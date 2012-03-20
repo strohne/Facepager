@@ -10,9 +10,9 @@ class MainWindow(QMainWindow):
         self.createComponents()
     
     def createComponents(self):
-        #self.Tree=Tree()
+        self.Tree=Tree(parent=self)
         self.toolbar=self.addToolBar(Toolbar(self))    
-        self.setCentralWidget(self.toolbar) 
+        self.setCentralWidget(self.Tree) 
 
     def createLayouts(self):
         layoutMain=QHBoxLayout()
@@ -49,8 +49,13 @@ class Toolbar(QToolBar):
 
     @Slot()
     def openFile(self):
+        if hasattr(self.parent(),"dbpipe"):
+            self.parent().dbpipe.session.commit()
+            self.parent().dbpipe.session.close()
+        
         self.parentWidget().dbpipe=DBPipe(QFileDialog.getOpenFileName(None,"Open DB File",".","DB files (*.db)")[0])
-        print self.parentWidget().dbpipe.session.query(Site).all() 
+        self.parent().Tree.clear()
+        self.parent().Tree.loadAll()
 
 
     @Slot()
@@ -82,22 +87,53 @@ class DBPipe(object):
         self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
         Base.query = self.session.query_property()
         Base.metadata.create_all(bind=self.engine)
+        
 
 
-class SiteItem(QStandardItem):
+class Tree(QTreeWidget):
 
-    def __init__(self,site):
-        super(SiteItem,self).__init__(site.id)
+    def __init__(self,parent=None):
+        super(Tree,self).__init__(parent)
+        self.setColumnCount(3)
+        self.setHeaderLabels(["ID","DESCRIPTION","DATE"])
+        self.setSortingEnabled(True)
 
+    def addSite(self,site):
+        if type(site)!=list:
+            site=[site,]
+        items=[]
+        for item in site:
+            site_item=QTreeWidgetItem(self)
+            site_item.setText(1,item.description)
+            site_item.setText(0,item.id)
+            items.append(site_item)
+        
+        self.insertTopLevelItems(0,items)
+        
+    def addPost(self,post,site_item):
+        if type(post)!=list:
+            post=[site,]
+        items=[]
+        
+        for item in post:
+           if item.site_id==int(site_item.data(0,0)):
+                print "match"            
+                post_item=QTreeWidgetItem(parent=site_item)
+                post_item.setText(1,item.message)
+                post_item.setText(0,item.id)
+                post_item.setText(2,str(item.created_time))
+                items.append(post_item)
+        site_item.addChildren(items)
+        
+    
+    def loadAll(self):
+        self.addSite(Site.query.all())
+        self.addPost(Post.query.all(),self.topLevelItem(1))
+        
 
-
-SiteItemModel=QStandardItemModel()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main=MainWindow()
-    d=DBPipe("../comments.db")
-    ds=Site.query.all()
-    main.show()
     sys.exit(app.exec_())
 
