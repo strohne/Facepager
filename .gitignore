@@ -7,6 +7,8 @@ comments2.db
 *.pyc
 *.pyo
 *.db
+.pydevproject
+.project
 Links Spendenorganisationen.xlsx
 Links Spendenorganisationen.xlsx
 >>>>>>> 2dbabfacbe950ecdc2f26ef874940c780c0c6465
