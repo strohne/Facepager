@@ -112,7 +112,7 @@ class Tree(QTreeWidget):
         
     def addPost(self,post,site_item):
         if type(post)!=list:
-            post=[site,]
+            post=[site_item,]
         items=[]
         
         for item in post:
@@ -128,12 +128,15 @@ class Tree(QTreeWidget):
     
     def loadAll(self):
         self.addSite(Site.query.all())
-        self.addPost(Post.query.all(),self.topLevelItem(1))
+        for tl in range(0,self.topLevelItemCount(),1):
+            tli=self.topLevelItem(tl)
+            self.addPost(Post.query.filter(Post.site_id==tli.data(0,0)).all(),tli)
         
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main=MainWindow()
+    main.show()
     sys.exit(app.exec_())
 
