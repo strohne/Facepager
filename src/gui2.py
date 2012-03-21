@@ -4,6 +4,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from models import *
 
+
 class MainWindow(QMainWindow):
     
     def __init__(self,central=None):
@@ -67,7 +68,7 @@ class Toolbar(QToolBar):
     @Slot()
     def doExport(self):
         outfile = open('Site.csv', 'wb')
-        outcsv = csv.DictWriter(outfile,fieldnames={'category', 'username', 'website', 'name', 'company_overview', 'talking_about_count',\
+        outcsv = csv.DictWriter(outfile, delimiter=";",fieldnames={'category', 'username', 'website', 'name', 'company_overview', 'talking_about_count',\
                                          'mission', 'founded', 'phone', 'link', 'likes', 'general_info', 'checkins', 'id', 'description'},extrasaction='ignore',restval="NONE")
         outcsv.writeheader()
         records = Site.query.all()
