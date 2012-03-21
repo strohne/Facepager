@@ -67,9 +67,12 @@ class Toolbar(QToolBar):
     @Slot()
     def doExport(self):
         outfile = open('Site.csv', 'wb')
-        outcsv = csv.writer(outfile)
+        outcsv = csv.DictWriter(outfile,fieldnames={'category', 'username', 'website', 'name', 'company_overview', 'talking_about_count',\
+                                         'mission', 'founded', 'phone', 'link', 'likes', 'general_info', 'checkins', 'id', 'description'},extrasaction='ignore',restval="NONE")
+        outcsv.writeheader()
         records = Site.query.all()
-        [outcsv.writerow([curr.id,curr.description])  for curr in records ]
+        sitedicts=[i.__dict__ for i in records]
+        outcsv.writerows(sitedicts)
         outfile.close()
 
 
