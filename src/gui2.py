@@ -68,13 +68,12 @@ class Toolbar(QToolBar):
         pass
     @Slot()
     def doAdd(self):
-        pass
+        pass‚
     @Slot()
     def doQuery(self):
         dialog=QDialog(self.parent())
         layout=QVBoxLayout()
-        start=QDateEdit()
-        start.calendarPopup=True
+        start=QCalendarWidget()
         end=QCalendarWidget()
         commit=QPushButton("Commit Query")
         layout.addWidget(start)
