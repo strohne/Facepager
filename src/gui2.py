@@ -68,21 +68,51 @@ class Toolbar(QToolBar):
         pass
     @Slot()
     def doAdd(self):
-        pass‚
+        pass
     @Slot()
     def doQuery(self):
         dialog=QDialog(self.parent())
-        layout=QVBoxLayout()
+        dialog.setWindowTitle("Date Selection")
+        #dialog elemts
         start=QCalendarWidget()
+        start.setGridVisible(True)
         end=QCalendarWidget()
-        commit=QPushButton("Commit Query")
+        end.setGridVisible(True)
+        buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
+        #signals and slots
+        def query():
+            print start.selectedDate().toString("yyyy-MM-dd"),end.selectedDate().toString("yyyy-MM-dd")
+            dateform=QTextCharFormat()
+            dateform.setFontWeight(990)
+            painter = QPainter(dialog)
+            painter.setPen(Qt.blue)
+            painter.setFont(QFont("Arial", 30))
+            painter.setBackground(Qt.cyan)
+                 
+            for i in Post.query.all():
+                if i.created_time[:10]==start.selectedDate().toString("yyyy-MM-dd"):
+                    start.paintCell(painter.begin(dialog),QRect(),start.selectedDate())
+                    
+        def cancel():
+            dialog.close()
+        
+        buttons.accepted.connect(query)
+        buttons.rejected.connect(cancel)
+        #labels
+        label1=QLabel("<b>Startdate</b>")
+        label1.setAlignment(Qt.AlignCenter)
+        label2=QLabel("<b>Enddate</b>")
+        label2.setAlignment(Qt.AlignCenter)
+        #layout for the dialog pop-up
+        layout=QVBoxLayout()
+        layout.addWidget(label1)
         layout.addWidget(start)
+        layout.addWidget(label2)
         layout.addWidget(end)
-        layout.addWidget(commit)
-        
+        layout.addWidget(buttons)
+                
         dialog.setLayout(layout)
-        dialog.show()
-        
+        dialog.exec_()
     @Slot()
     def doReload(self):
         pass
