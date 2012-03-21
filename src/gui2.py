@@ -1,4 +1,5 @@
 import sys
+import csv
 from PySide.QtCore import *
 from PySide.QtGui import *
 from models import *
@@ -65,7 +66,13 @@ class Toolbar(QToolBar):
         
     @Slot()
     def doExport(self):
-        pass
+        outfile = open('Site.csv', 'wb')
+        outcsv = csv.writer(outfile)
+        records = Site.query.all()
+        [outcsv.writerow([curr.id,curr.description])  for curr in records ]
+        outfile.close()
+
+
     @Slot()
     def doAdd(self):
         pass
@@ -132,8 +139,8 @@ class Tree(QTreeWidget):
 
     def __init__(self,parent=None):
         super(Tree,self).__init__(parent)
-        self.setColumnCount(3)
-        self.setHeaderLabels(["ID","DESCRIPTION","DATE"])
+        self.setColumnCount(5)
+        self.setHeaderLabels(["ID","AUTHOR","DESCRIPTION","CONTENT","DATE"])
         self.setSortingEnabled(True)
 
     def addSite(self,site):
@@ -142,8 +149,13 @@ class Tree(QTreeWidget):
         items=[]
         for item in site:
             site_item=QTreeWidgetItem(self)
-            site_item.setText(1,item.description)
+            site_item.setSizeHint(0,QSize(5,5))
+            site_item.setSizeHint(3,QSize(5,5))
+            site_item.setSizeHint(2,QSize(5,5))
             site_item.setText(0,item.id)
+            site_item.setText(1,item.name)
+            site_item.setText(2,item.description)
+            site_item.setText(3,item.mission)
             items.append(site_item)
         
         self.insertTopLevelItems(0,items)
@@ -156,9 +168,14 @@ class Tree(QTreeWidget):
         for item in post:
            if item.site_id==int(site_item.data(0,0)): 
                 post_item=QTreeWidgetItem(parent=site_item)
-                post_item.setText(1,item.message)
                 post_item.setText(0,item.id)
-                post_item.setText(2,str(item.created_time))
+                post_item.setText(1,item.author)
+                post_item.setText(2,item.description)
+                post_item.setText(3,item.message)
+                post_item.setText(4,item.created_time[:10])
+                post_item.setSizeHint(0,QSize(5,5))
+                post_item.setSizeHint(3,QSize(5,5))
+                post_item.setSizeHint(2,QSize(5,5))
                 items.append(post_item)
         site_item.addChildren(items)
         
