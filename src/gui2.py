@@ -28,7 +28,7 @@ class Toolbar(QToolBar):
         
         
     def createComponents(self):
-        self.actionOpen=self.addAction("Open",self.openFile)
+        self.actionOpen=self.addAction("Open")
         self.actionExport=self.addAction("Export")
         self.actionNew=self.addAction("Save")
         self.addSeparator()
@@ -53,14 +53,14 @@ class Toolbar(QToolBar):
             self.parent().dbpipe.session.commit()
             self.parent().dbpipe.session.close()
         
-        self.parentWidget().dbpipe=DBPipe(QFileDialog.getOpenFileName(None,"Open DB File",".","DB files (*.db)")[0])
+        self.parentWidget().dbpipe=DBPipe(QFileDialog.getOpenFileName(self,"Open DB File",".","DB files (*.db)")[0])
         self.parent().Tree.clear()
         self.parent().Tree.loadAll()
 
 
     @Slot()
     def newFile(self):
-        self.parentWidget().dbpipe=DBPipe(QFileDialog.getSaveFileName(None,"Open DB File",".","DB files (*.db)")[0])
+        self.parentWidget().dbpipe=DBPipe(QFileDialog.getSaveFileName(self,"Open DB File",".","DB files (*.db)")[0])
         
         
     @Slot()
@@ -80,18 +80,15 @@ class Toolbar(QToolBar):
         end.setGridVisible(True)
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         #signals and slots
+        dateform=QTextCharFormat()
+        dateform.setFontWeight(90)
+        for i in Post.query.filter(Post.site_id==self.parent().Tree.currentItem().data(0,0)).all():
+            date=QDate().fromString(i.created_time[:10],"yyyy-MM-dd")
+            start.setDateTextFormat(date,dateform)
+            end.setDateTextFormat(date,dateform)
         def query():
-            print start.selectedDate().toString("yyyy-MM-dd"),end.selectedDate().toString("yyyy-MM-dd")
-            dateform=QTextCharFormat()
-            dateform.setFontWeight(990)
-            painter = QPainter(dialog)
-            painter.setPen(Qt.blue)
-            painter.setFont(QFont("Arial", 30))
-            painter.setBackground(Qt.cyan)
-                 
-            for i in Post.query.all():
-                if i.created_time[:10]==start.selectedDate().toString("yyyy-MM-dd"):
-                    start.paintCell(painter.begin(dialog),QRect(),start.selectedDate())
+            pass
+            
                     
         def cancel():
             dialog.close()
