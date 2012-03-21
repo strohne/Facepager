@@ -71,7 +71,19 @@ class Toolbar(QToolBar):
         pass
     @Slot()
     def doQuery(self):
-        pass
+        dialog=QDialog(self.parent())
+        layout=QVBoxLayout()
+        start=QDateEdit()
+        start.calendarPopup=True
+        end=QCalendarWidget()
+        commit=QPushButton("Commit Query")
+        layout.addWidget(start)
+        layout.addWidget(end)
+        layout.addWidget(commit)
+        
+        dialog.setLayout(layout)
+        dialog.show()
+        
     @Slot()
     def doReload(self):
         pass
@@ -116,8 +128,7 @@ class Tree(QTreeWidget):
         items=[]
         
         for item in post:
-           if item.site_id==int(site_item.data(0,0)):
-                print "match"            
+           if item.site_id==int(site_item.data(0,0)): 
                 post_item=QTreeWidgetItem(parent=site_item)
                 post_item.setText(1,item.message)
                 post_item.setText(0,item.id)
