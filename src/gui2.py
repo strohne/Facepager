@@ -56,7 +56,6 @@ class Toolbar(QToolBar):
             self.parent().dbpipe.session.close()
         
         self.parentWidget().dbpipe=DBPipe(QFileDialog.getOpenFileName(self,"Open DB File",".","DB files (*.db)")[0])
-        self.parent().Tree.clear()
         self.parent().Tree.loadAll()
 
 
@@ -92,18 +91,11 @@ class Toolbar(QToolBar):
         end.setGridVisible(True)
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         #signals and slots
-        dateform=QTextCharFormat()
-        dateform.setFontWeight(90)
-        for i in Post.query.filter(Post.site_id==self.parent().Tree.currentItem().data(0,0)).all():
-            date=QDate().fromString(i.created_time[:10],"yyyy-MM-dd")
-            start.setDateTextFormat(date,dateform)
-            end.setDateTextFormat(date,dateform)
         def query():
             pass
-            
-                    
+      
         def cancel():
-            dialog.close()
+            dialog.close()           
         
         buttons.accepted.connect(query)
         buttons.rejected.connect(cancel)
@@ -118,17 +110,44 @@ class Toolbar(QToolBar):
         layout.addWidget(start)
         layout.addWidget(label2)
         layout.addWidget(end)
-        layout.addWidget(buttons)
-                
+        layout.addWidget(buttons)    
+        dateform=QTextCharFormat()
+        dateform.setFontWeight(90)
         dialog.setLayout(layout)
-        dialog.exec_()
+        #
+        if self.parent().Tree.currentItem() is not None:
+            if self.parent().Tree.currentItem().parent() is None:
+                toplevel=self.parent().Tree.currentItem()
+            else:
+                toplevel=self.parent().Tree.currentItem().parent()
+            for i in Post.query.filter(Post.site_id==toplevel.data(0,0)).all():
+                date=QDate().fromString(i.created_time[:10],"yyyy-MM-dd")
+                start.setDateTextFormat(date,dateform)
+                end.setDateTextFormat(date,dateform)
+            dialog.exec_()
+        else:
+            msg=QMessageBox.warning(self, self.tr("Query missing Facebook Page"),
+                               self.tr("Please select a Facebook Page  or a Post of this Page in the main view"),
+                               QMessageBox.Ok)
+            
+           
+                    
     @Slot()
     def doReload(self):
-        pass
+        self.parent().Tree.loadAll()
+        
     @Slot()
     def doDelete(self):
-        pass
-
+        candidate=self.parent().Tree.currentItem()
+        if self.parent().Tree.indexOfTopLevelItem(candidate)is int(-1):
+            self.parent().dbpipe.session.delete(Post.query.get(candidate.data(0,0)))
+        else:
+            self.parent().dbpipe.session.delete(Site.query.get(candidate.data(0,0)))     
+        self.parent().Tree.invisibleRootItem().removeChild(candidate)
+        self.parent().dbpipe.session.commit()
+        
+            
+     
 
 class DBPipe(object):
     
@@ -145,7 +164,7 @@ class Tree(QTreeWidget):
     def __init__(self,parent=None):
         super(Tree,self).__init__(parent)
         self.setColumnCount(5)
-        self.setHeaderLabels(["ID","AUTHOR","DESCRIPTION","CONTENT","DATE"])
+        self.setHeaderLabels(["ID","Author","Description","Content","Date","Title","Comments Count"])
         self.setSortingEnabled(True)
 
     def addSite(self,site):
@@ -163,7 +182,7 @@ class Tree(QTreeWidget):
             site_item.setText(3,item.mission)
             items.append(site_item)
         
-        self.insertTopLevelItems(0,items)
+        self.addTopLevelItems(items)
         
     def addPost(self,post,site_item):
         if type(post)!=list:
@@ -178,6 +197,8 @@ class Tree(QTreeWidget):
                 post_item.setText(2,item.description)
                 post_item.setText(3,item.message)
                 post_item.setText(4,item.created_time[:10])
+                post_item.setText(5,item.title)
+                post_item.setText(6,str(item.comments_count))
                 post_item.setSizeHint(0,QSize(5,5))
                 post_item.setSizeHint(3,QSize(5,5))
                 post_item.setSizeHint(2,QSize(5,5))
@@ -186,6 +207,7 @@ class Tree(QTreeWidget):
         
     
     def loadAll(self):
+        self.clear()
         self.addSite(Site.query.all())
         for tl in range(0,self.topLevelItemCount(),1):
             tli=self.topLevelItem(tl)
