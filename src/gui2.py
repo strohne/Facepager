@@ -79,6 +79,18 @@ class Toolbar(QToolBar):
 
     @Slot()
     def doAdd(self):
+        dialog=QDialog(self.parent())
+        buttons=QDialogButtonBox(QDialogButtonBox.Apply|QDialogButtonBox.Cancel)
+        input=QLineEdit()
+       
+        
+        layout=QVBoxLayout()
+        layout.addWidget(input)
+        layout.addWidget(buttons)
+        
+        dialog.setLayout(layout)
+        dialog.exec_()
+    
         pass
     @Slot()
     def doQuery(self):
