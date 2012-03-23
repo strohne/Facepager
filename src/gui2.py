@@ -80,15 +80,33 @@ class Toolbar(QToolBar):
     @Slot()
     def doAdd(self):
         dialog=QDialog(self.parent())
-        buttons=QDialogButtonBox(QDialogButtonBox.Apply|QDialogButtonBox.Cancel)
+        dialog.setWindowTitle("Add a Facebook Page")
+        dialog.setFixedSize(500,90)
+        label1=QLabel("<b>Facebook Page:</b>")
+        buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         input=QLineEdit()
-       
-        
+        input.setFocusPolicy(Qt.ClickFocus)
+        input.setPlaceholderText("Enter a Facebook Page ID or Name here")
+        formlay=QFormLayout()
+        formlay.addRow(label1,input)
         layout=QVBoxLayout()
-        layout.addWidget(input)
+        layout.addLayout(formlay)
         layout.addWidget(buttons)
-        
         dialog.setLayout(layout)
+        def createSite():
+            new=Site(input.text())
+            if Site.query.get(new.id)==None:
+                self.parent().dbpipe.session.add(new)
+                self.parent().Tree.addSite(new)
+                self.parent().dbpipe.session.commit()
+                dialog.close()
+            else:
+                 err=QErrorMessage(dialog)
+                 err.showMessage("This Page is already in the Database. Enter another or cancel.")
+        def close():
+            dialog.close()
+        buttons.accepted.connect(createSite)
+        buttons.rejected.connect(close)
         dialog.exec_()
     
         pass
@@ -103,14 +121,11 @@ class Toolbar(QToolBar):
         end.setGridVisible(True)
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         #signals and slots
-        def query():
-            pass
-      
+        
         def cancel():
             dialog.close()           
         
-        buttons.accepted.connect(query)
-        buttons.rejected.connect(cancel)
+        
         #labels
         label1=QLabel("<b>Startdate</b>")
         label1.setAlignment(Qt.AlignCenter)
@@ -136,6 +151,21 @@ class Toolbar(QToolBar):
                 date=QDate().fromString(i.created_time[:10],"yyyy-MM-dd")
                 start.setDateTextFormat(date,dateform)
                 end.setDateTextFormat(date,dateform)
+                    
+            def query():
+                candidate=Site.query.get(toplevel.data(0,0))
+                candidate.getPosts(start.selectedDate().toString("yyyy-MM-dd"),end.selectedDate().toString("yyyy-MM-dd"))
+                self.parent().dbpipe.session.commit()
+                for new in candidate.posts:
+                    date=QDate().fromString(new.created_time[:10],"yyyy-MM-dd")
+                    start.setDateTextFormat(date,dateform)
+                    end.setDateTextFormat(date,dateform)
+                self.parent().Tree.addPost([i for i in candidate.posts],toplevel)
+                        
+            
+            buttons.accepted.connect(query)
+            buttons.rejected.connect(cancel)
+            
             dialog.exec_()
         else:
             msg=QMessageBox.warning(self, self.tr("Query missing Facebook Page"),
@@ -198,19 +228,24 @@ class Tree(QTreeWidget):
         
     def addPost(self,post,site_item):
         if type(post)!=list:
-            post=[site_item,]
+            post=[post,]
+        else:
+            pass
         items=[]
         
-        for item in post:
-           if item.site_id==int(site_item.data(0,0)): 
+        for p in post:
+           if p.site_id==int(site_item.data(0,0)): 
                 post_item=QTreeWidgetItem(parent=site_item)
-                post_item.setText(0,item.id)
-                post_item.setText(1,item.author)
-                post_item.setText(2,item.description)
-                post_item.setText(3,item.message)
-                post_item.setText(4,item.created_time[:10])
-                post_item.setText(5,item.title)
-                post_item.setText(6,str(item.comments_count))
+                post_item.setText(0,p.id)
+                post_item.setText(1,p.author)
+                post_item.setText(2,p.description)
+                post_item.setToolTip(2,p.description)
+                post_item.setText(3,p.message)
+                post_item.setToolTip(3,p.message)
+                post_item.setText(4,p.created_time[:10])
+                post_item.setText(5,p.title)
+                post_item.setToolTip(5,p.title)
+                post_item.setText(6,str(p.comments_count))
                 post_item.setSizeHint(0,QSize(5,5))
                 post_item.setSizeHint(3,QSize(5,5))
                 post_item.setSizeHint(2,QSize(5,5))
