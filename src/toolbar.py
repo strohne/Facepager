@@ -1,6 +1,8 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 from models import *
+import time
+
 
 class Toolbar(QToolBar):
     def __init__(self,parent=None):
@@ -12,23 +14,33 @@ class Toolbar(QToolBar):
     def createComponents(self):
         self.actionOpen=self.addAction("Open")
         self.actionExport=self.addAction("Export")
-        self.actionNew=self.addAction("Save")
+        self.actionSave=self.addAction("Save")
+        self.actionNew=self.addAction("New")
+        self.actionReload=self.addAction("Reload")
         self.addSeparator()
         self.actionAdd=self.addAction("Add")
         self.actionQuery=self.addAction("Querry")
-        self.actionReload=self.addAction("Reload")
         self.actionDelete=self.addAction("Delete")
+        self.actionAuth=self.addAction("Authenticate")
         
     def createConnects(self):
         self.actionOpen.triggered.connect(self.openFile)
-        self.actionNew.triggered.connect(self.newFile)
+        self.actionSave.triggered.connect(self.doSave)
+        self.actionNew.triggered.connect(self.makeDB)
         self.actionExport.triggered.connect(self.doExport)
         self.actionAdd.triggered.connect(self.doAdd)
         self.actionQuery.triggered.connect(self.doQuery)
         self.actionReload.triggered.connect(self.doReload)
         self.actionDelete.triggered.connect(self.doDelete)
+        self.actionAuth.triggered.connect(self.doAuth)
 
 
+    @Slot()
+    def doAuth(self):
+        global g
+        g=fb.GraphAPI('109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI')
+        return g
+    
     @Slot()
     def openFile(self):
         if hasattr(self.parent(),"dbpipe"):
@@ -38,9 +50,18 @@ class Toolbar(QToolBar):
         self.parentWidget().dbpipe=DBPipe(QFileDialog.getOpenFileName(self,"Open DB File",".","DB files (*.db)")[0])
         self.parent().Tree.loadAll()
 
-
     @Slot()
-    def newFile(self):
+    def doSave(self):
+        if hasattr(self.parent(),"dbpipe"):
+            self.parent().dbpipe.session.commit()
+            
+    @Slot()
+    def makeDB(self):
+        if hasattr(self.parent(),"dbpipe"):
+                self.parent().dbpipe.session.commit()
+                self.parent().dbpipe.session.close()
+                del self.parent().dbpipe
+                
         self.parentWidget().dbpipe=DBPipe(QFileDialog.getSaveFileName(self,"Open DB File",".","DB files (*.db)")[0])
         
         
@@ -60,15 +81,33 @@ class Toolbar(QToolBar):
     @Slot()
     def doAdd(self):
         dialog=QDialog(self.parent())
-        buttons=QDialogButtonBox(QDialogButtonBox.Apply|QDialogButtonBox.Cancel)
+        dialog.setWindowTitle("Add a Facebook Page")
+        dialog.setFixedSize(500,90)
+        label1=QLabel("<b>Facebook Page:</b>")
+        buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         input=QLineEdit()
-       
-        
+        input.setFocusPolicy(Qt.ClickFocus)
+        input.setPlaceholderText("Enter a Facebook Page ID or Name here")
+        formlay=QFormLayout()
+        formlay.addRow(label1,input)
         layout=QVBoxLayout()
-        layout.addWidget(input)
+        layout.addLayout(formlay)
         layout.addWidget(buttons)
-        
         dialog.setLayout(layout)
+        def createSite():
+            new=Site(input.text())
+            if Site.query.get(new.id)==None:
+                self.parent().dbpipe.session.add(new)
+                self.parent().Tree.addSite(new)
+                self.parent().dbpipe.session.commit()
+                dialog.close()
+            else:
+                 err=QErrorMessage(dialog)
+                 err.showMessage("This Page is already in the Database. Enter another or cancel.")
+        def close():
+            dialog.close()
+        buttons.accepted.connect(createSite)
+        buttons.rejected.connect(close)
         dialog.exec_()
     
         pass
@@ -82,15 +121,14 @@ class Toolbar(QToolBar):
         end=QCalendarWidget()
         end.setGridVisible(True)
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
+        
+    
         #signals and slots
-        def query():
-            pass
-      
+        
         def cancel():
             dialog.close()           
         
-        buttons.accepted.connect(query)
-        buttons.rejected.connect(cancel)
+        
         #labels
         label1=QLabel("<b>Startdate</b>")
         label1.setAlignment(Qt.AlignCenter)
@@ -116,6 +154,25 @@ class Toolbar(QToolBar):
                 date=QDate().fromString(i.created_time[:10],"yyyy-MM-dd")
                 start.setDateTextFormat(date,dateform)
                 end.setDateTextFormat(date,dateform)
+                    
+            def query():
+                candidate=Site.query.get(toplevel.data(0,0))
+                dialog.setStyleSheet("background:transparent;")
+                
+                
+                candidate.getPosts(start.selectedDate().toString("yyyy-MM-dd"),end.selectedDate().toString("yyyy-MM-dd"))
+                              
+                self.parent().dbpipe.session.commit()
+                for new in candidate.posts:
+                    date=QDate().fromString(new.created_time[:10],"yyyy-MM-dd")
+                    start.setDateTextFormat(date,dateform)
+                    end.setDateTextFormat(date,dateform)
+                self.parent().Tree.addPost([i for i in candidate.posts],toplevel)
+                       
+            
+            buttons.accepted.connect(query)
+            buttons.rejected.connect(cancel)
+            
             dialog.exec_()
         else:
             msg=QMessageBox.warning(self, self.tr("Query missing Facebook Page"),
@@ -137,6 +194,3 @@ class Toolbar(QToolBar):
             self.parent().dbpipe.session.delete(Site.query.get(candidate.data(0,0)))     
         self.parent().Tree.invisibleRootItem().removeChild(candidate)
         self.parent().dbpipe.session.commit()
-        
-            
-     
