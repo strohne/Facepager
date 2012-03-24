@@ -12,6 +12,17 @@ import pickle as pcl
 Base = declarative_base()
 #Base.query = db_session.query_property()
 #Base.metadata.create_all(bind=engine)
+
+class DBPipe(object):
+    
+    def __init__(self,filename):
+        self.engine = create_engine('sqlite:///%s'%filename, convert_unicode=True)
+        self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
+        Base.query = self.session.query_property()
+        Base.metadata.create_all(bind=self.engine)
+        
+
+
 class Site(Base):
         __tablename__='Sites'
         category=Column(String)
