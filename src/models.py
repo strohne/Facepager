@@ -7,11 +7,33 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_session
 from urllib import quote as quote
 import pickle as pcl
+from contextlib import contextmanager
+
 #engine = create_engine('sqlite:///./comments.db', convert_unicode=True)
 #db_session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=engine))
 Base = declarative_base()
 #Base.query = db_session.query_property()
 #Base.metadata.create_all(bind=engine)
+
+g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
+
+
+@contextmanager
+def saverPipe(db):   
+        yield db.session
+        try:
+            db.session.flush()
+        except Exception as e:
+            print e
+            db.session.rollback()
+            raise e
+        finally:
+            db.session.commit()
+
+def killPipe():
+    if 'dbpipe' in globals():
+                globals()["dbpipe"].session.close()
+                del globals()["dbpipe"]
 
 class DBPipe(object):
     
@@ -21,6 +43,9 @@ class DBPipe(object):
         Base.query = self.session.query_property()
         Base.metadata.create_all(bind=self.engine)
         
+
+
+
 
 
 class Site(Base):
@@ -47,7 +72,7 @@ class Site(Base):
                 self.__dict__.update(g.get_object(site))
                 self.posts=[]
 
-        def getPosts(self,n,since,until):
+        def getPosts(self,since,until,n=500):
                 plist=g.get_object(str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until))['data']
                 print str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until)
                 l=[self.posts.append(Post(i,site=self)) for i in plist if i.get("id") not in [x.id for x in self.posts]]
