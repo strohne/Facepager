@@ -22,21 +22,20 @@ class Tree(QTreeWidget):
         elif item.type() is 2:
             self.loadComments(item, all=True)
 
-        else:
-            pass
 
     
     @Slot()
     def updateHeader(self,item):
         if item.type() is 1:
             self.setColumnCount(15)
+
             self.setHeaderLabels(['Site ID','Category', 'Description','Username', 'Website', 'Name','Products','Company_overview', 'Talking_about_count',\
                                          'Mission', 'Founded', 'Phone', 'Link', 'Likes', 'General_info', 'Checkins'])
         elif item.type() is 2:
             self.setColumnCount(13)
             self.setHeaderLabels(["Post_ID","Created","Author","Description","Title","Message","Type","Link","Source","Likes","Liker","Shares","Comments Count"])
         elif item.type() is 3:
-            self.setColumnCount(6)
+            self.setColumnCount(7)
             self.setHeaderLabels(["Comment_ID","Created","Author","Message","Likes","Liker"])
     
     
@@ -91,7 +90,7 @@ class Tree(QTreeWidget):
                 if site_item.indexOfChild(post_item) is -1:
                     self.loadComments(post_item)
                     for r in range(1,self.columnCount(),1):
-                        post_item.setSizeHint(r,QSize(6,15))
+                        post_item.setSizeHint(r,QSize(6,9)) 
                         post_item.setBackground(r,QColor(205,200,177))
                     site_item.insertChild(0,post_item)
 
@@ -109,9 +108,9 @@ class Tree(QTreeWidget):
                 comment_item.setText(3,com.message)
                 comment_item.setText(4,str(com.likes))
                 comment_item.setText(5,str(com.liker))
-
                 for r in range(1,self.columnCount(),1):
                      comment_item.setBackground(r,QColor(238,232,205))
+                     comment_item.setSizeHint(r,QSize(6,9))
                 if post_item.indexOfChild(comment_item) is -1:
                     post_item.insertChild(0,comment_item)
     
