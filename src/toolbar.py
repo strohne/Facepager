@@ -166,7 +166,7 @@ class Toolbar(QToolBar):
                     start.setDateTextFormat(date,dateform)
                     end.setDateTextFormat(date,dateform)
 
-                self.parent().Tree.loadPosts([i for i in candidate.posts],toplevel)
+                self.parent().Tree.loadPosts(toplevel)
                        
        
         #layout for the dialog pop-up
