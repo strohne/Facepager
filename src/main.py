@@ -10,6 +10,7 @@ class MainWindow(QMainWindow):
     
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
+        self.setWindowTitle("Facepager")
         self.createComponents()
         self.setMinimumSize(700,400)
     

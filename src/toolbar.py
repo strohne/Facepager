@@ -175,7 +175,7 @@ class Toolbar(QToolBar):
         dialog.setLayout(layout)
                       
             
-        if self.parent().Tree.currentItem() is not None and self.parent().Tree.currentItem().parent() is None:
+        if self.parent().Tree.currentItem()is not None and self.parent().Tree.currentItem().parent() is None:
             tl=self.parent().Tree.currentItem()
             updateToplevel(tl)
             buttons.accepted.connect(query)
@@ -184,7 +184,7 @@ class Toolbar(QToolBar):
             
         else:
             QMessageBox.warning(self, self.tr("Query missing Facebook Page"),
-                               self.tr("Please select a Facebook Page  or a Post of this Page in the main view"),
+                               self.tr("Please select a Facebook Page in the Viewer"),
                                QMessageBox.Ok)
          
          
