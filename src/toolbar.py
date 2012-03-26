@@ -4,25 +4,27 @@ from models import *
 import time
 import os
 
+
 class Toolbar(QToolBar):
     def __init__(self,parent=None):
         super(Toolbar,self).__init__(parent)
+        self.setIconSize(QSize(32,32))
         self.createComponents()
         self.createConnects()
         if 'dbpipe'  not in globals():
             self.buttongroup.setEnabled(False)
         
     def createComponents(self):
-        self.actionOpen=self.addAction("Open")
-        self.actionExport=self.addAction("Export")
-        self.actionNew=self.addAction("New")
+        self.actionOpen=self.addAction(QIcon("../data/icons/document-import.png"),"Open Database")
+        self.actionExport=self.addAction(QIcon("../data/icons/document-export.png"),"Export Database")
+        self.actionNew=self.addAction(QIcon("../data/icons/window_new.png"),"New Database")
         self.addSeparator()
         self.buttongroup=QActionGroup(self)
-        self.actionSave=self.buttongroup.addAction("Save")
-        self.actionReload=self.buttongroup.addAction("Reload")
-        self.actionAdd=self.buttongroup.addAction("Add")
-        self.actionQuery=self.buttongroup.addAction("Query")
-        self.actionDelete=self.buttongroup.addAction("Delete")
+        self.actionSave=self.buttongroup.addAction(QIcon("../data/icons/filesave.png"),"Save Database")
+        self.actionReload=self.buttongroup.addAction(QIcon("../data/icons/view-refresh.png"),"Reload Database")
+        self.actionAdd=self.buttongroup.addAction(QIcon("../data/icons/bookmark_add.png"),"Add Site")
+        self.actionQuery=self.buttongroup.addAction(QIcon("../data/icons/find.png"),"Query")
+        self.actionDelete=self.buttongroup.addAction(QIcon("../data/icons/edit-delete.png"),"Delete")
         self.addActions(self.buttongroup.actions())
         
     def createConnects(self):
@@ -45,8 +47,9 @@ class Toolbar(QToolBar):
             killPipe()
             global dbpipe
             dbpipe=DBPipe(str(fldg.selectedFiles()[0]))                  
-            self.parent().Tree.loadAll()
+            self.parent().Tree.loadSites()
             self.buttongroup.setEnabled(True)
+            
         
     @Slot()
     def saveDB(self):
@@ -154,13 +157,16 @@ class Toolbar(QToolBar):
                 
         def query(toplevel=self.parent().Tree.currentItem()):
                 candidate=Site.query.get(toplevel.data(0,0))          
-                candidate.getPosts(start.selectedDate().toString("yyyy-MM-dd"),end.selectedDate().toString("yyyy-MM-dd"))            
-                dbpipe.session.commit()
+                         
+                with saverPipe(dbpipe) as pipe:
+                    candidate.getPosts(start.selectedDate().toString("yyyy-MM-dd"),end.selectedDate().toString("yyyy-MM-dd"))
+                       
                 for new in candidate.posts:
                     date=QDate().fromString(new.created_time[:10],"yyyy-MM-dd")
                     start.setDateTextFormat(date,dateform)
                     end.setDateTextFormat(date,dateform)
-                self.parent().Tree.addPost([i for i in candidate.posts],toplevel)
+
+                self.parent().Tree.loadPosts([i for i in candidate.posts],toplevel)
                        
        
         #layout for the dialog pop-up
@@ -172,6 +178,7 @@ class Toolbar(QToolBar):
         layout.addWidget(buttons)    
         dateform=QTextCharFormat()
         dateform.setFontWeight(90)
+        dateform.setBackground(QColor(205,200,177))
         dialog.setLayout(layout)
                       
             
@@ -183,7 +190,7 @@ class Toolbar(QToolBar):
             dialog.exec_()
             
         else:
-            QMessageBox.warning(self, self.tr("Query missing Facebook Page"),
+            QMessageBox.warning(self, self.tr("Missing Facebook Page"),
                                self.tr("Please select a Facebook Page in the Viewer"),
                                QMessageBox.Ok)
          
@@ -192,7 +199,7 @@ class Toolbar(QToolBar):
                     
     @Slot()
     def doReload(self):
-        self.parent().Tree.loadAll()
+        self.parent().Tree.loadSites()
         
     @Slot()
     def doDelete(self):
