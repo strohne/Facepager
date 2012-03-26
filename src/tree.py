@@ -121,25 +121,24 @@ class Tree(QTreeWidget):
         self.addSite(Site.query.all())
         
     @Slot()    
-    def loadPosts(self,site,all=False):
-        if all==True:
-            dbpost=Post.query.filter(Post.site_id==site.data(0,0)).all()
-            self.addPost(dbpost,site)
+    def loadPosts(self,site_item,all=False):
+        if all is True:
+            dbpost=Post.query.filter(Post.site_id==site_item.data(0,0)).all()
+            self.addPost(dbpost,site_item)
         else:
-            dbpost=Post.query.filter(Post.site_id==site.data(0,0)).first()
-
+            dbpost=Post.query.filter(Post.site_id==site_item.data(0,0)).first()
             if dbpost is not None:
-                self.addPost(dbpost,site)
+                self.addPost(dbpost,site_item)
             
     
     @Slot()
-    def loadComments(self,post,all=False):
-        if all==True:
-            dbcomments=Comment.query.filter(Comment.post_id==post.data(0,0)).all()
-            self.addComments(comment=dbcomments,post_item=post)
+    def loadComments(self,post_item,all=False):
+        if all is True:
+            dbcomments=Comment.query.filter(Comment.post_id==post_item.data(0,0)).all()
+            self.addComments(dbcomments,post_item)
         else:
-            dbcomments=Comment.query.filter(Comment.post_id==post.data(0,0)).first()
+            dbcomments=Comment.query.filter(Comment.post_id==post_item.data(0,0)).first()
             if dbcomments is not None:
-                self.addComments(dbcomments,post)
+                self.addComments(dbcomments,post_item)
             
     
