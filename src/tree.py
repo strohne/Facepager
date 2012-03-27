@@ -22,21 +22,20 @@ class Tree(QTreeWidget):
         elif item.type() is 2:
             self.loadComments(item, all=True)
 
-        else:
-            pass
 
     
     @Slot()
     def updateHeader(self,item):
         if item.type() is 1:
             self.setColumnCount(15)
+
             self.setHeaderLabels(['Site ID','Category', 'Description','Username', 'Website', 'Name','Products','Company_overview', 'Talking_about_count',\
                                          'Mission', 'Founded', 'Phone', 'Link', 'Likes', 'General_info', 'Checkins'])
         elif item.type() is 2:
             self.setColumnCount(13)
             self.setHeaderLabels(["Post_ID","Created","Author","Description","Title","Message","Type","Link","Source","Likes","Liker","Shares","Comments Count"])
         elif item.type() is 3:
-            self.setColumnCount(6)
+            self.setColumnCount(7)
             self.setHeaderLabels(["Comment_ID","Created","Author","Message","Likes","Liker"])
     
     
@@ -91,7 +90,7 @@ class Tree(QTreeWidget):
                 if site_item.indexOfChild(post_item) is -1:
                     self.loadComments(post_item)
                     for r in range(1,self.columnCount(),1):
-                        post_item.setSizeHint(r,QSize(6,15))
+                        post_item.setSizeHint(r,QSize(6,9)) 
                         post_item.setBackground(r,QColor(205,200,177))
                     site_item.insertChild(0,post_item)
 
@@ -109,9 +108,9 @@ class Tree(QTreeWidget):
                 comment_item.setText(3,com.message)
                 comment_item.setText(4,str(com.likes))
                 comment_item.setText(5,str(com.liker))
-
                 for r in range(1,self.columnCount(),1):
                      comment_item.setBackground(r,QColor(238,232,205))
+                     comment_item.setSizeHint(r,QSize(6,9))
                 if post_item.indexOfChild(comment_item) is -1:
                     post_item.insertChild(0,comment_item)
     
@@ -121,25 +120,24 @@ class Tree(QTreeWidget):
         self.addSite(Site.query.all())
         
     @Slot()    
-    def loadPosts(self,site,all=False):
-        if all==True:
-            dbpost=Post.query.filter(Post.site_id==site.data(0,0)).all()
-            self.addPost(dbpost,site)
+    def loadPosts(self,site_item,all=False):
+        if all is True:
+            dbpost=Post.query.filter(Post.site_id==site_item.data(0,0)).all()
+            self.addPost(dbpost,site_item)
         else:
-            dbpost=Post.query.filter(Post.site_id==site.data(0,0)).first()
-
+            dbpost=Post.query.filter(Post.site_id==site_item.data(0,0)).first()
             if dbpost is not None:
-                self.addPost(dbpost,site)
+                self.addPost(dbpost,site_item)
             
     
     @Slot()
-    def loadComments(self,post,all=False):
-        if all==True:
-            dbcomments=Comment.query.filter(Comment.post_id==post.data(0,0)).all()
-            self.addComments(comment=dbcomments,post_item=post)
+    def loadComments(self,post_item,all=False):
+        if all is True:
+            dbcomments=Comment.query.filter(Comment.post_id==post_item.data(0,0)).all()
+            self.addComments(dbcomments,post_item)
         else:
-            dbcomments=Comment.query.filter(Comment.post_id==post.data(0,0)).first()
+            dbcomments=Comment.query.filter(Comment.post_id==post_item.data(0,0)).first()
             if dbcomments is not None:
-                self.addComments(dbcomments,post)
+                self.addComments(dbcomments,post_item)
             
     
