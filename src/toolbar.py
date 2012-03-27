@@ -69,7 +69,7 @@ class Toolbar(QToolBar):
             
     @Slot()
     def makeDB(self):
-        fldg=QFileDialog(caption="Save DB File",directory=self.parent().settings("lastpath","."),filter="DB files (*.db)")
+        fldg=QFileDialog(caption="Save DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.db)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("db")
                
@@ -114,8 +114,9 @@ class Toolbar(QToolBar):
         dialog.setLayout(layout)
         
         def createSite():
-            new=Site(input.text())
+                   
             try:
+                new=Site(input.text())
                 with saverPipe(dbpipe) as pipe:
                     pipe.add(new)
             except Exception as e:
@@ -202,6 +203,7 @@ class Toolbar(QToolBar):
                     
     @Slot()
     def doReload(self):
+        self.parent().Tree.clear()
         self.parent().Tree.loadSites()
         
     @Slot()
