@@ -11,4 +11,4 @@ setup(
         version = "0.1",
         description = "The Facebook Page Crawler",
         options = {'build_exe': {'includes':includes,"packages":["sqlalchemy","sqlalchemy.dialects.sqlite"],'include_files':includefiles}},
-        executables = [Executable(script="main.py",copyDependentFiles = True)])
+        executables = [Executable(script="main.py",base="Win32GUI",copyDependentFiles = True)])
