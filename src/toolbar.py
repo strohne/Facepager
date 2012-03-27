@@ -41,12 +41,13 @@ class Toolbar(QToolBar):
     
     @Slot()
     def openDB(self):      
-        fldg=QFileDialog(caption="Open DB File",directory=".",filter="DB files (*.db)")
+        fldg=QFileDialog(caption="Open DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.db)")
         fldg.setFileMode(QFileDialog.ExistingFile)
         if fldg.exec_():
             killPipe()
             global dbpipe
-            dbpipe=DBPipe(str(fldg.selectedFiles()[0]))                  
+            dbpipe=DBPipe(str(fldg.selectedFiles()[0]))
+            self.parent().settings.setValue("lastpath",fldg.selectedFiles()[0])                 
             self.parent().Tree.loadSites()
             self.buttongroup.setEnabled(True)
             
@@ -68,9 +69,10 @@ class Toolbar(QToolBar):
             
     @Slot()
     def makeDB(self):
-        fldg=QFileDialog(caption="Save DB File",directory=".",filter="DB files (*.db)")
+        fldg=QFileDialog(caption="Save DB File",directory=self.parent().settings("lastpath","."),filter="DB files (*.db)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
-        #.getSaveFileName(self,)
+        fldg.setDefaultSuffix("db")
+               
         if fldg.exec_():
             killPipe()
             global dbpipe
