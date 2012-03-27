@@ -79,7 +79,7 @@ class Toolbar(QToolBar):
             if os.path.isfile(fldg.selectedFiles()[0]):
                 os.remove(fldg.selectedFiles()[0])                
             dbpipe=DBPipe(fldg.selectedFiles()[0])
-            self.parent().Tree.loadAll()
+            self.parent().Tree.loadSites()
             self.buttongroup.setEnabled(True)
         
         
@@ -138,6 +138,7 @@ class Toolbar(QToolBar):
     def queryDB(self):
         dialog=QDialog(self.parent())
         dialog.setWindowTitle("Date Selection")
+        dialog.setMinimumSize(500,500)
         start=QCalendarWidget()
         start.setGridVisible(True)
         end=QCalendarWidget()
@@ -168,7 +169,7 @@ class Toolbar(QToolBar):
                     start.setDateTextFormat(date,dateform)
                     end.setDateTextFormat(date,dateform)
 
-                self.parent().Tree.loadPosts([i for i in candidate.posts],toplevel)
+                self.parent().Tree.loadPosts(toplevel)
                        
        
         #layout for the dialog pop-up
