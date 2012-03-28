@@ -3,7 +3,7 @@ from PySide.QtGui import *
 from models import *
 import time
 import os
-
+import icons
 
 class Toolbar(QToolBar):
     def __init__(self,parent=None):
@@ -15,16 +15,16 @@ class Toolbar(QToolBar):
             self.buttongroup.setEnabled(False)
         
     def createComponents(self):
-        self.actionOpen=self.addAction(QIcon("../data/icons/document-import.png"),"Open Database")
-        self.actionExport=self.addAction(QIcon("../data/icons/document-export.png"),"Export Database")
-        self.actionNew=self.addAction(QIcon("../data/icons/window_new.png"),"New Database")
+        self.actionOpen=self.addAction(QIcon(":/icons/data/icons/document-import.png"),"Open Database")
+        self.actionExport=self.addAction(QIcon(":icons/data/icons/document-export.png"),"Export Database")
+        self.actionNew=self.addAction(QIcon(":/icons/data/icons/window_new.png"),"New Database")
         self.addSeparator()
         self.buttongroup=QActionGroup(self)
-        self.actionSave=self.buttongroup.addAction(QIcon("../data/icons/filesave.png"),"Save Database")
-        self.actionReload=self.buttongroup.addAction(QIcon("../data/icons/view-refresh.png"),"Reload Database")
-        self.actionAdd=self.buttongroup.addAction(QIcon("../data/icons/bookmark_add.png"),"Add Site")
-        self.actionQuery=self.buttongroup.addAction(QIcon("../data/icons/find.png"),"Query")
-        self.actionDelete=self.buttongroup.addAction(QIcon("../data/icons/edit-delete.png"),"Delete")
+        self.actionSave=self.buttongroup.addAction(QIcon(":/icons/data/icons/filesave.png"),"Save Database")
+        self.actionReload=self.buttongroup.addAction(QIcon(":/icons/data/icons/view-refresh.png"),"Reload Database")
+        self.actionAdd=self.buttongroup.addAction(QIcon(":/icons/data/icons/bookmark_add.png"),"Add Site")
+        self.actionQuery=self.buttongroup.addAction(QIcon(":/icons/data/icons/find.png"),"Query")
+        self.actionDelete=self.buttongroup.addAction(QIcon(":/icons/data/icons/editdelete.png"),"Delete")
         self.addActions(self.buttongroup.actions())
         
     def createConnects(self):
@@ -123,7 +123,7 @@ class Toolbar(QToolBar):
                 err=QErrorMessage(dialog)
                 err.showMessage(str(e))
             else:
-                self.parent().Tree.addSite(new)
+                self.parent().Tree.loadSites()
                 dialog.close()
 
         def close():

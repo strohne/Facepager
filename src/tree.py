@@ -38,9 +38,6 @@ class Tree(QTreeWidget):
         elif item.type() is 3:
             self.setColumnCount(7)
             self.setHeaderLabels(["Comment_ID","Created","Author","Message","Likes","Liker"])
-    
-       
-                 
 
        
     
@@ -49,8 +46,9 @@ class Tree(QTreeWidget):
         self.clear()
         dbsites=Site.query.all()
         if dbsites:
+            todo=[]
             for dbsite in dbsites:
-                item_site=QTreeWidgetItem(parent=self,type=1)
+                item_site=QTreeWidgetItem(type=1)
                 item_site.setText(0,dbsite.id)
                 item_site.setText(1,dbsite.category)
                 item_site.setText(2,dbsite.description)
@@ -71,44 +69,43 @@ class Tree(QTreeWidget):
                 for r in range(1,self.columnCount(),1):
                         item_site.setSizeHint(r,QSize(5,9))
                         item_site.setBackground(r,QColor(139,136,120))
-                self.addTopLevelItem(item_site)
                 self.loadPosts(item_site,all=False)
+                todo.append(item_site)
+            self.addTopLevelItems(todo)
         
     @Slot()    
     def loadPosts(self,site_item,all=False):
         if all==True:
             dbposts=[i for i in Post.query.filter(Post.site_id==site_item.data(0,0)).all()]
+            if dbposts:
+                todo=[]
+                site_item.takeChildren()
+                for  dbpost in dbposts:
+                    item_post=QTreeWidgetItem(type=2)
+                    item_post.setText(0,dbpost.id)
+                    item_post.setText(1,dbpost.created_time[:10])
+                    item_post.setText(2,dbpost.author)
+                    item_post.setText(3,dbpost.description)
+                    item_post.setText(4,dbpost.title)
+                    item_post.setText(5,dbpost.message)
+                    item_post.setText(6,dbpost.type)
+                    item_post.setText(7,dbpost.link)
+                    item_post.setText(8,dbpost.source)
+                    item_post.setText(9,str(dbpost.likes))
+                    item_post.setText(10,str(dbpost.liker))
+                    item_post.setText(11,str(dbpost.shares_count))
+                    item_post.setText(12,str(dbpost.comments_count))
+                    for r in range(1,self.columnCount(),1):
+                            item_post.setSizeHint(r,QSize(6,9)) 
+                            item_post.setBackground(r,QColor(205,200,177))
+                    self.loadComments(item_post,all=False)
+                    todo.append(item_post)
+            site_item.addChildren(todo)
         elif all==False:
             singlepost=Post.query.filter(Post.site_id==site_item.data(0,0)).first()
             if singlepost is not None:
-                dbposts=[singlepost,]
-            else:
-                dbposts=[]
-        if dbposts:
-            todo=[]
-            site_item.takeChildren()
-            for  dbpost in dbposts:
-                item_post=QTreeWidgetItem(type=2)
-                item_post.setText(0,dbpost.id)
-                item_post.setText(1,dbpost.created_time[:10])
-                item_post.setText(2,dbpost.author)
-                item_post.setText(3,dbpost.description)
-                item_post.setText(4,dbpost.title)
-                item_post.setText(5,dbpost.message)
-                item_post.setText(6,dbpost.type)
-                item_post.setText(7,dbpost.link)
-                item_post.setText(8,dbpost.source)
-                item_post.setText(9,str(dbpost.likes))
-                item_post.setText(10,str(dbpost.liker))
-                item_post.setText(11,str(dbpost.shares_count))
-                item_post.setText(12,str(dbpost.comments_count))
-                for r in range(1,self.columnCount(),1):
-                        item_post.setSizeHint(r,QSize(6,9)) 
-                        item_post.setBackground(r,QColor(205,200,177))
-                self.loadComments(item_post)
-                todo.append(item_post)
-            site_item.addChildren(todo)
-
+                site_item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+        
                         
                
 
@@ -118,26 +115,25 @@ class Tree(QTreeWidget):
     def loadComments(self,post_item,all=False):
         if all is True:
             dbcomments=Comment.query.filter(Comment.post_id==post_item.data(0,0)).all()
+            if dbcomments:
+                todo=[]
+                post_item.takeChildren()
+                for dbcom in dbcomments:
+                        item_comment=QTreeWidgetItem(type=3)
+                        item_comment.setText(0,dbcom.id)
+                        item_comment.setText(1,dbcom.created_time[:10])
+                        item_comment.setText(2,dbcom.author)
+                        item_comment.setText(3,dbcom.message)
+                        item_comment.setText(4,str(dbcom.likes))
+                        item_comment.setText(5,str(dbcom.liker))
+                        for r in range(1,self.columnCount(),1):
+                             item_comment.setBackground(r,QColor(238,232,205))
+                             item_comment.setSizeHint(r,QSize(6,9))
+                        todo.append(item_comment)
+                post_item.addChildren(todo)
+        
         elif all is False:
             singlecom=Comment.query.filter(Comment.post_id==post_item.data(0,0)).first()
             if singlecom is not None:
-                dbcomments=[singlecom,]
-            else: 
-                dbcomments=[]
-        if dbcomments:
-            todo=[]
-            post_item.takeChildren()
-            for dbcom in dbcomments:
-                    item_comment=QTreeWidgetItem(parent=post_item,type=3)
-                    item_comment.setText(0,dbcom.id)
-                    item_comment.setText(1,dbcom.created_time[:10])
-                    item_comment.setText(2,dbcom.author)
-                    item_comment.setText(3,dbcom.message)
-                    item_comment.setText(4,str(dbcom.likes))
-                    item_comment.setText(5,str(dbcom.liker))
-                    for r in range(1,self.columnCount(),1):
-                         item_comment.setBackground(r,QColor(238,232,205))
-                         item_comment.setSizeHint(r,QSize(6,9))
-                    todo.append(item_comment)
-            post_item.addChildren(todo)
+                post_item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
     
