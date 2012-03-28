@@ -98,7 +98,9 @@ class Tree(QTreeWidget):
                     for r in range(1,self.columnCount(),1):
                             item_post.setSizeHint(r,QSize(6,9)) 
                             item_post.setBackground(r,QColor(205,200,177))
-                    self.loadComments(item_post,all=False)
+                    #inaccurate, but way faster!!
+                    if dbpost.comments_count!=0:
+                        item_post.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
                     todo.append(item_post)
             site_item.addChildren(todo)
         elif all==False:
