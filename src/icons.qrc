@@ -1,0 +1,13 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>data/icons/bookmark_add.png</file>
+    <file>data/icons/document-export.png</file>
+    <file>data/icons/document-import.png</file>
+    <file>data/icons/editdelete.png</file>
+    <file>data/icons/filesave.png</file>
+    <file>data/icons/find.png</file>
+    <file>data/icons/remove.png</file>
+    <file>data/icons/view-refresh.png</file>
+    <file>data/icons/window_new.png</file>
+  </qresource>
+</RCC>
