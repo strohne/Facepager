@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>icon_facepager.png</file>
+  </qresource>
+</RCC>
