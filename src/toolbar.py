@@ -2,8 +2,10 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from models import *
 import time
+import csv
 import os
 import icons
+import codecs
 
 class Toolbar(QToolBar):
     def __init__(self,parent=None):
@@ -85,15 +87,28 @@ class Toolbar(QToolBar):
         
     @Slot()
     def doExport(self):
-        
-        outfile = open('Site.csv', 'wb')
-        outcsv = csv.DictWriter(outfile, delimiter=";",fieldnames={'category', 'username', 'website', 'name','products','company_overview', 'talking_about_count',\
-                                         'mission', 'founded', 'phone', 'link', 'likes', 'general_info', 'checkins', 'id', 'description'},extrasaction='ignore',restval="Export Error")
-        outcsv.writeheader()
-        records = Site.query.all()
-        sitedicts=[i.__dict__ for i in records]
-        outcsv.writerows(sitedicts)
-        outfile.close()
+        fldg=QFileDialog(caption="Export DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.db)")
+        fldg.setAcceptMode(QFileDialog.AcceptSave)
+        fldg.setDefaultSuffix("csv")
+
+        if fldg.exec_():
+            if os.path.isfile(fldg.selectedFiles()[0]):
+                os.remove(fldg.selectedFiles()[0])
+            outfile = codecs.open(fldg.selectedFiles()[0], 'w',encoding="utf-8")
+            outcsv = csv.DictWriter(outfile, delimiter=";",fieldnames={'category', 'username', 'website', 'name','products','company_overview', 'talking_about_count',\
+                                     'mission', 'founded', 'phone', 'link', 
+                                     'likes', 'general_info', 'checkins', 'id', 'description'},extrasaction='ignore')
+            outcsv.writeheader()
+            records = Site.query.all()
+            for i in records:
+                decode={}
+                for k,v in i.__dict__.items():
+                    try:
+                        decode.update({k:v.encode("utf-8")})
+                    except:
+                        continue
+                outcsv.writerow(decode)
+            outfile.close()
 
 
     @Slot()
