@@ -8,12 +8,16 @@ from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_ses
 from urllib import quote as quote
 import pickle as pcl
 from contextlib import contextmanager
+import urllib as ul
+import requests
+import json
 
 #engine = create_engine('sqlite:///./comments.db', convert_unicode=True)
 #db_session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=engine))
 Base = declarative_base()
 #Base.query = db_session.query_property()
 #Base.metadata.create_all(bind=engine)
+at="109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
 
 g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
 
@@ -76,7 +80,12 @@ class Site(Base):
                 plist=g.get_object(str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until))['data']
                 print str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until)
                 l=[self.posts.append(Post(i,site=self)) for i in plist if i.get("id") not in [x.id for x in self.posts]]
-                
+
+        def fqlget(self,since,until):
+                plist=requests.get('https://graph.facebook.com/fql?q={"posts":"SELECT post_id,actor_id,message,permalink,created_time,type,attachment,impressions,place,description,comments.count,likes.count FROM stream\
+                WHERE source_id=%s","comm":"select fromid,object_id,username,time,text,likes from comment where\
+                post_id in (select post_id from %%23posts)","user":"select username,name,sex from user where uid in (select fromid from %%23comm)"}&access_token=109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI' %self.id)
+                return json.loads(plist.content)
 
 class Post(Base):
         __tablename__='Posts'

@@ -6,17 +6,24 @@ import csv
 import os
 import icons
 import codecs
+import numpy
+import xlwt
 
 class Toolbar(QToolBar):
+    '''
+    Initialize the main toolbar for the facepager-too that provides the central interface and functions.
+    '''
     def __init__(self,parent=None):
         super(Toolbar,self).__init__(parent)
         self.setIconSize(QSize(32,32))
         self.createComponents()
         self.createConnects()
+        #disable buttons that do not work without an opened database
         if 'dbpipe'  not in globals():
             self.buttongroup.setEnabled(False)
         
     def createComponents(self):
+        #create the interface or toolbar buttons and their corresponding Icons and Names
         self.actionOpen=self.addAction(QIcon(":/icons/data/icons/document-import.png"),"Open Database")
         self.actionExport=self.addAction(QIcon(":icons/data/icons/document-export.png"),"Export Database")
         self.actionNew=self.addAction(QIcon(":/icons/data/icons/window_new.png"),"New Database")
@@ -27,9 +34,12 @@ class Toolbar(QToolBar):
         self.actionAdd=self.buttongroup.addAction(QIcon(":/icons/data/icons/bookmark_add.png"),"Add Site")
         self.actionQuery=self.buttongroup.addAction(QIcon(":/icons/data/icons/find.png"),"Query")
         self.actionDelete=self.buttongroup.addAction(QIcon(":/icons/data/icons/editdelete.png"),"Delete")
+        self.addSeparator()
+        self.actionStat=self.buttongroup.addAction("Statistics")
         self.addActions(self.buttongroup.actions())
         
     def createConnects(self):
+        #connect the buttons to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)
         self.actionSave.triggered.connect(self.saveDB)
         self.actionNew.triggered.connect(self.makeDB)
@@ -38,19 +48,25 @@ class Toolbar(QToolBar):
         self.actionQuery.triggered.connect(self.queryDB)
         self.actionReload.triggered.connect(self.doReload)
         self.actionDelete.triggered.connect(self.doDelete)
-
+        self.actionStat.triggered.connect(self.showStats)
 
     
     @Slot()
-    def openDB(self):      
+    def openDB(self):
+        #open a file dialog with a .db filter
         fldg=QFileDialog(caption="Open DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.db)")
         fldg.setFileMode(QFileDialog.ExistingFile)
         if fldg.exec_():
+            #disconnect all existing db connections
             killPipe()
+            #open a new,central db connection based on the filename of the dialog
             global dbpipe
             dbpipe=DBPipe(str(fldg.selectedFiles()[0]))
+            #remember the last chosen path; saved in the central preferences
             self.parent().settings.setValue("lastpath",fldg.selectedFiles()[0])                 
+            #load the Sites
             self.parent().Tree.loadSites()
+            #activate the other buttons
             self.buttongroup.setEnabled(True)
             
         
@@ -71,13 +87,16 @@ class Toolbar(QToolBar):
             
     @Slot()
     def makeDB(self):
+        #same as openDB-Slot, but now for creating a new one on the file system
         fldg=QFileDialog(caption="Save DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.db)")
+        # set a Save-Button
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("db")
                
         if fldg.exec_():
             killPipe()
             global dbpipe
+            #ask for duplicates and delete if
             if os.path.isfile(fldg.selectedFiles()[0]):
                 os.remove(fldg.selectedFiles()[0])                
             dbpipe=DBPipe(fldg.selectedFiles()[0])
@@ -87,32 +106,58 @@ class Toolbar(QToolBar):
         
     @Slot()
     def doExport(self):
-        fldg=QFileDialog(caption="Export DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.db)")
-        fldg.setAcceptMode(QFileDialog.AcceptSave)
-        fldg.setDefaultSuffix("csv")
+        if self.parent().Tree.currentItem() is not None:
+            site=Site.query.get(self.parent().Tree.currentItem().data(0,0))
+            fldg=QFileDialog(caption="Export DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.xls")
+            fldg.setAcceptMode(QFileDialog.AcceptSave)
+            fldg.setDefaultSuffix("xls")
 
-        if fldg.exec_():
-            if os.path.isfile(fldg.selectedFiles()[0]):
-                os.remove(fldg.selectedFiles()[0])
-            outfile = codecs.open(fldg.selectedFiles()[0], 'w',encoding="utf-8")
-            outcsv = csv.DictWriter(outfile, delimiter=";",fieldnames={'category', 'username', 'website', 'name','products','company_overview', 'talking_about_count',\
-                                     'mission', 'founded', 'phone', 'link', 
-                                     'likes', 'general_info', 'checkins', 'id', 'description'},extrasaction='ignore')
-            outcsv.writeheader()
-            records = Site.query.all()
-            for i in records:
-                decode={}
-                for k,v in i.__dict__.items():
-                    try:
-                        decode.update({k:v.encode("utf-8")})
-                    except:
-                        continue
-                outcsv.writerow(decode)
-            outfile.close()
+            if fldg.exec_():
+                if os.path.isfile(fldg.selectedFiles()[0]):
+                    os.remove(fldg.selectedFiles()[0])
+                x=xlwt.Workbook(encoding="latin-1")
+                xs=x.add_sheet("Output")
+                posts=site.posts
 
+                col=0
+                #for sk in vars(site).keys():
+                #        if sk!="_sa_instance_state" or sk!= "posts":
+                #            xs.write(0,col,unicode(vars(site).get(sk)))
+                #            col+=1
 
+                row=1 
+                for p in posts:
+                    col=1
+                    
+                    for k,v in p.__dict__.items():
+                        if k!="_sa_instance_state" or k!= "comments":
+                            try:
+                                if len(unicode(v))<32760:
+                                    xs.write(row,col,unicode(v))
+                                else:
+                                    xs.write(row,col,"ERROR")
+
+                            except:
+                                xs.write(row,col,"ERROR")
+                            col+=1
+                    row+=1
+                x.save(fldg.selectedFiles()[0])
+    
+    @Slot()
+    def showStats(self):
+        if self.parent().Tree.currentItem() is not None:
+            result=Site.query.get(self.parent().Tree.currentItem().data(0,0))
+            msgbox=QMessageBox(self.parent())
+            msgbox.setText("Statistics for %s" %result.name)
+            msgbox.setInformativeText("<b>Posts: </b> %s <br> <b>Mean of Comments:</b> %s <br> <b>Mean of Post-Likes:</b> %s" % (len(result.posts),\
+            numpy.mean([len(c.comments) for c in result.posts]),numpy.mean([p.likes for p in result.posts])))
+            #would be faster with non-orm sql query
+            msgbox.show()
+
+            
     @Slot()
     def addSite(self):
+        # makes the user add a new facebook page into the db
         dialog=QDialog(self.parent())
         dialog.setWindowTitle("Add a Facebook Page")
         label1=QLabel("<b>Facebook Page:</b>")
@@ -129,7 +174,7 @@ class Toolbar(QToolBar):
         dialog.setLayout(layout)
         
         def createSite():
-                   
+            #adds a new Site via API-Call   
             try:
                 new=Site(input.text())
                 with saverPipe(dbpipe) as pipe:
@@ -143,7 +188,7 @@ class Toolbar(QToolBar):
 
         def close():
             dialog.close()
-        
+        #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(createSite)
         buttons.rejected.connect(close)
         dialog.exec_()
