@@ -9,8 +9,9 @@ from urllib import quote as quote
 import pickle as pcl
 from contextlib import contextmanager
 import urllib as ul
-import requests
+#import requests
 import json
+from dateutil import parser
 
 #engine = create_engine('sqlite:///./comments.db', convert_unicode=True)
 #db_session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=engine))
@@ -81,11 +82,11 @@ class Site(Base):
                 print str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until)
                 l=[self.posts.append(Post(i,site=self)) for i in plist if i.get("id") not in [x.id for x in self.posts]]
 
-        def fqlget(self,since,until):
-                plist=requests.get('https://graph.facebook.com/fql?q={"posts":"SELECT post_id,actor_id,message,permalink,created_time,type,attachment,impressions,place,description,comments.count,likes.count FROM stream\
-                WHERE source_id=%s","comm":"select fromid,object_id,username,time,text,likes from comment where\
-                post_id in (select post_id from %%23posts)","user":"select username,name,sex from user where uid in (select fromid from %%23comm)"}&access_token=109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI' %self.id)
-                return json.loads(plist.content)
+#        def fqlget(self,since,until):
+#                plist=requests.get('https://graph.facebook.com/fql?q={"posts":"SELECT post_id,actor_id,message,permalink,created_time,type,attachment,impressions,place,description,comments.count,likes.count FROM stream\
+#                WHERE source_id=%s","comm":"select fromid,object_id,username,time,text,likes from comment where\
+#                post_id in (select post_id from %%23posts)","user":"select username,name,sex from user where uid in (select fromid from %%23comm)"}&access_token=109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI' %self.id)
+#                return json.loads(plist.content)
 
 class Post(Base):
         __tablename__='Posts'
@@ -110,7 +111,7 @@ class Post(Base):
             self.description=post.get('description','NA')
             self.message=post.get('message','NA')
             self.id=post.get('id','NA')
-            self.created_time=post.get('created_time','NA')
+            self.created_time=parser.parse(post.get('created_time','NA'))
             self.link=post.get('link','NA')
             self.likes=post.get('likes',{'count':'0'}).get('count')
             self.comments_count=post.get('comments',{'count':0}).get('count')
@@ -165,6 +166,7 @@ class Comment(Base):
         
         def __init__(self,data,post):
             self.__dict__.update(data)
+            self.created_time=parser.parse(data.get('created_time','NA'))
             self.post_id=post.__dict__.get('id','NA')
             self.site_id=post.__dict__.get('site_id','NA')
             self.author=self.__dict__.get('from').get('name','NA')
