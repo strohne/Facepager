@@ -2,11 +2,9 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from models import *
 import time
-import csv
 import os
 import icons
 import codecs
-import numpy
 import xlwt
 
 class Toolbar(QToolBar):
@@ -34,8 +32,7 @@ class Toolbar(QToolBar):
         self.actionAdd=self.buttongroup.addAction(QIcon(":/icons/data/icons/bookmark_add.png"),"Add Site")
         self.actionQuery=self.buttongroup.addAction(QIcon(":/icons/data/icons/find.png"),"Query")
         self.actionDelete=self.buttongroup.addAction(QIcon(":/icons/data/icons/editdelete.png"),"Delete")
-        self.addSeparator()
-        self.actionStat=self.buttongroup.addAction("Statistics")
+
         self.addActions(self.buttongroup.actions())
         
     def createConnects(self):
@@ -48,7 +45,7 @@ class Toolbar(QToolBar):
         self.actionQuery.triggered.connect(self.queryDB)
         self.actionReload.triggered.connect(self.doReload)
         self.actionDelete.triggered.connect(self.doDelete)
-        self.actionStat.triggered.connect(self.showStats)
+
 
     
     @Slot()
@@ -106,53 +103,50 @@ class Toolbar(QToolBar):
         
     @Slot()
     def doExport(self):
+                            
         if self.parent().Tree.currentItem() is not None:
             site=Site.query.get(self.parent().Tree.currentItem().data(0,0))
-            fldg=QFileDialog(caption="Export DB File",directory=self.parent().settings.value("lastpath","."),filter="DB files (*.xls")
+            fldg=QFileDialog(caption="Export DB File to XLS",directory=self.parent().settings.value("lastpath","."),filter="XLS Files (*.xls")
             fldg.setAcceptMode(QFileDialog.AcceptSave)
             fldg.setDefaultSuffix("xls")
-
+            
             if fldg.exec_():
                 if os.path.isfile(fldg.selectedFiles()[0]):
                     os.remove(fldg.selectedFiles()[0])
+                
                 x=xlwt.Workbook(encoding="latin-1")
                 xs=x.add_sheet("Output")
-                posts=site.posts
-
-                col=0
-                #for sk in vars(site).keys():
-                #        if sk!="_sa_instance_state" or sk!= "posts":
-                #            xs.write(0,col,unicode(vars(site).get(sk)))
-                #            col+=1
-
-                row=1 
-                for p in posts:
-                    col=1
-                    
-                    for k,v in p.__dict__.items():
-                        if k!="_sa_instance_state" or k!= "comments":
+                
+                def itemwriter(obj,col,row):
+                    for k,v in obj.__dict__.items():
+                        if k not in ('_sa_instance_state','comments'):
                             try:
                                 if len(unicode(v))<32760:
                                     xs.write(row,col,unicode(v))
                                 else:
                                     xs.write(row,col,"ERROR")
-
                             except:
                                 xs.write(row,col,"ERROR")
                             col+=1
+
+                
+                posts=site.posts
+                row=1
+
+                for p in posts:
+                    xs.write(row,0,"POST")
+                    itemwriter(p,1,row)
                     row+=1
+                    for c in p.comments:
+                        xs.write(row,0,"COMMENT")
+                        itemwriter(c,1,row)
+                        row+=1                    
                 x.save(fldg.selectedFiles()[0])
+        else:
+            QMessageBox.warning(self, self.tr("Missing Facebook Page"),
+                               self.tr("Please select a Facebook Page in the Viewer"),
+                               QMessageBox.Ok)
     
-    @Slot()
-    def showStats(self):
-        if self.parent().Tree.currentItem() is not None:
-            result=Site.query.get(self.parent().Tree.currentItem().data(0,0))
-            msgbox=QMessageBox(self.parent())
-            msgbox.setText("Statistics for %s" %result.name)
-            msgbox.setInformativeText("<b>Posts: </b> %s <br> <b>Mean of Comments:</b> %s <br> <b>Mean of Post-Likes:</b> %s" % (len(result.posts),\
-            numpy.mean([len(c.comments) for c in result.posts]),numpy.mean([p.likes for p in result.posts])))
-            #would be faster with non-orm sql query
-            msgbox.show()
 
             
     @Slot()

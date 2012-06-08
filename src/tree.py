@@ -83,7 +83,7 @@ class Tree(QTreeWidget):
                 for  dbpost in dbposts:
                     item_post=QTreeWidgetItem(type=2)
                     item_post.setText(0,dbpost.id)
-                    item_post.setText(1,dbpost.created_time[:10])
+                    item_post.setText(1,str(dbpost.created_time))
                     item_post.setText(2,dbpost.author)
                     item_post.setText(3,dbpost.description)
                     item_post.setText(4,dbpost.title)
@@ -123,7 +123,7 @@ class Tree(QTreeWidget):
                 for dbcom in dbcomments:
                         item_comment=QTreeWidgetItem(type=3)
                         item_comment.setText(0,dbcom.id)
-                        item_comment.setText(1,dbcom.created_time[:10])
+                        item_comment.setText(1,str(dbcom.created_time))
                         item_comment.setText(2,dbcom.author)
                         item_comment.setText(3,dbcom.message)
                         item_comment.setText(4,str(dbcom.likes))
