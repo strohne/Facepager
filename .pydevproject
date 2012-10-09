@@ -7,4 +7,9 @@
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/Facepager/src</path>
 </pydev_pathproperty>
+<pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
+<path>C:\Python27\Lib\site-packages\PyQt4\sip\PyQt4</path>
+<path>C:\Python27\Lib\site-packages\PyQt4\sip\PyQt4\QtGui</path>
+<path>C:\Python27\Lib\site-packages\PyQt4</path>
+</pydev_pathproperty>
 </pydev_project>

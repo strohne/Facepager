@@ -1,188 +1,453 @@
 import facebook as fb
 import sqlalchemy as sql
-from sqlalchemy import Column, Integer, String,ForeignKey
+from sqlalchemy import Column, Integer, String,ForeignKey,Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_session
-from urllib import quote as quote
-import pickle as pcl
-from contextlib import contextmanager
-import urllib as ul
-#import requests
+
 import json
 from dateutil import parser
+import datetime
+import os
+from PySide.QtGui import *
+from PySide.QtCore import *
 
-#engine = create_engine('sqlite:///./comments.db', convert_unicode=True)
-#db_session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=engine))
 Base = declarative_base()
-#Base.query = db_session.query_property()
-#Base.metadata.create_all(bind=engine)
 at="109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
-
 g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
 
 
-@contextmanager
-def saverPipe(db):   
-        yield db.session
-        try:
-            db.session.flush()
+def getDictValue(data,multikey):
+    keys=multikey.split('.')                
+    value=data
+    for key in keys:
+        if type(value) is dict:
+            value=value.get(key,"")
+        else:
+            return ""    
+    return value                    
+    
+class Database(object):
+    
+    def __init__(self):
+        self.connected=False
+        self.filename=""
+        
+    def connect(self,filename):
+        try:   
+            if self.connected:
+                self.disconnect()
+ 
+            self.engine = create_engine('sqlite:///%s'%filename, convert_unicode=True)
+            self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
+            Base.query = self.session.query_property()
+            Base.metadata.create_all(bind=self.engine)
+            self.filename=filename
+            self.connected=True
         except Exception as e:
-            print e
-            db.session.rollback()
-            raise e
-        finally:
-            db.session.commit()
+            self.filename=""
+            self.connected=False
+            err=QErrorMessage()
+            err.showMessage(str(e))
+                
+    def disconnect(self):
+        if self.connected:
+            self.session.close()
+            
+        self.filename=""    
+        self.connected=False
+        
+    def createconnect(self,filename):    
+        self.disconnect()
+        if os.path.isfile(filename):
+            os.remove(filename)
+        self.connect(filename)     
+                    
+    def commit(self):
+        if self.connected:
+            try:
+                self.session.commit()
+            except Exception as e:
+                err=QErrorMessage()
+                err.showMessage(str(e))
+        else:
+            err=QErrorMessage()
+            err.showMessage("No database connection")
 
-def killPipe():
-    if 'dbpipe' in globals():
-                globals()["dbpipe"].session.close()
-                del globals()["dbpipe"]
+    def rollback(self):
+        if self.connected:
+            try:
+                self.session.rollback()
+            except Exception as e:
+                err=QErrorMessage()
+                err.showMessage(str(e))
+        else:
+            err=QErrorMessage()
+            err.showMessage("No database connection")            
+            
 
-class DBPipe(object):
+
+            
+class Node(Base):
+        __tablename__='Nodes'
+
+        facebookid=Column(String)
+        querystatus=Column(String)
+        querytype=Column(String)
+        querytime=Column(String)
+        response_raw=Column("response",Text)                                        
+        id=Column(Integer,primary_key=True)
+        parent_id = Column(Integer, ForeignKey('Nodes.id'))
+        children = relationship("Node",backref=backref('parent', remote_side=[id]))
+        level=Column(Integer)                             
+        childcount=Column(Integer)
+
+        def __init__(self,facebookid,parent_id=None):            
+            self.facebookid=facebookid
+            self.parent_id=parent_id
+            self.level=0
+            self.childcount=0
+            self.querystatus='new'
+            
+        @property
+        def response(self):
+            if (self.response_raw == None): 
+                return {}
+            else:
+                return  json.loads(self.response_raw)
     
-    def __init__(self,filename):
-        self.engine = create_engine('sqlite:///%s'%filename, convert_unicode=True)
-        self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
-        Base.query = self.session.query_property()
-        Base.metadata.create_all(bind=self.engine)
+        @response.setter
+        def response(self, response_raw):
+            self.response_raw = json.dumps(response_raw)               
+            
+        def getResponseValue(self,key):
+            return getDictValue(self.response,key)
+            
+        
+                      
+
+class TreeItem(object):
+    def __init__(self, parent=None,id=None,data=None):
+        self.id = id
+        self.parentItem = parent        
+        self.data = data
+        self.childItems = []
+        self.loaded=False                
+        self._childcountallloaded=False
+        self._childcountall=0
+
+    def appendChild(self, item,persistent=False):
+        item.parentItem=self
+        self.childItems.append(item)
+        if persistent:
+            self._childcountall += 1
+
+    def child(self, row):
+        return self.childItems[row]
+    
+    def clear(self):
+        self.childItems=[]
+        self.loaded=False
+        self._childcountallloaded=False
+        
+    def remove(self,persistent=False):
+        self.parentItem.removeChild(self,persistent)            
         
 
+    def removeChild(self,child,persistent=False):
+        if child in self.childItems:            
+            self.childItems.remove(child)
+            if persistent:
+                self._childcountall -= 1        
+        
+    def childCount(self):
+        return len(self.childItems)
+    
+    def childCountAll(self):       
+        if not self._childcountallloaded:                                     
+            self._childcountall=Node.query.filter(Node.parent_id == self.id).count()
+            self._childcountallloaded=True            
+        return self._childcountall     
+            
+    def parent(self):
+        return self.parentItem
 
+    def level(self):
+        if self.data == None:
+            return 0
+        else:
+            return self.data['level']
 
+    def row(self):
+        if self.parentItem:
+            return self.parentItem.childItems.index(self)
+        return 0
 
+    
 
-class Site(Base):
-        __tablename__='Sites'
-        category=Column(String)
-        name=Column(String)
-        founded=Column(String)
-        company_overview=Column(String)
-        username=Column(String)
-        talking_about_count=Column(Integer)
-        mission=Column(String)
-        website=Column(String)
-        phone=Column(String)
-        link=Column(String)
-        likes=Column(Integer)
-        products=Column(String)
-        general_info=Column(String)
-        checkins=Column(Integer)
-        id=Column(String,primary_key=True)
-        description=Column(String)
-        posts=relationship('Post')
+class TreeModel(QAbstractItemModel):
+    
+    def __init__(self, mainWindow=None,database=None):
+        super(TreeModel, self).__init__()
+        self.mainWindow=mainWindow
+        self.customcolumns=[]
+        self.rootItem = TreeItem()
+        self.database=database
 
-        def __init__(self,site):
-                self.__dict__.update(g.get_object(site))
-                self.posts=[]
-
-        def getPosts(self,since,until,n=500):
-                plist=g.get_object(str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until))['data']
-                print str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until)
-                l=[self.posts.append(Post(i,site=self)) for i in plist if i.get("id") not in [x.id for x in self.posts]]
-
-#        def fqlget(self,since,until):
-#                plist=requests.get('https://graph.facebook.com/fql?q={"posts":"SELECT post_id,actor_id,message,permalink,created_time,type,attachment,impressions,place,description,comments.count,likes.count FROM stream\
-#                WHERE source_id=%s","comm":"select fromid,object_id,username,time,text,likes from comment where\
-#                post_id in (select post_id from %%23posts)","user":"select username,name,sex from user where uid in (select fromid from %%23comm)"}&access_token=109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI' %self.id)
-#                return json.loads(plist.content)
-
-class Post(Base):
-        __tablename__='Posts'
-        id=Column(String,primary_key=True)
-        site_id=Column(Integer,ForeignKey('Sites.id'))
-        created_time=Column(String)
-        author=Column(String)
-        author_id=Column(String)
-        title=Column(String)
-        description=Column(String)
-        message=Column(String)
-        type=Column(String)
-        link=Column(String)
-        source=Column(String)
-        comments=relationship('Comment')
-        comments_count=Column(Integer)
-        likes=Column(Integer)
-        liker=Column(Integer)
-        shares_count=Column(String)
-
-        def __init__(self,post,site):
-            self.description=post.get('description','NA')
-            self.message=post.get('message','NA')
-            self.id=post.get('id','NA')
-            self.created_time=parser.parse(post.get('created_time','NA'))
-            self.link=post.get('link','NA')
-            self.likes=post.get('likes',{'count':'0'}).get('count')
-            self.comments_count=post.get('comments',{'count':0}).get('count')
-            self.site_id=site.id
-            self.comments=self.getComments()
-            self.title=post.get('name','NA')
-            self.type=post.get('type')
-            self.author=post.get('from').get('name')
-            self.author_id=post.get('from').get('id')
-            self.source=post.get('source','NA')
-            self.type=post.get('type','NA')
-            self.shares_count=post.get('shares',{'count':0}).get('count')
-            self.liker=999
+    def reset(self):        
+        self.rootItem.clear()
+        super(TreeModel, self).reset()        
                    
-        def getComments(self):
-            if self.comments_count!=0:
-                try:
-                    comments=g.get_object(str(self.id+'/comments?limit=500')) 
-                    return [Comment(data=i,post=self) for i in comments['data']]
-                except KeyError:
-                    print "Comment(s) missing for %s"%self.id
-                    return []
-            else: 
-                return []
+    def setCustomColumns(self,newcolumns=[]):
+        self.customcolumns=newcolumns
+        self.layoutChanged.emit()    
+                            
 
-        def getLikers(self):
-            if self.likes!=0:
-                    try:    
-                        liker=g.get_object(str('/fql&q=select user_id from like where post_id="%s" and user_id=%s limit 500'%(self.id,self.site_id)))
-                        if not liker.get("data"):
-                            return 0
-                        else:
-                            return 1
-                    except:
-                        return 999 
-            else:
-                return 0
+    def deleteNode(self,index):
+        if (not self.database.connected) or (not index.isValid()) or (index.column() <> 0):
+            return False                                               
 
-           
-class Comment(Base):
-    
-        __tablename__='Comments'
-        id=Column(String,primary_key=True)
-        site_id=Column(Integer,ForeignKey('Sites.id'))
-        post_id=Column(Integer,ForeignKey('Posts.id'))
-        created_time=Column(String)
-        author=Column(String)
-        author_id=Column(String)
-        message=Column(String)
-        likes=Column(Integer)
-        liker=Column(Integer)
+        self.beginRemoveRows(index.parent(),index.row(),index.row())
+        item=index.internalPointer()                   
+        Node.query.filter(Node.id == item.id).delete()                            
+        self.database.session.commit()                         
+        item.remove(True)       
+        self.endRemoveRows()
+
+            
+    def addNodes(self,facebookids):
+        try:       
+            if not self.database.connected:
+                return False
+                
+            self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(facebookids)-1)
+               
+            for facebookid in facebookids: 
+                new=Node(facebookid)
+                self.database.session.add(new)
+                self.database.session.flush()
+                itemdata=self.getItemData(new)     
+                self.rootItem.appendChild(TreeItem(self.rootItem,new.id,itemdata),True)
+                #self.createIndex(row, 0, index)
+                         
+            self.database.session.commit()                        
+            self.endInsertRows()
+
+                                    
+        except Exception as e:
+            err=QErrorMessage(self.mainWindow)
+            err.showMessage(str(e))        
+
+    def queryData(self,index,relation=None,options={}):
+        if not index.isValid():
+            return False
         
-        def __init__(self,data,post):
-            self.__dict__.update(data)
-            self.created_time=parser.parse(data.get('created_time','NA'))
-            self.post_id=post.__dict__.get('id','NA')
-            self.site_id=post.__dict__.get('site_id','NA')
-            self.author=self.__dict__.get('from').get('name','NA')
-            self.author_id=self.__dict__.get('from').get('id','NA')
-            self.likes=self.__dict__.get('likes',0)
-            self.liker=999
-
-        def getLikers(self):
-            if self.likes!=0:
-                    try:
-                        liker=g.get_object(str('/fql&q=select user_id from like where post_id="%s" and user_id=%s limit 500'%(self.id,self.site_id)))
-                        if not liker.get("data"):
-                            return 0
-                        else:
-                            return 1
-                    except:
-                        return 999
+        if (relation!=None) and (relation!=''):
+            self.queryRelations(index,relation,options)
+        else:   
+            treenode=index.internalPointer()
+            dbnode=Node.query.get(treenode.id)             
+            
+            try:
+                url=dbnode.facebookid+'&metadata=1'
+                response = g.get_object(url)                                                
+                dbnode.response = response
+            except Exception as e:
+                dbnode.querystatus=str(e)
             else:
-                return 0
+                dbnode.querystatus="fetched"
+            
+            dbnode.querytime=str(datetime.datetime.now())
+            dbnode.querytype=""
+            self.database.session.commit()
+            treenode.data=self.getItemData(dbnode)
+            
+            self.layoutChanged.emit()
+                                  
+        
+    def queryRelations(self,index,relation,options={}):
+        if not index.isValid():
+            return False
+        
+        parentitem=index.internalPointer()        
+        dbnode=Node.query.get(parentitem.id) 
+        try:
+            #liker=g.get_object(str('/fql&q=select user_id from like where post_id="%s" and user_id=%s limit 500'%(self.id,self.site_id)))            
+            #nodes=g.get_object(str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until))['data']
+            default={'limit':100,'metadata':1}                
+            default.update(options)
+            
+            optionstring=''
+            for option in default:
+                optionstring+='&'+option+'='+str(default[option])
+            url=str(dbnode.facebookid)+'/'+relation+optionstring
+            
+            response=g.get_object(url)
+            nodes=response['data']
+            
+            rowcount=self.rowCount(index)
+            self.beginInsertRows(index,rowcount,rowcount+len(nodes)-1)
+            
+            
+            for n in nodes:
+                #if n.get("id") not in [x.id for x in self.children]]
+                new=Node(n.get("id"),dbnode.id)
+                new.response=n
+                new.level=dbnode.level+1
+                new.querystatus="fetched"
+                new.querytime=str(datetime.datetime.now())
+                new.querytype=relation
+                dbnode.children.append(new)
+                self.database.session.flush()
+                
+                itemdata=self.getItemData(new)     
+                parentitem.appendChild(TreeItem(parentitem,new.id,itemdata),True)
+
+                
+            dbnode.childcount += len(nodes)    
+            self.database.session.commit()
+            
+            self.endInsertRows()
+        except Exception as e:
+            err=QErrorMessage()
+            err.showMessage(str(e))
+                                
+    def columnCount(self, parent):
+        return 4+len(self.customcolumns)    
+
+    def rowCount(self, parent):
+        if parent.column() > 0:
+            return 0
+
+        if not parent.isValid():
+            parentItem = self.rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        return parentItem.childCount()
+                                             
+
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            captions=['Facebook ID','Query Status','Query Time','Query Type']+self.customcolumns                
+            return captions[section] if section < len(captions) else ""
+
+        return None
+
+    def index(self, row, column, parent):
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
+
+        if not parent.isValid():
+            parentItem = self.rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        childItem = parentItem.child(row)
+        if childItem:
+            return self.createIndex(row, column, childItem)
+        else:
+            return QModelIndex()
+        
+          
+    def parent(self, index):
+        if not index.isValid():
+            return QModelIndex()
+
+        childItem = index.internalPointer()
+        parentItem = childItem.parent()
+
+        if parentItem == self.rootItem:
+            return QModelIndex()
+
+        return self.createIndex(parentItem.row(), 0, parentItem)
+
+            
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+
+        if role != Qt.DisplayRole:
+            return None
+
+        item = index.internalPointer()
+        
+        if index.column()==0:
+            return item.data['facebookid']
+        elif index.column()==1:
+            return item.data['querystatus']      
+        elif index.column()==2:
+            return item.data['querytime']      
+        elif index.column()==3:
+            return item.data['querytype']      
+        else:            
+            return getDictValue(item.data['response'],self.customcolumns[index.column()-4])
+            
+
+    def hasChildren(self, index):
+        if not self.database.connected:
+            return False
+                
+        if not index.isValid():
+            item = self.rootItem
+        else:
+            item = index.internalPointer()                                
+        
+        return item.childCountAll() > 0               
+            
+        
+            
+
+    def getItemData(self,item):
+        itemdata={}
+        itemdata['level']=item.level
+        itemdata['facebookid']=item.facebookid        
+        itemdata['querystatus']=item.querystatus
+        itemdata['querytime']=item.querytime
+        itemdata['querytype']=item.querytype
+        itemdata['response']=item.response     
+        return itemdata   
+        
+    def canFetchMore(self, index):                           
+        if not self.database.connected:
+            return False
+        
+        if not index.isValid():
+            item = self.rootItem
+        else:
+            item = index.internalPointer()    
+                            
+        return item.childCountAll() > item.childCount()
+        
+    def fetchMore(self, index):
+        if not index.isValid():
+            parent = self.rootItem
+        else:
+            parent = index.internalPointer()                       
+        
+        if parent.childCountAll() == parent.childCount():
+            return False
+                
+        row=parent.childCount()        
+        items = Node.query.filter(Node.parent_id == parent.id).all()
+
+        
+        self.beginInsertRows(index,row,row+len(items)-1)
+
+        for item in items:
+            itemdata=self.getItemData(item)
+            new=TreeItem(parent,item.id,itemdata)
+            new._childcountall=item.childcount
+            new._childcountallloaded=True                                                               
+            parent.appendChild(new)
+            self.createIndex(row, 0, index)
+            row += 1
+                                        
+        self.endInsertRows()
+        parent.loaded=parent.childCountAll()==parent.childCount()
+
+
+                    
+    
+
