@@ -1,64 +1,25 @@
 Facebook-Page Scraper-GUI-Tool
 
-Facepager was made for scraping Facebook-Pages, which are public available, over larger timespans. Contentual as well as structural Informations like the Type of content, links,
-the count of comments are stored in a visualized SQL Database. A export to CSV-Files is currently developed.
+Facepager was made for fetching public available data from Facebook. All data is stored in a SQLite database and may be exported to Excel. 
 
-Facepager saves the following Informations from Facebook Pages (adding more in the future):
+This version supports:
 
-Page-Level:
-        category
-        name
-        founded
-        company_overview
-        username
-        talking_about_count
-        mission
-        website
-        phone
-        link
-        likes
-        products
-        general_info
-        checkins
-        id
-        description
+-Fetching data for multiple facebook objects at once
+-Choosing which relational data (comments, likes etc.) to download
+-Customizing columns in user interface and exported files    
+                                                      
+You should be aware that downloading large amounts of data may result in errors.
 
-Post-Level:
+Getting started:
 
-        created_time        author
-        author_id
-        title
-        description
-        message
-        type of content
-        link (if provided)
-        source
-        comments
-        comments_count
-        likes
-        liker (likes by the Page-Owner)
-        Number of Shares
+1. Run Facepager
+2. Click "New Database" in the toolbar to create a blank database
+3. Add Facebook IDs by clicking "Add Nodes" in the toolbar. Enter the last part of a Facebook page, e.g. enter "Tatort" for the page "http://www.facebook.com/Tatort"
+4. Select one or more nodes in the view and click "Fetch data".  
 
 
-Comments-Level:
-        created_time        author
-
-        message
-        likes
-        liker (Likes by the Page owner)
-
-
-
-
-It is possible to define the timespan via a simple interface, but you should be aware that large timespans may results in errors, depending of the amount of interactions, posts
-etc.
-
-
-Agenda for the future:
-
--Improve the Speed in general
--Save photos, albums and other stuff
--Export options
--Options/Checkbox to select, which informations should be stored, which not
-
-
+Todo:
+-Improve user experience and speed
+-Log all queries
+-Store multiple queries for one object (monitoring over time)
+-Better source code documentation
