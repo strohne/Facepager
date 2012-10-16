@@ -97,8 +97,8 @@ class Node(Base):
         querytype=Column(String)
         querytime=Column(String)
         response_raw=Column("response",Text)                                        
-        id=Column(Integer,primary_key=True)
-        parent_id = Column(Integer, ForeignKey('Nodes.id'))
+        id=Column(Integer,primary_key=True,index=True)
+        parent_id = Column(Integer, ForeignKey('Nodes.id'),index=True)
         children = relationship("Node",backref=backref('parent', remote_side=[id]))
         level=Column(Integer)                             
         childcount=Column(Integer)
@@ -124,7 +124,23 @@ class Node(Base):
         def getResponseValue(self,key):
             return getDictValue(self.response,key)
             
+class Job(Base):
+        __tablename__='Jobs'
         
+        status=Column(String)        
+        executed=Column(String)
+        level=Column(Integer)                                            
+        seeds=Column(Integer)
+        query=Column(String)
+        since=Column(String)
+        until=Column(String)
+        offset=Column(String)
+        limit=Column(String)
+        id=Column(Integer,primary_key=True)
+
+        def __init__(self):
+            pass            
+     
                       
 
 class TreeItem(object):
@@ -203,6 +219,22 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns=newcolumns
         self.layoutChanged.emit()    
                             
+    def delete(self,level,querytype):
+        if (not self.database.connected):
+            return False                                               
+
+        #self.beginRemoveRows(index.parent(),index.row(),index.row())
+        #item=index.internalPointer()                 
+        self.beginResetModel()  
+        Node.query.filter(Node.level == level,Node.querytype==querytype).delete()                            
+        self.database.session.commit()                         
+        #item.remove(True)
+        
+        self.reset()
+        self.endResetModel()
+        #self.reset()       
+        #self.endRemoveRows()
+
 
     def deleteNode(self,index):
         if (not self.database.connected) or (not index.isValid()) or (index.column() <> 0):
@@ -221,97 +253,144 @@ class TreeModel(QAbstractItemModel):
             if not self.database.connected:
                 return False
                 
-            self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(facebookids)-1)
-               
+            #self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(facebookids)-1)
+            newnodes=[]   
             for facebookid in facebookids: 
                 new=Node(facebookid)
-                self.database.session.add(new)
-                self.database.session.flush()
-                itemdata=self.getItemData(new)     
-                self.rootItem.appendChild(TreeItem(self.rootItem,new.id,itemdata),True)
-                #self.createIndex(row, 0, index)
-                         
-            self.database.session.commit()                        
-            self.endInsertRows()
+                newnodes.append(new)
+                
+                #self.database.session.flush()
+                #itemdata=self.getItemData(new)     
+                #self.rootItem.appendChild(TreeItem(self.rootItem,new.id,itemdata),True)
+
+            self.database.session.add_all(newnodes)             
+            self.database.session.commit()
+            self.rootItem._childcountall+=len(facebookids)
+            self.layoutChanged.emit()
+                                    
+            #self.endInsertRows()
 
                                     
         except Exception as e:
             err=QErrorMessage(self.mainWindow)
             err.showMessage(str(e))        
 
-    def queryData(self,index,relation=None,options={}):
+    def queryCustom(self,index,options={}):        
         if not index.isValid():
             return False
-        
-        if (relation!=None) and (relation!=''):
-            self.queryRelations(index,relation,options)
-        else:   
-            treenode=index.internalPointer()
-            dbnode=Node.query.get(treenode.id)             
-            
-            try:
-                url=dbnode.facebookid+'&metadata=1'
-                response = g.get_object(url)                                                
-                dbnode.response = response
-            except Exception as e:
-                dbnode.querystatus=str(e)
-            else:
-                dbnode.querystatus="fetched"
-            
-            dbnode.querytime=str(datetime.datetime.now())
-            dbnode.querytype=""
-            self.database.session.commit()
-            treenode.data=self.getItemData(dbnode)
-            
-            self.layoutChanged.emit()
-                                  
-        
-    def queryRelations(self,index,relation,options={}):
-        if not index.isValid():
-            return False
-        
-        parentitem=index.internalPointer()        
-        dbnode=Node.query.get(parentitem.id) 
-        try:
-            #liker=g.get_object(str('/fql&q=select user_id from like where post_id="%s" and user_id=%s limit 500'%(self.id,self.site_id)))            
-            #nodes=g.get_object(str(self.id+'/feed&limit='+str(n)+'&since='+since+'&until='+until))['data']
-            default={'limit':100,'metadata':1}                
-            default.update(options)
-            
-            optionstring=''
-            for option in default:
-                optionstring+='&'+option+'='+str(default[option])
-            url=str(dbnode.facebookid)+'/'+relation+optionstring
-            
-            response=g.get_object(url)
-            nodes=response['data']
-            
-            rowcount=self.rowCount(index)
-            self.beginInsertRows(index,rowcount,rowcount+len(nodes)-1)
-            
-            
-            for n in nodes:
-                #if n.get("id") not in [x.id for x in self.children]]
-                new=Node(n.get("id"),dbnode.id)
-                new.response=n
-                new.level=dbnode.level+1
-                new.querystatus="fetched"
-                new.querytime=str(datetime.datetime.now())
-                new.querytype=relation
-                dbnode.children.append(new)
-                self.database.session.flush()
-                
-                itemdata=self.getItemData(new)     
-                parentitem.appendChild(TreeItem(parentitem,new.id,itemdata),True)
+                         
+        default={'urlpath':'search','urlparams':{'q':'queryterm','type':'page'},'append':True,'nodedata':'data','splitdata':False,'objectid':'id','querytype':'search'}                
+        default.update(options)
+        options=default
+                    
 
-                
-            dbnode.childcount += len(nodes)    
-            self.database.session.commit()
+        treenode=index.internalPointer()
+        dbnode=Node.query.get(treenode.id)             
+        
+        try:
+            #get data
+            try:
+                response = g.request(options['urlpath'],options['urlparams'])
+            except Exception as e:
+                querystatus=str(e)
+            else:
+                querystatus="fetched"                
             
-            self.endInsertRows()
+            
+            #append nodes
+            if options['append']:
+    
+                #filter response
+                if options['nodedata'] != None:
+                    nodes=response.get(options['nodedata'],[])
+                else:
+                    nodes=response
+                
+                #single record
+                if not options['splitdata']:
+                    nodes=[response]                                     
+                
+                #empty records                    
+                if (len(nodes) == 0) and (options['appendempty']):                    
+                    nodes=[{}]
+                    querystatus="empty"                      
+                                    
+                #rowcount=self.rowCount(index)
+                #self.beginInsertRows(index,rowcount,rowcount+len(nodes)-1)
+                newnodes=[]
+                for n in nodes:                    
+                    new=Node(n.get(options['objectid']),dbnode.id)
+                    new.response=n
+                    new.level=dbnode.level+1
+                    new.querystatus=querystatus
+                    new.querytime=str(datetime.datetime.now())
+                    new.querytype=options['querytype']
+                    newnodes.append(new)
+                    
+                    #dbnode.children.append(new)
+                    #self.database.session.flush()
+                    
+                    #itemdata=self.getItemData(new)     
+                    #treenode.appendChild(TreeItem(treenode,new.id,itemdata),True)
+    
+                self.database.session.add_all(newnodes)    
+                treenode._childcountall += len(newnodes)    
+                dbnode.childcount += len(newnodes)    
+                self.database.session.commit()                
+                
+                #self.endInsertRows()
+                
+            #update node    
+            else:  
+                dbnode.response = response
+                dbnode.querystatus=querystatus                
+                dbnode.querytime=str(datetime.datetime.now())
+                dbnode.querytype=options['querytype']
+                self.database.session.commit()
+                treenode.data=self.getItemData(dbnode)
+                
+                            
         except Exception as e:
             err=QErrorMessage()
-            err.showMessage(str(e))
+            err.showMessage(str(e))                              
+            
+            
+    def queryData(self,index,relation=None,options={},appendempty=True):
+        if not index.isValid():
+            return False
+        
+        treenode=index.internalPointer()
+        if treenode.data['facebookid']=="":
+            return False
+
+        if relation=='<self>':
+            #build url
+                        
+            urlpath=treenode.data['facebookid']
+            urlparams={'metadata':'1'}
+            #fetch
+            self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':None,'splitdata':False,'objectid':'id','querytype':relation})   
+
+        elif relation=='<search>':
+            #build url
+            urlpath='search'
+            urlparams={'q':str(treenode.data['facebookid']),'type':'page'}
+
+            #fetch            
+            self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':'data','splitdata':True,'objectid':'id','querytype':relation})
+        
+        else:
+            #build url                   
+            default={'limit':100}                
+            default.update(options)            
+            urlpath=str(treenode.data['facebookid'])+'/'+relation
+            urlparams=default
+            
+            #fetch            
+            self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':'data','splitdata':True,'objectid':'id','querytype':relation})
+        
+        self.layoutChanged.emit()
+                            
                                 
     def columnCount(self, parent):
         return 4+len(self.customcolumns)    
@@ -430,7 +509,7 @@ class TreeModel(QAbstractItemModel):
             return False
                 
         row=parent.childCount()        
-        items = Node.query.filter(Node.parent_id == parent.id).all()
+        items = Node.query.filter(Node.parent_id == parent.id).offset(row).all()
 
         
         self.beginInsertRows(index,row,row+len(items)-1)
