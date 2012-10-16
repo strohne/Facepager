@@ -1,6 +1,5 @@
 import cProfile
 import sys
-import csv
 from PySide.QtCore import *
 from PySide.QtGui import *
 from toolbar import Toolbar
@@ -75,7 +74,7 @@ class MainWindow(QMainWindow):
                 
         #-Query Type
         self.relationEdit=QComboBox(self.mainWidget)
-        self.relationEdit.insertItems(0,['','feed','posts','comments','likes','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
+        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
         self.relationEdit.setEditable(True)
         groupLayout.addRow("Query",self.relationEdit)
 
@@ -104,6 +103,15 @@ class MainWindow(QMainWindow):
         self.limitEdit.setValue(100)
         groupLayout.addRow("Limit",self.limitEdit)
 
+        #-Empty record
+        self.emptyEdit=QCheckBox("Add empty records for empty results",self.mainWidget)        
+        groupLayout.addRow(self.emptyEdit)
+        
+        #-Delete records
+        self.deleteEdit=QCheckBox("Delete records of same query type and level before fetching",self.mainWidget)        
+        groupLayout.addRow(self.deleteEdit)
+
+        
         #-button        
         button=QPushButton("Fetch Data", self.mainWidget)
         button.clicked.connect(self.actions.actionQuery.trigger)
@@ -121,6 +129,29 @@ class MainWindow(QMainWindow):
         self.detailData.acceptRichText=False    
         groupLayout.addWidget(self.detailData)
         
+#        #unpack data
+#        detailGroup=QGroupBox("Unpack Data")
+#        detailLayout.addWidget(detailGroup)
+#        groupLayout=QFormLayout()
+#        detailGroup.setLayout(groupLayout)
+#        
+#        #-Level
+#        self.unpackLevelEdit=QSpinBox(self.mainWidget)
+#        self.unpackLevelEdit.setMinimum(1)
+#        groupLayout.addRow("Level",self.unpackLevelEdit)
+#                
+#        #-Key
+#        self.unpackKeyEdit=QComboBox(self.mainWidget)
+#        #self.unpackKeyEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
+#        self.unpackKeyEdit.setEditable(True)
+#        groupLayout.addRow("Key",self.unpackKeyEdit)        
+#        
+#        #-Button 
+#        button=QPushButton("Unpack Data")
+#        button.clicked.connect(self.actions.actionUnpackData.trigger)
+#        groupLayout.addWidget(button)   
+        
+                        
         #fields
         detailGroup=QGroupBox("Custom Table Columns (one key per line)")
         detailLayout.addWidget(detailGroup)
