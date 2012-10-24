@@ -25,8 +25,11 @@ def getDictValue(data,multikey):
         if type(value) is dict:
             value=value.get(key,"")
         else:
-            return ""    
-    return value                    
+            return ""
+    if type(value) is dict:
+        return json.dumps(value) 
+    else:        
+        return value                    
     
 class Database(object):
     
@@ -121,8 +124,12 @@ class Node(Base):
         def response(self, response_raw):
             self.response_raw = json.dumps(response_raw)               
             
-        def getResponseValue(self,key):
-            return getDictValue(self.response,key)
+        def getResponseValue(self,key,encoding=None):
+            value=getDictValue(self.response,key)
+            if encoding and isinstance(value, unicode):                
+                return value.encode(encoding)
+            else:
+                return value
             
 class Job(Base):
         __tablename__='Jobs'
@@ -188,6 +195,9 @@ class TreeItem(object):
             
     def parent(self):
         return self.parentItem
+    
+    def parentid(self):
+        return self.parentItem.id if self.parentItem else None     
 
     def level(self):
         if self.data == None:
@@ -241,7 +251,11 @@ class TreeModel(QAbstractItemModel):
             return False                                               
 
         self.beginRemoveRows(index.parent(),index.row(),index.row())
-        item=index.internalPointer()                   
+        item=index.internalPointer()
+        
+        
+        #Node.query.filter(Node.id == item.parentid).update()
+                           
         Node.query.filter(Node.id == item.id).delete()                            
         self.database.session.commit()                         
         item.remove(True)       
@@ -293,6 +307,7 @@ class TreeModel(QAbstractItemModel):
                 response = g.request(options['urlpath'],options['urlparams'])
             except Exception as e:
                 querystatus=str(e)
+                response={}
             else:
                 querystatus="fetched"                
             

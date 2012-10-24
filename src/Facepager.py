@@ -66,21 +66,25 @@ class MainWindow(QMainWindow):
         detailLayout.addWidget(detailGroup)
         groupLayout=QFormLayout()
         detailGroup.setLayout(groupLayout)
-                
+        
+        groupLayout.addRow(QLabel("Input"))        
+
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
         self.levelEdit.setMinimum(1)
         groupLayout.addRow("Level",self.levelEdit)
+        
+        groupLayout.addRow(QLabel('\nThroughput'))
                 
         #-Query Type
         self.relationEdit=QComboBox(self.mainWidget)
-        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
+        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','global_brand_children','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
         self.relationEdit.setEditable(True)
         groupLayout.addRow("Query",self.relationEdit)
 
         #-Since
         self.sinceEdit=QDateEdit(self.mainWidget)
-        self.sinceEdit.setDate(datetime.datetime.today().replace(month=datetime.datetime.today().month-1))
+        self.sinceEdit.setDate(datetime.datetime.today().replace(year=datetime.datetime.today().year-1,day=datetime.datetime.today().day-1))
         groupLayout.addRow("Since",self.sinceEdit)
         
 
@@ -91,25 +95,27 @@ class MainWindow(QMainWindow):
         
         #-Offset
         self.offsetEdit=QSpinBox(self.mainWidget)
-        self.offsetEdit.setMaximum(100)
+        self.offsetEdit.setMaximum(500)
         self.offsetEdit.setMinimum(0)
         self.offsetEdit.setValue(0)
         groupLayout.addRow("Offset",self.offsetEdit)
 
         #-Limit
         self.limitEdit=QSpinBox(self.mainWidget)
-        self.limitEdit.setMaximum(500)
+        self.limitEdit.setMaximum(1000)
         self.limitEdit.setMinimum(1)
-        self.limitEdit.setValue(100)
+        self.limitEdit.setValue(500)
         groupLayout.addRow("Limit",self.limitEdit)
 
+        groupLayout.addRow(QLabel('\nOutput'))
+        
         #-Empty record
         self.emptyEdit=QCheckBox("Add empty records for empty results",self.mainWidget)        
         groupLayout.addRow(self.emptyEdit)
         
         #-Delete records
-        self.deleteEdit=QCheckBox("Delete records of same query type and level before fetching",self.mainWidget)        
-        groupLayout.addRow(self.deleteEdit)
+#        self.deleteEdit=QCheckBox("Delete all! records of same query type and level before fetching",self.mainWidget)        
+#        groupLayout.addRow(self.deleteEdit)
 
         
         #-button        
@@ -170,6 +176,7 @@ class MainWindow(QMainWindow):
         self.fieldList.append('talking_about_count')
         self.fieldList.append('likes')                
         self.fieldList.append('likes.count')        
+        self.fieldList.append('shares.count')
         self.fieldList.append('comments.count')
         self.fieldList.append('created_time')
         self.fieldList.append('updated_time')
@@ -181,8 +188,21 @@ class MainWindow(QMainWindow):
         button.clicked.connect(self.actions.actionShowColumns.trigger)
         groupLayout.addWidget(button)   
 
+        #expand all
+        detailGroup=QGroupBox("Tree")
+        detailLayout.addWidget(detailGroup)
+        groupLayout=QFormLayout()
+        detailGroup.setLayout(groupLayout)
+                
+        #-Button 
+        button=QPushButton("Expand all nodes")
+        button.clicked.connect(self.actions.actionExpandAll.trigger)
+        groupLayout.addWidget(button)   
         
-      
+        #-Button 
+        button=QPushButton("Collapse all nodes")
+        button.clicked.connect(self.actions.actionCollapseAll.trigger)
+        groupLayout.addWidget(button)        
 
     def updateUI(self):
         #disable buttons that do not work without an opened database                   

@@ -2,7 +2,9 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from models import *
 #import xlwt
-from openpyxl import Workbook
+#from openpyxl import Workbook
+import csv
+import sys
 
 class Actions(object):
     
@@ -23,6 +25,8 @@ class Actions(object):
         self.actionQuery=self.facebookActions.addAction(QIcon(":/icons/data/icons/find.png"),"Query")                
         self.actionShowColumns=self.facebookActions.addAction("Show Columns")
         self.actionUnpackData=self.facebookActions.addAction("Unpack Data")
+        self.actionExpandAll=self.facebookActions.addAction("Expand all nodes")
+        self.actionCollapseAll=self.facebookActions.addAction("Collapse all nodes")
 
         #connect the actions to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)
@@ -33,6 +37,8 @@ class Actions(object):
         self.actionQuery.triggered.connect(self.queryNodes)
         self.actionShowColumns.triggered.connect(self.showColumns)
         self.actionUnpackData.triggered.connect(self.unpackData)
+        self.actionExpandAll.triggered.connect(self.expandAll)
+        self.actionCollapseAll.triggered.connect(self.collapseAll)
         
     @Slot()
     def openDB(self):
@@ -82,11 +88,70 @@ class Actions(object):
         progress.cancel()
 
                      
-                                 
     @Slot()
     def exportNodes(self):
                                         
-        fldg=QFileDialog(caption="Export DB File to XLSX",filter="XLS Files (*.xlsx)")
+        fldg=QFileDialog(caption="Export DB File to CSV",filter="CSV Files (*.csv)")
+        fldg.setAcceptMode(QFileDialog.AcceptSave)
+        fldg.setDefaultSuffix("csv")
+        
+        if fldg.exec_():               
+            progress = QProgressDialog("Saving data...", "Abort", 0, 0,self.mainWindow)
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+            progress.forceShow()   
+                                     
+            progress.setMaximum(Node.query.count())
+                                
+            if os.path.isfile(fldg.selectedFiles()[0]):
+                os.remove(fldg.selectedFiles()[0])
+           
+            
+            f = open(fldg.selectedFiles()[0], 'wb')
+            try:
+                writer = csv.writer(f,delimiter=';',quotechar='"', quoting=csv.QUOTE_ALL,doublequote=True,lineterminator='\r\n')
+                
+                #headers    
+                row=["level","id","parent_id","facebook_id","query_status","query_time","query_type"]
+                for key in self.mainWindow.treemodel.customcolumns:
+                    row.append(key)                        
+                writer.writerow(row)
+                
+                #rows             
+                page=0
+                no=0  
+                while True:            
+                    allnodes=Node.query.offset(page*5000).limit(5000).all()
+    
+                    for node in allnodes:      
+                        if progress.wasCanceled():
+                            break
+                                   
+                        progress.setValue(no)
+                        no+=1               
+                        
+                        row=[node.level,node.id,node.parent_id,node.facebookid,node.querystatus,node.querytime,node.querytype]    
+                        for key in self.mainWindow.treemodel.customcolumns:                    
+                            row.append(node.getResponseValue(key,"utf-8"))    
+                         
+                        writer.writerow(row) 
+                     
+                    if progress.wasCanceled():
+                        break
+                               
+                    if len(allnodes) == 0:
+                        break
+                    else:
+                        page +=1   
+                                             
+            finally:                                            
+                f.close()                            
+                progress.cancel()
+                                             
+    @Slot()
+    def exportNodesXLS(self):
+                                        
+        fldg=QFileDialog(caption="Export DB File to XLSX",filter="XLSX Files (*.xlsx)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("xlsx")
         
@@ -95,10 +160,7 @@ class Actions(object):
             progress.setWindowModality(Qt.WindowModal)
             progress.setMinimumDuration(0)
             progress.forceShow()   
-             
-            
-                   
-            #selected=self.mainWindow.tree.selectedIndexesAndChildren()
+                                     
             progress.setMaximum(Node.query.count())
             
                     
@@ -121,24 +183,12 @@ class Actions(object):
                     xs=x.create_sheet()
                     xs.title="Level"+str(level)
                     
-                    row=["level","id","parent_id","facebook_id","query_status","query_time","query_type","response"]
+                    row=["level","id","parent_id","facebook_id","query_status","query_time","query_type"]
                     for key in self.mainWindow.treemodel.customcolumns:
                         row.append(key)
                         
                     xs.append(row)
-                                                         
-#                    writeValue(xs,0,0,"level")
-#                    writeValue(xs,0,1,"id")
-#                    writeValue(xs,0,2,"parent_id")                
-#                    writeValue(xs,0,3,"facebook id")
-#                    writeValue(xs,0,4,"query status")
-#                    writeValue(xs,0,5,"query time")
-#                    writeValue(xs,0,6,"query type")
-#                    writeValue(xs,0,7,"response")
-#                    col=8    
-#                    for key in self.mainWindow.treemodel.customcolumns:
-#                        writeValue(xs,0,col,key)
-#                        col+=1                     
+                                                                             
                     
                     sh={'sheet':xs,'row':1}
                     sheets[level]=sh
@@ -160,36 +210,15 @@ class Actions(object):
                                        
                     sh=getSheet(node.level)
                     xs=sh['sheet']
-                    #row=sh['row']
-                    #sh['row']+=1
+
                     
-                    row=[node.level,node.id,node.parent_id,node.facebookid,node.querystatus,node.querytime,node.querytype,node.response_raw]    
+                    row=[node.level,node.id,node.parent_id,node.facebookid,node.querystatus,node.querytime,node.querytype]    
                     for key in self.mainWindow.treemodel.customcolumns:                    
-                        row.append(node.getResponseValue(key))    
+                        row.append(node.getResponseValue(key,"utf-8"))    
                      
+#                    print row
                     xs.append(row)                                 
-#                    writeValue(xs,row,0,node.level)
-#                    writeValue(xs,row,1,node.id)
-#                    writeValue(xs,row,2,node.parent_id)
-#                    writeValue(xs,row,3,node.facebookid)
-#                    writeValue(xs,row,4,node.querystatus)
-#                    writeValue(xs,row,5,node.querytime)
-#                    writeValue(xs,row,6,node.querytype)
-#                    writeValue(xs,row,7,node.response_raw)
-                            
-#                    col=8    
-#                    for key in self.mainWindow.treemodel.customcolumns:                    
-#                        value=node.getResponseValue(key)
-#                        writeValue(xs,row,col,value)
-    #                    try:
-    #                        if len(unicode(key))<32760:
-    #                            xs.write(row,col,unicode(value))
-    #                        else:
-    #                            xs.write(row,col,"ERROR")
-    #                    except:
-    #                        xs.write(row,col,"ERROR")
-    
-                        #col+=1
+
                  
                 if progress.wasCanceled():
                     break
@@ -200,7 +229,7 @@ class Actions(object):
                     page +=1                        
                                       
                               
-            x.remove_sheet(x.get_active_sheet())                  
+            #x.remove_sheet(x.get_active_sheet())                  
             x.save(fldg.selectedFiles()[0])
             progress.cancel()
 
@@ -253,6 +282,14 @@ class Actions(object):
     def unpackData(self):
         pass
   
+    @Slot()     
+    def expandAll(self):
+        self.mainWindow.tree.expandAll()
+
+    @Slot()     
+    def collapseAll(self):
+        self.mainWindow.tree.collapseAll()
+              
     @Slot()
     def queryNodes(self):
         #Show progress window         
@@ -277,8 +314,8 @@ class Actions(object):
         options['limit']=self.mainWindow.limitEdit.value()
         
         #delete old data
-        if self.mainWindow.deleteEdit.isChecked():
-            self.mainWindow.treemodel.delete(level,relation)
+#        if self.mainWindow.deleteEdit.isChecked():
+#            self.mainWindow.treemodel.delete(level,relation)
         
         #Fetch data
         c=0

@@ -3,7 +3,7 @@
 
 from cx_Freeze import setup, Executable
 
-includes = ["sqlite3","facebook","xlwt","dateutil"]
+includes = ["sqlite3","facebook","dateutil"]
 
 
 exe = Executable(
@@ -16,7 +16,7 @@ exe = Executable(
 
 setup(
         name = "Facepager",
-        version = "2.0",
+        version = "2.1",
         description = "The Facebook Page Crawler",
         options = {'build_exe': {'includes':includes,"packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil"],}},
         executables = [exe]
