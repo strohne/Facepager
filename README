@@ -2,12 +2,19 @@ Facebook-Page Scraper-GUI-Tool
 
 Facepager was made for fetching public available data from Facebook. All data is stored in a SQLite database and may be exported to Excel. 
 
-This version supports:
+Version 2.0 supports:
 
 -Fetching data for multiple facebook objects at once
 -Choosing which relational data (comments, likes etc.) to download
--Customizing columns in user interface and exported files    
-                                                      
+-Customizing columns in user interface and exported files
+
+Version 2.1 supports:
+-Searching facebook
+-Export to CSV instead of XLS, which is faster
+-Minor bug fixes
+
+    
+Notice: Database files may be incompatible between different versions.                                                      
 You should be aware that downloading large amounts of data may result in errors.
 
 Getting started:
@@ -21,5 +28,5 @@ Getting started:
 Todo:
 -Improve user experience and speed
 -Log all queries
--Store multiple queries for one object (monitoring over time)
+-Manage nodes (extended select, delete, sort, find...)
 -Better source code documentation
