@@ -90,7 +90,6 @@ class Actions(object):
                      
     @Slot()
     def exportNodes(self):
-                                        
         fldg=QFileDialog(caption="Export DB File to CSV",filter="CSV Files (*.csv)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("csv")
@@ -130,7 +129,7 @@ class Actions(object):
                         progress.setValue(no)
                         no+=1               
                         
-                        row=[node.level,node.id,node.parent_id,node.facebookid,node.querystatus,node.querytime,node.querytype]    
+                        row=[node.level,node.id,node.parent_id,node.facebookid_encoded,node.querystatus,node.querytime,node.querytype]    
                         for key in self.mainWindow.treemodel.customcolumns:                    
                             row.append(node.getResponseValue(key,"utf-8"))    
                          
@@ -323,7 +322,12 @@ class Actions(object):
             progress.setValue(c)
             c+=1            
             
-            self.mainWindow.treemodel.queryData(index,relation,options,appendempty)           
+            try:
+                self.mainWindow.treemodel.queryData(index,relation,options,appendempty)
+            except Exception as e:
+                err=QErrorMessage()
+                err.showMessage(str(e))
+                       
            
             if progress.wasCanceled():
                 break 
