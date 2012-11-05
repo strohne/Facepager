@@ -18,6 +18,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon("./icon_facepager.png"))        
         self.setMinimumSize(700,400)
         
+        #self.deleteSettings()
         self.readSettings() 
         self.createActions()
         self.createUI()
@@ -28,7 +29,8 @@ class MainWindow(QMainWindow):
         
     def createDB(self):
         self.database = Database()
-        if os.path.isfile(self.settings.value("lastpath")):
+        lastpath = self.settings.value("lastpath")
+        if lastpath and os.path.isfile(lastpath):
             self.database.connect(self.settings.value("lastpath"))
         
         self.treemodel = TreeModel(self,self.database)
@@ -225,10 +227,16 @@ class MainWindow(QMainWindow):
     def readSettings(self):
         self.settings = QSettings("Keyling", "Facepager")
         self.settings.beginGroup("MainWindow")
-        self.resize(self.settings.value("size", QSize(400, 400)))
-        self.move(self.settings.value("pos", QPoint(200, 200)))
+        self.resize(self.settings.value("size", QSize(800, 800)))
+        self.move(self.settings.value("pos", QPoint(200, 10)))
         self.settings.endGroup()         
-        
+      
+    def deleteSettings(self):    
+        self.settings = QSettings("Keyling", "Facepager")
+        self.settings.beginGroup("MainWindow")
+        self.settings.remove("")
+        self.settings.endGroup()
+        self.settings.remove("lastpath")
 
     def closeEvent(self, event=QCloseEvent()):
         if self.close():

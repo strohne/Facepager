@@ -131,6 +131,13 @@ class Node(Base):
             else:
                 return value
             
+        @property
+        def facebookid_encoded(self):
+            try:
+                return str(self.facebookid)
+            except UnicodeEncodeError as e:
+                return self.facebookid.encode('utf-8')
+                 
 class Job(Base):
         __tablename__='Jobs'
         
@@ -374,6 +381,13 @@ class TreeModel(QAbstractItemModel):
         if not index.isValid():
             return False
         
+        def idtostr(id):
+            try:
+                return str(id)
+            except UnicodeEncodeError as e:
+                return id.encode('utf-8')                                
+              
+            
         treenode=index.internalPointer()
         if treenode.data['facebookid']=="":
             return False
@@ -381,7 +395,7 @@ class TreeModel(QAbstractItemModel):
         if relation=='<self>':
             #build url
                         
-            urlpath=treenode.data['facebookid']
+            urlpath=idtostr(treenode.data['facebookid'])
             urlparams={'metadata':'1'}
             #fetch
             self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':None,'splitdata':False,'objectid':'id','querytype':relation})   
@@ -389,7 +403,7 @@ class TreeModel(QAbstractItemModel):
         elif relation=='<search>':
             #build url
             urlpath='search'
-            urlparams={'q':str(treenode.data['facebookid']),'type':'page'}
+            urlparams={'q':idtostr(treenode.data['facebookid']),'type':'page'}
 
             #fetch            
             self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':'data','splitdata':True,'objectid':'id','querytype':relation})
@@ -398,7 +412,7 @@ class TreeModel(QAbstractItemModel):
             #build url                   
             default={'limit':100}                
             default.update(options)            
-            urlpath=str(treenode.data['facebookid'])+'/'+relation
+            urlpath=idtostr(treenode.data['facebookid'])+'/'+relation
             urlparams=default
             
             #fetch            
