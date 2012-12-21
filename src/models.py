@@ -1,4 +1,4 @@
-import facebook as fb
+from requester import *
 import sqlalchemy as sql
 from sqlalchemy import Column, Integer, String,ForeignKey,Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,8 +14,9 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 
 Base = declarative_base()
-at="109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
-g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
+
+#at="109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
+#g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
 
 
 def getDictValue(data,multikey):
@@ -90,12 +91,11 @@ class Database(object):
             err.showMessage("No database connection")            
             
 
-
             
 class Node(Base):
         __tablename__='Nodes'
 
-        facebookid=Column(String)
+        objectid=Column(String)
         querystatus=Column(String)
         querytype=Column(String)
         querytime=Column(String)
@@ -106,8 +106,8 @@ class Node(Base):
         level=Column(Integer)                             
         childcount=Column(Integer)
 
-        def __init__(self,facebookid,parent_id=None):            
-            self.facebookid=facebookid
+        def __init__(self,objectid,parent_id=None):            
+            self.objectid=objectid
             self.parent_id=parent_id
             self.level=0
             self.childcount=0
@@ -132,11 +132,11 @@ class Node(Base):
                 return value
             
         @property
-        def facebookid_encoded(self):
+        def objectid_encoded(self):
             try:
-                return str(self.facebookid)
+                return str(self.objectid)
             except UnicodeEncodeError as e:
-                return self.facebookid.encode('utf-8')
+                return self.objectid.encode('utf-8')
                  
 class Job(Base):
         __tablename__='Jobs'
@@ -154,9 +154,7 @@ class Job(Base):
 
         def __init__(self):
             pass            
-     
-                      
-
+                           
 class TreeItem(object):
     def __init__(self, parent=None,id=None,data=None):
         self.id = id
@@ -227,6 +225,7 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns=[]
         self.rootItem = TreeItem()
         self.database=database
+        self.requester=ApiRequester(mainWindow)
 
     def reset(self):        
         self.rootItem.clear()
@@ -269,15 +268,15 @@ class TreeModel(QAbstractItemModel):
         self.endRemoveRows()
 
             
-    def addNodes(self,facebookids):
+    def addNodes(self,objectids):
         try:       
             if not self.database.connected:
                 return False
                 
             #self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(facebookids)-1)
             newnodes=[]   
-            for facebookid in facebookids: 
-                new=Node(facebookid)
+            for objectid in objectids: 
+                new=Node(objectid)
                 newnodes.append(new)
                 
                 #self.database.session.flush()
@@ -286,7 +285,7 @@ class TreeModel(QAbstractItemModel):
 
             self.database.session.add_all(newnodes)             
             self.database.session.commit()
-            self.rootItem._childcountall+=len(facebookids)
+            self.rootItem._childcountall+=len(objectids)
             self.layoutChanged.emit()
                                     
             #self.endInsertRows()
@@ -296,24 +295,30 @@ class TreeModel(QAbstractItemModel):
             err=QErrorMessage(self.mainWindow)
             err.showMessage(str(e))        
 
-    def queryCustom(self,index,options={}):        
+            
+    def queryData(self,index):
         if not index.isValid():
             return False
-                         
-        default={'urlpath':'search','urlparams':{'q':'queryterm','type':'page'},'append':True,'nodedata':'data','splitdata':False,'objectid':'id','querytype':'search'}                
-        default.update(options)
-        options=default
-                    
-
+            
         treenode=index.internalPointer()
-        dbnode=Node.query.get(treenode.id)             
+        dbnode=Node.query.get(treenode.id)
         
         try:
             #get data
             try:
-                response = g.request(options['urlpath'],options['urlparams'])
+                options=self.mainWindow.RequestTabs.currentWidget().getOptions();
+                
+                if options['requester']=='facebook':
+                    response = self.requester.request_facebook(treenode.data,options)
+                elif options['requester']=='twitter':
+                    response = self.requester.request_twitter(treenode.data,options)
+                elif options['requester']=='generic':
+                    response = self.requester.request_generic(treenode.data,options)
+  
             except Exception as e:
                 querystatus=str(e)
+                self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))
+                
                 response={}
             else:
                 querystatus="fetched"                
@@ -324,7 +329,8 @@ class TreeModel(QAbstractItemModel):
     
                 #filter response
                 if options['nodedata'] != None:
-                    nodes=response.get(options['nodedata'],[])
+                    nodes=getDictValue(response,options['nodedata'])
+                    #nodes=response.get(options['nodedata'],[])
                 else:
                     nodes=response
                 
@@ -337,8 +343,6 @@ class TreeModel(QAbstractItemModel):
                     nodes=[{}]
                     querystatus="empty"                      
                                     
-                #rowcount=self.rowCount(index)
-                #self.beginInsertRows(index,rowcount,rowcount+len(nodes)-1)
                 newnodes=[]
                 for n in nodes:                    
                     new=Node(n.get(options['objectid']),dbnode.id)
@@ -348,19 +352,11 @@ class TreeModel(QAbstractItemModel):
                     new.querytime=str(datetime.datetime.now())
                     new.querytype=options['querytype']
                     newnodes.append(new)
-                    
-                    #dbnode.children.append(new)
-                    #self.database.session.flush()
-                    
-                    #itemdata=self.getItemData(new)     
-                    #treenode.appendChild(TreeItem(treenode,new.id,itemdata),True)
     
                 self.database.session.add_all(newnodes)    
                 treenode._childcountall += len(newnodes)    
                 dbnode.childcount += len(newnodes)    
                 self.database.session.commit()                
-                
-                #self.endInsertRows()
                 
             #update node    
             else:  
@@ -373,51 +369,8 @@ class TreeModel(QAbstractItemModel):
                 
                             
         except Exception as e:
-            err=QErrorMessage()
-            err.showMessage(str(e))                              
-            
-            
-    def queryData(self,index,relation=None,options={},appendempty=True):
-        if not index.isValid():
-            return False
-        
-        def idtostr(id):
-            try:
-                return str(id)
-            except UnicodeEncodeError as e:
-                return id.encode('utf-8')                                
-              
-            
-        treenode=index.internalPointer()
-        if treenode.data['facebookid']=="":
-            return False
+            self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))                                          
 
-        if relation=='<self>':
-            #build url
-                        
-            urlpath=idtostr(treenode.data['facebookid'])
-            urlparams={'metadata':'1'}
-            #fetch
-            self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':None,'splitdata':False,'objectid':'id','querytype':relation})   
-
-        elif relation=='<search>':
-            #build url
-            urlpath='search'
-            urlparams={'q':idtostr(treenode.data['facebookid']),'type':'page'}
-
-            #fetch            
-            self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':'data','splitdata':True,'objectid':'id','querytype':relation})
-        
-        else:
-            #build url                   
-            default={'limit':100}                
-            default.update(options)            
-            urlpath=idtostr(treenode.data['facebookid'])+'/'+relation
-            urlparams=default
-            
-            #fetch            
-            self.queryCustom(index, {'urlpath':urlpath,'urlparams':urlparams,'append':True,'appendempty':appendempty,'nodedata':'data','splitdata':True,'objectid':'id','querytype':relation})
-        
         self.layoutChanged.emit()
                             
                                 
@@ -438,7 +391,7 @@ class TreeModel(QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            captions=['Facebook ID','Query Status','Query Time','Query Type']+self.customcolumns                
+            captions=['Object ID','Query Status','Query Time','Query Type']+self.customcolumns                
             return captions[section] if section < len(captions) else ""
 
         return None
@@ -482,7 +435,7 @@ class TreeModel(QAbstractItemModel):
         item = index.internalPointer()
         
         if index.column()==0:
-            return item.data['facebookid']
+            return item.data['objectid']
         elif index.column()==1:
             return item.data['querystatus']      
         elif index.column()==2:
@@ -510,7 +463,7 @@ class TreeModel(QAbstractItemModel):
     def getItemData(self,item):
         itemdata={}
         itemdata['level']=item.level
-        itemdata['facebookid']=item.facebookid        
+        itemdata['objectid']=item.objectid        
         itemdata['querystatus']=item.querystatus
         itemdata['querytime']=item.querytime
         itemdata['querytype']=item.querytype

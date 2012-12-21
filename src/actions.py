@@ -111,7 +111,7 @@ class Actions(object):
                 writer = csv.writer(f,delimiter=';',quotechar='"', quoting=csv.QUOTE_ALL,doublequote=True,lineterminator='\r\n')
                 
                 #headers    
-                row=["level","id","parent_id","facebook_id","query_status","query_time","query_type"]
+                row=["level","id","parent_id","object_id","query_status","query_time","query_type"]
                 for key in self.mainWindow.treemodel.customcolumns:
                     row.append(key)                        
                 writer.writerow(row)
@@ -129,7 +129,7 @@ class Actions(object):
                         progress.setValue(no)
                         no+=1               
                         
-                        row=[node.level,node.id,node.parent_id,node.facebookid_encoded,node.querystatus,node.querytime,node.querytype]    
+                        row=[node.level,node.id,node.parent_id,node.objectid_encoded,node.querystatus,node.querytime,node.querytype]    
                         for key in self.mainWindow.treemodel.customcolumns:                    
                             row.append(node.getResponseValue(key,"utf-8"))    
                          
@@ -211,7 +211,7 @@ class Actions(object):
                     xs=sh['sheet']
 
                     
-                    row=[node.level,node.id,node.parent_id,node.facebookid,node.querystatus,node.querytime,node.querytype]    
+                    row=[node.level,node.id,node.parent_id,node.objectid,node.querystatus,node.querytime,node.querytype]    
                     for key in self.mainWindow.treemodel.customcolumns:                    
                         row.append(node.getResponseValue(key,"utf-8"))    
                      
@@ -301,21 +301,8 @@ class Actions(object):
         level=self.mainWindow.levelEdit.value()
         todo=self.mainWindow.tree.selectedIndexesAndChildren(level)
         progress.setMaximum(len(todo))
-            
-
-        #Set options
-        relation=self.mainWindow.relationEdit.currentText()
-        appendempty=self.mainWindow.emptyEdit.isChecked()
-        options={}
-        options['since']=self.mainWindow.sinceEdit.date().toString("yyyy-MM-dd")
-        options['until']=self.mainWindow.untilEdit.date().toString("yyyy-MM-dd")
-        options['offset']=self.mainWindow.offsetEdit.value()
-        options['limit']=self.mainWindow.limitEdit.value()
         
-        #delete old data
-#        if self.mainWindow.deleteEdit.isChecked():
-#            self.mainWindow.treemodel.delete(level,relation)
-        
+                    
         #Fetch data
         c=0
         for index in todo:            
@@ -323,7 +310,7 @@ class Actions(object):
             c+=1            
             
             try:
-                self.mainWindow.treemodel.queryData(index,relation,options,appendempty)
+                self.mainWindow.treemodel.queryData(index)
             except Exception as e:
                 err=QErrorMessage()
                 err.showMessage(str(e))
