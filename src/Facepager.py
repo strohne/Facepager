@@ -8,6 +8,174 @@ from models import *
 from actions import *
 
 
+class FacebookTab(QWidget):
+
+    def __init__(self, parent=None,mainWindow=None):
+        QWidget.__init__(self, parent)
+        self.mainWindow=mainWindow
+        mainLayout = QFormLayout()
+                
+        #-Query Type
+        self.relationEdit=QComboBox(self)
+        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','global_brand_children','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
+        self.relationEdit.setEditable(True)
+        mainLayout.addRow("Query",self.relationEdit)
+
+        #-Since
+        self.sinceEdit=QDateEdit(self)
+        self.sinceEdit.setDate(datetime.datetime.today().replace(year=datetime.datetime.today().year-1,day=datetime.datetime.today().day-1))
+        mainLayout.addRow("Since",self.sinceEdit)
+        
+
+        #-Until
+        self.untilEdit=QDateEdit(self)
+        self.untilEdit.setDate(datetime.datetime.today())
+        mainLayout.addRow("Until",self.untilEdit)
+        
+        #-Offset
+        self.offsetEdit=QSpinBox(self)
+        self.offsetEdit.setMaximum(500)
+        self.offsetEdit.setMinimum(0)
+        self.offsetEdit.setValue(0)
+        mainLayout.addRow("Offset",self.offsetEdit)
+
+        #-Limit
+        self.limitEdit=QSpinBox(self)
+        self.limitEdit.setMaximum(1000)
+        self.limitEdit.setMinimum(1)
+        self.limitEdit.setValue(50)
+        mainLayout.addRow("Limit",self.limitEdit)
+        
+        self.setLayout(mainLayout)
+        
+    def getOptions(self):      
+        options={}
+        
+        #options for request  
+        options['requester']='facebook'       
+        options['querytype']=self.relationEdit.currentText()
+        options['relation']=self.relationEdit.currentText()
+        options['since']=self.sinceEdit.date().toString("yyyy-MM-dd")
+        options['until']=self.untilEdit.date().toString("yyyy-MM-dd")
+        options['offset']=self.offsetEdit.value()
+        options['limit']=self.limitEdit.value()
+        
+        #options for data handling
+        options['append']=True
+        options['appendempty']=True
+        options['objectid']='id'
+        
+        if (options['relation']=='<self>'):
+            options['nodedata']=None
+            options['splitdata']=False
+        else:  
+            options['nodedata']='data'
+            options['splitdata']=True
+               
+        return options        
+        
+
+
+class TwitterTab(QWidget):
+
+    def __init__(self, parent=None,mainWindow=None):
+        QWidget.__init__(self, parent)
+        self.mainWindow=mainWindow
+        mainLayout = QFormLayout()
+                
+        #-Query Type
+        self.relationEdit=QComboBox(self)
+        self.relationEdit.insertItems(0,['statuses/user_timeline'])       
+        self.relationEdit.setEditable(True)
+        mainLayout.addRow("Resource",self.relationEdit)
+
+        #Parameter
+        self.objectidEdit=QComboBox(self)                
+        self.objectidEdit.insertItems(0,['screen_name'])
+        self.objectidEdit.insertItems(0,['user_id'])
+        self.objectidEdit.setEditable(True)
+        mainLayout.addRow("Object ID",self.objectidEdit)
+
+
+        self.setLayout(mainLayout)
+        
+    def getOptions(self):      
+        options={}
+        
+        #options for request 
+        options['requester']='twitter'
+        options['querytype']=self.relationEdit.currentText()
+        options['objectidparam']=self.objectidEdit.currentText()
+                
+        #options for data handling
+        options['append']=True
+        options['appendempty']=True        
+        options['splitdata']=True
+        options['nodedata']='data'
+        options['objectid']='id'        
+        
+        return options  
+
+class GenericTab(QWidget):
+
+    def __init__(self, parent=None,mainWindow=None):
+        QWidget.__init__(self, parent)
+        self.mainWindow=mainWindow
+        mainLayout = QFormLayout()
+                
+        #URL prefix 
+        self.prefixEdit=QComboBox(self)        
+        self.prefixEdit.insertItems(0,['https://api.twitter.com/1/statuses/user_timeline.json?screen_name='])               
+        self.prefixEdit.setEditable(True)
+        mainLayout.addRow("URL prefix",self.prefixEdit)
+
+        #URL field 
+        self.fieldEdit=QComboBox(self)
+        self.fieldEdit.insertItems(0,['<Object ID>','<None>'])       
+        self.fieldEdit.setEditable(True)        
+        mainLayout.addRow("URL field",self.fieldEdit)
+        
+        #URL suffix 
+        self.suffixEdit=QComboBox(self)
+        self.suffixEdit.insertItems(0,[''])       
+        self.suffixEdit.setEditable(True)        
+        mainLayout.addRow("URL suffix",self.suffixEdit)
+        
+
+        #Extract option 
+        self.extractEdit=QComboBox(self)
+        self.extractEdit.insertItems(0,['data'])
+        self.extractEdit.insertItems(0,['data.matches'])               
+        self.extractEdit.setEditable(True)
+        mainLayout.addRow("Extract key",self.extractEdit)
+
+        #Split option
+        self.splitEdit=QCheckBox("Split data",self)
+        self.splitEdit.setChecked(True)     
+        mainLayout.addRow(self.splitEdit)
+
+
+        self.setLayout(mainLayout)
+        
+    def getOptions(self):      
+        options={}
+        
+        #options for request 
+        options['requester']='generic'
+        options['querytype']='generic'
+        options['prefix']=self.prefixEdit.currentText()
+        options['suffix']=self.suffixEdit.currentText()
+        options['urlfield']=self.fieldEdit.currentText()
+                
+        #options for data handling
+        options['append']=True
+        options['appendempty']=True        
+        options['splitdata']=self.splitEdit.isChecked()
+        options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else False
+        options['objectid']='id'        
+        
+        return options  
+
 class MainWindow(QMainWindow):
     
     def __init__(self,central=None):
@@ -27,7 +195,7 @@ class MainWindow(QMainWindow):
         self.updateUI()
         
         
-    def createDB(self):
+    def createDB(self):        
         self.database = Database()
         lastpath = self.settings.value("lastpath")
         if lastpath and os.path.isfile(lastpath):
@@ -52,78 +220,25 @@ class MainWindow(QMainWindow):
         #dummy widget to contain the layout manager
         self.mainWidget=QWidget(self) 
         self.setCentralWidget(self.mainWidget)        
-        mainLayout=QHBoxLayout()
+        mainLayout=QVBoxLayout()
         self.mainWidget.setLayout(mainLayout)                
+         
+        dataLayout=QHBoxLayout()
+        mainLayout.addLayout(dataLayout,0)
+        
+        requestLayout=QHBoxLayout()
+        mainLayout.addLayout(requestLayout,0)
+
          
         #tree                                                
         self.tree=Tree(self.mainWidget,self)
-        mainLayout.addWidget(self.tree,1)
+        dataLayout.addWidget(self.tree,1)
         
         #right sidebar
         detailLayout=QVBoxLayout()
-        mainLayout.addLayout(detailLayout,0)
+        dataLayout.addLayout(detailLayout,0)
         
-        #fetch data
-        detailGroup=QGroupBox("Fetch Data")
-        detailLayout.addWidget(detailGroup)
-        groupLayout=QFormLayout()
-        detailGroup.setLayout(groupLayout)
-        
-        groupLayout.addRow(QLabel("Input"))        
-
-        #-Level
-        self.levelEdit=QSpinBox(self.mainWidget)
-        self.levelEdit.setMinimum(1)
-        groupLayout.addRow("Level",self.levelEdit)
-        
-        groupLayout.addRow(QLabel('\nThroughput'))
-                
-        #-Query Type
-        self.relationEdit=QComboBox(self.mainWidget)
-        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','global_brand_children','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
-        self.relationEdit.setEditable(True)
-        groupLayout.addRow("Query",self.relationEdit)
-
-        #-Since
-        self.sinceEdit=QDateEdit(self.mainWidget)
-        self.sinceEdit.setDate(datetime.datetime.today().replace(year=datetime.datetime.today().year-1,day=datetime.datetime.today().day-1))
-        groupLayout.addRow("Since",self.sinceEdit)
-        
-
-        #-Until
-        self.untilEdit=QDateEdit(self.mainWidget)
-        self.untilEdit.setDate(datetime.datetime.today())
-        groupLayout.addRow("Until",self.untilEdit)
-        
-        #-Offset
-        self.offsetEdit=QSpinBox(self.mainWidget)
-        self.offsetEdit.setMaximum(500)
-        self.offsetEdit.setMinimum(0)
-        self.offsetEdit.setValue(0)
-        groupLayout.addRow("Offset",self.offsetEdit)
-
-        #-Limit
-        self.limitEdit=QSpinBox(self.mainWidget)
-        self.limitEdit.setMaximum(1000)
-        self.limitEdit.setMinimum(1)
-        self.limitEdit.setValue(500)
-        groupLayout.addRow("Limit",self.limitEdit)
-
-        groupLayout.addRow(QLabel('\nOutput'))
-        
-        #-Empty record
-        self.emptyEdit=QCheckBox("Add empty records for empty results",self.mainWidget)        
-        groupLayout.addRow(self.emptyEdit)
-        
-        #-Delete records
-#        self.deleteEdit=QCheckBox("Delete all! records of same query type and level before fetching",self.mainWidget)        
-#        groupLayout.addRow(self.deleteEdit)
-
-        
-        #-button        
-        button=QPushButton("Fetch Data", self.mainWidget)
-        button.clicked.connect(self.actions.actionQuery.trigger)
-        groupLayout.addRow(button)         
+     
         
         #detail data
         detailGroup=QGroupBox("Raw Data")
@@ -204,7 +319,59 @@ class MainWindow(QMainWindow):
         #-Button 
         button=QPushButton("Collapse all nodes")
         button.clicked.connect(self.actions.actionCollapseAll.trigger)
-        groupLayout.addWidget(button)        
+        groupLayout.addWidget(button)   
+        
+        
+        #requests
+        self.RequestTabs=QTabWidget()
+        requestLayout.addWidget(self.RequestTabs)
+        
+        #Tabs                      
+        self.RequestTabs.addTab(FacebookTab(None,self),"Facebook")
+        self.RequestTabs.addTab(TwitterTab(None,self),"Twitter")
+        self.RequestTabs.addTab(GenericTab(None,self),"Generic")
+
+        
+        
+        #request
+        actionLayout=QVBoxLayout()        
+        requestLayout.addLayout(actionLayout)
+
+        #log
+        detailGroup=QGroupBox("Status Log")
+        groupLayout=QVBoxLayout()
+        detailGroup.setLayout(groupLayout)
+        actionLayout.addWidget(detailGroup,1)
+                
+        self.loglist=QTextEdit()
+        self.loglist.setLineWrapMode(QTextEdit.NoWrap)
+        self.loglist.setWordWrapMode(QTextOption.NoWrap)
+        self.loglist.acceptRichText=False
+        self.loglist.clear()
+        groupLayout.addWidget(self.loglist)
+                
+        #fetch data                                    
+        fetchdata=QHBoxLayout()
+        mainLayout.addLayout(fetchdata)
+                        
+                                              
+        #-Level
+        self.levelEdit=QSpinBox(self.mainWidget)
+        self.levelEdit.setMinimum(1)
+        fetchdata.addWidget(QLabel("For all selected nodes and their children of level"))
+        fetchdata.addWidget(self.levelEdit)
+        
+        #-button        
+        button=QPushButton("Fetch Data", self.mainWidget)
+        button.clicked.connect(self.actions.actionQuery.trigger)
+        fetchdata.addWidget(button)
+        
+        fetchdata.addStretch(1)
+        
+
+          
+        
+                 
 
     def updateUI(self):
         #disable buttons that do not work without an opened database                   
