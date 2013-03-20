@@ -23,7 +23,7 @@ class FacebookTab(QWidget):
 
         #-Since
         self.sinceEdit=QDateEdit(self)
-        self.sinceEdit.setDate(datetime.datetime.today().replace(year=datetime.datetime.today().year-1,day=datetime.datetime.today().day-1))
+        self.sinceEdit.setDate(datetime.datetime.today().replace(year=datetime.datetime.today().year-1,day=datetime.datetime.today().day))
         mainLayout.addRow("Since",self.sinceEdit)
         
 
@@ -171,7 +171,7 @@ class GenericTab(QWidget):
         options['append']=True
         options['appendempty']=True        
         options['splitdata']=self.splitEdit.isChecked()
-        options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else False
+        options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
         options['objectid']='id'        
         
         return options  

@@ -34,7 +34,7 @@ class Tree(QTreeView):
         self.mainWindow.levelEdit.setValue(level)
             
             
-    def selectedIndexesAndChildren(self,level=None,persistent=False):
+    def selectedIndexesAndChildren(self,level=None,persistent=False,emptyonly=False):
         selected=[x for x in self.selectedIndexes() if x.column()==0]
         filtered=[]
 
@@ -51,11 +51,21 @@ class Tree(QTreeView):
             
         def addIndex(index):
             if index not in filtered:
+                #child=index.child(0,0)
+                
                 if level==None or level==getLevel(index):
-                    if persistent:
-                        filtered.append(QPersistentModelIndex(index))
+                    
+                    if emptyonly:
+                        child=index.child(0,0)
+                        append = not child.isValid()
                     else:
-                        filtered.append(index)    
+                        append=True    
+                    
+                    if append==True:
+                        if persistent:
+                            filtered.append(QPersistentModelIndex(index))
+                        else:
+                            filtered.append(index)    
                 
                 if level==None or level>getLevel(index) :
                     self.model().fetchMore(index)
