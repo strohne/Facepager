@@ -14,8 +14,8 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 
 Base = declarative_base()
-at="109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
-g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
+#at="109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
+#g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
 
 
 def getDictValue(data,multikey):
@@ -311,7 +311,8 @@ class TreeModel(QAbstractItemModel):
         try:
             #get data
             try:
-                response = g.request(options['urlpath'],options['urlparams'])
+                #response = g.request(options['urlpath'],options['urlparams'])
+                response = self.mainWindow.fb_graph.request(options['urlpath'],options['urlparams'])
             except Exception as e:
                 querystatus=str(e)
                 response={}
