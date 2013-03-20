@@ -120,7 +120,13 @@ class ApiRequester(object):
         try:
             fileInfo = file.info()
             if fileInfo.maintype == 'text':
-                response = _parse_json(file.read())
+                content=file.read()
+                
+                #f = open('D:/temp/log.txt', 'w')
+                #f.write(content)
+                #f.close()
+                 
+                response = _parse_json(content)
             elif fileInfo.maintype == 'image':
                 mimetype = fileInfo['content-type']
                 response = {
