@@ -6,7 +6,7 @@ from toolbar import Toolbar
 from tree import *
 from models import *
 from actions import *
-
+from datetime import datetime, timedelta
 
 class MainWindow(QMainWindow):
     
@@ -14,8 +14,8 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__()
         
         self.setWindowTitle("Facepager")                
-        #self.setWindowIcon(QIcon("../icons/icon_facepager.png"))
-        self.setWindowIcon(QIcon("./icon_facepager.png"))        
+        self.setWindowIcon(QIcon(":/icons/facepager_icons/mainicon.png"))       
+        
         self.setMinimumSize(700,400)
         
         #self.deleteSettings()
@@ -28,6 +28,7 @@ class MainWindow(QMainWindow):
         
         
     def createDB(self):
+        self.fb_graph=fb.GraphAPI()
         self.database = Database()
         lastpath = self.settings.value("lastpath")
         if lastpath and os.path.isfile(lastpath):
@@ -86,13 +87,13 @@ class MainWindow(QMainWindow):
 
         #-Since
         self.sinceEdit=QDateEdit(self.mainWidget)
-        self.sinceEdit.setDate(datetime.datetime.today().replace(year=datetime.datetime.today().year-1,day=datetime.datetime.today().day-1))
+        self.sinceEdit.setDate(datetime.today()-timedelta( days=7))
         groupLayout.addRow("Since",self.sinceEdit)
         
 
         #-Until
         self.untilEdit=QDateEdit(self.mainWidget)
-        self.untilEdit.setDate(datetime.datetime.today())
+        self.untilEdit.setDate(datetime.today())
         groupLayout.addRow("Until",self.untilEdit)
         
         #-Offset
