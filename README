@@ -2,6 +2,8 @@ Facebook-Page Scraper-GUI-Tool
 
 Facepager was made for fetching public available data from Facebook. All data is stored in a SQLite database and may be exported to Excel. 
 
+Download latest binary for Windows: https://github.com/strohne/Facepager/blob/master/build/Facepager_Setup_2_2.exe
+
 Version 2.0 features:
 -Fetch data for multiple facebook objects at once
 -Choose which relational data (comments, likes etc.) to download
@@ -12,6 +14,8 @@ Version 2.1 features:
 -Export to CSV instead of XLS, which is faster
 -Minor bug fixes
 
+Version 2.2 features:
+-Login to Facebook for fetching private groups etc. 
     
 Notice: Database files may be incompatible between different versions.
                                                       
@@ -22,7 +26,8 @@ Getting started:
 1. Run Facepager
 2. Click "New Database" in the toolbar to create a blank database
 3. Add Facebook IDs by clicking "Add Nodes" in the toolbar. Enter the last part of a Facebook page, e.g. enter "Tatort" for the page "http://www.facebook.com/Tatort"
-4. Select one or more nodes in the view and click "Fetch data".  
+4. Select one or more nodes in the view and click "Fetch data".
+5. Authorize access to Facebook by logging in  
 
 
 Todo:
