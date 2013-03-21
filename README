@@ -2,7 +2,7 @@ Facebook-Page Scraper-GUI-Tool
 
 Facepager was made for fetching public available data from Facebook. All data is stored in a SQLite database and may be exported to Excel. 
 
-Download latest binary for Windows: https://github.com/strohne/Facepager/blob/master/build/Facepager_Setup_2_2.exe
+Latest binary release for Windows is to be found in build/Facepager_Setup_2_2.exe
 
 Version 2.0 features:
 -Fetch data for multiple facebook objects at once
