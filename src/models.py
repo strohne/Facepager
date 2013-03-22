@@ -296,8 +296,7 @@ class TreeModel(QAbstractItemModel):
                 
             treenode=index.internalPointer()
             dbnode=Node.query.get(treenode.id)
-        
-        
+                
             #get data
             try:
                 options=self.mainWindow.RequestTabs.currentWidget().getOptions();
@@ -313,27 +312,25 @@ class TreeModel(QAbstractItemModel):
             
             
             #append nodes
-            if options['append']:
+            if options.get('append',True):
     
                 #filter response
                 if options['nodedata'] != None:
                     nodes=getDictValue(response,options['nodedata'])
-                    #nodes=response.get(options['nodedata'],[])
                 else:
                     nodes=response
                 
                 #single record
-                if not options['splitdata']:
-                    nodes=[response]                                     
+                if not (type(nodes) is list): nodes=[nodes]                                     
                 
                 #empty records                    
-                if (len(nodes) == 0) and (options['appendempty']):                    
+                if (len(nodes) == 0) and (options.get('appendempty',True)):                    
                     nodes=[{}]
                     querystatus="empty"                      
                                     
                 newnodes=[]
                 for n in nodes:                    
-                    new=Node(n.get(options['objectid']),dbnode.id)
+                    new=Node(getDictValue(n,options['objectid']),dbnode.id)
                     new.response=n
                     new.level=dbnode.level+1
                     new.querystatus=querystatus
@@ -357,7 +354,7 @@ class TreeModel(QAbstractItemModel):
 
             self.layoutChanged.emit()
         except Exception as e:
-            self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))            
+            self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))
                             
                                 
     def columnCount(self, parent):
