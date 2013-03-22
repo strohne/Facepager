@@ -1,5 +1,7 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
+import os
+import sys
 
 class HelpWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -12,7 +14,13 @@ class HelpWindow(QMainWindow):
         self.setCentralWidget(central)
         vLayout = QVBoxLayout(central)
         browser = QTextBrowser(central)
-        browser.setSource(QUrl().fromLocalFile("../help/help.html"))
+
+        if getattr(sys, 'frozen', False):
+            application_path = os.path.dirname(sys.executable)
+        elif __file__:
+            application_path = os.path.dirname(__file__)
+        
+        browser.setSource(QUrl().fromLocalFile(os.path.join(application_path,"help","help.html")))
         vLayout.addWidget(browser)
         hLayout = QHBoxLayout()
         vLayout.addLayout(hLayout)
