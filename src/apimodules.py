@@ -15,23 +15,25 @@ except ImportError:
         import json
 _parse_json = json.loads
 
+
+
 def loadTabs(mainWindow=None):                    
-    mainWindow.RequestTabs.addTab(FacebookTab(mainWindow,mainWindow),"Facebook")
-    mainWindow.RequestTabs.addTab(TwitterTab(mainWindow,mainWindow),"Twitter")
-    mainWindow.RequestTabs.addTab(GenericTab(mainWindow,mainWindow),"Generic")    
+    mainWindow.RequestTabs.addTab(FacebookTab(mainWindow),"Facebook")
+    mainWindow.RequestTabs.addTab(TwitterTab(mainWindow),"Twitter")
+    mainWindow.RequestTabs.addTab(GenericTab(mainWindow),"Generic")    
     
 class ApiTab(QWidget):
-    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
-        QWidget.__init__(self, parent)
+    def __init__(self, mainWindow=None,name="NoName",loadSettings=True):
+        QWidget.__init__(self, mainWindow)
         self.timeout=None
         self.mainWindow=mainWindow
-        self.name="NoName"
+        self.name=name
 
-    def idtostr(self,id):
+    def idtostr(self,val):
         try:
-            return str(id)
+            return str(val)
         except UnicodeEncodeError as e:
-            return id.encode('utf-8')     
+            return val.encode('utf-8')     
 
     def getOptions(self):
         return {}
@@ -100,9 +102,8 @@ class ApiTab(QWidget):
         
 class FacebookTab(ApiTab):
 
-    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
-        super(FacebookTab,self).__init__(parent,mainWindow)
-        self.name="Facebook"
+    def __init__(self, mainWindow=None,loadSettings=True):
+        super(FacebookTab,self).__init__(mainWindow,"Facebook")
 
         mainLayout = QFormLayout()
                 
@@ -156,8 +157,7 @@ class FacebookTab(ApiTab):
     def getOptions(self,persistent=False):      
         options={}                
         
-        #options for request  
-        options['requester']=self.name       
+        #options for request        
         options['querytype']=self.name+':'+self.relationEdit.currentText()
         options['relation']=self.relationEdit.currentText()
         options['since']=self.sinceEdit.date().toString("yyyy-MM-dd")
@@ -169,16 +169,12 @@ class FacebookTab(ApiTab):
         
         #options for data handling
         if not persistent:
-            options['append']=True
-            options['appendempty']=True
             options['objectid']='id'
             
             if (options['relation']=='<self>'):
                 options['nodedata']=None
-                options['splitdata']=False
             else:  
                 options['nodedata']='data'
-                options['splitdata']=True
                
         return options        
 
@@ -252,14 +248,15 @@ class FacebookTab(ApiTab):
 
 class TwitterTab(ApiTab):
 
-    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
-        super(TwitterTab,self).__init__(parent,mainWindow)
-        self.name="Twitter"
+    def __init__(self, mainWindow=None,loadSettings=True):
+        super(TwitterTab,self).__init__(mainWindow,"Twitter")
+
         mainLayout = QFormLayout()
                 
         #-Query Type
         self.relationEdit=QComboBox(self)
         self.relationEdit.insertItems(0,['statuses/user_timeline'])       
+        self.relationEdit.insertItems(0,['<search>'])
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Resource",self.relationEdit)
 
@@ -267,6 +264,7 @@ class TwitterTab(ApiTab):
         self.objectidEdit=QComboBox(self)                
         self.objectidEdit.insertItems(0,['screen_name'])
         self.objectidEdit.insertItems(0,['user_id'])
+        self.objectidEdit.insertItems(0,['<search>'])
         self.objectidEdit.setEditable(True)
         mainLayout.addRow("Object ID",self.objectidEdit)
 
@@ -278,45 +276,53 @@ class TwitterTab(ApiTab):
         options={}
         
         #options for request 
-        options['requester']=self.name
         options['query'] = self.relationEdit.currentText()
         options['querytype']=self.name+':'+self.relationEdit.currentText()
         options['objectidparam']=self.objectidEdit.currentText()
                 
         #options for data handling
-        if not persistent:
-            options['append']=True
-            options['appendempty']=True        
-            options['splitdata']=True
-            options['nodedata']='data'
-            options['objectid']='id'        
+        if not persistent:                 
+            options['objectid']='id'
+            options['nodedata']='data.results' if (options["query"] == '<search>')  else 'data'                        
         
         return options  
 
     def setOptions(self,options):         
-        self.relationEdit.setEditText(options.get('query','statuses/user_timeline'))        
-        self.objectidEdit.setEditText(options.get('objectidparam','user_id'))
+        self.relationEdit.setEditText(options.get('query','<search>'))        
+        self.objectidEdit.setEditText(options.get('objectidparam','<search>'))
 
     
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
-
-        urlpath = "https://api.twitter.com/1/"+options["query"]+".json"        
-        urlparams= {options["objectidparam"]:self.idtostr(nodedata['objectid'])}
+        
+        if (options["query"] == '<search>'):
+            urlpath = "http://search.twitter.com/search.json"        
+            urlparams= {"q":self.idtostr(nodedata['objectid'])}            
+        else:
+            urlpath = "https://api.twitter.com/1/"+options["query"]+".json"        
+            urlparams= {options["objectidparam"]:self.idtostr(nodedata['objectid'])}
         
         self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))    
         return self.request(urlpath,urlparams)         
 
 class GenericTab(ApiTab):
 
-    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
-        super(GenericTab,self).__init__(parent,mainWindow)
-        self.name="Generic"
+    #Youtube: 
+    #URL prefix: https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q=
+    #URL field: <Object ID>
+    #URL suffix: 
+    #-Extract: data.feed.entry
+    #-ObjectId: id.$t
+
+    def __init__(self, mainWindow=None,loadSettings=True):
+        super(GenericTab,self).__init__(mainWindow,"Generic")
         mainLayout = QFormLayout()
                 
         #URL prefix 
         self.prefixEdit=QComboBox(self)        
-        self.prefixEdit.insertItems(0,['https://api.twitter.com/1/statuses/user_timeline.json?screen_name='])               
+        self.prefixEdit.insertItems(0,['https://api.twitter.com/1/statuses/user_timeline.json?screen_name='])
+        self.prefixEdit.insertItems(0,['https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q='])
+                       
         self.prefixEdit.setEditable(True)
         mainLayout.addRow("URL prefix",self.prefixEdit)
 
@@ -336,14 +342,16 @@ class GenericTab(ApiTab):
         #Extract option 
         self.extractEdit=QComboBox(self)
         self.extractEdit.insertItems(0,['data'])
-        self.extractEdit.insertItems(0,['data.matches'])               
+        self.extractEdit.insertItems(0,['data.matches'])      
+        self.extractEdit.insertItems(0,['data.feed.entry'])        
+                 
         self.extractEdit.setEditable(True)
-        mainLayout.addRow("Extract key",self.extractEdit)
+        mainLayout.addRow("Key to extract",self.extractEdit)
 
-        #Split option
-        self.splitEdit=QCheckBox("Split data",self)
-        self.splitEdit.setChecked(True)     
-        mainLayout.addRow(self.splitEdit)
+        self.objectidEdit=QComboBox(self)
+        self.objectidEdit.insertItems(0,['id.$t'])              
+        self.objectidEdit.setEditable(True)
+        mainLayout.addRow("Key for ObjectID",self.objectidEdit)
 
 
         self.setLayout(mainLayout)
@@ -353,29 +361,23 @@ class GenericTab(ApiTab):
         options={}
         
         #options for request 
-        options['requester']=self.name
         options['querytype']='generic'
         options['prefix']=self.prefixEdit.currentText()
         options['suffix']=self.suffixEdit.currentText()
         options['urlfield']=self.fieldEdit.currentText()
                 
         #options for data handling
-        options['splitdata']=self.splitEdit.isChecked()
         options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
-
-        if not persistent:
-            options['append']=True
-            options['appendempty']=True
-            options['objectid']='id'                            
+        options['objectid']=self.objectidEdit.currentText() if self.objectidEdit.currentText() != "" else None                                     
         
         return options  
 
     def setOptions(self,options):         
-        self.prefixEdit.setEditText(options.get('prefix','https://api.twitter.com/1/statuses/user_timeline.json?screen_name='))        
+        self.prefixEdit.setEditText(options.get('prefix','https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q='))        
         self.fieldEdit.setEditText(options.get('urlfield','<Object ID>'))
         self.suffixEdit.setEditText(options.get('suffix',''))
-        self.extractEdit.setEditText(options.get('nodedata','data'))
-        self.splitEdit.setChecked(options.get('splitdata',True)=="true" )
+        self.extractEdit.setEditText(options.get('nodedata','data.feed.entry'))
+        self.objectidEdit.setEditText(options.get('objectid','id.$t'))
         
         
     def fetchData(self,nodedata,options=None):
@@ -393,6 +395,8 @@ class GenericTab(ApiTab):
         
         self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+self.idtostr(nodedata['objectid'])+" from "+urlpath)    
         return self.request(urlpath)       
+
+
 
 #Notcie: RequesterError und Requester enthalten Code aus facebook-sdk, das unter Apache 2.0 licence steht
 class RequesterError(Exception):

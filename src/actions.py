@@ -1,8 +1,6 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 from models import *
-#import xlwt
-#from openpyxl import Workbook
 import csv
 import sys
 import help
@@ -158,92 +156,6 @@ class Actions(object):
                 f.close()                            
                 progress.cancel()
                                              
-    @Slot()
-    def exportNodesXLS(self):
-                                        
-        fldg=QFileDialog(caption="Export DB File to XLSX",filter="XLSX Files (*.xlsx)")
-        fldg.setAcceptMode(QFileDialog.AcceptSave)
-        fldg.setDefaultSuffix("xlsx")
-        
-        if fldg.exec_():               
-            progress = QProgressDialog("Saving data...", "Abort", 0, 0,self.mainWindow)
-            progress.setWindowModality(Qt.WindowModal)
-            progress.setMinimumDuration(0)
-            progress.forceShow()   
-                                     
-            progress.setMaximum(Node.query.count())
-            
-                    
-            if os.path.isfile(fldg.selectedFiles()[0]):
-                os.remove(fldg.selectedFiles()[0])
-          
-            
-            #x=xlwt.Workbook(encoding="latin-1")
-            x=Workbook(encoding="latin-1",optimized_write = True)
-            
-            
-            def writeValue(sheet,row,col,value):
-                sheet.cell(row=row,column=col).value=value
-                
-            sheets={}
-            def getSheet(level=1):
-                sh = sheets.get(level,None)
-                if sh==None:                  
-                    #xs=x.add_sheet("Level"+str(level))  
-                    xs=x.create_sheet()
-                    xs.title="Level"+str(level)
-                    
-                    row=["level","id","parent_id","facebook_id","query_status","query_time","query_type"]
-                    for key in self.mainWindow.treemodel.customcolumns:
-                        row.append(key)
-                        
-                    xs.append(row)
-                                                                             
-                    
-                    sh={'sheet':xs,'row':1}
-                    sheets[level]=sh
-                return sh                    
-            
-            page=0
-            no=0  
-            while True:            
-                allnodes=Node.query.offset(page*5000).limit(5000).all()
-
-                for node in allnodes:      
-                    if progress.wasCanceled():
-                        break
-                               
-                    progress.setValue(no)
-                    no+=1            
-                   
-
-                                       
-                    sh=getSheet(node.level)
-                    xs=sh['sheet']
-
-                    
-                    row=[node.level,node.id,node.parent_id,node.objectid,node.querystatus,node.querytime,node.querytype]    
-                    for key in self.mainWindow.treemodel.customcolumns:                    
-                        row.append(node.getResponseValue(key,"utf-8"))    
-                     
-#                    print row
-                    xs.append(row)                                 
-
-                 
-                if progress.wasCanceled():
-                    break
-                           
-                if len(allnodes) == 0:
-                    break
-                else:
-                    page +=1                        
-                                      
-                              
-            #x.remove_sheet(x.get_active_sheet())                  
-            x.save(fldg.selectedFiles()[0])
-            progress.cancel()
-
-    
 
     @Slot()
     def addNodes(self):

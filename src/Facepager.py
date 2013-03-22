@@ -2,7 +2,7 @@ import cProfile
 import sys
 from PySide.QtCore import *
 from PySide.QtGui import *
-from toolbar import Toolbar
+import icons
 from tree import *
 from models import *
 from actions import *
@@ -155,7 +155,7 @@ class MainWindow(QMainWindow):
         actionlayout.addWidget(self.RequestTabs)        
         loadTabs(self)
         
-       #fetch data      
+        #fetch data      
         f=QFont()
         f.setPointSize(11)
 
@@ -185,8 +185,6 @@ class MainWindow(QMainWindow):
         button.clicked.connect(self.actions.actionQuery.trigger)
         button.setFont(f)
         fetchdata.addWidget(button,1)
-        
-        
 
         
         #Status
@@ -220,16 +218,14 @@ class MainWindow(QMainWindow):
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())        
+        self.settings.setValue("version","3.0")
         self.settings.endGroup()
         
         self.settings.setValue('columns',self.fieldList.toPlainText())
         
         for i in range(self.RequestTabs.count()):
-              self.RequestTabs.widget(i).saveSettings()
+            self.RequestTabs.widget(i).saveSettings()
         
-        
-             
-
     def readSettings(self):
         self.settings = QSettings("Keyling", "Facepager")
         self.settings.beginGroup("MainWindow")
@@ -252,6 +248,32 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
 
+class Toolbar(QToolBar):
+    '''
+    Initialize the main toolbar for the facepager - that provides the central interface and functions.
+    '''
+    def __init__(self,parent=None,mainWindow=None):
+        super(Toolbar,self).__init__(parent)
+        self.mainWindow=mainWindow
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
+        self.setIconSize(QSize(24,24))
+        
+        self.addActions(self.mainWindow.actions.basicActions.actions())        
+        self.addSeparator()
+        self.addActions(self.mainWindow.actions.databaseActions.actions())
+        
+        self.addSeparator()
+        self.addAction(self.mainWindow.actions.actionExpandAll)        
+        self.addAction(self.mainWindow.actions.actionCollapseAll)
+        self.addAction(self.mainWindow.actions.actionHelp)
+        
+
+        
+
+            
+    
+
+            
 def startMain():
     app = QApplication(sys.argv)
 
