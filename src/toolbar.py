@@ -14,7 +14,7 @@ class Toolbar(QToolBar):
         super(Toolbar,self).__init__(parent)
         self.mainWindow=mainWindow
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
-        self.setIconSize(QSize(32,32))
+        self.setIconSize(QSize(24,24))
         
         self.addActions(self.mainWindow.actions.basicActions.actions())        
         self.addSeparator()
@@ -23,6 +23,7 @@ class Toolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.mainWindow.actions.actionExpandAll)        
         self.addAction(self.mainWindow.actions.actionCollapseAll)
+        self.addAction(self.mainWindow.actions.actionHelp)
         
 
         

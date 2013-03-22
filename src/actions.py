@@ -5,6 +5,7 @@ from models import *
 #from openpyxl import Workbook
 import csv
 import sys
+import help
 
 class Actions(object):
     
@@ -13,20 +14,21 @@ class Actions(object):
         self.mainWindow=mainWindow
         
         self.basicActions=QActionGroup(self.mainWindow)       
-        self.actionOpen=self.basicActions.addAction(QIcon(":/icons/data/icons/document-import.png"),"Open Database")        
-        self.actionNew=self.basicActions.addAction(QIcon(":/icons/data/icons/window_new.png"),"New Database")        
+        self.actionOpen=self.basicActions.addAction(QIcon(":/icons/facepager_icons/save.png"),"Open Database")        
+        self.actionNew=self.basicActions.addAction(QIcon(":/icons/facepager_icons/new.png"),"New Database")        
                 
         self.databaseActions=QActionGroup(self.mainWindow)
-        self.actionExport=self.databaseActions.addAction(QIcon(":icons/data/icons/document-export.png"),"Export Data")        
-        self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/data/icons/bookmark_add.png"),"Add Nodes")                
-        self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/data/icons/editdelete.png"),"Delete Nodes")
+        self.actionExport=self.databaseActions.addAction(QIcon(":/icons/facepager_icons/export.png"),"Export Data")        
+        self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/facepager_icons/add.png"),"Add Nodes")                
+        self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/facepager_icons/delete.png"),"Delete Nodes")
         
         self.dataActions=QActionGroup(self.mainWindow)        
-        self.actionQuery=self.dataActions.addAction(QIcon(":/icons/data/icons/find.png"),"Query")                
+        self.actionQuery=self.dataActions.addAction(QIcon(":/icons/facepager_icons/fetch.png"),"Query")                
         self.actionShowColumns=self.dataActions.addAction("Show Columns")
         #self.actionUnpackData=self.dataActions.addAction("Unpack Data")
-        self.actionExpandAll=self.dataActions.addAction("Expand nodes")
-        self.actionCollapseAll=self.dataActions.addAction("Collapse nodes")
+        self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/facepager_icons/expand.png"),"Expand nodes")
+        self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/facepager_icons/collapse.png"),"Collapse nodes")
+        self.actionHelp=self.dataActions.addAction(QIcon(":/icons/facepager_icons/help.png"),"Help")
 
         #connect the actions to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)
@@ -39,7 +41,12 @@ class Actions(object):
         #self.actionUnpackData.triggered.connect(self.unpackData)
         self.actionExpandAll.triggered.connect(self.expandAll)
         self.actionCollapseAll.triggered.connect(self.collapseAll)
-        
+        self.actionHelp.triggered.connect(self.help)
+       
+    @Slot()
+    def help(self):
+        self.mainWindow.helpwindow.show()
+                
     @Slot()
     def openDB(self):
         #open a file dialog with a .db filter
