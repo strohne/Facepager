@@ -12,12 +12,13 @@ exe = Executable(
         )
 
 includes = ["sqlite3","facebook","dateutil","atexit","PySide.QtNetwork"]
-
+includefiles = ['help\help.html']
 
 
 buildoptions = {
   'includes':includes,
-  "packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil"]
+  "packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil"],
+  'include_files':includefiles
 }
 
 setup(
