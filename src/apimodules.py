@@ -1,0 +1,419 @@
+from PySide.QtCore import *
+from PySide.QtGui import *
+from PySide.QtWebKit import QWebView
+import urlparse
+import urllib,urllib2
+#import datetime
+from datetime import datetime, timedelta
+
+# Find a JSON parser
+try:
+    import simplejson as json
+except ImportError:
+    try:
+        from django.utils import simplejson as json
+    except ImportError:
+        import json
+_parse_json = json.loads
+
+
+class ApiTab(QWidget):
+    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
+        QWidget.__init__(self, parent)
+        self.timeout=None
+        self.mainWindow=mainWindow
+        self.name="NoName"
+
+    def idtostr(self,id):
+        try:
+            return str(id)
+        except UnicodeEncodeError as e:
+            return id.encode('utf-8')     
+
+    def getOptions(self):
+        return {}
+    
+    def setOptions(self,options):
+        pass
+    
+    def saveSettings(self):
+        self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
+        options=self.getOptions(True)
+
+        for key in options.keys():        
+            self.mainWindow.settings.setValue(key,options[key])
+        self.mainWindow.settings.endGroup()
+                                          
+    def loadSettings(self):
+        self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
+        options={}
+        for key in self.mainWindow.settings.allKeys():        
+            options[key] = self.mainWindow.settings.value(key)
+        self.mainWindow.settings.endGroup()
+        
+        self.setOptions(options)                                    
+        
+    def request(self, path, args=None):
+        
+        path=path + "?" +urllib.urlencode(args) if args else path
+        post_data = None
+        try:
+            file = urllib2.urlopen(path, post_data, timeout=self.timeout)
+        except urllib2.HTTPError, e:
+            response = _parse_json(e.read())
+            raise RequesterError(response)
+        except TypeError:
+            # Timeout support for Python <2.6
+            if self.timeout:
+                socket.setdefaulttimeout(self.timeout)
+            file = urllib2.urlopen(path, post_data)
+        try:
+            fileInfo = file.info()
+            if fileInfo.maintype == 'text':
+                content=file.read()
+                
+                #f = open('D:/temp/log.txt', 'w')
+                #f.write(content)
+                #f.close()
+                 
+                response = _parse_json(content)
+            elif fileInfo.maintype == 'image':
+                mimetype = fileInfo['content-type']
+                response = {
+                    "data": file.read(),
+                    "mime-type": mimetype,
+                    "url": file.url,
+                }
+            elif fileInfo.maintype == 'application':
+                response = {"data": _parse_json(file.read())}                
+            else:
+                raise RequesterError('Maintype was not text or image')
+        finally:
+            file.close()
+        if response and isinstance(response, dict) and response.get("error"):
+            raise RequesterError(response["error"]["type"],
+                                response["error"]["message"])
+        return response    
+        
+class FacebookTab(ApiTab):
+
+    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
+        super(FacebookTab,self).__init__(parent,mainWindow)
+        self.name="Facebook"
+
+        mainLayout = QFormLayout()
+                
+        #-Query Type
+        self.relationEdit=QComboBox(self)
+        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','global_brand_children','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
+        self.relationEdit.setEditable(True)
+        mainLayout.addRow("Query",self.relationEdit)
+
+        #-Since
+        self.sinceEdit=QDateEdit(self)
+        self.sinceEdit.setDate(datetime.today()-timedelta( days=7))
+        mainLayout.addRow("Since",self.sinceEdit)
+        
+
+        #-Until
+        self.untilEdit=QDateEdit(self)
+        self.untilEdit.setDate(datetime.today())
+        mainLayout.addRow("Until",self.untilEdit)
+        
+        #-Offset
+        self.offsetEdit=QSpinBox(self)
+        self.offsetEdit.setMaximum(500)
+        self.offsetEdit.setMinimum(0)
+        self.offsetEdit.setValue(0)
+        mainLayout.addRow("Offset",self.offsetEdit)
+
+        #-Limit
+        self.limitEdit=QSpinBox(self)
+        self.limitEdit.setMaximum(1000)
+        self.limitEdit.setMinimum(1)
+        self.limitEdit.setValue(50)
+        mainLayout.addRow("Limit",self.limitEdit)
+
+        #-Log in
+        loginlayout=QHBoxLayout()
+        
+        self.tokenEdit=QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
+
+        self.loginButton=QPushButton(" Login to Facebook ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+        
+        mainLayout.addRow("Access Token",loginlayout)
+                
+        self.setLayout(mainLayout)
+        if loadSettings: self.loadSettings()
+        
+    def getOptions(self,persistent=False):      
+        options={}                
+        
+        #options for request  
+        options['requester']=self.name       
+        options['querytype']=self.name+':'+self.relationEdit.currentText()
+        options['relation']=self.relationEdit.currentText()
+        options['since']=self.sinceEdit.date().toString("yyyy-MM-dd")
+        options['until']=self.untilEdit.date().toString("yyyy-MM-dd")
+        options['offset']=self.offsetEdit.value()
+        options['limit']=self.limitEdit.value()
+        options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
+        if (options['accesstoken'] == ""): self.doLogin(True)
+        
+        #options for data handling
+        if not persistent:
+            options['append']=True
+            options['appendempty']=True
+            options['objectid']='id'
+            
+            if (options['relation']=='<self>'):
+                options['nodedata']=None
+                options['splitdata']=False
+            else:  
+                options['nodedata']='data'
+                options['splitdata']=True
+               
+        return options        
+
+    def setOptions(self,options):         
+        self.relationEdit.setEditText(options.get('relation','<self>'))        
+        if options.has_key('since'): self.sinceEdit.setDate(datetime.strptime(options['since'],"%Y-%m-%d"))
+        if options.has_key('until'): self.untilEdit.setDate(datetime.strptime(options['until'],"%Y-%m-%d"))
+        self.offsetEdit.setValue(options.get('offset',0))
+        self.limitEdit.setValue(options.get('limit',50))
+        self.tokenEdit.setText(options.get('accesstoken','')) 
+
+
+    def fetchData(self,nodedata,options=None):
+        if (options==None): options = self.getOptions()
+        if (options['accesstoken'] == ""): raise RequesterError("Access token is missing")
+
+        if nodedata['objectid']==None:
+            raise RequesterError("Empty object id")
+            
+        #build url        
+        if options['relation']=='<self>':
+            urlpath=self.idtostr(nodedata['objectid'])
+            urlparams={'metadata':'1'}
+
+        elif options['relation']=='<search>':
+            urlpath='search'
+            urlparams={'q':self.idtostr(nodedata['objectid']),'type':'page'}
+        
+        else:
+            urlpath=self.idtostr(nodedata['objectid'])+'/'+options['relation']            
+            urlparams= { key: options[key] for key in ['limit','offset','since','until'] }                   
+                
+        urlparams["access_token"] =   options['accesstoken']         
+        urlpath = "https://graph.facebook.com/" + urlpath
+        
+        self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))   
+        return self.request(urlpath,urlparams)          
+
+    @Slot()
+    def doLogin(self,query=False):
+        self.doQuery=query
+        window = QMainWindow(self.mainWindow)
+        window.resize(1200,800)
+        window.setWindowTitle("Facebook Login Page")
+        #create WebView with Facebook log-Dialog, OpenSSL needed        
+        logdlg=QWebView(window)
+        logdlg.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
+        logdlg.resize(window.size())
+        logdlg.show()
+        window.show()
+        # provide access to contents of the Login-Page
+        self.login_frame=logdlg       
+        #On Redirect, parse Acess-Token and initalize as central fb-Request
+        #is signaled with every redirect (better code?--> Signal emmited only when "Login" button on the Page is pressed
+        # and permissions are granted--> via JavaScript?)        
+        logdlg.urlChanged.connect(self.getToken)
+        
+
+    @Slot()
+    def getToken(self):
+        url = urlparse.parse_qs(self.login_frame.url().toString())
+        if url.has_key("https://www.facebook.com/connect/login_success.html#access_token"):
+           token=url["https://www.facebook.com/connect/login_success.html#access_token"]
+           if token:
+               self.tokenEdit.setText(token[0])
+               self.login_frame.parent().close()
+               if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+
+        
+
+
+class TwitterTab(ApiTab):
+
+    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
+        super(TwitterTab,self).__init__(parent,mainWindow)
+        self.name="Twitter"
+        mainLayout = QFormLayout()
+                
+        #-Query Type
+        self.relationEdit=QComboBox(self)
+        self.relationEdit.insertItems(0,['statuses/user_timeline'])       
+        self.relationEdit.setEditable(True)
+        mainLayout.addRow("Resource",self.relationEdit)
+
+        #Parameter
+        self.objectidEdit=QComboBox(self)                
+        self.objectidEdit.insertItems(0,['screen_name'])
+        self.objectidEdit.insertItems(0,['user_id'])
+        self.objectidEdit.setEditable(True)
+        mainLayout.addRow("Object ID",self.objectidEdit)
+
+
+        self.setLayout(mainLayout)
+        if loadSettings: self.loadSettings()
+        
+    def getOptions(self,persistent=False):      
+        options={}
+        
+        #options for request 
+        options['requester']=self.name
+        options['query'] = self.relationEdit.currentText()
+        options['querytype']=self.name+':'+self.relationEdit.currentText()
+        options['objectidparam']=self.objectidEdit.currentText()
+                
+        #options for data handling
+        if not persistent:
+            options['append']=True
+            options['appendempty']=True        
+            options['splitdata']=True
+            options['nodedata']='data'
+            options['objectid']='id'        
+        
+        return options  
+
+    def setOptions(self,options):         
+        self.relationEdit.setEditText(options.get('query','statuses/user_timeline'))        
+        self.objectidEdit.setEditText(options.get('objectidparam','user_id'))
+
+    
+    def fetchData(self,nodedata,options=None):
+        if (options==None): options = self.getOptions()
+
+        urlpath = "https://api.twitter.com/1/"+options["query"]+".json"        
+        urlparams= {options["objectidparam"]:self.idtostr(nodedata['objectid'])}
+        
+        self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))    
+        return self.request(urlpath,urlparams)         
+
+class GenericTab(ApiTab):
+
+    def __init__(self, parent=None,mainWindow=None,loadSettings=True):
+        super(GenericTab,self).__init__(parent,mainWindow)
+        self.name="Generic"
+        mainLayout = QFormLayout()
+                
+        #URL prefix 
+        self.prefixEdit=QComboBox(self)        
+        self.prefixEdit.insertItems(0,['https://api.twitter.com/1/statuses/user_timeline.json?screen_name='])               
+        self.prefixEdit.setEditable(True)
+        mainLayout.addRow("URL prefix",self.prefixEdit)
+
+        #URL field 
+        self.fieldEdit=QComboBox(self)
+        self.fieldEdit.insertItems(0,['<Object ID>','<None>'])       
+        self.fieldEdit.setEditable(True)        
+        mainLayout.addRow("URL field",self.fieldEdit)
+        
+        #URL suffix 
+        self.suffixEdit=QComboBox(self)
+        self.suffixEdit.insertItems(0,[''])       
+        self.suffixEdit.setEditable(True)        
+        mainLayout.addRow("URL suffix",self.suffixEdit)
+        
+
+        #Extract option 
+        self.extractEdit=QComboBox(self)
+        self.extractEdit.insertItems(0,['data'])
+        self.extractEdit.insertItems(0,['data.matches'])               
+        self.extractEdit.setEditable(True)
+        mainLayout.addRow("Extract key",self.extractEdit)
+
+        #Split option
+        self.splitEdit=QCheckBox("Split data",self)
+        self.splitEdit.setChecked(True)     
+        mainLayout.addRow(self.splitEdit)
+
+
+        self.setLayout(mainLayout)
+        if loadSettings: self.loadSettings()
+        
+    def getOptions(self,persistent=False):      
+        options={}
+        
+        #options for request 
+        options['requester']=self.name
+        options['querytype']='generic'
+        options['prefix']=self.prefixEdit.currentText()
+        options['suffix']=self.suffixEdit.currentText()
+        options['urlfield']=self.fieldEdit.currentText()
+                
+        #options for data handling
+        options['splitdata']=self.splitEdit.isChecked()
+        options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
+
+        if not persistent:
+            options['append']=True
+            options['appendempty']=True
+            options['objectid']='id'                            
+        
+        return options  
+
+    def setOptions(self,options):         
+        self.prefixEdit.setEditText(options.get('prefix','https://api.twitter.com/1/statuses/user_timeline.json?screen_name='))        
+        self.fieldEdit.setEditText(options.get('urlfield','<Object ID>'))
+        self.suffixEdit.setEditText(options.get('suffix',''))
+        self.extractEdit.setEditText(options.get('nodedata','data'))
+        self.splitEdit.setChecked(options.get('splitdata',True)=="true" )
+        
+        
+    def fetchData(self,nodedata,options=None):
+        if (options==None): options = self.getOptions()
+    
+        if(options['urlfield']=='<Object ID>'): 
+            queryterm=self.idtostr(nodedata['objectid'])
+        elif((options['urlfield']=='<None>') | (options['urlfield']=='')):
+            queryterm=''
+        else:    
+            queryterm=nodedata[options['urlfield']]
+                        
+                 
+        urlpath = options["prefix"]+queryterm+options["suffix"]        
+        
+        self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+self.idtostr(nodedata['objectid'])+" from "+urlpath)    
+        return self.request(urlpath)       
+
+#Notcie: RequesterError und Requester enthalten Code aus facebook-sdk, das unter Apache 2.0 licence steht
+class RequesterError(Exception):
+    def __init__(self, result):
+        #Exception.__init__(self, message)
+        #self.type = type
+        self.result = result
+        try:
+            self.type = result["error_code"]
+        except:
+            self.type = ""
+
+        # OAuth 2.0 Draft 10
+        try:
+            self.message = result["error_description"]
+        except:
+            # OAuth 2.0 Draft 00
+            try:
+                self.message = result["error"]["message"]
+            except:
+                # REST server style
+                try:
+                    self.message = result["error_msg"]
+                except:
+                    self.message = result
+
+        Exception.__init__(self, self.message)

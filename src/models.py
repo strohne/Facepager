@@ -1,4 +1,4 @@
-from requester import *
+#from requester import *
 import sqlalchemy as sql
 from sqlalchemy import Column, Integer, String,ForeignKey,Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -34,7 +34,8 @@ def getDictValue(data,multikey):
     
 class Database(object):
     
-    def __init__(self):
+    def __init__(self,parent):
+        self.parent = parent
         self.connected=False
         self.filename=""
         
@@ -52,8 +53,7 @@ class Database(object):
         except Exception as e:
             self.filename=""
             self.connected=False
-            err=QErrorMessage()
-            err.showMessage(str(e))
+            QMessageBox.critical(self.parent,"Facepager",str(e))
                 
     def disconnect(self):
         if self.connected:
@@ -73,22 +73,18 @@ class Database(object):
             try:
                 self.session.commit()
             except Exception as e:
-                err=QErrorMessage()
-                err.showMessage(str(e))
+                QMessageBox.critical(self.parent,"Facepager",str(e))
         else:
-            err=QErrorMessage()
-            err.showMessage("No database connection")
+            QMessageBox.information(self.parent,"Facepager","No database connection")
 
     def rollback(self):
         if self.connected:
             try:
                 self.session.rollback()
             except Exception as e:
-                err=QErrorMessage()
-                err.showMessage(str(e))
+                QMessageBox.critical(self.parent,"Facepager",str(e))
         else:
-            err=QErrorMessage()
-            err.showMessage("No database connection")            
+            QMessageBox.information(self.parent,"Facepager","No database connection")            
             
 
             
@@ -225,7 +221,7 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns=[]
         self.rootItem = TreeItem()
         self.database=database
-        self.requester=ApiRequester(mainWindow)
+        #self.requester=ApiRequester(mainWindow)
 
     def reset(self):        
         self.rootItem.clear()
@@ -289,31 +285,23 @@ class TreeModel(QAbstractItemModel):
             self.layoutChanged.emit()
                                     
             #self.endInsertRows()
-
-                                    
         except Exception as e:
-            err=QErrorMessage(self.mainWindow)
-            err.showMessage(str(e))        
+            QMessageBox.critical(self.parent,"Facepager",str(e))                    
 
             
     def queryData(self,index):
-        if not index.isValid():
-            return False
-            
-        treenode=index.internalPointer()
-        dbnode=Node.query.get(treenode.id)
-        
         try:
+            if not index.isValid():
+                return False
+                
+            treenode=index.internalPointer()
+            dbnode=Node.query.get(treenode.id)
+        
+        
             #get data
             try:
                 options=self.mainWindow.RequestTabs.currentWidget().getOptions();
-                
-                if options['requester']=='facebook':
-                    response = self.requester.request_facebook(treenode.data,options)
-                elif options['requester']=='twitter':
-                    response = self.requester.request_twitter(treenode.data,options)
-                elif options['requester']=='generic':
-                    response = self.requester.request_generic(treenode.data,options)
+                response = self.mainWindow.RequestTabs.currentWidget().fetchData(treenode.data,options)
   
             except Exception as e:
                 querystatus=str(e)
@@ -366,12 +354,10 @@ class TreeModel(QAbstractItemModel):
                 dbnode.querytype=options['querytype']
                 self.database.session.commit()
                 treenode.data=self.getItemData(dbnode)
-                
-                            
-        except Exception as e:
-            self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))                                          
 
-        self.layoutChanged.emit()
+            self.layoutChanged.emit()
+        except Exception as e:
+            self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))            
                             
                                 
     def columnCount(self, parent):

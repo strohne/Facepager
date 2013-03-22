@@ -6,236 +6,20 @@ from toolbar import Toolbar
 from tree import *
 from models import *
 from actions import *
-from PySide.QtWebKit import QWebView
-import urlparse
-from datetime import datetime, timedelta
+from apimodules import * 
 
-
-class FacebookTab(QWidget):
-
-    def __init__(self, parent=None,mainWindow=None):
-        QWidget.__init__(self, parent)
-        self.mainWindow=mainWindow
-
-        mainLayout = QFormLayout()
-                
-        #-Query Type
-        self.relationEdit=QComboBox(self)
-        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','global_brand_children','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
-        self.relationEdit.setEditable(True)
-        mainLayout.addRow("Query",self.relationEdit)
-
-        #-Since
-        self.sinceEdit=QDateEdit(self)
-        self.sinceEdit.setDate(datetime.today()-timedelta( days=7))
-        mainLayout.addRow("Since",self.sinceEdit)
-        
-
-        #-Until
-        self.untilEdit=QDateEdit(self)
-        self.untilEdit.setDate(datetime.today())
-        mainLayout.addRow("Until",self.untilEdit)
-        
-        #-Offset
-        self.offsetEdit=QSpinBox(self)
-        self.offsetEdit.setMaximum(500)
-        self.offsetEdit.setMinimum(0)
-        self.offsetEdit.setValue(0)
-        mainLayout.addRow("Offset",self.offsetEdit)
-
-        #-Limit
-        self.limitEdit=QSpinBox(self)
-        self.limitEdit.setMaximum(1000)
-        self.limitEdit.setMinimum(1)
-        self.limitEdit.setValue(50)
-        mainLayout.addRow("Limit",self.limitEdit)
-
-        #-Log in
-        loginlayout=QHBoxLayout()
-        
-        self.tokenEdit=QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokenEdit)
-
-        self.loginButton=QPushButton(" Login to Facebook ", self)
-        self.loginButton.clicked.connect(self.doLogin)
-        loginlayout.addWidget(self.loginButton)
-        
-        mainLayout.addRow("Access Token",loginlayout)
-                
-        self.setLayout(mainLayout)
-        
-    def getOptions(self):      
-        options={}
-        
-        
-        
-        #options for request  
-        options['requester']='facebook'       
-        options['querytype']=self.relationEdit.currentText()
-        options['relation']=self.relationEdit.currentText()
-        options['since']=self.sinceEdit.date().toString("yyyy-MM-dd")
-        options['until']=self.untilEdit.date().toString("yyyy-MM-dd")
-        options['offset']=self.offsetEdit.value()
-        options['limit']=self.limitEdit.value()
-        options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
-        if (options['accesstoken'] == ""): self.doLogin(True)
-        
-        #options for data handling
-        options['append']=True
-        options['appendempty']=True
-        options['objectid']='id'
-        
-        if (options['relation']=='<self>'):
-            options['nodedata']=None
-            options['splitdata']=False
-        else:  
-            options['nodedata']='data'
-            options['splitdata']=True
-               
-        return options        
-
-    @Slot()
-    def doLogin(self,query=False):
-        self.doQuery=query
-        window = QMainWindow(self.mainWindow)
-        window.resize(1200,800)
-        window.setWindowTitle("Facebook Login Page")
-        #create WebView with Facebook log-Dialog, OpenSSL needed        
-        logdlg=QWebView(window)
-        logdlg.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
-        logdlg.resize(window.size())
-        logdlg.show()
-        window.show()
-        # provide access to contents of the Login-Page
-        self.login_frame=logdlg       
-        #On Redirect, parse Acess-Token and initalize as central fb-Request
-        #is signaled with every redirect (better code?--> Signal emmited only when "Login" button on the Page is pressed
-        # and permissions are granted--> via JavaScript?)        
-        logdlg.urlChanged.connect(self.getToken)
-        
-
-    @Slot()
-    def getToken(self):
-        url = urlparse.parse_qs(self.login_frame.url().toString())
-        if url.has_key("https://www.facebook.com/connect/login_success.html#access_token"):
-           token=url["https://www.facebook.com/connect/login_success.html#access_token"]
-           if token:
-               self.tokenEdit.setText(token[0])
-               self.login_frame.parent().close()
-               if (self.doQuery == True): self.mainWindow.actions.queryNodes()
-
-        
-
-
-class TwitterTab(QWidget):
-
-    def __init__(self, parent=None,mainWindow=None):
-        QWidget.__init__(self, parent)
-        self.mainWindow=mainWindow
-        mainLayout = QFormLayout()
-                
-        #-Query Type
-        self.relationEdit=QComboBox(self)
-        self.relationEdit.insertItems(0,['statuses/user_timeline'])       
-        self.relationEdit.setEditable(True)
-        mainLayout.addRow("Resource",self.relationEdit)
-
-        #Parameter
-        self.objectidEdit=QComboBox(self)                
-        self.objectidEdit.insertItems(0,['screen_name'])
-        self.objectidEdit.insertItems(0,['user_id'])
-        self.objectidEdit.setEditable(True)
-        mainLayout.addRow("Object ID",self.objectidEdit)
-
-
-        self.setLayout(mainLayout)
-        
-    def getOptions(self):      
-        options={}
-        
-        #options for request 
-        options['requester']='twitter'
-        options['querytype']=self.relationEdit.currentText()
-        options['objectidparam']=self.objectidEdit.currentText()
-                
-        #options for data handling
-        options['append']=True
-        options['appendempty']=True        
-        options['splitdata']=True
-        options['nodedata']='data'
-        options['objectid']='id'        
-        
-        return options  
-
-class GenericTab(QWidget):
-
-    def __init__(self, parent=None,mainWindow=None):
-        QWidget.__init__(self, parent)
-        self.mainWindow=mainWindow
-        mainLayout = QFormLayout()
-                
-        #URL prefix 
-        self.prefixEdit=QComboBox(self)        
-        self.prefixEdit.insertItems(0,['https://api.twitter.com/1/statuses/user_timeline.json?screen_name='])               
-        self.prefixEdit.setEditable(True)
-        mainLayout.addRow("URL prefix",self.prefixEdit)
-
-        #URL field 
-        self.fieldEdit=QComboBox(self)
-        self.fieldEdit.insertItems(0,['<Object ID>','<None>'])       
-        self.fieldEdit.setEditable(True)        
-        mainLayout.addRow("URL field",self.fieldEdit)
-        
-        #URL suffix 
-        self.suffixEdit=QComboBox(self)
-        self.suffixEdit.insertItems(0,[''])       
-        self.suffixEdit.setEditable(True)        
-        mainLayout.addRow("URL suffix",self.suffixEdit)
-        
-
-        #Extract option 
-        self.extractEdit=QComboBox(self)
-        self.extractEdit.insertItems(0,['data'])
-        self.extractEdit.insertItems(0,['data.matches'])               
-        self.extractEdit.setEditable(True)
-        mainLayout.addRow("Extract key",self.extractEdit)
-
-        #Split option
-        self.splitEdit=QCheckBox("Split data",self)
-        self.splitEdit.setChecked(True)     
-        mainLayout.addRow(self.splitEdit)
-
-
-        self.setLayout(mainLayout)
-        
-    def getOptions(self):      
-        options={}
-        
-        #options for request 
-        options['requester']='generic'
-        options['querytype']='generic'
-        options['prefix']=self.prefixEdit.currentText()
-        options['suffix']=self.suffixEdit.currentText()
-        options['urlfield']=self.fieldEdit.currentText()
-                
-        #options for data handling
-        options['append']=True
-        options['appendempty']=True        
-        options['splitdata']=self.splitEdit.isChecked()
-        options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
-        options['objectid']='id'        
-        
-        return options  
 
 class MainWindow(QMainWindow):
     
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
         
-        self.setWindowTitle("Facepager")                
+        self.setWindowTitle("Facepager 3.0")                
         self.setWindowIcon(QIcon(":icons/data/icons//icon_facepager.png"))        
-        self.setMinimumSize(700,400)
+        self.setMinimumSize(800,400)
+        self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
+
+
         
         #self.deleteSettings()
         self.readSettings() 
@@ -246,8 +30,9 @@ class MainWindow(QMainWindow):
         self.updateUI()
         
         
+        
     def createDB(self):        
-        self.database = Database()
+        self.database = Database(self)
         lastpath = self.settings.value("lastpath")
         if lastpath and os.path.isfile(lastpath):
             self.database.connect(self.settings.value("lastpath"))
@@ -349,6 +134,7 @@ class MainWindow(QMainWindow):
         self.fieldList.append('created_time')
         self.fieldList.append('updated_time')
        
+        self.fieldList.setPlainText(self.settings.value('columns',self.fieldList.toPlainText()))       
                     
         groupLayout.addWidget(self.fieldList)        
                 
@@ -359,7 +145,7 @@ class MainWindow(QMainWindow):
         
         #requests
         actionlayout=QVBoxLayout()
-        requestLayout.addLayout(actionlayout)
+        requestLayout.addLayout(actionlayout,1)
         
         self.RequestTabs=QTabWidget()
         actionlayout.addWidget(self.RequestTabs)
@@ -377,7 +163,7 @@ class MainWindow(QMainWindow):
         fetchdata=QHBoxLayout()
         fetchdata.setContentsMargins(10,0,10,0)
         actionlayout.addLayout(fetchdata)        
-        fetchdata.addStretch(1)                         
+        #fetchdata.addStretch(1)                         
                                     
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
@@ -389,8 +175,8 @@ class MainWindow(QMainWindow):
  
         #label.setWordWrap(True)
         #label.setMaximumWidth(100)
-        fetchdata.addWidget(label)
-        fetchdata.addWidget(self.levelEdit)
+        fetchdata.addWidget(label,0)
+        fetchdata.addWidget(self.levelEdit,0)
         
         #-button        
         button=QPushButton(QIcon(":/icons/data/icons/find.png"),"Fetch Data", self.mainWidget)
@@ -398,14 +184,14 @@ class MainWindow(QMainWindow):
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.actions.actionQuery.trigger)
         button.setFont(f)
-        fetchdata.addWidget(button)
+        fetchdata.addWidget(button,1)
         
         
 
         
         #Status
         statusLayout=QVBoxLayout()        
-        requestLayout.addLayout(statusLayout)
+        requestLayout.addLayout(statusLayout,2)
 
         detailGroup=QGroupBox("Status Log")
         groupLayout=QVBoxLayout()
@@ -418,9 +204,6 @@ class MainWindow(QMainWindow):
         self.loglist.acceptRichText=False
         self.loglist.clear()
         groupLayout.addWidget(self.loglist)
-                
-         
-        
         
     def updateUI(self):
         #disable buttons that do not work without an opened database                   
@@ -436,15 +219,23 @@ class MainWindow(QMainWindow):
         self.settings = QSettings("Keyling", "Facepager")
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
-        self.settings.setValue("pos", self.pos())
+        self.settings.setValue("pos", self.pos())        
         self.settings.endGroup()
+        
+        self.settings.setValue('columns',self.fieldList.toPlainText())
+        
+        for i in range(self.RequestTabs.count()):
+              self.RequestTabs.widget(i).saveSettings()
+        
+        
              
 
     def readSettings(self):
         self.settings = QSettings("Keyling", "Facepager")
         self.settings.beginGroup("MainWindow")
-        self.resize(self.settings.value("size", QSize(800, 800)))
-        self.move(self.settings.value("pos", QPoint(200, 10)))
+        
+        #self.resize(self.settings.value("size", QSize(800, 800)))
+        #self.move(self.settings.value("pos", QPoint(200, 10)))
         self.settings.endGroup()         
       
     def deleteSettings(self):    
