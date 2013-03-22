@@ -79,6 +79,7 @@ class ApiRequester(object):
         
                 
     def request_facebook(self,nodedata,options):
+        if (options['accesstoken'] == ""): raise RequesterError("Access token is missing")
 
         if nodedata['objectid']==None:
             raise RequesterError("Empty object id")
@@ -96,7 +97,7 @@ class ApiRequester(object):
             urlpath=self.idtostr(nodedata['objectid'])+'/'+options['relation']            
             urlparams= { key: options[key] for key in ['limit','offset','since','until'] }                   
                 
-        urlparams["access_token"] =  "109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"         
+        urlparams["access_token"] =   options['accesstoken']         
         urlpath = "https://graph.facebook.com/" + urlpath
         
         self.mainWindow.loglist.append(str(datetime.datetime.now())+" Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))   
