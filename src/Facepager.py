@@ -7,6 +7,7 @@ from tree import *
 from models import *
 from actions import *
 from apimodules import * 
+from help import *
 
 
 class MainWindow(QMainWindow):
@@ -15,8 +16,8 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__()
         
         self.setWindowTitle("Facepager 3.0")                
-        self.setWindowIcon(QIcon(":icons/data/icons//icon_facepager.png"))        
-        self.setMinimumSize(800,400)
+        self.setWindowIcon(QIcon(":/icons/facepager_icons/mainicon.png"))        
+        self.setMinimumSize(900,400)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
 
 
@@ -47,6 +48,9 @@ class MainWindow(QMainWindow):
 
                         
     def createUI(self):
+        
+        self.helpwindow = HelpWindow(self)
+        
         self.toolbar=Toolbar(parent=self,mainWindow=self)
         self.addToolBar(Qt.TopToolBarArea,self.toolbar)    
         
@@ -148,12 +152,8 @@ class MainWindow(QMainWindow):
         requestLayout.addLayout(actionlayout,1)
         
         self.RequestTabs=QTabWidget()
-        actionlayout.addWidget(self.RequestTabs)
-        
-        #Tabs                      
-        self.RequestTabs.addTab(FacebookTab(None,self),"Facebook")
-        self.RequestTabs.addTab(TwitterTab(None,self),"Twitter")
-        self.RequestTabs.addTab(GenericTab(None,self),"Generic")    
+        actionlayout.addWidget(self.RequestTabs)        
+        loadTabs(self)
         
        #fetch data      
         f=QFont()
@@ -179,7 +179,7 @@ class MainWindow(QMainWindow):
         fetchdata.addWidget(self.levelEdit,0)
         
         #-button        
-        button=QPushButton(QIcon(":/icons/data/icons/find.png"),"Fetch Data", self.mainWidget)
+        button=QPushButton(QIcon(":/icons/facepager_icons/fetch.png"),"Fetch Data", self.mainWidget)
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.actions.actionQuery.trigger)

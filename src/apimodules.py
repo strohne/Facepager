@@ -3,7 +3,6 @@ from PySide.QtGui import *
 from PySide.QtWebKit import QWebView
 import urlparse
 import urllib,urllib2
-#import datetime
 from datetime import datetime, timedelta
 
 # Find a JSON parser
@@ -16,7 +15,11 @@ except ImportError:
         import json
 _parse_json = json.loads
 
-
+def loadTabs(mainWindow=None):                    
+    mainWindow.RequestTabs.addTab(FacebookTab(mainWindow,mainWindow),"Facebook")
+    mainWindow.RequestTabs.addTab(TwitterTab(mainWindow,mainWindow),"Twitter")
+    mainWindow.RequestTabs.addTab(GenericTab(mainWindow,mainWindow),"Generic")    
+    
 class ApiTab(QWidget):
     def __init__(self, parent=None,mainWindow=None,loadSettings=True):
         QWidget.__init__(self, parent)
@@ -238,11 +241,11 @@ class FacebookTab(ApiTab):
     def getToken(self):
         url = urlparse.parse_qs(self.login_frame.url().toString())
         if url.has_key("https://www.facebook.com/connect/login_success.html#access_token"):
-           token=url["https://www.facebook.com/connect/login_success.html#access_token"]
-           if token:
-               self.tokenEdit.setText(token[0])
-               self.login_frame.parent().close()
-               if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+            token=url["https://www.facebook.com/connect/login_success.html#access_token"]
+            if token:
+                self.tokenEdit.setText(token[0])
+                self.login_frame.parent().close()
+                if (self.doQuery == True): self.mainWindow.actions.queryNodes()
 
         
 
