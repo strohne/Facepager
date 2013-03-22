@@ -1,5 +1,5 @@
 data/
 build/exe.win32-2.7/
 build/exe.win32-2.7-version2-1/
-misc/
-*.project
+build/exe.win32-2.7-version2-2/
+misc/*.project
