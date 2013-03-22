@@ -6,6 +6,9 @@ from toolbar import Toolbar
 from tree import *
 from models import *
 from actions import *
+from PySide.QtWebKit import QWebView
+import urlparse
+from datetime import datetime, timedelta
 
 
 class FacebookTab(QWidget):
@@ -13,6 +16,7 @@ class FacebookTab(QWidget):
     def __init__(self, parent=None,mainWindow=None):
         QWidget.__init__(self, parent)
         self.mainWindow=mainWindow
+
         mainLayout = QFormLayout()
                 
         #-Query Type
@@ -23,13 +27,13 @@ class FacebookTab(QWidget):
 
         #-Since
         self.sinceEdit=QDateEdit(self)
-        self.sinceEdit.setDate(datetime.datetime.today().replace(year=datetime.datetime.today().year-1,day=datetime.datetime.today().day))
+        self.sinceEdit.setDate(datetime.today()-timedelta( days=7))
         mainLayout.addRow("Since",self.sinceEdit)
         
 
         #-Until
         self.untilEdit=QDateEdit(self)
-        self.untilEdit.setDate(datetime.datetime.today())
+        self.untilEdit.setDate(datetime.today())
         mainLayout.addRow("Until",self.untilEdit)
         
         #-Offset
@@ -45,11 +49,26 @@ class FacebookTab(QWidget):
         self.limitEdit.setMinimum(1)
         self.limitEdit.setValue(50)
         mainLayout.addRow("Limit",self.limitEdit)
+
+        #-Log in
+        loginlayout=QHBoxLayout()
         
+        self.tokenEdit=QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
+
+        self.loginButton=QPushButton(" Login to Facebook ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+        
+        mainLayout.addRow("Access Token",loginlayout)
+                
         self.setLayout(mainLayout)
         
     def getOptions(self):      
         options={}
+        
+        
         
         #options for request  
         options['requester']='facebook'       
@@ -59,6 +78,8 @@ class FacebookTab(QWidget):
         options['until']=self.untilEdit.date().toString("yyyy-MM-dd")
         options['offset']=self.offsetEdit.value()
         options['limit']=self.limitEdit.value()
+        options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
+        if (options['accesstoken'] == ""): self.doLogin(True)
         
         #options for data handling
         options['append']=True
@@ -73,6 +94,37 @@ class FacebookTab(QWidget):
             options['splitdata']=True
                
         return options        
+
+    @Slot()
+    def doLogin(self,query=False):
+        self.doQuery=query
+        window = QMainWindow(self.mainWindow)
+        window.resize(1200,800)
+        window.setWindowTitle("Facebook Login Page")
+        #create WebView with Facebook log-Dialog, OpenSSL needed        
+        logdlg=QWebView(window)
+        logdlg.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
+        logdlg.resize(window.size())
+        logdlg.show()
+        window.show()
+        # provide access to contents of the Login-Page
+        self.login_frame=logdlg       
+        #On Redirect, parse Acess-Token and initalize as central fb-Request
+        #is signaled with every redirect (better code?--> Signal emmited only when "Login" button on the Page is pressed
+        # and permissions are granted--> via JavaScript?)        
+        logdlg.urlChanged.connect(self.getToken)
+        
+
+    @Slot()
+    def getToken(self):
+        url = urlparse.parse_qs(self.login_frame.url().toString())
+        if url.has_key("https://www.facebook.com/connect/login_success.html#access_token"):
+           token=url["https://www.facebook.com/connect/login_success.html#access_token"]
+           if token:
+               self.tokenEdit.setText(token[0])
+               self.login_frame.parent().close()
+               if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+
         
 
 
@@ -182,8 +234,7 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__()
         
         self.setWindowTitle("Facepager")                
-        #self.setWindowIcon(QIcon("../icons/icon_facepager.png"))
-        self.setWindowIcon(QIcon("./icon_facepager.png"))        
+        self.setWindowIcon(QIcon(":icons/data/icons//icon_facepager.png"))        
         self.setMinimumSize(700,400)
         
         #self.deleteSettings()
@@ -212,7 +263,7 @@ class MainWindow(QMainWindow):
                         
     def createUI(self):
         self.toolbar=Toolbar(parent=self,mainWindow=self)
-        self.addToolBar(Qt.LeftToolBarArea,self.toolbar)    
+        self.addToolBar(Qt.TopToolBarArea,self.toolbar)    
         
         self.statusBar().showMessage('No database connection')
         self.statusBar().setSizeGripEnabled(False)       
@@ -305,43 +356,61 @@ class MainWindow(QMainWindow):
         button.clicked.connect(self.actions.actionShowColumns.trigger)
         groupLayout.addWidget(button)   
 
-        #expand all
-        detailGroup=QGroupBox("Tree")
-        detailLayout.addWidget(detailGroup)
-        groupLayout=QFormLayout()
-        detailGroup.setLayout(groupLayout)
-                
-        #-Button 
-        button=QPushButton("Expand all nodes")
-        button.clicked.connect(self.actions.actionExpandAll.trigger)
-        groupLayout.addWidget(button)   
-        
-        #-Button 
-        button=QPushButton("Collapse all nodes")
-        button.clicked.connect(self.actions.actionCollapseAll.trigger)
-        groupLayout.addWidget(button)   
-        
         
         #requests
+        actionlayout=QVBoxLayout()
+        requestLayout.addLayout(actionlayout)
+        
         self.RequestTabs=QTabWidget()
-        requestLayout.addWidget(self.RequestTabs)
+        actionlayout.addWidget(self.RequestTabs)
         
         #Tabs                      
         self.RequestTabs.addTab(FacebookTab(None,self),"Facebook")
         self.RequestTabs.addTab(TwitterTab(None,self),"Twitter")
-        self.RequestTabs.addTab(GenericTab(None,self),"Generic")
+        self.RequestTabs.addTab(GenericTab(None,self),"Generic")    
+        
+       #fetch data      
+        f=QFont()
+        f.setPointSize(11)
 
+                                     
+        fetchdata=QHBoxLayout()
+        fetchdata.setContentsMargins(10,0,10,0)
+        actionlayout.addLayout(fetchdata)        
+        fetchdata.addStretch(1)                         
+                                    
+        #-Level
+        self.levelEdit=QSpinBox(self.mainWidget)
+        self.levelEdit.setMinimum(1)
+        self.levelEdit.setFont(f)
+        self.levelEdit.setMinimumHeight(35)
+        label=QLabel("For all selected nodes and \ntheir children of level")
+        #label.setFont(f)    
+ 
+        #label.setWordWrap(True)
+        #label.setMaximumWidth(100)
+        fetchdata.addWidget(label)
+        fetchdata.addWidget(self.levelEdit)
+        
+        #-button        
+        button=QPushButton(QIcon(":/icons/data/icons/find.png"),"Fetch Data", self.mainWidget)
+        button.setMinimumSize(QSize(120,40))
+        button.setIconSize(QSize(32,32))
+        button.clicked.connect(self.actions.actionQuery.trigger)
+        button.setFont(f)
+        fetchdata.addWidget(button)
         
         
-        #request
-        actionLayout=QVBoxLayout()        
-        requestLayout.addLayout(actionLayout)
 
-        #log
+        
+        #Status
+        statusLayout=QVBoxLayout()        
+        requestLayout.addLayout(statusLayout)
+
         detailGroup=QGroupBox("Status Log")
         groupLayout=QVBoxLayout()
         detailGroup.setLayout(groupLayout)
-        actionLayout.addWidget(detailGroup,1)
+        statusLayout.addWidget(detailGroup,1)
                 
         self.loglist=QTextEdit()
         self.loglist.setLineWrapMode(QTextEdit.NoWrap)
@@ -350,29 +419,9 @@ class MainWindow(QMainWindow):
         self.loglist.clear()
         groupLayout.addWidget(self.loglist)
                 
-        #fetch data                                    
-        fetchdata=QHBoxLayout()
-        mainLayout.addLayout(fetchdata)
-                        
-                                              
-        #-Level
-        self.levelEdit=QSpinBox(self.mainWidget)
-        self.levelEdit.setMinimum(1)
-        fetchdata.addWidget(QLabel("For all selected nodes and their children of level"))
-        fetchdata.addWidget(self.levelEdit)
+         
         
-        #-button        
-        button=QPushButton("Fetch Data", self.mainWidget)
-        button.clicked.connect(self.actions.actionQuery.trigger)
-        fetchdata.addWidget(button)
         
-        fetchdata.addStretch(1)
-        
-
-          
-        
-                 
-
     def updateUI(self):
         #disable buttons that do not work without an opened database                   
         self.actions.databaseActions.setEnabled(self.database.connected)

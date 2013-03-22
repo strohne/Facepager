@@ -12,21 +12,21 @@ class Actions(object):
 
         self.mainWindow=mainWindow
         
-        self.basicActions=QActionGroup(self.mainWindow)        
+        self.basicActions=QActionGroup(self.mainWindow)       
         self.actionOpen=self.basicActions.addAction(QIcon(":/icons/data/icons/document-import.png"),"Open Database")        
         self.actionNew=self.basicActions.addAction(QIcon(":/icons/data/icons/window_new.png"),"New Database")        
                 
         self.databaseActions=QActionGroup(self.mainWindow)
         self.actionExport=self.databaseActions.addAction(QIcon(":icons/data/icons/document-export.png"),"Export Data")        
         self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/data/icons/bookmark_add.png"),"Add Nodes")                
-        self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/data/icons/editdelete.png"),"Delete Selected Nodes")
+        self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/data/icons/editdelete.png"),"Delete Nodes")
         
-        self.facebookActions=QActionGroup(self.mainWindow)        
-        self.actionQuery=self.facebookActions.addAction(QIcon(":/icons/data/icons/find.png"),"Query")                
-        self.actionShowColumns=self.facebookActions.addAction("Show Columns")
-        self.actionUnpackData=self.facebookActions.addAction("Unpack Data")
-        self.actionExpandAll=self.facebookActions.addAction("Expand all nodes")
-        self.actionCollapseAll=self.facebookActions.addAction("Collapse all nodes")
+        self.dataActions=QActionGroup(self.mainWindow)        
+        self.actionQuery=self.dataActions.addAction(QIcon(":/icons/data/icons/find.png"),"Query")                
+        self.actionShowColumns=self.dataActions.addAction("Show Columns")
+        #self.actionUnpackData=self.dataActions.addAction("Unpack Data")
+        self.actionExpandAll=self.dataActions.addAction("Expand nodes")
+        self.actionCollapseAll=self.dataActions.addAction("Collapse nodes")
 
         #connect the actions to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)
@@ -36,7 +36,7 @@ class Actions(object):
         self.actionDelete.triggered.connect(self.deleteNodes)
         self.actionQuery.triggered.connect(self.queryNodes)
         self.actionShowColumns.triggered.connect(self.showColumns)
-        self.actionUnpackData.triggered.connect(self.unpackData)
+        #self.actionUnpackData.triggered.connect(self.unpackData)
         self.actionExpandAll.triggered.connect(self.expandAll)
         self.actionCollapseAll.triggered.connect(self.collapseAll)
         
