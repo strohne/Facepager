@@ -67,7 +67,11 @@ class Actions(object):
 
         
     @Slot()
-    def deleteNodes(self):   
+    def deleteNodes(self):
+
+        reply = QMessageBox.question(self.mainWindow, 'Delete Nodes',"Are you sure to delete all selected nodes?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes: return
+    
         progress = QProgressDialog("Deleting data...", "Abort", 0, 0,self.mainWindow)
         progress.setWindowModality(Qt.WindowModal)
         progress.setMinimumDuration(0)
@@ -241,10 +245,10 @@ class Actions(object):
         
         # makes the user add a new facebook object into the db
         dialog=QDialog(self.mainWindow)
-        dialog.setWindowTitle("Add Facebook Objects")
+        dialog.setWindowTitle("Add Nodes")
         layout=QVBoxLayout()
         
-        label=QLabel("<b>Facebook IDs (one ID per line):</b>")
+        label=QLabel("<b>Object IDs (one ID per line):</b>")
         layout.addWidget(label)
         
         input=QTextEdit()           
@@ -301,24 +305,14 @@ class Actions(object):
         level=self.mainWindow.levelEdit.value()
         todo=self.mainWindow.tree.selectedIndexesAndChildren(level)
         progress.setMaximum(len(todo))
-        
-                    
+                            
         #Fetch data
         c=0
         for index in todo:            
             progress.setValue(c)
-            c+=1            
-            
-            try:
-                self.mainWindow.treemodel.queryData(index)
-            except Exception as e:
-                err=QErrorMessage()
-                err.showMessage(str(e))
-                       
-           
-            if progress.wasCanceled():
-                break 
- 
+            c+=1                        
+            self.mainWindow.treemodel.queryData(index)                                  
+            if progress.wasCanceled(): break  
 
         progress.cancel()   
 
