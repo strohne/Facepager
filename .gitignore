@@ -1,3 +1,8 @@
 data/
-misc/*.project
 private/
+misc/*.project
+src/*.pyc
+src/*.pyo
+.settings/
+.project
+.pydevproject
