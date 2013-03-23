@@ -1,32 +1,26 @@
-Facebook-Page Scraper-GUI-Tool
-
 Facepager was made for fetching public available data from Facebook. All data is stored in a SQLite database and may be exported to Excel. 
 
-Version 2.0 features:
--Fetch data for multiple facebook objects at once
--Choose which relational data (comments, likes etc.) to download
--Customize columns in user interface and exported files
-
-Version 2.1 features:
--Search facebook
--Export to CSV instead of XLS, which is faster
--Minor bug fixes
+Version 3.0 features:
+- Refurbished user interface
+- Login to Facebook for fetching groups
+- Experimental generic downloader for all sorts of webservices delivering JSON
 
     
 Notice: Database files may be incompatible between different versions.
                                                       
-You should be aware that downloading large amounts of data may result in errors.
+You should be aware of error sources when dealing with Facebook API. There are access restrictions for the amount of data and due to privacy. 
 
-Getting started:
+Getting started
 
-1. Run Facepager
-2. Click "New Database" in the toolbar to create a blank database
-3. Add Facebook IDs by clicking "Add Nodes" in the toolbar. Enter the last part of a Facebook page, e.g. enter "Tatort" for the page "http://www.facebook.com/Tatort"
-4. Select one or more nodes in the view and click "Fetch data".  
+1. Click "New Database" in the toolbar to create a blank database
+2. Add Facebook IDs by clicking "Add Nodes" in the toolbar. Enter the last part of a Facebook page, e.g. enter "Tatort" for the page "http://www.facebook.com/Tatort". Alternatively you can enter "me" as reference to yourself.
+3. Select the Facebook tab and set Query to "<self>"
+4. In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.
+5. Select one or more nodes in the view and click "Fetch data".
+6. Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.
+7. Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
 
 
-Todo:
--Improve user experience and speed
--Log all queries
--Manage nodes (extended select, delete, sort, find...)
--Better source code documentation
+Citation
+
+Keyling, Till / JÅnger, Jakob (2013). Facepager 3. Tool for Downloading Facebook Data. Online at https://github.com/strohne/Facepager. 
