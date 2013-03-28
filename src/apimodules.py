@@ -1,6 +1,6 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from PySide.QtWebKit import QWebView
+from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
 import urllib,urllib2
 from datetime import datetime, timedelta
@@ -219,29 +219,40 @@ class FacebookTab(ApiTab):
         window = QMainWindow(self.mainWindow)
         window.resize(1200,800)
         window.setWindowTitle("Facebook Login Page")
+        
         #create WebView with Facebook log-Dialog, OpenSSL needed        
-        logdlg=QWebView(window)
-        logdlg.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
-        logdlg.resize(window.size())
-        logdlg.show()
+        webview=QWebView(window)
+        
+        webpage = QWebPageCustom(self)
+        webpage.logmessage.connect(self.mainWindow.logmessage)   
+        webview.setPage(webpage);
+        
+        webview.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
+        webview.resize(window.size())
+        webview.show()
         window.show()
         # provide access to contents of the Login-Page
-        self.login_frame=logdlg       
+        self.login_webview=webview       
         #On Redirect, parse Acess-Token and initalize as central fb-Request
         #is signaled with every redirect (better code?--> Signal emmited only when "Login" button on the Page is pressed
         # and permissions are granted--> via JavaScript?)        
-        logdlg.urlChanged.connect(self.getToken)
+        webview.urlChanged.connect(self.getToken)
+        webview.loadFinished.connect(self.loadFinished)
         
 
     @Slot()
     def getToken(self):
-        url = urlparse.parse_qs(self.login_frame.url().toString())
+        url = urlparse.parse_qs(self.login_webview.url().toString())
         if url.has_key("https://www.facebook.com/connect/login_success.html#access_token"):
             token=url["https://www.facebook.com/connect/login_success.html#access_token"]
             if token:
                 self.tokenEdit.setText(token[0])
-                self.login_frame.parent().close()
+                self.login_webview.parent().close()
                 if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+           
+    @Slot()            
+    def loadFinished(self,success):
+        if (not success): self.mainWindow.logmessage('Error loading web page')
 
         
 
@@ -424,3 +435,38 @@ class RequesterError(Exception):
                     self.message = result
 
         Exception.__init__(self, self.message)
+        
+
+class QWebPageCustom(QWebPage):
+    
+    logmessage = Signal(str)
+    
+    def supportsExtension(self,extension): 
+        if (extension == QWebPage.ErrorPageExtension):
+            return True
+        else:
+            return False
+    
+    def extension(self,extension,option=0,output=0):
+        if (extension != QWebPage.ErrorPageExtension): return False
+    
+        #ErrorPageExtensionOption *errorOption = (ErrorPageExtensionOption*) option;
+        errorOption=option
+        #print(errorOption.url.toString())
+         
+        if (errorOption.domain == QWebPage.QtNetwork):
+            msg = "Network error ("+ str(errorOption.error)+"): "+errorOption.errorString
+                   
+        elif (errorOption.domain == QWebPage.QtHttp):
+            msg = "HTTP error ("+ str(errorOption.error)+"): "+errorOption.errorString
+            
+        elif(errorOption.domain == QWebPage.QtWebKit):
+            msg = "WebKit error ("+ str(errorOption.error)+"): "+errorOption.errorString    
+        else:
+            msg = errorOption.errorString
+                
+        print(msg)
+        self.logmessage.emit(msg)
+                
+        return False;        
+
