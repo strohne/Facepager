@@ -247,6 +247,10 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+            
+    @Slot(str)        
+    def logmessage(self,message):
+        self.loglist.append(str(datetime.now())+" "+message)            
 
 class Toolbar(QToolBar):
     '''
