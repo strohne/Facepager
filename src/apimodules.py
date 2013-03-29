@@ -449,21 +449,17 @@ class QWebPageCustom(QWebPage):
     
     def extension(self,extension,option=0,output=0):
         if (extension != QWebPage.ErrorPageExtension): return False
-    
-        #ErrorPageExtensionOption *errorOption = (ErrorPageExtensionOption*) option;
-        errorOption=option
-        #print(errorOption.url.toString())
          
-        if (errorOption.domain == QWebPage.QtNetwork):
-            msg = "Network error ("+ str(errorOption.error)+"): "+errorOption.errorString
+        if (option.domain == QWebPage.QtNetwork):
+            msg = "Network error ("+ str(option.error)+"): "+option.errorString
                    
-        elif (errorOption.domain == QWebPage.QtHttp):
-            msg = "HTTP error ("+ str(errorOption.error)+"): "+errorOption.errorString
+        elif (option.domain == QWebPage.Http):
+            msg = "HTTP error ("+ str(option.error)+"): "+option.errorString
             
-        elif(errorOption.domain == QWebPage.QtWebKit):
-            msg = "WebKit error ("+ str(errorOption.error)+"): "+errorOption.errorString    
+        elif(option.domain == QWebPage.WebKit):
+            msg = "WebKit error ("+ str(option.error)+"): "+option.errorString    
         else:
-            msg = errorOption.errorString
+            msg = option.errorString
                 
         print(msg)
         self.logmessage.emit(msg)
