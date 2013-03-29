@@ -221,24 +221,19 @@ class FacebookTab(ApiTab):
         window.setWindowTitle("Facebook Login Page")
         
         #create WebView with Facebook log-Dialog, OpenSSL needed        
-        webview=QWebView(window)
+        self.login_webview=QWebView(window)
         
         webpage = QWebPageCustom(self)
         webpage.logmessage.connect(self.mainWindow.logmessage)   
-        webview.setPage(webpage);
+        self.login_webview.setPage(webpage);
+        self.login_webview.urlChanged.connect(self.getToken)
+        self.login_webview.loadFinished.connect(self.loadFinished)
         
-        webview.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
-        webview.resize(window.size())
-        webview.show()
+        self.login_webview.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
+        self.login_webview.resize(window.size())
+        self.login_webview.show()
+        
         window.show()
-        # provide access to contents of the Login-Page
-        self.login_webview=webview       
-        #On Redirect, parse Acess-Token and initalize as central fb-Request
-        #is signaled with every redirect (better code?--> Signal emmited only when "Login" button on the Page is pressed
-        # and permissions are granted--> via JavaScript?)        
-        webview.urlChanged.connect(self.getToken)
-        webview.loadFinished.connect(self.loadFinished)
-        
 
     @Slot()
     def getToken(self):
