@@ -461,7 +461,9 @@ class QWebPageCustom(QWebPage):
         else:
             msg = option.errorString
                 
+        print(option.url)
         print(msg)
+        
         self.logmessage.emit(msg)
                 
         return False;        
