@@ -309,7 +309,7 @@ class TreeModel(QAbstractItemModel):
   
             except Exception as e:
                 querystatus=str(e)
-                self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))
+                self.mainWindow.logmessage(str(e))
                 
                 response={}
             else:
@@ -359,7 +359,7 @@ class TreeModel(QAbstractItemModel):
 
             self.layoutChanged.emit()
         except Exception as e:
-            self.mainWindow.loglist.append(str(datetime.datetime.now())+" "+str(e))
+            self.mainWindow.logmessage(str(e))
                             
                                 
     def columnCount(self, parent):
