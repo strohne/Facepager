@@ -48,7 +48,8 @@ class Actions(object):
     @Slot()
     def openDB(self):
         #open a file dialog with a .db filter
-        fldg=QFileDialog(caption="Open DB File",directory=self.mainWindow.settings.value("lastpath","."),filter="DB files (*.db)")
+        datadir=self.mainWindow.settings.value("lastpath",os.path.expanduser("~"))
+        fldg=QFileDialog(caption="Open DB File",directory=datadir,filter="DB files (*.db)")
         fldg.setFileMode(QFileDialog.ExistingFile)
         if fldg.exec_():
             self.mainWindow.database.connect(fldg.selectedFiles()[0])           
@@ -60,7 +61,8 @@ class Actions(object):
     @Slot()
     def makeDB(self):
         #same as openDB-Slot, but now for creating a new one on the file system
-        fldg=QFileDialog(caption="Save DB File",directory=self.mainWindow.settings.value("lastpath","."),filter="DB files (*.db)")        
+        datadir=self.mainWindow.settings.value("lastpath",os.path.expanduser("~"))
+        fldg=QFileDialog(caption="Save DB File",directory=datadir,filter="DB files (*.db)")        
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("db")
                
