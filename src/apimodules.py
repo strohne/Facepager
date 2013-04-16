@@ -210,7 +210,7 @@ class FacebookTab(ApiTab):
         urlparams["access_token"] =   options['accesstoken']         
         urlpath = "https://graph.facebook.com/" + urlpath
         
-        self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))   
+        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))   
         return self.request(urlpath,urlparams)          
 
     @Slot()
@@ -308,7 +308,7 @@ class TwitterTab(ApiTab):
             urlpath = "https://api.twitter.com/1/"+options["query"]+".json"        
             urlparams= {options["objectidparam"]:self.idtostr(nodedata['objectid'])}
         
-        self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))    
+        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))    
         return self.request(urlpath,urlparams)         
 
 class GenericTab(ApiTab):
@@ -399,7 +399,7 @@ class GenericTab(ApiTab):
                  
         urlpath = options["prefix"]+queryterm+options["suffix"]        
         
-        self.mainWindow.loglist.append(str(datetime.now())+" Fetching data for "+self.idtostr(nodedata['objectid'])+" from "+urlpath)    
+        self.mainWindow.logmessage("Fetching data for "+self.idtostr(nodedata['objectid'])+" from "+urlpath)    
         return self.request(urlpath)       
 
 
