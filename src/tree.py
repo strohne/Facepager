@@ -20,8 +20,10 @@ class Tree(QTreeView):
         self.mainWindow.detailData.clear()
         if current.isValid():     
             item=current.internalPointer()
-            for prop in item.data['response']:
-                self.mainWindow.detailData.append(prop+": "+json.dumps(item.data['response'].get(prop)))
+            self.mainWindow.detailData.append(json.dumps(item.data['response'],indent=2, separators=(',', ': ')))
+            #for prop in item.data['response']:
+            #    self.mainWindow.detailData.append(prop+": "+json.dumps(item.data['response'].get(prop)))
+                
             
                 
         #select level
