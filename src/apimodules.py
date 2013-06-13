@@ -4,6 +4,7 @@ from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
 import urllib,urllib2
 from datetime import datetime, timedelta
+from components import *
 
 # Find a JSON parser
 try:
@@ -50,6 +51,8 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
                                           
     def loadSettings(self):
+        #self.setOptions({})       
+        #return (False) 
         self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
         options={}
         for key in self.mainWindow.settings.allKeys():        
@@ -58,12 +61,13 @@ class ApiTab(QWidget):
         
         self.setOptions(options)                                    
         
-    def request(self, path, args=None):
+    def request(self, path, args=None,headers={}):
         
         path=path + "?" +urllib.urlencode(args) if args else path
-        post_data = None
+        
         try:
-            file = urllib2.urlopen(path, post_data, timeout=self.timeout)
+            req = urllib2.Request(path,headers=headers)
+            file = urllib2.urlopen(req,timeout=self.timeout)
         except urllib2.HTTPError, e:
             response = _parse_json(e.read())
             raise RequesterError(response)
@@ -261,55 +265,133 @@ class TwitterTab(ApiTab):
                 
         #-Query Type
         self.relationEdit=QComboBox(self)
-        self.relationEdit.insertItems(0,['statuses/user_timeline'])       
-        self.relationEdit.insertItems(0,['<search>'])
+        
+        self.relationEdit.insertItems(0,['users/lookup','users/show''users/search'])      
+        self.relationEdit.insertItems(0,['followers/list','followers/ids','friends/list','friends/ids'])        
+        self.relationEdit.insertItems(0,['statuses/retweeters/ids','statuses/show/:id','statuses/retweets/:id','statuses/retweets_of_me'])
+        self.relationEdit.insertItems(0,['statuses/home_timeline','statuses/mentions_timeline','statuses/user_timeline'])                       
+        self.relationEdit.insertItems(0,['search/tweets'])
+        
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Resource",self.relationEdit)
 
+         
         #Parameter
-        self.objectidEdit=QComboBox(self)                
-        self.objectidEdit.insertItems(0,['screen_name'])
-        self.objectidEdit.insertItems(0,['user_id'])
-        self.objectidEdit.insertItems(0,['<search>'])
-        self.objectidEdit.setEditable(True)
-        mainLayout.addRow("Object ID",self.objectidEdit)
+        self.paramEdit = QParamEdit(self)
+        self.paramEdit.setNameOptions(['<None>','<:id>','q','screen_name','user_id']) #'count','until'
+        self.paramEdit.setValueOptions(['<None>','<Object ID>'])
+        
+        mainLayout.addRow("Parameters",self.paramEdit)
+ 
+        #-Log in
+        loginlayout=QHBoxLayout()
+        
+        self.tokenEdit=QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
 
+        self.loginButton=QPushButton(" Login to Twitter ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+        
+        mainLayout.addRow("Access Token",loginlayout)
 
+                 
         self.setLayout(mainLayout)
         if loadSettings: self.loadSettings()
-        
+  
+              
     def getOptions(self,persistent=False):      
         options={}
         
         #options for request 
         options['query'] = self.relationEdit.currentText()
         options['querytype']=self.name+':'+self.relationEdit.currentText()
-        options['objectidparam']=self.objectidEdit.currentText()
+        options['params']=self.paramEdit.getParams()
                 
         #options for data handling
         if not persistent:                 
             options['objectid']='id'
-            options['nodedata']='data.results' if (options["query"] == '<search>')  else 'data'                        
+            #options['nodedata']='data.results' if (options["query"] == '<search>')  else 'data'                        
+            options['nodedata']='data'
         
         return options  
 
     def setOptions(self,options):         
-        self.relationEdit.setEditText(options.get('query','<search>'))        
-        self.objectidEdit.setEditText(options.get('objectidparam','<search>'))
-
+        self.relationEdit.setEditText(options.get('query','search/tweets'))        
+        self.paramEdit.setParams(options.get('params',{'q':'<Object ID'}))
     
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
         
-        if (options["query"] == '<search>'):
-            urlpath = "http://search.twitter.com/search.json"        
-            urlparams= {"q":self.idtostr(nodedata['objectid'])}            
-        else:
-            urlpath = "https://api.twitter.com/1/"+options["query"]+".json"        
-            urlparams= {options["objectidparam"]:self.idtostr(nodedata['objectid'])}
+        #Resource
+        urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
         
-        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))    
-        return self.request(urlpath,urlparams)         
+        #Params
+        urlparams = {}                                
+        for name in options["params"]:
+            if (name == '<None>') | (name == ''): continue
+            if (options["params"][name] == '<None>') | (options["params"][name] == ''): continue
+                        
+            value = self.idtostr(nodedata['objectid']) if options["params"][name] == '<Object ID>' else nodedata[options[options["params"][name]]] 
+            if name == '<:id>':
+              urlpath = urlpath.replace(':id',value)                                        
+            else:
+              urlparams[name] = value
+                
+        #Authentication
+#        self.oauth={
+#            "oauth_consumer_key":"xvz1evFS4wEEPTGEFPHBog",
+#            "oauth_nonce":"kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg", 
+#            "oauth_signature":"tnnArxj06cWHq44gCs1OSKk%2FjLY%3D", 
+#            "oauth_signature_method":"HMAC-SHA1", 
+#            "oauth_timestamp":"1318622958", 
+#            "oauth_token":"370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb", 
+#            "oauth_version":"1.0"
+#        }
+#        
+        auth = 'OAuth ' 
+        headers={'Authorization':auth}        
+        
+        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams)+" and headers "+json.dumps(headers))    
+        return self.request(urlpath,urlparams,headers)        
+    
+    
+    @Slot()
+    def doLogin(self,query=False):
+        self.doQuery=query
+        window = QMainWindow(self.mainWindow)
+        window.resize(1200,800)
+        window.setWindowTitle("Facebook Login Page")
+        
+        #create WebView with Facebook log-Dialog, OpenSSL needed        
+        self.login_webview=QWebView(window)
+        
+        webpage = QWebPageCustom(self)
+        webpage.logmessage.connect(self.mainWindow.logmessage)   
+        self.login_webview.setPage(webpage);
+        self.login_webview.urlChanged.connect(self.getToken)
+        self.login_webview.loadFinished.connect(self.loadFinished)
+        
+        #self.login_webview.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
+        self.login_webview.resize(window.size())
+        self.login_webview.show()
+        
+        window.show()
+
+    @Slot()
+    def getToken(self):
+        url = urlparse.parse_qs(self.login_webview.url().toString())
+        if url.has_key("https://www.facebook.com/connect/login_success.html#access_token"):
+            token=url["https://www.facebook.com/connect/login_success.html#access_token"]
+            if token:
+                self.tokenEdit.setText(token[0])
+                self.login_webview.parent().close()
+                if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+           
+    @Slot()            
+    def loadFinished(self,success):
+        if (not success): self.mainWindow.logmessage('Error loading web page')     
 
 class GenericTab(ApiTab):
 
