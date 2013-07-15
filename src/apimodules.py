@@ -5,6 +5,7 @@ import urlparse
 import urllib,urllib2
 from datetime import datetime, timedelta
 from components import *
+from rauth import OAuth1Service
 
 # Find a JSON parser
 try:
@@ -274,6 +275,20 @@ class TwitterTab(ApiTab):
         
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Resource",self.relationEdit)
+        #Twitter OAUTH consumer key and secret (should be kept secret on github
+        #in the future!!)
+        self.consumer_key = 'BXczKRXJpd8VSogbEA'
+        self.consumer_secret = 'beanc6H8c1Q27NpH26OMX3URDS9nyrbiyUGKQJS8M8'
+        #see the overcomplicated OAuth1 Handshake here https://github.com/litl/rauth
+        self.twitter = OAuth1Service(
+                            consumer_key=self.consumer_key,
+                            consumer_secret=self.consumer_secret,
+                            name='twitter',
+                            access_token_url='https://api.twitter.com/oauth/access_token',
+                            authorize_url='https://api.twitter.com/oauth/authorize',
+                            request_token_url='https://api.twitter.com/oauth/request_token',
+                            base_url='https://api.twitter.com/1.1/')
+
 
          
         #Parameter
@@ -308,18 +323,28 @@ class TwitterTab(ApiTab):
         options['query'] = self.relationEdit.currentText()
         options['querytype']=self.name+':'+self.relationEdit.currentText()
         options['params']=self.paramEdit.getParams()
-                
+        options['accesstoken']= self.tokenEdit.text()        
         #options for data handling
         if not persistent:                 
             options['objectid']='id'
             #options['nodedata']='data.results' if (options["query"] == '<search>')  else 'data'                        
             options['nodedata']='data'
         
-        return options  
+        return options
+
 
     def setOptions(self,options):         
         self.relationEdit.setEditText(options.get('query','search/tweets'))        
         self.paramEdit.setParams(options.get('params',{'q':'<Object ID'}))
+
+    def makeauthedSession(self):
+        self.authedsession=self.twitter.get_auth_session(self.requesttoken,
+                                    self.requestkey,method="POST",
+                                    data={'oauth_verifier':self.tokenEdit.text()})
+        #todo: This methods gets an accesstoken and instantiates a session, but
+        #doesn´t store the token. It´s better to get the access_token as
+        #mentioned here (see the end of the page) https://dev.twitter.com/docs/auth/implementing-sign-twitter
+        # May be not possible to reuse the token? https://dev.twitter.com/docs/auth/3-legged-authorization
     
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
@@ -339,23 +364,16 @@ class TwitterTab(ApiTab):
             else:
               urlparams[name] = value
                 
-        #Authentication
-#        self.oauth={
-#            "oauth_consumer_key":"xvz1evFS4wEEPTGEFPHBog",
-#            "oauth_nonce":"kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg", 
-#            "oauth_signature":"tnnArxj06cWHq44gCs1OSKk%2FjLY%3D", 
-#            "oauth_signature_method":"HMAC-SHA1", 
-#            "oauth_timestamp":"1318622958", 
-#            "oauth_token":"370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb", 
-#            "oauth_version":"1.0"
-#        }
-#        
-        auth = 'OAuth ' 
-        headers={'Authorization':auth}        
+
         
-        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams)+" and headers "+json.dumps(headers))    
-        return self.request(urlpath,urlparams,headers)        
-    
+        self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
+                {2}".format(nodedata['objectid'],urlpath,json.dumps(urlparams)))    
+        if not hasattr(self,"authedsession"):
+            #construct a Requests session with rauth library
+            self.makeauthedSession()
+        #return data from the request, buggy, because the request-method of the
+        #class is overriden at the moment
+        return {"data":self.authedsession.get(urlpath,params=urlparams).content}    
     
     @Slot()
     def doLogin(self,query=False):
@@ -364,7 +382,7 @@ class TwitterTab(ApiTab):
         window.resize(1200,800)
         window.setWindowTitle("Facebook Login Page")
         
-        #create WebView with Facebook log-Dialog, OpenSSL needed        
+        #create WebView with Twitter log-Dialog, OpenSSL needed        
         self.login_webview=QWebView(window)
         
         webpage = QWebPageCustom(self)
@@ -372,8 +390,11 @@ class TwitterTab(ApiTab):
         self.login_webview.setPage(webpage);
         self.login_webview.urlChanged.connect(self.getToken)
         self.login_webview.loadFinished.connect(self.loadFinished)
-        
-        #self.login_webview.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
+        # set the OAuth-reqeust-token and Key
+        self.requesttoken,self.requestkey=self.twitter.get_request_token()
+        #generate the auth-dialog with the request-token, if the dialog passes,
+        #the verification string is parsed via the getToken method (see above)
+        self.login_webview.load(QUrl(self.twitter.get_authorize_url(self.requesttoken)))
         self.login_webview.resize(window.size())
         self.login_webview.show()
         
@@ -382,8 +403,8 @@ class TwitterTab(ApiTab):
     @Slot()
     def getToken(self):
         url = urlparse.parse_qs(self.login_webview.url().toString())
-        if url.has_key("https://www.facebook.com/connect/login_success.html#access_token"):
-            token=url["https://www.facebook.com/connect/login_success.html#access_token"]
+        if "oauth_verifier" in url:
+            token=url["oauth_verifier"]
             if token:
                 self.tokenEdit.setText(token[0])
                 self.login_webview.parent().close()
