@@ -1,47 +1,90 @@
 <h1 style="font-size:11pt">Getting started</h1>
 
 <ol style="font-size:11pt;margin-left:0px;padding-left:0px;">
-<li style="margin-bottom:1em;">Click &quot;New Database&quot; in the toolbar to create a blank database</li>
-<li style="margin-bottom:1em">Add Facebook IDs by clicking &quot;Add Nodes&quot; in the toolbar. Enter the last part of a Facebook page, e.g. enter &quot;Tatort&quot; for the page &quot;http://www.facebook.com/Tatort&quot;. Alternatively you can enter "me" as reference to yourself.</li>
-<li style="margin-bottom:1em">Select the Facebook tab and set Query to "&lt;self&gt;"</li>   
-<li style="margin-bottom:1em">In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.</li>    
-<li style="margin-bottom:1em">Select one or more nodes in the view and click &quot;Fetch data&quot;.</li> 
-<li style="margin-bottom:1em">Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.</li>
-<li style="margin-bottom:1em">Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".</li>  
+    <li style="margin-bottom:1em;">Click &quot;New Database&quot; in the toolbar to create a blank database</li>
+    <li style="margin-bottom:1em">Add Facebook IDs by clicking &quot;Add Nodes&quot; in the toolbar. Enter the last part of a Facebook page, e.g. enter &quot;Tatort&quot; for the page &quot;http://www.facebook.com/Tatort&quot;. Alternatively you can enter "me" as reference to yourself.</li>
+    <li style="margin-bottom:1em">Select the Facebook tab and set Query to "&lt;self&gt;"</li>   
+    <li style="margin-bottom:1em">In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.</li>    
+    <li style="margin-bottom:1em">Select one or more nodes in the view and click &quot;Fetch data&quot;.</li> 
+    <li style="margin-bottom:1em">Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.</li>
+    <li style="margin-bottom:1em">Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".</li>  
 </ol>
 
 <h1 style="font-size:11pt">Getting data from the Facebook-API</h1>
 <ol style="font-size:11pt;margin-left:0px;padding-left:0px;">
 
-<li style="margin-bottom:1em;">The "Query" parameter denotes the object or entity you want to fetch from Facebook. When you entered the name of a Facebook-Page via "Add Node", the Query should contain  "&lt;self&gt;". This mean, that the ID of this starting point (i.e. its name) is fetched from Facebook. One could enter its own name or simple "me", and the tool fetches your own Facebook-Profile (you must gain access via the "Login to Facebook" first). As you can see the in the "Raw Data" window on the right side contains the raw information:</li>
-    <img src="facebook_rawdata.PNG"> 
-<li style="margin-bottom:1em;">This data is formatted in the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>, which follows a quite simple logic of key:value pair. One could say that keys relate to column in a Excel-Sheet, while values are the row-entries. On Facebook <b>every</b> object has a fixed ID. This ID is shown in the Column "Object ID" in the main window and is the starting point for all queries to the Facebook-API. For example, if you want to get all of your friends on Facebook, select the "me" node --> change the Query-Parameter to "friends" --> Fetch Data. As you can see from the Status-Log Window, a requests against the Facebook-API is done, containing both your own id and the queryparameter: <i>https://graph.facebook.com/1346277685/friends </i> </li> <br>
+<li style="margin-bottom:1em;">
+        The "Query" parameter denotes the object or entity you want to fetch from Facebook. When you entered the name of a Facebook-Page via "Add Node", the Query should contain  "&lt;self&gt;". 
+        This means that the ID of this starting point (i.e. it`s name) is fetched from Facebook. 
+        Enter your own Facebook-Name or simply a "me", and the tool fetches your own Facebook-Profile (you must gain access to your own via "Login to Facebook"). 
+        As you can see, the "Raw Data" window on the right side contains the raw information:
+</li>
 
-<table border="1">
-  <tr>
-    <th>Base URL</th>
-    <th>Object ID</th>
-    <th>Query Parameter</th>
-  </tr>
-  <tr>
-    <td>https://graph.facebook.com/1346277685/friends</td>
-    <td>1346277685</td>
-    <td>friends</td>
-  </tr>
-</table>
+<img src="facebook_rawdata.PNG" alt="Raw Data View" />
+
+<li style="margin-bottom:1em;">
+        This data is formatted in the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>, which follows a quite simple logic of key:value pair. 
+        One could state that keys relate to columns in an Excel-Sheet, while values are the row-values in that column. 
+        On Facebook <b>every</b> object has a fixed ID. This ID is shown in the column "Object ID" in the main window and is the starting point for all queries to the Facebook-API. 
+        For example, if you want to get all of your friends on Facebook, select the "me" node, change the "Query"-parameter to "friends" and click on "Fetch Data". 
+        As you can see from the Status-Log Window, a requests against the Facebook-API is done, containing both your own id and the queryparameter: <i>https://graph.facebook.com/1346277685/friends </i> 
+</li>
+    <br>
+    <table border="0">
+      <tr>
+        <th>Base URL</th>
+        <th>Object ID</th>
+        <th>Query Parameter</th>
+      </tr>
+      <tr>
+        <td> https://graph.facebook.com </td>
+        <td> 1346277685 </td>
+        <td> friends </td>
+      </tr>
+    </table>
 
 <br>
 
-<li style="margin-bottom:1em;">The reults of this request are shown in the main window. As you can see, the friends are automatically nested under the row of the current user ("me").
-This is a central concept: Every request is issued against a specific object (User, Post, Comments and so on) and it's object id </b> The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.</li>
-
+<li style="margin-bottom:1em;">
+The results of this request are shown in the main window. As you can see, the friends are automatically nested under the row of the current user ("me").
+This is a central concept: Every request is issued against a specific object (User, Post, Comments and so on) and it's object id. 
+The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.</li>
+<br>
 <img src="facebook_idsystem.PNG" >
 <br>
 
-For more information on Facebook-Objects and the underlying system (and the interpretation of the raw-data), see the <a href="https://developers.facebook.com/docs/reference/api/">Facebook API documentation </a>
+<li style="margin-bottom:1em;">
+For more information on Facebook-Objects and the underlying system (and the interpretation of the raw-data), see the <a href="https://developers.facebook.com/docs/reference/api/">Facebook API documentation </a>. 
+Information regarding the offset and limit parameter in detail, consider <a href="https://developers.facebook.com/docs/reference/api/pagination/"> this </a> documentation. 
+A quick explanation:
+
+    <ul> 
+        <li><b>Offset: </b> 
+            Imagine you want to fetch 500 comments for a Facebook-Post and the limit is set to "50". Thus, there are 10 "pages" of information available, each containing 50 comments. 
+            With the offset-parameter, you can cycle or paginate through these pages, i.e. an offset=51 would return the comments 51-100, offset=101 the comments 101-150 and so on 
+            (Info: Comments are usually ordered by their date). If you want to get all 500 comments, you habe to rreadjust the offse-parameter 10 times and do 10 requests in this case 
+            (offset=[0,51,101,151,201,251,301,351,401,451])  
+         </li>
+        <li><b>Limit: </b> 
+            This is the number of individual objects that are returned in page. The maximum is usually 500
+        </li>
+        <li><b>Since: </b> 
+            A date, f.e. denoting the objects creation time. In the above example, since="14.07.2013" would grab comments made after the 13.07.2013. 
+            Not every Facebook-Object has a timestamp and therefore a limit, f.e. the users friends (in this case, the "since"-paramter has no effect)
+        </li>
+        <li><b>Until: </b> 
+            A date, f.e. denoting the objects creation time. In the above example, until="17.07.2013" would grab comments made before the 17.07.2013. 
+            Not every Facebook-Object has a timestamp and therefore a limit, f.e. the users friends (in this case, the "until"-paramter has no effect). 
+            A combination of "since" and "until" is possible.
+        </li>
+    </ul>
+
+</li>
 </ol>
 
+
 <h1 style="font-size:11pt">Citation</h1>
-<p style="font-size:11pt">
-Keyling, Till / Jünger, Jakob (2013). Facepager 3. Tool for Downloading Facebook Data. Online at https://github.com/strohne/Facepager.
-</p>
+    <p style="font-size:11pt">
+        Keyling, Till / Jünger, Jakob (2013). Facepager 3. Tool for Downloading Facebook Data. Online at https://github.com/strohne/Facepager.
+    </p>
+
