@@ -327,8 +327,7 @@ class TwitterTab(ApiTab):
         #options for data handling
         if not persistent:                 
             options['objectid']='id'
-            #options['nodedata']='data.results' if (options["query"] == '<search>')  else 'data'                        
-            options['nodedata']='data'
+            options['nodedata']='statuses' if (options["query"] == 'search/tweets')  else None                        
         
         return options
 
@@ -336,6 +335,7 @@ class TwitterTab(ApiTab):
     def setOptions(self,options):         
         self.relationEdit.setEditText(options.get('query','search/tweets'))        
         self.paramEdit.setParams(options.get('params',{'q':'<Object ID'}))
+        self.tokenEdit.setText(options.get('accesstoken',''))
 
     def makeauthedSession(self):
         self.authedsession=self.twitter.get_auth_session(self.requesttoken,
@@ -373,7 +373,9 @@ class TwitterTab(ApiTab):
             self.makeauthedSession()
         #return data from the request, buggy, because the request-method of the
         #class is overriden at the moment
-        return {"data":self.authedsession.get(urlpath,params=urlparams).content}    
+        
+        response = self.authedsession.get(urlpath,params=urlparams)   
+        return response.json()
     
     @Slot()
     def doLogin(self,query=False):
