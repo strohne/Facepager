@@ -277,12 +277,15 @@ class TwitterTab(ApiTab):
         mainLayout.addRow("Resource",self.relationEdit)
         #Twitter OAUTH consumer key and secret (should be kept secret on github
         #in the future!!)
-        self.consumer_key = 'BXczKRXJpd8VSogbEA'
-        self.consumer_secret = 'beanc6H8c1Q27NpH26OMX3URDS9nyrbiyUGKQJS8M8'
+        
+        self.oauthdata = {
+             'consumer_key':'BXczKRXJpd8VSogbEA',
+             'consumer_secret':'beanc6H8c1Q27NpH26OMX3URDS9nyrbiyUGKQJS8M8'             
+        }
         #see the overcomplicated OAuth1 Handshake here https://github.com/litl/rauth
         self.twitter = OAuth1Service(
-                            consumer_key=self.consumer_key,
-                            consumer_secret=self.consumer_secret,
+                            consumer_key=self.oauthdata['consumer_key'],
+                            consumer_secret=self.oauthdata['consumer_secret'],
                             name='twitter',
                             access_token_url='https://api.twitter.com/oauth/access_token',
                             authorize_url='https://api.twitter.com/oauth/authorize',
@@ -323,7 +326,9 @@ class TwitterTab(ApiTab):
         options['query'] = self.relationEdit.currentText()
         options['querytype']=self.name+':'+self.relationEdit.currentText()
         options['params']=self.paramEdit.getParams()
-        options['accesstoken']= self.tokenEdit.text()        
+        if 'access_token' in self.oauthdata: options['access_token']= self.oauthdata['access_token']
+        if 'access_token_secret' in self.oauthdata: options['access_token_secret']= self.oauthdata['access_token_secret']
+                
         #options for data handling
         if not persistent:                 
             options['objectid']='id'
@@ -336,15 +341,35 @@ class TwitterTab(ApiTab):
         self.relationEdit.setEditText(options.get('query','search/tweets'))        
         self.paramEdit.setParams(options.get('params',{'q':'<Object ID'}))
         self.tokenEdit.setText(options.get('accesstoken',''))
+        if 'access_token' in options: self.oauthdata['access_token'] = options['access_token'] 
+        if 'access_token_secret' in options: self.oauthdata['access_token_secret'] = options['access_token_secret']
+        
+        
 
-    def makeauthedSession(self):
-        self.authedsession=self.twitter.get_auth_session(self.requesttoken,
-                                    self.requestkey,method="POST",
-                                    data={'oauth_verifier':self.tokenEdit.text()})
-        #todo: This methods gets an accesstoken and instantiates a session, but
-        #doesnt store the token. Its better to get the access_token as
-        #mentioned here (see the end of the page) https://dev.twitter.com/docs/auth/implementing-sign-twitter
-        # May be not possible to reuse the token? https://dev.twitter.com/docs/auth/3-legged-authorization
+         
+
+    def initSession(self):
+        if hasattr(self,"authedsession"):
+            return self.authedsession
+        
+        elif ('access_token' in self.oauthdata) and ('access_token_secret' in self.oauthdata):          
+            self.authedsession=self.twitter.get_session((self.oauthdata['access_token'], self.oauthdata['access_token_secret']))
+            return self.authedsession
+        
+        elif ('requesttoken' in self.oauthdata) and ('requesttoken_secret' in self.oauthdata) and ('oauth_verifier' in self.oauthdata):
+            self.authedsession=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
+                                        self.oauthdata['requesttoken_secret'],method="POST",
+                                        data={'oauth_verifier':self.oauthdata['oauth_verifier']})
+            
+            
+            self.oauthdata['access_token'] = self.authedsession.access_token
+            self.oauthdata['access_token_secret'] =self.authedsession.access_token_secret
+            return self.authedsession
+            
+        else:
+            self.doLogin(True)
+            return False
+
     
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
@@ -368,13 +393,13 @@ class TwitterTab(ApiTab):
         
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
                 {2}".format(nodedata['objectid'],urlpath,json.dumps(urlparams)))    
-        if not hasattr(self,"authedsession"):
-            #construct a Requests session with rauth library
-            self.makeauthedSession()
+        
         #return data from the request, buggy, because the request-method of the
         #class is overriden at the moment
         
-        response = self.authedsession.get(urlpath,params=urlparams)   
+        session = self.initSession()        
+        if (session == False): raise RequesterError("Access token is missing")
+        response = session.get(urlpath,params=urlparams)   
         return response.json()
     
     @Slot()
@@ -392,11 +417,18 @@ class TwitterTab(ApiTab):
         self.login_webview.setPage(webpage);
         self.login_webview.urlChanged.connect(self.getToken)
         self.login_webview.loadFinished.connect(self.loadFinished)
+        
+        
         # set the OAuth-reqeust-token and Key
-        self.requesttoken,self.requestkey=self.twitter.get_request_token()
+        if hasattr(self,'authedsession'): delattr(self,'authedsession')
+        self.oauthdata.pop('access_token',None)
+        self.oauthdata.pop('access_token_secret',None)
+        self.oauthdata.pop('oauth_verifier',None)
+        self.oauthdata['requesttoken'],self.oauthdata['requesttoken_secret']=self.twitter.get_request_token()
+        #self.requesttoken,self.requestkey=
         #generate the auth-dialog with the request-token, if the dialog passes,
         #the verification string is parsed via the getToken method (see above)
-        self.login_webview.load(QUrl(self.twitter.get_authorize_url(self.requesttoken)))
+        self.login_webview.load(QUrl(self.twitter.get_authorize_url(self.oauthdata['requesttoken'])))
         self.login_webview.resize(window.size())
         self.login_webview.show()
         
@@ -408,7 +440,8 @@ class TwitterTab(ApiTab):
         if "oauth_verifier" in url:
             token=url["oauth_verifier"]
             if token:
-                self.tokenEdit.setText(token[0])
+                #self.tokenEdit.setText(token[0])
+                self.oauthdata['oauth_verifier'] = token[0]
                 self.login_webview.parent().close()
                 if (self.doQuery == True): self.mainWindow.actions.queryNodes()
            
