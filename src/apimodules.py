@@ -187,8 +187,8 @@ class FacebookTab(ApiTab):
         self.relationEdit.setEditText(options.get('relation','<self>'))        
         if options.has_key('since'): self.sinceEdit.setDate(datetime.strptime(options['since'],"%Y-%m-%d"))
         if options.has_key('until'): self.untilEdit.setDate(datetime.strptime(options['until'],"%Y-%m-%d"))
-        self.offsetEdit.setValue(options.get('offset',0))
-        self.limitEdit.setValue(options.get('limit',50))
+        self.offsetEdit.setValue(int(options.get('offset',0)))
+        self.limitEdit.setValue(int(options.get('limit',50)))
         self.tokenEdit.setText(options.get('accesstoken','')) 
 
 
@@ -342,7 +342,7 @@ class TwitterTab(ApiTab):
                                     self.requestkey,method="POST",
                                     data={'oauth_verifier':self.tokenEdit.text()})
         #todo: This methods gets an accesstoken and instantiates a session, but
-        #doesn´t store the token. It´s better to get the access_token as
+        #doesnt store the token. Its better to get the access_token as
         #mentioned here (see the end of the page) https://dev.twitter.com/docs/auth/implementing-sign-twitter
         # May be not possible to reuse the token? https://dev.twitter.com/docs/auth/3-legged-authorization
     
