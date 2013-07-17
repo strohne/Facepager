@@ -10,17 +10,83 @@
     <li style="margin-bottom:1em">Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".</li>  
 </ol>
 
+<h1 style="font-size:11pt">Overview of the Facepager-Layout</h1>
+	<img src="https://raw.github.com/strohne/Facepager/twitterauth/src/help/facepager_overview_annotated.jpg" height=600 width=1000/>
+<ol style="font-size:11pt;margin-left:0px;padding-left:0px;">
+
+	<ul>
+		<li><b>Object View:</b>
+			This view includes the objects of your data collection (Facebook
+			Posts, Statuses or Twitter Tweets and
+			any other objects that an API is able to return. 
+			<br>
+			These objects have different attributes, which are displayed in the columns of the
+			object view and may differ between different types or classes of
+			objects (only the first four columns do not change, because they are crucial througout the whole data collection
+			process) and usually one object is one row. 
+			<br>
+			Objects may include objects (they may be nested): A Facebook Post may have Comments related to
+			that Post. When you request the Comments for a Post and a result is
+			returned, these comments are automatically inserted under the Post
+			as single rows.You´ll notice - depending on your operating system - an arrow or
+			plus sign besides the objects. Clicking it, will unfold the object
+			show the related or "child"-objects. Of course, objects may have
+			multiple levels or relationships.
+			</li>
+		<li><b>Query Window:</b> The starting point for fetching data from an
+			API.Preconfigured comes a tab for requesting data from Facebook, Twitter
+			and a "Generic"-Tab, which enables you to get data from most JSON-based
+			API (this is for the advanced usecases only).
+			<br>
+			Crawling data from Facebook and Twitter requires a <b>Login</b>
+			with your user credentials. Before starting your data collection
+			process, you should complete the login via the corresponding
+			buttons. A login-windows will open and once the login is
+			successful, collecting the data is possible <i>(NOTE: Your user credentials
+			are stored locally, i.e. no personal data is submitted to the
+			developers or any other authority)</i>.
+		</li>
+		<li><b>Status View:</b> This window is for logging and debugging
+		purposes only. Messages issued here may inform you about the details of
+		the data collection process or any other errors while fetching data.
+		</li
+		<li><b>Data & Column View:</b> This viewport includes two components:
+		The <b>Raw Data View</b> shows the unparsed, raw JSON-Data of the selected
+			object or row in the <b>Object View</b>.This data is displayed in
+			the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>,
+			which follows a quite simple logic of a "key":"value" -
+			notation <i>(NOTE: Most API´s return JSON-wrapped data)</i>i
+			<br>
+			While not all of the information in the raw data may be displayed in the
+			<b>Object View</b> as a single column, one can control the column
+			layout of the Object View via the <b>Custom Table Column</b>-Field:<br>
+			Each line in this field controls the columns in the Object View (and
+			the csv-export as well) and corresponds to a "key" in the
+			Raw-Data-View.For example, if you do not want to display the message
+			of a Facebook-Post, simply delete "message" from the Custom-Table
+			and click "Apply" (vice versa,add a key in the raw data to add a
+			column).
+			<br>
+			If there are nested key:value pairs in the raw data (f.e.
+		    {"user":{"name":"Facepager"}}, you can pass these nested keys
+			seperated by a dot (user.name) to the column setup, to display the
+			value ("Facepager").
+		</li>
+	</ul>
+
 <h1 style="font-size:11pt">Getting data from the Facebook-API</h1>
 <ol style="font-size:11pt;margin-left:0px;padding-left:0px;">
 
 <li style="margin-bottom:1em;">
-        The "Query" parameter denotes the object or entity you want to fetch from Facebook. When you entered the name of a Facebook-Page via "Add Node", the Query should contain  "&lt;self&gt;". 
-        This means that the ID of this starting point (i.e. it`s name) is fetched from Facebook. 
+        The "Query" parameter denotes the object or entity you want to fetch
+		from Facebook. When you entered the name of a Facebook-Page via "Add
+		Node", the "Query"-field should contain  "&lt;self&gt;". 
+        This means that the ID of this starting point (i.e. it`s name) is fetched from Facebook.
         Enter your own Facebook-Name or simply a "me", and the tool fetches your own Facebook-Profile (you must gain access to your own via "Login to Facebook"). 
         As you can see, the "Raw Data" window on the right side contains the raw information:
 </li>
 
-<img src="facebook_rawdata.PNG" alt="Raw Data View" />
+<img src="https://raw.github.com/strohne/Facepager/twitterauth/src/help/facebook_rawdata.PNG" alt="Raw Data View" />
 
 <li style="margin-bottom:1em;">
         This data is formatted in the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>, which follows a quite simple logic of key:value pair. 
@@ -50,7 +116,7 @@ The results of this request are shown in the main window. As you can see, the fr
 This is a central concept: Every request is issued against a specific object (User, Post, Comments and so on) and it's object id. 
 The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.</li>
 <br>
-<img src="facebook_idsystem.PNG" >
+<img src="https://raw.github.com/strohne/Facepager/twitterauth/src/help/facebook_idsystem.PNG" >
 <br>
 
 <li style="margin-bottom:1em;">
