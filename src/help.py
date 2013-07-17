@@ -1,4 +1,5 @@
 from PySide.QtCore import *
+from PySide.QtWebKit import *
 from PySide.QtGui import *
 import os
 import sys
@@ -13,14 +14,14 @@ class HelpWindow(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
         vLayout = QVBoxLayout(central)
-        browser = QTextBrowser(central)
+        browser = QWebView(central)
 
         if getattr(sys, 'frozen', False):
             application_path = os.path.dirname(sys.executable)
         elif __file__:
             application_path = os.path.dirname(__file__)
         
-        browser.setSource(QUrl().fromLocalFile(os.path.join(application_path,"help","help.html")))
+        browser.load(QUrl("http://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/twitterauth/src/help/help.html"))
         vLayout.addWidget(browser)
         hLayout = QHBoxLayout()
         vLayout.addLayout(hLayout)
