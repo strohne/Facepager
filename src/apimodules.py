@@ -104,6 +104,32 @@ class ApiTab(QWidget):
             raise RequesterError(response["error"]["type"],
                                 response["error"]["message"])
         return response    
+
+    @Slot()
+    def doLogin(self,query=False,caption='',url=''):
+        self.doQuery=query
+        window = QMainWindow(self.mainWindow)
+        window.resize(1200,800)
+        window.setWindowTitle(caption)
+        
+        #create WebView with Facebook log-Dialog, OpenSSL needed        
+        self.login_webview=QWebView(window)
+        
+        webpage = QWebPageCustom(self)
+        webpage.logmessage.connect(self.mainWindow.logmessage)   
+        self.login_webview.setPage(webpage);
+        self.login_webview.urlChanged.connect(self.getToken)
+        self.login_webview.loadFinished.connect(self.loadFinished)
+        
+        self.login_webview.load(QUrl(url))
+        self.login_webview.resize(window.size())
+        self.login_webview.show()
+        
+        window.show()
+            
+    @Slot()            
+    def loadFinished(self,success):
+        if (not success): self.mainWindow.logmessage('Error loading web page')    
         
 class FacebookTab(ApiTab):
 
@@ -218,28 +244,11 @@ class FacebookTab(ApiTab):
         self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))   
         return self.request(urlpath,urlparams)          
 
-    @Slot()
-    def doLogin(self,query=False):
-        self.doQuery=query
-        window = QMainWindow(self.mainWindow)
-        window.resize(1200,800)
-        window.setWindowTitle("Facebook Login Page")
-        
-        #create WebView with Facebook log-Dialog, OpenSSL needed        
-        self.login_webview=QWebView(window)
-        
-        webpage = QWebPageCustom(self)
-        webpage.logmessage.connect(self.mainWindow.logmessage)   
-        self.login_webview.setPage(webpage);
-        self.login_webview.urlChanged.connect(self.getToken)
-        self.login_webview.loadFinished.connect(self.loadFinished)
-        
-        self.login_webview.load(QUrl("https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"))
-        self.login_webview.resize(window.size())
-        self.login_webview.show()
-        
-        window.show()
 
+    @Slot()
+    def doLogin(self,query=False,caption="Facebook Login Page",url="https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"):
+        super(FacebookTab,self).doLogin(query,caption,url)
+        
     @Slot()
     def getToken(self):
         url = urlparse.parse_qs(self.login_webview.url().toString())
@@ -250,9 +259,7 @@ class FacebookTab(ApiTab):
                 self.login_webview.parent().close()
                 if (self.doQuery == True): self.mainWindow.actions.queryNodes()
            
-    @Slot()            
-    def loadFinished(self,success):
-        if (not success): self.mainWindow.logmessage('Error loading web page')
+
 
         
 
@@ -267,21 +274,22 @@ class TwitterTab(ApiTab):
         #-Query Type
         self.relationEdit=QComboBox(self)
         
-        self.relationEdit.insertItems(0,['users/lookup','users/show''users/search'])      
-        self.relationEdit.insertItems(0,['followers/list','followers/ids','friends/list','friends/ids'])        
-        self.relationEdit.insertItems(0,['statuses/retweeters/ids','statuses/show/:id','statuses/retweets/:id','statuses/retweets_of_me'])
-        self.relationEdit.insertItems(0,['statuses/home_timeline','statuses/mentions_timeline','statuses/user_timeline'])                       
+        self.relationEdit.insertItems(0,['users/show','users/search'])      
+        self.relationEdit.insertItems(0,['followers/list','friends/list'])        
+        self.relationEdit.insertItems(0,['statuses/show/:id','statuses/retweets/:id'])
+        self.relationEdit.insertItems(0,['statuses/user_timeline'])                       
         self.relationEdit.insertItems(0,['search/tweets'])
         
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Resource",self.relationEdit)
-        #Twitter OAUTH consumer key and secret (should be kept secret on github
-        #in the future!!)
         
+        #Twitter OAUTH consumer key and secret (should be kept secret on github
+        #in the future!!)        
         self.oauthdata = {
              'consumer_key':'BXczKRXJpd8VSogbEA',
              'consumer_secret':'beanc6H8c1Q27NpH26OMX3URDS9nyrbiyUGKQJS8M8'             
         }
+        
         #see the overcomplicated OAuth1 Handshake here https://github.com/litl/rauth
         self.twitter = OAuth1Service(
                             consumer_key=self.oauthdata['consumer_key'],
@@ -307,6 +315,12 @@ class TwitterTab(ApiTab):
         self.tokenEdit=QLineEdit()
         self.tokenEdit.setEchoMode(QLineEdit.Password)
         loginlayout.addWidget(self.tokenEdit)
+        
+        loginlayout.addWidget(QLabel("Access Token Secret"))
+
+        self.tokensecretEdit=QLineEdit()
+        self.tokensecretEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokensecretEdit)
 
         self.loginButton=QPushButton(" Login to Twitter ", self)
         self.loginButton.clicked.connect(self.doLogin)
@@ -326,46 +340,39 @@ class TwitterTab(ApiTab):
         options['query'] = self.relationEdit.currentText()
         options['querytype']=self.name+':'+self.relationEdit.currentText()
         options['params']=self.paramEdit.getParams()
-        if 'access_token' in self.oauthdata: options['access_token']= self.oauthdata['access_token']
-        if 'access_token_secret' in self.oauthdata: options['access_token_secret']= self.oauthdata['access_token_secret']
+        options['access_token'] = self.tokenEdit.text() 
+        options['access_token_secret'] = self.tokensecretEdit.text()
                 
         #options for data handling
         if not persistent:                 
             options['objectid']='id'
-            options['nodedata']='statuses' if (options["query"] == 'search/tweets')  else None                        
-        
+            
+            if (options["query"] == 'search/tweets'):
+                options['nodedata']='statuses'
+            elif (options["query"] == 'followers/list'):
+                options['nodedata']='users'
+            elif (options["query"] == 'friends/list'):
+                options['nodedata']='users'
+            else:
+                options['nodedata']=None    
+                        
         return options
 
 
     def setOptions(self,options):         
         self.relationEdit.setEditText(options.get('query','search/tweets'))        
         self.paramEdit.setParams(options.get('params',{'q':'<Object ID'}))
-        self.tokenEdit.setText(options.get('accesstoken',''))
-        if 'access_token' in options: self.oauthdata['access_token'] = options['access_token'] 
-        if 'access_token_secret' in options: self.oauthdata['access_token_secret'] = options['access_token_secret']
+        self.tokenEdit.setText(options.get('access_token',''))
+        self.tokensecretEdit.setText(options.get('access_token_secret',''))
         
-        
-
-         
-
     def initSession(self):
         if hasattr(self,"authedsession"):
             return self.authedsession
-        
-        elif ('access_token' in self.oauthdata) and ('access_token_secret' in self.oauthdata):          
-            self.authedsession=self.twitter.get_session((self.oauthdata['access_token'], self.oauthdata['access_token_secret']))
+                
+        elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):                  
+            self.authedsession=self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
             return self.authedsession
-        
-        elif ('requesttoken' in self.oauthdata) and ('requesttoken_secret' in self.oauthdata) and ('oauth_verifier' in self.oauthdata):
-            self.authedsession=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
-                                        self.oauthdata['requesttoken_secret'],method="POST",
-                                        data={'oauth_verifier':self.oauthdata['oauth_verifier']})
-            
-            
-            self.oauthdata['access_token'] = self.authedsession.access_token
-            self.oauthdata['access_token_secret'] =self.authedsession.access_token_secret
-            return self.authedsession
-            
+                    
         else:
             self.doLogin(True)
             return False
@@ -394,45 +401,20 @@ class TwitterTab(ApiTab):
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
                 {2}".format(nodedata['objectid'],urlpath,json.dumps(urlparams)))    
         
-        #return data from the request, buggy, because the request-method of the
-        #class is overriden at the moment
         
         session = self.initSession()        
-        if (session == False): raise RequesterError("Access token is missing")
+        if (session == False): raise RequesterError("No access, login to Twitter first.")
         response = session.get(urlpath,params=urlparams)   
         return response.json()
     
     @Slot()
-    def doLogin(self,query=False):
-        self.doQuery=query
-        window = QMainWindow(self.mainWindow)
-        window.resize(1200,800)
-        window.setWindowTitle("Facebook Login Page")
-        
-        #create WebView with Twitter log-Dialog, OpenSSL needed        
-        self.login_webview=QWebView(window)
-        
-        webpage = QWebPageCustom(self)
-        webpage.logmessage.connect(self.mainWindow.logmessage)   
-        self.login_webview.setPage(webpage);
-        self.login_webview.urlChanged.connect(self.getToken)
-        self.login_webview.loadFinished.connect(self.loadFinished)
-        
-        
-        # set the OAuth-reqeust-token and Key
-        if hasattr(self,'authedsession'): delattr(self,'authedsession')
-        self.oauthdata.pop('access_token',None)
-        self.oauthdata.pop('access_token_secret',None)
+    def doLogin(self,query=False,caption="Twitter Login Page",url=""):
+
         self.oauthdata.pop('oauth_verifier',None)
         self.oauthdata['requesttoken'],self.oauthdata['requesttoken_secret']=self.twitter.get_request_token()
-        #self.requesttoken,self.requestkey=
-        #generate the auth-dialog with the request-token, if the dialog passes,
-        #the verification string is parsed via the getToken method (see above)
-        self.login_webview.load(QUrl(self.twitter.get_authorize_url(self.oauthdata['requesttoken'])))
-        self.login_webview.resize(window.size())
-        self.login_webview.show()
         
-        window.show()
+        super(TwitterTab,self).doLogin(query,caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
+
 
     @Slot()
     def getToken(self):
@@ -440,14 +422,18 @@ class TwitterTab(ApiTab):
         if "oauth_verifier" in url:
             token=url["oauth_verifier"]
             if token:
-                #self.tokenEdit.setText(token[0])
                 self.oauthdata['oauth_verifier'] = token[0]
+                self.authedsession=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
+                                            self.oauthdata['requesttoken_secret'],method="POST",
+                                            data={'oauth_verifier':self.oauthdata['oauth_verifier']})
+                
+                              
+                self.tokenEdit.setText(self.authedsession.access_token)
+                self.tokensecretEdit.setText(self.authedsession.access_token_secret)              
+                
                 self.login_webview.parent().close()
                 if (self.doQuery == True): self.mainWindow.actions.queryNodes()
-           
-    @Slot()            
-    def loadFinished(self,success):
-        if (not success): self.mainWindow.logmessage('Error loading web page')     
+
 
 class GenericTab(ApiTab):
 
