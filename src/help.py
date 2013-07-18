@@ -21,7 +21,7 @@ class HelpWindow(QMainWindow):
         elif __file__:
             application_path = os.path.dirname(__file__)
         
-        browser.load(QUrl("http://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/twitterauth/src/help/help.html"))
+        browser.load(QUrl("http://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"))
         vLayout.addWidget(browser)
         hLayout = QHBoxLayout()
         vLayout.addLayout(hLayout)
