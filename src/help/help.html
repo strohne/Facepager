@@ -1,8 +1,8 @@
 <h1 style="font-size:11pt">Getting started</h1>
 
-<ol style="font-size:11pt;margin-left:0px;padding-left:0px;">
-    <li style="margin-bottom:1em;">Click &quot;New Database&quot; in the toolbar to create a blank database</li>
-    <li style="margin-bottom:1em">Add Facebook IDs by clicking &quot;Add Nodes&quot; in the toolbar. Enter the last part of a Facebook page, e.g. enter &quot;Tatort&quot; for the page &quot;http://www.facebook.com/Tatort&quot;. Alternatively you can enter "me" as reference to yourself.</li>
+<ol>
+    <li>Click &quot;New Database&quot; in the toolbar to create a blank database</li>
+    <li style="margin-bottom:1em">Add Facebook IDs by clicking &quot;Add Nodes&quot; in the toolbar. Enter the last part of a Facebook page, e.g. enter &quot;Tatort&quot; for the page &quot;http://www.Facebook.com/Tatort&quot;. Alternatively you can enter "me" as reference to yourself.</li>
     <li style="margin-bottom:1em">Select the Facebook tab and set Query to "&lt;self&gt;"</li>   
     <li style="margin-bottom:1em">In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.</li>    
     <li style="margin-bottom:1em">Select one or more nodes in the view and click &quot;Fetch data&quot;.</li> 
@@ -17,7 +17,7 @@
 	<ul>
 		<li><b>Object View:</b>
 			This view includes the objects of your data collection (Facebook
-			Posts, Statuses or Twitter Tweets and
+			posts, Statuses or Twitter Tweets and
 			any other objects that an API is able to return. 
 			<br>
 			These objects have different attributes, which are displayed in the columns of the
@@ -25,9 +25,9 @@
 			objects (only the first four columns do not change, because they are crucial througout the whole data collection
 			process) and usually one object is one row. 
 			<br>
-			Objects may include objects (they may be nested): A Facebook Post may have Comments related to
-			that Post. When you request the Comments for a Post and a result is
-			returned, these comments are automatically inserted under the Post
+			Objects may include objects (they may be nested): A Facebook-post may have comments related to
+			that post. When you request the comments for a post and a result is
+			returned, these comments are automatically inserted under the post
 			as single rows.You´ll notice - depending on your operating system - an arrow or
 			plus sign besides the objects. Clicking it, will unfold the object
 			show the related or "child"-objects. Of course, objects may have
@@ -63,7 +63,7 @@
 			Each line in this field controls the columns in the Object View (and
 			the csv-export as well) and corresponds to a "key" in the
 			Raw-Data-View.For example, if you do not want to display the message
-			of a Facebook-Post, simply delete "message" from the Custom-Table
+			of a Facebook-post, simply delete "message" from the Custom-Table
 			and click "Apply" (vice versa,add a key in the raw data to add a
 			column).
 			<br>
@@ -93,7 +93,7 @@
         One could state that keys relate to columns in an Excel-Sheet, while values are the row-values in that column. 
         On Facebook <b>every</b> object has a fixed ID. This ID is shown in the column "Object ID" in the main window and is the starting point for all queries to the Facebook-API. 
         For example, if you want to get all of your friends on Facebook, select the "me" node, change the "Query"-parameter to "friends" and click on "Fetch Data". 
-        As you can see from the Status-Log Window, a requests against the Facebook-API is done, containing both your own id and the queryparameter: <i>https://graph.facebook.com/1346277685/friends </i> 
+        As you can see from the Status-Log Window, a requests against the Facebook-API is done, containing both your own id and the queryparameter: <i>https://graph.Facebook.com/1346277685/friends </i> 
 </li>
     <br>
     <table border="0">
@@ -103,7 +103,7 @@
         <th>Query Parameter</th>
       </tr>
       <tr>
-        <td> https://graph.facebook.com </td>
+        <td> https://graph.Facebook.com </td>
         <td> 1346277685 </td>
         <td> friends </td>
       </tr>
@@ -113,22 +113,24 @@
 
 <li style="margin-bottom:1em;">
 The results of this request are shown in the main window. As you can see, the friends are automatically nested under the row of the current user ("me").
-This is a central concept: Every request is issued against a specific object (User, Post, Comments and so on) and it's object id. 
+This is a central concept: Every request is issued against a specific object (User, post, comments and so on) and it's object id. 
 The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.</li>
 <br>
 <img src="https://raw.github.com/strohne/Facepager/twitterauth/src/help/facebook_idsystem.PNG" >
 <br>
 
 <li style="margin-bottom:1em;">
-For more information on Facebook-Objects and the underlying system (and the interpretation of the raw-data), see the <a href="https://developers.facebook.com/docs/reference/api/">Facebook API documentation </a>. 
-Information regarding the offset and limit parameter in detail, consider <a href="https://developers.facebook.com/docs/reference/api/pagination/"> this </a> documentation. 
+For more information on Facebook-Objects and the underlying system (and the
+interpretation of the raw-data), see the <a href="https://developers.facebook.com/docs/reference/api/">Facebook API documentation </a>. 
+Information regarding the offset and limit parameter in detail, consider <a
+	href="https://developers.facebook.com/docs/reference/api/pagination/"> this </a> documentation. 
 A quick explanation:
 
     <ul> 
         <li><b>Offset: </b> 
-            Imagine you want to fetch 500 comments for a Facebook-Post and the limit is set to "50". Thus, there are 10 "pages" of information available, each containing 50 comments. 
+            Imagine you want to fetch 500 comments for a Facebook-post and the limit is set to "50". Thus, there are 10 "pages" of information available, each containing 50 comments. 
             With the offset-parameter, you can cycle or paginate through these pages, i.e. an offset=51 would return the comments 51-100, offset=101 the comments 101-150 and so on 
-            (Info: Comments are usually ordered by their date). If you want to get all 500 comments, you habe to rreadjust the offse-parameter 10 times and do 10 requests in this case 
+            (Info: comments are usually ordered by their date). If you want to get all 500 comments, you habe to rreadjust the offse-parameter 10 times and do 10 requests in this case 
             (offset=[0,51,101,151,201,251,301,351,401,451])  
          </li>
         <li><b>Limit: </b> 
