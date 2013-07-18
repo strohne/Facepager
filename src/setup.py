@@ -12,7 +12,7 @@ exe = Executable(
         )
 
 includes = ["sqlite3","facebook","dateutil","atexit","PySide.QtNetwork"]
-includefiles = ['help\help.html']
+#includefiles = ['help\help.html']
 
 
 buildoptions = {
@@ -23,7 +23,7 @@ buildoptions = {
 
 setup(
         name = "Facepager 3",
-        version = "3.0",
+        version = "3.1",
         description = "The Facebook Page Crawler",
         options = {'build_exe': buildoptions},
         executables = [exe]
