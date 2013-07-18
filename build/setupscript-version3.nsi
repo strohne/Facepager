@@ -5,7 +5,7 @@ CRCCheck On
 
 ;General
 
-OutFile "Facepager_Setup_3_0.exe"
+OutFile "Facepager_Setup_3_1.exe"
 ShowInstDetails "nevershow"
 ShowUninstDetails "nevershow"
 
@@ -87,8 +87,8 @@ File "_ssl.pyd"
 File "ssleay32.dll"
 File "libeay32.dll"
 
-SetOutPath "$INSTDIR\help"
-File "help\help.html"
+;SetOutPath "$INSTDIR\help"
+;File "help\help.html"
 
 ;CreateDirectory "$INSTDIR\help"
 ;CopyFiles "${NSISDIR}\Plugins\*.*" "C:\TEMP\test"
