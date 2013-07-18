@@ -1,18 +1,71 @@
-<h1 style="font-size:11pt">Getting started</h1>
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<base href="https://raw.github.com/strohne/Facepager/twitterauth/src/help/" />
+<title>Facepager Help</title>
+
+<style type="text/css">
+* {
+  font-size:11pt;
+  font-family:Arial,sans-serif;
+}
+
+h1 {
+  font-size:12pt;
+  
+  font-weight:bold;
+  margin-bottom:1em;
+  margin-top:2em;
+  padding:0px;
+  border-bottom:1px solid #333;
+}
+
+p {
+  margin-bottom:1em;
+}
+
+li {
+  margin-bottom:1em;
+}
+
+img {
+  margin:0.8em 0px 0.8em 0px;
+  padding:3px;
+  background-color:#eee;
+}
+
+table {
+  border:0px;
+}  
+
+table td, table th {
+  text-align:left;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Getting started</h1>
 
 <ol>
     <li>Click &quot;New Database&quot; in the toolbar to create a blank database</li>
-    <li style="margin-bottom:1em">Add Facebook IDs by clicking &quot;Add Nodes&quot; in the toolbar. Enter the last part of a Facebook page, e.g. enter &quot;Tatort&quot; for the page &quot;http://www.Facebook.com/Tatort&quot;. Alternatively you can enter "me" as reference to yourself.</li>
-    <li style="margin-bottom:1em">Select the Facebook tab and set Query to "&lt;self&gt;"</li>   
-    <li style="margin-bottom:1em">In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.</li>    
-    <li style="margin-bottom:1em">Select one or more nodes in the view and click &quot;Fetch data&quot;.</li> 
-    <li style="margin-bottom:1em">Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.</li>
-    <li style="margin-bottom:1em">Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".</li>  
+    <li>Add Facebook IDs by clicking &quot;Add Nodes&quot; in the toolbar. Enter the last part of a Facebook page, e.g. enter &quot;Tatort&quot; for the page &quot;http://www.Facebook.com/Tatort&quot;. Alternatively you can enter "me" as reference to yourself.</li>
+    <li>Select the Facebook tab and set Query to "&lt;self&gt;"</li>   
+    <li>In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.</li>    
+    <li>Select one or more nodes in the view and click &quot;Fetch data&quot;.</li> 
+    <li>Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.</li>
+    <li>Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".</li>  
 </ol>
 
-<h1 style="font-size:11pt">Overview of the Facepager-Layout</h1>
-	<img src="https://raw.github.com/strohne/Facepager/twitterauth/src/help/facepager_overview_annotated.jpg" height=600 width=1000/>
-<ol style="font-size:11pt;margin-left:0px;padding-left:0px;">
+<h1>Overview of the Facepager-Layout</h1>
+<img src="facepager_overview_annotated.png" />
+
+
 
 	<ul>
 		<li><b>Object View:</b>
@@ -49,7 +102,7 @@
 		<li><b>Status View:</b> This window is for logging and debugging
 		purposes only. Messages issued here may inform you about the details of
 		the data collection process or any other errors while fetching data.
-		</li
+		</li>
 		<li><b>Data & Column View:</b> This viewport includes two components:
 		The <b>Raw Data View</b> shows the unparsed, raw JSON-Data of the selected
 			object or row in the <b>Object View</b>.This data is displayed in
@@ -74,52 +127,57 @@
 		</li>
 	</ul>
 
-<h1 style="font-size:11pt">Getting data from the Facebook-API</h1>
-<ol style="font-size:11pt;margin-left:0px;padding-left:0px;">
+<h1>Getting data from the Facebook-API</h1>
 
-<li style="margin-bottom:1em;">
+<p>
         The "Query" parameter denotes the object or entity you want to fetch
 		from Facebook. When you entered the name of a Facebook-Page via "Add
 		Node", the "Query"-field should contain  "&lt;self&gt;". 
         This means that the ID of this starting point (i.e. it`s name) is fetched from Facebook.
         Enter your own Facebook-Name or simply a "me", and the tool fetches your own Facebook-Profile (you must gain access to your own via "Login to Facebook"). 
         As you can see, the "Raw Data" window on the right side contains the raw information:
-</li>
+</p>
 
-<img src="https://raw.github.com/strohne/Facepager/twitterauth/src/help/facebook_rawdata.PNG" alt="Raw Data View" />
+<img src="facebook_rawdata.PNG" alt="Raw Data View" />
 
-<li style="margin-bottom:1em;">
+<p>
         This data is formatted in the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>, which follows a quite simple logic of key:value pair. 
         One could state that keys relate to columns in an Excel-Sheet, while values are the row-values in that column. 
         On Facebook <b>every</b> object has a fixed ID. This ID is shown in the column "Object ID" in the main window and is the starting point for all queries to the Facebook-API. 
         For example, if you want to get all of your friends on Facebook, select the "me" node, change the "Query"-parameter to "friends" and click on "Fetch Data". 
         As you can see from the Status-Log Window, a requests against the Facebook-API is done, containing both your own id and the queryparameter: <i>https://graph.Facebook.com/1346277685/friends </i> 
-</li>
-    <br>
-    <table border="0">
+</p>
+    
+    
+    <table>
+    <thead>
       <tr>
         <th>Base URL</th>
         <th>Object ID</th>
         <th>Query Parameter</th>
       </tr>
+    </thead>  
+    <tbody>
       <tr>
         <td> https://graph.Facebook.com </td>
         <td> 1346277685 </td>
         <td> friends </td>
       </tr>
+     </tbody>
     </table>
 
 <br>
 
-<li style="margin-bottom:1em;">
+<p>
 The results of this request are shown in the main window. As you can see, the friends are automatically nested under the row of the current user ("me").
 This is a central concept: Every request is issued against a specific object (User, post, comments and so on) and it's object id. 
-The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.</li>
-<br>
-<img src="https://raw.github.com/strohne/Facepager/twitterauth/src/help/facebook_idsystem.PNG" >
-<br>
+The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.
+</p>
 
-<li style="margin-bottom:1em;">
+<img src="facebook_idsystem.PNG" >
+
+
+<p>
 For more information on Facebook-Objects and the underlying system (and the
 interpretation of the raw-data), see the <a href="https://developers.facebook.com/docs/reference/api/">Facebook API documentation </a>. 
 Information regarding the offset and limit parameter in detail, consider <a
@@ -146,13 +204,17 @@ A quick explanation:
             A combination of "since" and "until" is possible.
         </li>
     </ul>
-
-</li>
-</ol>
+</p>
 
 
-<h1 style="font-size:11pt">Citation</h1>
-    <p style="font-size:11pt">
-        Keyling, Till / Jünger, Jakob (2013). Facepager 3. Tool for Downloading Facebook Data. Online at https://github.com/strohne/Facepager.
-    </p>
+
+<h1>Citation</h1>
+<p>
+  Keyling, Till / Jünger, Jakob (2013). Facepager 3. Tool for Downloading Facebook Data. Online at https://github.com/strohne/Facepager.
+</p>
+
+
+
+</body>
+</html>
 
