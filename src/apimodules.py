@@ -241,7 +241,7 @@ class FacebookTab(ApiTab):
         urlparams["access_token"] =   options['accesstoken']         
         urlpath = "https://graph.facebook.com/" + urlpath
         
-        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))   
+        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))
         return self.request(urlpath,urlparams)          
 
 
@@ -397,21 +397,20 @@ class TwitterTab(ApiTab):
               urlparams[name] = value
                 
 
-        
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
-                {2}".format(nodedata['objectid'],urlpath,json.dumps(urlparams)))    
+                {2}".format(nodedata['objectid'],urlpath,urlparams))    
         
-        
+         
         session = self.initSession()        
         if (session == False): raise RequesterError("No access, login to Twitter first.")
-        response = session.get(urlpath,params=urlparams)   
+        response = session.get(urlpath,params=urlparams,verify=False) 
         return response.json()
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
 
         self.oauthdata.pop('oauth_verifier',None)
-        self.oauthdata['requesttoken'],self.oauthdata['requesttoken_secret']=self.twitter.get_request_token()
+        self.oauthdata['requesttoken'],self.oauthdata['requesttoken_secret']=self.twitter.get_request_token(verify=False)
         
         super(TwitterTab,self).doLogin(query,caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
 
@@ -425,7 +424,7 @@ class TwitterTab(ApiTab):
                 self.oauthdata['oauth_verifier'] = token[0]
                 self.authedsession=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
                                             self.oauthdata['requesttoken_secret'],method="POST",
-                                            data={'oauth_verifier':self.oauthdata['oauth_verifier']})
+                                            data={'oauth_verifier':self.oauthdata['oauth_verifier']},verify=False)
                 
                               
                 self.tokenEdit.setText(self.authedsession.access_token)
