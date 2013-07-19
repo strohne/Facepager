@@ -5,14 +5,13 @@ from cx_Freeze import setup, Executable
 
 exe = Executable(
         script="Facepager.py",
-    #;base="Win32GUI",
+        #base="Win32GUI",
         icon="../icons/icon_facepager.ico",
         copyDependentFiles = True,
         targetDir="build"
         )
 
 includes = ["sqlite3","facebook","dateutil","atexit","PySide.QtNetwork"]
-#includefiles = ['help\help.html']
 includefiles = []
 
 
