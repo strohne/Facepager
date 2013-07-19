@@ -63,14 +63,22 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
         
         self.setOptions(options)                                    
-        
-    def request(self, path, args=None,headers={}):
-        
+
+    def initSession(self):
+        if not hasattr(self,"session"):
+            self.session = requests.Session()
+        return self.session
+
+                
+    def request(self, path, args=None,headers=None):
+        session = self.initSession()            
+        if (session == False): raise Exception("No session available.")        
+                
         try:
-            if headers:
-                response = requests.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
+            if headers != None:
+                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
             else:
-                response = requests.get(path,params=args,timeout=self.timeout,verify=False)
+                response = session.get(path,params=args,timeout=self.timeout,verify=False)
         except (HTTPError,ConnectionError),e: 
             self.mainWindow.logmessage("Request error with message: {0}".format(e.message))
         else:
@@ -192,12 +200,12 @@ class FacebookTab(ApiTab):
         self.tokenEdit.setText(options.get('accesstoken','')) 
 
 
-    def fetchData(self,nodedata,options=None):
+    def fetchData(self,nodedata,options=None):          
         if (options==None): options = self.getOptions()
-        if (options['accesstoken'] == ""): raise RequesterError("Access token is missing")
+        if (options['accesstoken'] == ""): raise Exception("Access token is missing")
 
         if nodedata['objectid']==None:
-            raise RequesterError("Empty object id")
+            raise Exception("Empty object id")
             
         #build url        
         if options['relation']=='<self>':
@@ -340,16 +348,16 @@ class TwitterTab(ApiTab):
         self.tokensecretEdit.setText(options.get('access_token_secret',''))
         
     def initSession(self):
-        if hasattr(self,"authedsession"):
-            return self.authedsession
+        if hasattr(self,"session"):
+            return self.session
                 
         elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):                  
-            self.authedsession=self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
-            return self.authedsession
+            self.session=self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
+            return self.session
                     
         else:
             self.doLogin(True)
-            return False
+            raise Exception("No access, login please!")
 
     
     def fetchData(self,nodedata,options=None):
@@ -372,13 +380,9 @@ class TwitterTab(ApiTab):
                 
 
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
-                {2}".format(nodedata['objectid'],urlpath,urlparams))    
-        
-         
-        session = self.initSession()        
-        if (session == False): raise RequesterError("No access, login to Twitter first.")
-        response = session.get(urlpath,params=urlparams,verify=False) 
-        return response.json()
+                {2}".format(nodedata['objectid'],urlpath,urlparams))                    
+ 
+        return self.request(urlpath,urlparams)
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
@@ -396,13 +400,13 @@ class TwitterTab(ApiTab):
             token=url["oauth_verifier"]
             if token:
                 self.oauthdata['oauth_verifier'] = token[0]
-                self.authedsession=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
+                self.session=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
                                             self.oauthdata['requesttoken_secret'],method="POST",
                                             data={'oauth_verifier':self.oauthdata['oauth_verifier']},verify=False)
                 
                               
-                self.tokenEdit.setText(self.authedsession.access_token)
-                self.tokensecretEdit.setText(self.authedsession.access_token_secret)              
+                self.tokenEdit.setText(self.session.access_token)
+                self.tokensecretEdit.setText(self.session.access_token_secret)              
                 
                 self.login_webview.parent().close()
                 if (self.doQuery == True): self.mainWindow.actions.queryNodes()
