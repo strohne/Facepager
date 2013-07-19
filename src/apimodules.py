@@ -2,7 +2,6 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
-import urllib,urllib2
 import requests
 from requests.exceptions import *
 from datetime import datetime, timedelta
@@ -178,7 +177,7 @@ class FacebookTab(ApiTab):
         options['offset']=self.offsetEdit.value()
         options['limit']=self.limitEdit.value()
         options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
-        if (options['accesstoken'] == ""): self.doLogin(True)
+        #if (options['accesstoken'] == ""): self.doLogin(True)
         
         #options for data handling
         if not persistent:
@@ -239,7 +238,7 @@ class FacebookTab(ApiTab):
             if token:
                 self.tokenEdit.setText(token[0])
                 self.login_webview.parent().close()
-                if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+                #if (self.doQuery == True): self.mainWindow.actions.queryNodes()
            
 
 
@@ -356,7 +355,7 @@ class TwitterTab(ApiTab):
             return self.session
                     
         else:
-            self.doLogin(True)
+            #self.doLogin(True)
             raise Exception("No access, login please!")
 
     
@@ -409,7 +408,7 @@ class TwitterTab(ApiTab):
                 self.tokensecretEdit.setText(self.session.access_token_secret)              
                 
                 self.login_webview.parent().close()
-                if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+                #if (self.doQuery == True): self.mainWindow.actions.queryNodes()
 
 
 class GenericTab(ApiTab):
