@@ -3,6 +3,8 @@ from PySide.QtGui import *
 from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
 import urllib,urllib2
+import requests
+from requests.exceptions import *
 from datetime import datetime, timedelta
 from components import *
 from rauth import OAuth1Service
@@ -64,46 +66,18 @@ class ApiTab(QWidget):
         
     def request(self, path, args=None,headers={}):
         
-        path=path + "?" +urllib.urlencode(args) if args else path
-        
         try:
-            req = urllib2.Request(path,headers=headers)
-            file = urllib2.urlopen(req,timeout=self.timeout)
-        except urllib2.HTTPError, e:
-            response = _parse_json(e.read())
-            raise RequesterError(response)
-        except TypeError:
-            # Timeout support for Python <2.6
-            if self.timeout:
-                socket.setdefaulttimeout(self.timeout)
-            file = urllib2.urlopen(path, post_data)
-        try:
-            fileInfo = file.info()
-            if fileInfo.maintype == 'text':
-                content=file.read()
-                
-                #f = open('D:/temp/log.txt', 'w')
-                #f.write(content)
-                #f.close()
-                 
-                response = _parse_json(content)
-            elif fileInfo.maintype == 'image':
-                mimetype = fileInfo['content-type']
-                response = {
-                    "data": file.read(),
-                    "mime-type": mimetype,
-                    "url": file.url,
-                }
-            elif fileInfo.maintype == 'application':
-                response = {"data": _parse_json(file.read())}                
+            if headers:
+                response = requests.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
             else:
-                raise RequesterError('Maintype was not text or image')
-        finally:
-            file.close()
-        if response and isinstance(response, dict) and response.get("error"):
-            raise RequesterError(response["error"]["type"],
-                                response["error"]["message"])
-        return response    
+                response = requests.get(path,params=args,timeout=self.timeout,verify=False)
+        except (HTTPError,ConnectionError),e: 
+            self.mainWindow.logmessage("Request error with message: {0}".format(e.message))
+        else:
+            if not response.ok:
+                self.mainWindow.logmessage("Request Status Error with message: {0}".format(response.reason))
+            elif response.json():
+                return response.json()     
 
     @Slot()
     def doLogin(self,query=False,caption='',url=''):
@@ -526,34 +500,6 @@ class GenericTab(ApiTab):
         return self.request(urlpath)       
 
 
-
-#Notcie: RequesterError und Requester enthalten Code aus facebook-sdk, das unter Apache 2.0 licence steht
-class RequesterError(Exception):
-    def __init__(self, result):
-        #Exception.__init__(self, message)
-        #self.type = type
-        self.result = result
-        try:
-            self.type = result["error_code"]
-        except:
-            self.type = ""
-
-        # OAuth 2.0 Draft 10
-        try:
-            self.message = result["error_description"]
-        except:
-            # OAuth 2.0 Draft 00
-            try:
-                self.message = result["error"]["message"]
-            except:
-                # REST server style
-                try:
-                    self.message = result["error_msg"]
-                except:
-                    self.message = result
-
-        Exception.__init__(self, self.message)
-        
 
 class QWebPageCustom(QWebPage):
     
