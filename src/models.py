@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_session
 
 import json
+from utilities import *
 from dateutil import parser
 import datetime
 import os
@@ -18,24 +19,7 @@ Base = declarative_base()
 #at="109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
 #g=fb.GraphAPI("109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI")
 
-
-def getDictValue(data,multikey):
-    keys=multikey.split('.')                
-    value=data
-    for key in keys:
-        if type(value) is dict:
-            value=value.get(key,"")
-        elif type(value) is list:
-            try:
-                value=value[int(key)]
-            except:
-                return ""        
-        else:
-            return ""
-    if type(value) is dict:
-        return json.dumps(value) 
-    else:        
-        return value                    
+                 
     
 class Database(object):
     
