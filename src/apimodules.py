@@ -71,7 +71,7 @@ class ApiTab(QWidget):
                 
     def request(self, path, args=None,headers=None):
         session = self.initSession()            
-        if (session == False): raise Exception("No session available.")        
+        if (not session): raise Exception("No session available.")        
                 
         try:
             if headers != None:
@@ -79,11 +79,14 @@ class ApiTab(QWidget):
             else:
                 response = session.get(path,params=args,timeout=self.timeout,verify=False)
         except (HTTPError,ConnectionError),e: 
-            self.mainWindow.logmessage("Request error with message: {0}".format(e.message))
+            raise Exception("Request Error: {0}".format(e.message))
         else:
             if not response.ok:
-                self.mainWindow.logmessage("Request Status Error with message: {0}".format(response.reason))
-            elif response.json():
+                raise Exception("Request Status Error: {0}".format(response.reason))
+            elif not response.json():
+                raise Exception("Request Format Error: No JSON data!")
+                
+            else:    
                 return response.json()     
 
     @Slot()
@@ -201,7 +204,7 @@ class FacebookTab(ApiTab):
 
     def fetchData(self,nodedata,options=None):          
         if (options==None): options = self.getOptions()
-        if (options['accesstoken'] == ""): raise Exception("Access token is missing")
+        if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
 
         if nodedata['objectid']==None:
             raise Exception("Empty object id")
@@ -447,9 +450,9 @@ class GenericTab(ApiTab):
 
         #Extract option 
         self.extractEdit=QComboBox(self)
-        self.extractEdit.insertItems(0,['data'])
-        self.extractEdit.insertItems(0,['data.matches'])      
-        self.extractEdit.insertItems(0,['data.feed.entry'])        
+        #self.extractEdit.insertItems(0,['data'])
+        self.extractEdit.insertItems(0,['matches'])      
+        self.extractEdit.insertItems(0,['feed.entry'])        
                  
         self.extractEdit.setEditable(True)
         mainLayout.addRow("Key to extract",self.extractEdit)
