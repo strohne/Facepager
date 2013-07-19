@@ -6,6 +6,8 @@ import urllib,urllib2
 from datetime import datetime, timedelta
 from components import *
 from rauth import OAuth1Service
+from utilities import *
+import re
 
 # Find a JSON parser
 try:
@@ -37,6 +39,16 @@ class ApiTab(QWidget):
         except UnicodeEncodeError as e:
             return val.encode('utf-8')     
 
+    def getvalue(self,key,nodedata):
+        if key == '<Object ID>':        
+          return self.idtostr(nodedata['objectid'])
+        else:
+            match = re.match("^<(.*)>$",key)
+            if match:                 
+                 return getDictValue(nodedata['response'],match.group(1))
+            else:  
+                return key
+        
     def getOptions(self):
         return {}
     
@@ -390,7 +402,8 @@ class TwitterTab(ApiTab):
             if (name == '<None>') | (name == ''): continue
             if (options["params"][name] == '<None>') | (options["params"][name] == ''): continue
                         
-            value = self.idtostr(nodedata['objectid']) if options["params"][name] == '<Object ID>' else nodedata[options[options["params"][name]]] 
+            value = self.getvalue(options["params"][name],nodedata)             
+             
             if name == '<:id>':
               urlpath = urlpath.replace(':id',value)                                        
             else:

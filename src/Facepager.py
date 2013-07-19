@@ -9,7 +9,6 @@ from actions import *
 from apimodules import * 
 from help import *
 
-
 class MainWindow(QMainWindow):
     
     def __init__(self,central=None):
