@@ -11,7 +11,7 @@ exe = Executable(
         targetDir="build"
         )
 
-includes = ["sqlite3","facebook","dateutil","atexit","PySide.QtNetwork"]
+includes = ["sqlite3","dateutil","atexit","PySide.QtNetwork"]
 #includefiles = ['help\help.html']
 includefiles = []
 
