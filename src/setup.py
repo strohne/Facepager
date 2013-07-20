@@ -5,7 +5,7 @@ from cx_Freeze import setup, Executable
 
 exe = Executable(
         script="Facepager.py",
-        #base="Win32GUI",
+        base="Win32GUI",
         icon="../icons/icon_facepager.ico",
         copyDependentFiles = True,
         targetDir="build"
