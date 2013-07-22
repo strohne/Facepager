@@ -1,10 +1,14 @@
 Facepager was made for fetching public available data from Facebook. All data is stored in a SQLite database and may be exported to Excel. 
 
-Version 3.0 features:
+Version 3.1 features:
 - Refurbished user interface
 - Login to Facebook for fetching groups
+- Login to Twitter using the Twitter API 1.1
 - Experimental generic downloader for all sorts of webservices delivering JSON
 
+
+Binary/Install Version for Windows/OS X:
+- http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html
     
 Notice: Database files may be incompatible between different versions.
                                                       
@@ -23,4 +27,4 @@ Getting started
 
 Citation
 
-Keyling, Till / JÅnger, Jakob (2013). Facepager 3. Tool for Downloading Facebook Data. Online at https://github.com/strohne/Facepager. 
+Keyling, Till / J√ºnger, Jakob (2013). Facepager 3. Tool for Downloading Facebook Data. Online at https://github.com/strohne/Facepager. 
