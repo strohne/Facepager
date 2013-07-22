@@ -2,10 +2,13 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
-import urllib,urllib2
+import requests
+from requests.exceptions import *
 from datetime import datetime, timedelta
 from components import *
 from rauth import OAuth1Service
+from utilities import *
+import re
 
 # Find a JSON parser
 try:
@@ -37,6 +40,16 @@ class ApiTab(QWidget):
         except UnicodeEncodeError as e:
             return val.encode('utf-8')     
 
+    def getvalue(self,key,nodedata):
+        if key == '<Object ID>':        
+          return self.idtostr(nodedata['objectid'])
+        else:
+            match = re.match("^<(.*)>$",key)
+            if match:                 
+                 return getDictValue(nodedata['response'],match.group(1))
+            else:  
+                return key
+        
     def getOptions(self):
         return {}
     
@@ -61,49 +74,32 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
         
         self.setOptions(options)                                    
-        
-    def request(self, path, args=None,headers={}):
-        
-        path=path + "?" +urllib.urlencode(args) if args else path
-        
-        try:
-            req = urllib2.Request(path,headers=headers)
-            file = urllib2.urlopen(req,timeout=self.timeout)
-        except urllib2.HTTPError, e:
-            response = _parse_json(e.read())
-            raise RequesterError(response)
-        except TypeError:
-            # Timeout support for Python <2.6
-            if self.timeout:
-                socket.setdefaulttimeout(self.timeout)
-            file = urllib2.urlopen(path, post_data)
-        try:
-            fileInfo = file.info()
-            if fileInfo.maintype == 'text':
-                content=file.read()
+
+    def initSession(self):
+        if not hasattr(self,"session"):
+            self.session = requests.Session()
+        return self.session
+
                 
-                #f = open('D:/temp/log.txt', 'w')
-                #f.write(content)
-                #f.close()
-                 
-                response = _parse_json(content)
-            elif fileInfo.maintype == 'image':
-                mimetype = fileInfo['content-type']
-                response = {
-                    "data": file.read(),
-                    "mime-type": mimetype,
-                    "url": file.url,
-                }
-            elif fileInfo.maintype == 'application':
-                response = {"data": _parse_json(file.read())}                
+    def request(self, path, args=None,headers=None):
+        session = self.initSession()            
+        if (not session): raise Exception("No session available.")        
+                
+        try:
+            if headers != None:
+                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
             else:
-                raise RequesterError('Maintype was not text or image')
-        finally:
-            file.close()
-        if response and isinstance(response, dict) and response.get("error"):
-            raise RequesterError(response["error"]["type"],
-                                response["error"]["message"])
-        return response    
+                response = session.get(path,params=args,timeout=self.timeout,verify=False)
+        except (HTTPError,ConnectionError),e: 
+            raise Exception("Request Error: {0}".format(e.message))
+        else:
+            if not response.ok:
+                raise Exception("Request Status Error: {0}".format(response.reason))
+            elif not response.json():
+                raise Exception("Request Format Error: No JSON data!")
+                
+            else:    
+                return response.json()     
 
     @Slot()
     def doLogin(self,query=False,caption='',url=''):
@@ -196,7 +192,7 @@ class FacebookTab(ApiTab):
         options['offset']=self.offsetEdit.value()
         options['limit']=self.limitEdit.value()
         options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
-        if (options['accesstoken'] == ""): self.doLogin(True)
+        #if (options['accesstoken'] == ""): self.doLogin(True)
         
         #options for data handling
         if not persistent:
@@ -218,12 +214,12 @@ class FacebookTab(ApiTab):
         self.tokenEdit.setText(options.get('accesstoken','')) 
 
 
-    def fetchData(self,nodedata,options=None):
+    def fetchData(self,nodedata,options=None):          
         if (options==None): options = self.getOptions()
-        if (options['accesstoken'] == ""): raise RequesterError("Access token is missing")
+        if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
 
         if nodedata['objectid']==None:
-            raise RequesterError("Empty object id")
+            raise Exception("Empty object id")
             
         #build url        
         if options['relation']=='<self>':
@@ -241,7 +237,7 @@ class FacebookTab(ApiTab):
         urlparams["access_token"] =   options['accesstoken']         
         urlpath = "https://graph.facebook.com/" + urlpath
         
-        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))   
+        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))
         return self.request(urlpath,urlparams)          
 
 
@@ -257,7 +253,7 @@ class FacebookTab(ApiTab):
             if token:
                 self.tokenEdit.setText(token[0])
                 self.login_webview.parent().close()
-                if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+                #if (self.doQuery == True): self.mainWindow.actions.queryNodes()
            
 
 
@@ -366,16 +362,16 @@ class TwitterTab(ApiTab):
         self.tokensecretEdit.setText(options.get('access_token_secret',''))
         
     def initSession(self):
-        if hasattr(self,"authedsession"):
-            return self.authedsession
+        if hasattr(self,"session"):
+            return self.session
                 
         elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):                  
-            self.authedsession=self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
-            return self.authedsession
+            self.session=self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
+            return self.session
                     
         else:
-            self.doLogin(True)
-            return False
+            #self.doLogin(True)
+            raise Exception("No access, login please!")
 
     
     def fetchData(self,nodedata,options=None):
@@ -390,28 +386,24 @@ class TwitterTab(ApiTab):
             if (name == '<None>') | (name == ''): continue
             if (options["params"][name] == '<None>') | (options["params"][name] == ''): continue
                         
-            value = self.idtostr(nodedata['objectid']) if options["params"][name] == '<Object ID>' else nodedata[options[options["params"][name]]] 
+            value = self.getvalue(options["params"][name],nodedata)             
+             
             if name == '<:id>':
               urlpath = urlpath.replace(':id',value)                                        
             else:
               urlparams[name] = value
                 
 
-        
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
-                {2}".format(nodedata['objectid'],urlpath,json.dumps(urlparams)))    
-        
-        
-        session = self.initSession()        
-        if (session == False): raise RequesterError("No access, login to Twitter first.")
-        response = session.get(urlpath,params=urlparams)   
-        return response.json()
+                {2}".format(nodedata['objectid'],urlpath,urlparams))                    
+ 
+        return self.request(urlpath,urlparams)
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
 
         self.oauthdata.pop('oauth_verifier',None)
-        self.oauthdata['requesttoken'],self.oauthdata['requesttoken_secret']=self.twitter.get_request_token()
+        self.oauthdata['requesttoken'],self.oauthdata['requesttoken_secret']=self.twitter.get_request_token(verify=False)
         
         super(TwitterTab,self).doLogin(query,caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
 
@@ -423,16 +415,16 @@ class TwitterTab(ApiTab):
             token=url["oauth_verifier"]
             if token:
                 self.oauthdata['oauth_verifier'] = token[0]
-                self.authedsession=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
+                self.session=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
                                             self.oauthdata['requesttoken_secret'],method="POST",
-                                            data={'oauth_verifier':self.oauthdata['oauth_verifier']})
+                                            data={'oauth_verifier':self.oauthdata['oauth_verifier']},verify=False)
                 
                               
-                self.tokenEdit.setText(self.authedsession.access_token)
-                self.tokensecretEdit.setText(self.authedsession.access_token_secret)              
+                self.tokenEdit.setText(self.session.access_token)
+                self.tokensecretEdit.setText(self.session.access_token_secret)              
                 
                 self.login_webview.parent().close()
-                if (self.doQuery == True): self.mainWindow.actions.queryNodes()
+                #if (self.doQuery == True): self.mainWindow.actions.queryNodes()
 
 
 class GenericTab(ApiTab):
@@ -471,9 +463,9 @@ class GenericTab(ApiTab):
 
         #Extract option 
         self.extractEdit=QComboBox(self)
-        self.extractEdit.insertItems(0,['data'])
-        self.extractEdit.insertItems(0,['data.matches'])      
-        self.extractEdit.insertItems(0,['data.feed.entry'])        
+        #self.extractEdit.insertItems(0,['data'])
+        self.extractEdit.insertItems(0,['matches'])      
+        self.extractEdit.insertItems(0,['feed.entry'])        
                  
         self.extractEdit.setEditable(True)
         mainLayout.addRow("Key to extract",self.extractEdit)
@@ -527,34 +519,6 @@ class GenericTab(ApiTab):
         return self.request(urlpath)       
 
 
-
-#Notcie: RequesterError und Requester enthalten Code aus facebook-sdk, das unter Apache 2.0 licence steht
-class RequesterError(Exception):
-    def __init__(self, result):
-        #Exception.__init__(self, message)
-        #self.type = type
-        self.result = result
-        try:
-            self.type = result["error_code"]
-        except:
-            self.type = ""
-
-        # OAuth 2.0 Draft 10
-        try:
-            self.message = result["error_description"]
-        except:
-            # OAuth 2.0 Draft 00
-            try:
-                self.message = result["error"]["message"]
-            except:
-                # REST server style
-                try:
-                    self.message = result["error_msg"]
-                except:
-                    self.message = result
-
-        Exception.__init__(self, self.message)
-        
 
 class QWebPageCustom(QWebPage):
     

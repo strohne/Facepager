@@ -5,7 +5,7 @@
 
 <head>
 
-<base href="https://raw.github.com/strohne/Facepager/twitterauth/src/help/" />
+<base href="https://raw.github.com/strohne/Facepager/master/src/help/" />
 <title>Facepager Help</title>
 
 <style type="text/css">
@@ -22,6 +22,10 @@ h1 {
   margin-top:2em;
   padding:0px;
   border-bottom:1px solid #333;
+}
+
+h1.first {
+  margin-top:0px;
 }
 
 p {
@@ -50,7 +54,7 @@ table td, table th {
 
 <body>
 
-<h1>Getting started</h1>
+<h1 class="first">Getting started</h1>
 
 <ol>
     <li>Click &quot;New Database&quot; in the toolbar to create a blank database</li>
@@ -138,7 +142,7 @@ table td, table th {
         As you can see, the "Raw Data" window on the right side contains the raw information:
 </p>
 
-<img src="facebook_rawdata.PNG" alt="Raw Data View" />
+<img src="facebook_rawdata.png" alt="Raw Data View" />
 
 <p>
         This data is formatted in the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>, which follows a quite simple logic of key:value pair. 
@@ -174,7 +178,7 @@ This is a central concept: Every request is issued against a specific object (Us
 The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.
 </p>
 
-<img src="facebook_idsystem.PNG" >
+<img src="facebook_idsystem.png" >
 
 
 <p>
