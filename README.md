@@ -8,9 +8,7 @@ Facepager was made for fetching public available data from Facebook. All data is
 - Login to Facebook for fetching groups
 - Login to Twitter using the Twitter API 1.1
 - Experimental generic downloader for all sorts of webservices delivering JSON
-
-
-[Binary/Installer](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html) Version for Windows/OS X:
+- [Binary/Installer](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html) Version for Windows/OS X
 
     
 Notice: Database files may be incompatible between different versions.
@@ -26,6 +24,7 @@ You should be aware of error sources when dealing with Facebook API. There are a
 5. Select one or more nodes in the view and click "Fetch data".
 6. Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.
 7. Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
+8. For further information, click the "help" button
 
 
 ###Citation
