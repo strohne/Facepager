@@ -192,7 +192,7 @@ A quick explanation:
             (offset=[0,51,101,151,201,251,301,351,401,451])  
          </li>
         <li><b>Limit: </b> 
-            This is the number of individual objects that are returned in page. The maximum is usually 500
+		This is the number of individual objects that are returned on each page. This limit is API-specific (for Facebook, it´s usually 500 objects per page). Be aware			of the fact that the "limit" -field doesn´t referr to the total amount of available objects, but may be combined with the "offset" -parameter. 
         </li>
         <li><b>Since: </b> 
             A date, f.e. denoting the objects creation time. In the above example, since="14.07.2013" would grab comments made after the 13.07.2013. 
@@ -201,10 +201,22 @@ A quick explanation:
         <li><b>Until: </b> 
             A date, f.e. denoting the objects creation time. In the above example, until="17.07.2013" would grab comments made before the 17.07.2013. 
             Not every Facebook-Object has a timestamp and therefore a limit, f.e. the users friends (in this case, the "until"-paramter has no effect). 
-            A combination of "since" and "until" is possible.
+            A combination of "since" and "until" is possible. Depending on the API the "until"-field must be incremented by one day to get the most recent objects.
         </li>
     </ul>
 </p>
+
+<h1>General remarks & hints</h1>
+<p>
+    <ul> 
+        <li><b>Item/Object Selection:</b> 
+			Multiple objects in the view can be selected at once by pressing down SHIFT while selecting the objects with the mouse. This makes bulk deleteions easier,
+			but also enables a request against the API for multiple objects at once.
+		</li>
+		<li><b>Custom Table Column Setup:</b> 
+		Use custom columns to control the columns in the export files (CSV-File). Using nested columns like "user.entities.url.urls" (for Twitter Tweets) may have no effect in the object view, especially if the result of such a column setup is a list (which is content in square bracket [<i>content here</i>] ), however the result becomes visible when exporting the data.
+		</li>
+    </ul>
 
 
 
