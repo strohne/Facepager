@@ -7,8 +7,8 @@ Version 3.1 features:
 - Experimental generic downloader for all sorts of webservices delivering JSON
 
 
-Binary/Install Version for Windows/OS X:
-- http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html
+[Binary/Installer](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html) Version for Windows/OS X:
+
     
 Notice: Database files may be incompatible between different versions.
                                                       
