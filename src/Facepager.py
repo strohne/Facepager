@@ -164,6 +164,20 @@ class MainWindow(QMainWindow):
         actionlayout.addWidget(self.RequestTabs)        
         loadTabs(self)
         
+
+       #presets
+        presetLayout=QHBoxLayout() 
+                
+        button=QPushButton("Load Preset")
+        button.clicked.connect(self.actions.actionLoadPreset.trigger)
+        presetLayout.addWidget(button)
+
+        button=QPushButton("Save Preset")
+        button.clicked.connect(self.actions.actionSavePreset.trigger)
+        presetLayout.addWidget(button)
+                  
+        actionlayout.addLayout(presetLayout)
+        
         #fetch data      
         f=QFont()
         f.setPointSize(11)
