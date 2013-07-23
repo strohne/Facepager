@@ -2,9 +2,10 @@
 import sqlalchemy as sql
 from sqlalchemy import Column, Integer, String,ForeignKey,Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine,event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_session
+from sqlalchemy.engine import Engine
 
 import json
 from utilities import *
@@ -27,6 +28,13 @@ class Database(object):
         self.parent = parent
         self.connected=False
         self.filename=""
+
+    @event.listens_for(Engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+        
         
     def connect(self,filename):
         try:   
@@ -86,8 +94,8 @@ class Node(Base):
         querytime=Column(String)
         response_raw=Column("response",Text)                                        
         id=Column(Integer,primary_key=True,index=True)
-        parent_id = Column(Integer, ForeignKey('Nodes.id'),index=True)
-        children = relationship("Node",backref=backref('parent', remote_side=[id]))
+        parent_id = Column(Integer, ForeignKey('Nodes.id',ondelete='CASCADE'),index=True)
+        children = relationship("Node",backref=backref('parent', remote_side='Node.id'))
         level=Column(Integer)                             
         childcount=Column(Integer)
 
@@ -275,7 +283,7 @@ class TreeModel(QAbstractItemModel):
                                     
             #self.endInsertRows()
         except Exception as e:
-            QMessageBox.critical(self.parent,"Facepager",str(e))                    
+            QMessageBox.critical(self.mainWindow,"Facepager",str(e))                    
 
             
     def queryData(self,index):
@@ -305,7 +313,7 @@ class TreeModel(QAbstractItemModel):
     
                 #filter response
                 if options['nodedata'] != None:
-                    nodes=getDictValue(response,options['nodedata'])
+                    nodes=getDictValue(response,options['nodedata'],False)
                 else:
                     nodes=response
                 
