@@ -9,16 +9,7 @@ from components import *
 from rauth import OAuth1Service
 from utilities import *
 import re
-
-# Find a JSON parser
-try:
-    import simplejson as json
-except ImportError:
-    try:
-        from django.utils import simplejson as json
-    except ImportError:
-        import json
-_parse_json = json.loads
+import json
 
 
 
