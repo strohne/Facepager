@@ -41,7 +41,7 @@ class ApiTab(QWidget):
             else:  
                 return key
         
-    def getOptions(self):
+    def getOptions(self,persistent=False):
         return {}
     
     def setOptions(self,options):

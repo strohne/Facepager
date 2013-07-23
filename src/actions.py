@@ -209,11 +209,14 @@ class Actions(object):
 
     @Slot()     
     def loadPreset(self):
-        pass
+        self.mainWindow.presetWindow.loadPreset()
+
+                    
+
 
     @Slot()     
     def savePreset(self):
-        pass
+        self.mainWindow.presetWindow.savePreset()
 
                                         
     @Slot()     
