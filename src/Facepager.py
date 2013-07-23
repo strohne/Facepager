@@ -62,20 +62,30 @@ class MainWindow(QMainWindow):
         mainLayout=QVBoxLayout()
         self.mainWidget.setLayout(mainLayout)                
          
+         
         dataLayout=QHBoxLayout()
         mainLayout.addLayout(dataLayout,0)
+        dataSplitter = QSplitter(self)
+        dataLayout.addWidget(dataSplitter)
         
         requestLayout=QHBoxLayout()
         mainLayout.addLayout(requestLayout,0)
 
          
-        #tree                                                
+        #tree
+                                                        
         self.tree=Tree(self.mainWidget,self)
-        dataLayout.addWidget(self.tree,1)
+        dataSplitter.addWidget(self.tree)
+        dataSplitter.setStretchFactor(0, 1);
+        #dataLayout.addWidget(self.tree,1)
         
         #right sidebar
+        detailWidget=QWidget()
         detailLayout=QVBoxLayout()
-        dataLayout.addLayout(detailLayout,0)
+        detailWidget.setLayout(detailLayout)
+        dataSplitter.addWidget(detailWidget)        
+        dataSplitter.setStretchFactor(1, 0);
+        #dataLayout.addLayout(detailLayout,0)
         
      
         
