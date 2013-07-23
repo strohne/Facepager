@@ -1,6 +1,6 @@
 import json
 
-def getDictValue(data,multikey):
+def getDictValue(data,multikey,dump=True):
     keys=multikey.split('.',1)
                 
     if type(data) is dict and keys[0] != '':
@@ -29,7 +29,7 @@ def getDictValue(data,multikey):
     else:
         value = data
         
-    if type(value) is dict or type(value) is list:
+    if dump and (type(value) is dict or type(value) is list):
         return json.dumps(value) 
     else:        
         return value   
