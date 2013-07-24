@@ -166,20 +166,7 @@ class MainWindow(QMainWindow):
         actionlayout.addWidget(self.RequestTabs)        
         loadTabs(self)
         
-
-       #presets
-        presetLayout=QHBoxLayout() 
-                
-        button=QPushButton("Load Preset")
-        button.clicked.connect(self.actions.actionLoadPreset.trigger)
-        presetLayout.addWidget(button)
-
-        button=QPushButton("Save Preset")
-        button.clicked.connect(self.actions.actionSavePreset.trigger)
-        presetLayout.addWidget(button)
-                  
-        actionlayout.addLayout(presetLayout)
-        
+    
         #fetch data      
         f=QFont()
         f.setPointSize(11)
@@ -297,6 +284,7 @@ class Toolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.mainWindow.actions.actionExpandAll)        
         self.addAction(self.mainWindow.actions.actionCollapseAll)
+        self.addAction(self.mainWindow.actions.actionLoadPreset)
         self.addAction(self.mainWindow.actions.actionHelp)
         
 
