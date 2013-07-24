@@ -226,7 +226,10 @@ class MainWindow(QMainWindow):
         
         
     def writeSettings(self):
-        self.settings = QSettings("Keyling", "Facepager")
+        QCoreApplication.setOrganizationName("Keyling")
+        QCoreApplication.setApplicationName("Facepager")
+
+        self.settings = QSettings()        
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())        
