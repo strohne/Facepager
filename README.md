@@ -1,6 +1,7 @@
 ###Description
 
-Facepager was made for fetching public available data from Facebook. All data is stored in a SQLite database and may be exported to Excel. 
+Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
+All data is stored in a SQLite database and may be exported to csv. 
 
 ###Version 3.1 features
 
