@@ -87,6 +87,12 @@ class PresetWindow(QDialog):
         
         self.presetFolder = os.path.join(os.path.dirname(self.mainWindow.settings.fileName()),'presets')
         
+        if getattr(sys, 'frozen', False):
+            self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
+        elif __file__:
+            self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
+        
+        
     
     def currentChanged(self):
         #hide
@@ -112,21 +118,40 @@ class PresetWindow(QDialog):
         self.initPresets()
         self.exec_()
         
-    def initPresets(self):
-        self.presetList.clear()
-        files = [f for f in os.listdir(self.presetFolder) if f.endswith('.json')]
-        for filename in files:
-            try:            
-                with open(os.path.join(self.presetFolder, filename), 'r') as input:
-                    data = json.load(input)
-                data['filename'] = filename
+    def addPresetItem(self,folder,filename,default=False):
+        try:            
+            with open(os.path.join(folder, filename), 'r') as input:
+                data = json.load(input)
+            data['filename'] = filename
+            data['default'] = default
+        
+            newItem = QListWidgetItem()
+            newItem.setText(data['name'])    
+            newItem.setData(Qt.UserRole,data)
+
+            if default:
+                ft = newItem.font()
+                ft.setWeight(QFont.Bold)
+                newItem.setFont(ft)
+                
+
+                        
+            self.presetList.addItem(newItem)
+        except:
+             pass   
+        
             
-                newItem = QListWidgetItem()
-                newItem.setText(data['name'])
-                newItem.setData(Qt.UserRole,data)            
-                self.presetList.addItem(newItem)
-            except:
-                 pass   
+    def initPresets(self):
+        #self.defaultPresetFolder
+        self.presetList.clear()
+        
+        if os.path.exists(self.defaultPresetFolder):    
+            files = [f for f in os.listdir(self.defaultPresetFolder) if f.endswith('.json')]
+            for filename in files: self.addPresetItem(self.defaultPresetFolder,filename,True)
+
+        if os.path.exists(self.presetFolder):
+            files = [f for f in os.listdir(self.presetFolder) if f.endswith('.json')]
+            for filename in files: self.addPresetItem(self.presetFolder,filename)
         
         self.presetList.setFocus()
         self.presetList.setCurrentRow(0)
@@ -167,6 +192,9 @@ class PresetWindow(QDialog):
     def deletePreset(self):
         if not self.presetList.currentItem(): return False
         data = self.presetList.currentItem().data(Qt.UserRole)
+        if data.get('default',False):
+            QMessageBox.information(self,"Facepager","Cannot delete default presets.")
+            return False
         
         reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the preset {0}?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes: return
@@ -216,7 +244,7 @@ class PresetWindow(QDialog):
             with open(filename, 'w') as outfile:
                 json.dump(data, outfile,indent=2, separators=(',', ': '))
            
-            self.initPresets() 
+            self.initPresets()           
             dialog.close()
                   
                       
