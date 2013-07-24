@@ -85,7 +85,9 @@ class PresetWindow(QDialog):
         buttons.rejected.connect(self.close)                        
         layout.addWidget(buttons,0)
         
-        self.presetFolder = os.path.join(os.path.dirname(self.mainWindow.settings.fileName()),'presets')
+        #self.presetFolder = os.path.join(os.path.dirname(self.mainWindow.settings.fileName()),'presets')
+        self.presetFolder = os.path.join(os.path.expanduser("~"),'Facepager','Presets')
+        
         
         if getattr(sys, 'frozen', False):
             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
@@ -109,7 +111,7 @@ class PresetWindow(QDialog):
             self.detailModule.setText(data.get('module'))
             self.detailDescription.setText(data.get('description'))
             self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': ')))
-            self.detailColumns.setText(data.get('columns'))
+            self.detailColumns.setText("\n".join(data.get('columns',[])))
 
             
      
@@ -172,7 +174,7 @@ class PresetWindow(QDialog):
                 break                    
 
         #Set columns
-        self.mainWindow.fieldList.setPlainText(data.get('columns',''))
+        self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
         self.close()
                
     def uniqueFilename(self,name):
@@ -233,7 +235,7 @@ class PresetWindow(QDialog):
                     'description':description.toPlainText(),
                     'module':self.mainWindow.RequestTabs.currentWidget().name,
                     'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
-                    'columns':self.mainWindow.fieldList.toPlainText()
+                    'columns':self.mainWindow.fieldList.toPlainText().splitlines()
             }
             
             filename= self.uniqueFilename(name.text())
