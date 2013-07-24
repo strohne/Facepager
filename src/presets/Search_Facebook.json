@@ -1,0 +1,13 @@
+{
+  "columns": "name\nmessage\ntype\nmetadata.type\ntalking_about_count\nlikes\nlikes.count\nshares.count\ncomments.count\ncreated_time\nupdated_time",
+  "options": {
+    "limit": 50,
+    "since": "2013-07-17",
+    "relation": "<search>",
+    "until": "2013-07-24",
+    "offset": 0
+  },
+  "name": "Search Facebook",
+  "module": "Facebook",
+  "description": "Add search terms as nodes and fetch data."
+}
