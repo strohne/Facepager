@@ -29,7 +29,6 @@ class Actions(object):
         self.actionHelp=self.dataActions.addAction(QIcon(":/icons/facepager_icons/help.png"),"Help")
         
         self.actionLoadPreset=self.dataActions.addAction("Load Preset")
-        self.actionSavePreset=self.dataActions.addAction("Save Preset")
 
         #connect the actions to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)
@@ -40,7 +39,6 @@ class Actions(object):
         self.actionQuery.triggered.connect(self.queryNodes)
         self.actionShowColumns.triggered.connect(self.showColumns)
         self.actionLoadPreset.triggered.connect(self.loadPreset)
-        self.actionSavePreset.triggered.connect(self.savePreset)
         #self.actionUnpackData.triggered.connect(self.unpackData)
         self.actionExpandAll.triggered.connect(self.expandAll)
         self.actionCollapseAll.triggered.connect(self.collapseAll)
@@ -209,14 +207,7 @@ class Actions(object):
 
     @Slot()     
     def loadPreset(self):
-        self.mainWindow.presetWindow.loadPreset()
-
-                    
-
-
-    @Slot()     
-    def savePreset(self):
-        self.mainWindow.presetWindow.savePreset()
+        self.mainWindow.presetWindow.showPresets()
 
                                         
     @Slot()     
