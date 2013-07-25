@@ -4,3 +4,4 @@ misc/
 src/build
 src/*.pyc
 src/*.pyo
+src/credentials.py

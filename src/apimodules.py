@@ -10,6 +10,7 @@ from rauth import OAuth1Service
 from utilities import *
 import re
 import json
+from credentials import *
 
 
 
@@ -184,7 +185,7 @@ class FacebookTab(ApiTab):
         
         if purpose != 'preset':
             options['querytype']=self.name+':'+self.relationEdit.currentText()
-            options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
+            options['accesstoken']= self.tokenEdit.text()
                 
         #options for data handling
         if purpose == 'fetch':
@@ -230,7 +231,8 @@ class FacebookTab(ApiTab):
 
 
     @Slot()
-    def doLogin(self,query=False,caption="Facebook Login Page",url="https://www.facebook.com/dialog/oauth?client_id=109906609107292&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"):
+    def doLogin(self,query=False,caption="Facebook Login Page",url="https://www.facebook.com/dialog/oauth?client_id="+FACEBOOK_CLIENT_ID+"&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups"):
+        #Facebook client id should be defined in credentials.py
         super(FacebookTab,self).doLogin(query,caption,url)
         
     @Slot()
@@ -267,17 +269,13 @@ class TwitterTab(ApiTab):
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Resource",self.relationEdit)
         
-        #Twitter OAUTH consumer key and secret (should be kept secret on github
-        #in the future!!)        
-        self.oauthdata = {
-             'consumer_key':'BXczKRXJpd8VSogbEA',
-             'consumer_secret':'beanc6H8c1Q27NpH26OMX3URDS9nyrbiyUGKQJS8M8'             
-        }
+        #Twitter OAUTH consumer key and secret should be defined in credentials.py         
+        self.oauthdata = {}
         
         #see the overcomplicated OAuth1 Handshake here https://github.com/litl/rauth
         self.twitter = OAuth1Service(
-                            consumer_key=self.oauthdata['consumer_key'],
-                            consumer_secret=self.oauthdata['consumer_secret'],
+                            consumer_key=TWITTER_CONSUMER_KEY,
+                            consumer_secret=TWITTER_CONSUMER_SECRET,
                             name='twitter',
                             access_token_url='https://api.twitter.com/oauth/access_token',
                             authorize_url='https://api.twitter.com/oauth/authorize',
