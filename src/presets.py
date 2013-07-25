@@ -78,8 +78,9 @@ class PresetWindow(QDialog):
                         
         #buttons=QDialogButtonBox()
         self.applyButton=QPushButton('Apply')
+        self.applyButton.setDefault(True)
         self.applyButton.clicked.connect(self.loadPreset)
-        buttons.addButton(self.applyButton,QDialogButtonBox.ApplyRole)
+        buttons.addButton(self.applyButton,QDialogButtonBox.AcceptRole)
         
         buttons.addButton(QDialogButtonBox.Cancel)
         buttons.rejected.connect(self.close)                        
@@ -175,6 +176,7 @@ class PresetWindow(QDialog):
 
         #Set columns
         self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
+        self.mainWindow.actions.showColumns()
         self.close()
                
     def uniqueFilename(self,name):
