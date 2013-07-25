@@ -12,7 +12,7 @@ exe = Executable(
         )
 
 includes = ["sqlite3","dateutil","atexit","PySide.QtNetwork"]
-includefiles = []
+includefiles = ['presets/']
 
 
 buildoptions = {
