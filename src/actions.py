@@ -27,6 +27,8 @@ class Actions(object):
         self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/facepager_icons/expand.png"),"Expand nodes")
         self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/facepager_icons/collapse.png"),"Collapse nodes")
         self.actionHelp=self.dataActions.addAction(QIcon(":/icons/facepager_icons/help.png"),"Help")
+        
+        self.actionLoadPreset=self.dataActions.addAction("Presets")
 
         #connect the actions to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)
@@ -36,6 +38,7 @@ class Actions(object):
         self.actionDelete.triggered.connect(self.deleteNodes)
         self.actionQuery.triggered.connect(self.queryNodes)
         self.actionShowColumns.triggered.connect(self.showColumns)
+        self.actionLoadPreset.triggered.connect(self.loadPreset)
         #self.actionUnpackData.triggered.connect(self.unpackData)
         self.actionExpandAll.triggered.connect(self.expandAll)
         self.actionCollapseAll.triggered.connect(self.collapseAll)
@@ -201,6 +204,11 @@ class Actions(object):
     @Slot()     
     def showColumns(self):
         self.mainWindow.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
+
+    @Slot()     
+    def loadPreset(self):
+        self.mainWindow.presetWindow.showPresets()
+
                                         
     @Slot()     
     def unpackData(self):

@@ -41,7 +41,7 @@ class ApiTab(QWidget):
             else:  
                 return key
         
-    def getOptions(self):
+    def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'
         return {}
     
     def setOptions(self,options):
@@ -49,7 +49,7 @@ class ApiTab(QWidget):
     
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
-        options=self.getOptions(True)
+        options=self.getOptions('settings')
 
         for key in options.keys():        
             self.mainWindow.settings.setValue(key,options[key])
@@ -172,27 +172,24 @@ class FacebookTab(ApiTab):
         self.setLayout(mainLayout)
         if loadSettings: self.loadSettings()
         
-    def getOptions(self,persistent=False):      
+    def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'     
         options={}                
         
-        #options for request        
-        options['querytype']=self.name+':'+self.relationEdit.currentText()
+        #options for request                
         options['relation']=self.relationEdit.currentText()
         options['since']=self.sinceEdit.date().toString("yyyy-MM-dd")
         options['until']=self.untilEdit.date().toString("yyyy-MM-dd")
         options['offset']=self.offsetEdit.value()
         options['limit']=self.limitEdit.value()
-        options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
-        #if (options['accesstoken'] == ""): self.doLogin(True)
         
+        if purpose != 'preset':
+            options['querytype']=self.name+':'+self.relationEdit.currentText()
+            options['accesstoken']= self.tokenEdit.text() # self.accesstoken # None #"109906609107292|_3rxWMZ_v1UoRroMVkbGKs_ammI"
+                
         #options for data handling
-        if not persistent:
-            options['objectid']='id'
-            
-            if (options['relation']=='<self>'):
-                options['nodedata']=None
-            else:  
-                options['nodedata']='data'
+        if purpose == 'fetch':
+            options['objectid']='id'            
+            options['nodedata']=None if (options['relation']=='<self>') else 'data'
                
         return options        
 
@@ -202,7 +199,7 @@ class FacebookTab(ApiTab):
         if options.has_key('until'): self.untilEdit.setDate(datetime.strptime(options['until'],"%Y-%m-%d"))
         self.offsetEdit.setValue(int(options.get('offset',0)))
         self.limitEdit.setValue(int(options.get('limit',50)))
-        self.tokenEdit.setText(options.get('accesstoken','')) 
+        if options.has_key('accesstoken'): self.tokenEdit.setText(options.get('accesstoken','')) 
 
 
     def fetchData(self,nodedata,options=None):          
@@ -320,18 +317,20 @@ class TwitterTab(ApiTab):
         if loadSettings: self.loadSettings()
   
               
-    def getOptions(self,persistent=False):      
+    def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'      
         options={}
         
         #options for request 
-        options['query'] = self.relationEdit.currentText()
-        options['querytype']=self.name+':'+self.relationEdit.currentText()
+        options['query'] = self.relationEdit.currentText()        
         options['params']=self.paramEdit.getParams()
-        options['access_token'] = self.tokenEdit.text() 
-        options['access_token_secret'] = self.tokensecretEdit.text()
+        
+        if purpose != 'preset':
+            options['querytype']=self.name+':'+self.relationEdit.currentText()
+            options['access_token'] = self.tokenEdit.text() 
+            options['access_token_secret'] = self.tokensecretEdit.text()
                 
         #options for data handling
-        if not persistent:                 
+        if purpose == 'fetch':                 
             options['objectid']='id'
             
             if (options["query"] == 'search/tweets'):
@@ -349,8 +348,8 @@ class TwitterTab(ApiTab):
     def setOptions(self,options):         
         self.relationEdit.setEditText(options.get('query','search/tweets'))        
         self.paramEdit.setParams(options.get('params',{'q':'<Object ID'}))
-        self.tokenEdit.setText(options.get('access_token',''))
-        self.tokensecretEdit.setText(options.get('access_token_secret',''))
+        if options.has_key('access_token'): self.tokenEdit.setText(options.get('access_token',''))
+        if options.has_key('access_token_secret'): self.tokensecretEdit.setText(options.get('access_token_secret',''))
         
     def initSession(self):
         if hasattr(self,"session"):
@@ -470,14 +469,16 @@ class GenericTab(ApiTab):
         self.setLayout(mainLayout)
         if loadSettings: self.loadSettings()
         
-    def getOptions(self,persistent=False):      
+    def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'      
         options={}
         
-        #options for request 
-        options['querytype']='generic'
+        #options for request
+        if purpose != 'preset':
+            options['querytype']=self.name 
+
         options['prefix']=self.prefixEdit.currentText()
-        options['suffix']=self.suffixEdit.currentText()
         options['urlfield']=self.fieldEdit.currentText()
+        options['suffix']=self.suffixEdit.currentText()      
                 
         #options for data handling
         options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None

@@ -8,6 +8,7 @@ from models import *
 from actions import *
 from apimodules import * 
 from help import *
+from presets import *
 
 class MainWindow(QMainWindow):
     
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
     def createUI(self):
         
         self.helpwindow = HelpWindow(self)
+        self.presetWindow= PresetWindow(self)
         
         self.toolbar=Toolbar(parent=self,mainWindow=self)
         self.addToolBar(Qt.TopToolBarArea,self.toolbar)    
@@ -164,6 +166,7 @@ class MainWindow(QMainWindow):
         actionlayout.addWidget(self.RequestTabs)        
         loadTabs(self)
         
+    
         #fetch data      
         f=QFont()
         f.setPointSize(11)
@@ -223,7 +226,10 @@ class MainWindow(QMainWindow):
         
         
     def writeSettings(self):
-        self.settings = QSettings("Keyling", "Facepager")
+        QCoreApplication.setOrganizationName("Keyling")
+        QCoreApplication.setApplicationName("Facepager")
+
+        self.settings = QSettings()        
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())        
@@ -236,7 +242,10 @@ class MainWindow(QMainWindow):
             self.RequestTabs.widget(i).saveSettings()
         
     def readSettings(self):
-        self.settings = QSettings("Keyling", "Facepager")
+        QSettings.setDefaultFormat(QSettings.IniFormat)
+        QCoreApplication.setOrganizationName("Keyling")
+        QCoreApplication.setApplicationName("Facepager")
+        self.settings = QSettings()        
         self.settings.beginGroup("MainWindow")
         
         #self.resize(self.settings.value("size", QSize(800, 800)))
@@ -278,6 +287,7 @@ class Toolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.mainWindow.actions.actionExpandAll)        
         self.addAction(self.mainWindow.actions.actionCollapseAll)
+        self.addAction(self.mainWindow.actions.actionLoadPreset)
         self.addAction(self.mainWindow.actions.actionHelp)
         
 
