@@ -225,8 +225,10 @@ class FacebookTab(ApiTab):
                 
         urlparams["access_token"] =   options['accesstoken']         
         urlpath = "https://graph.facebook.com/" + urlpath
-        
-        self.mainWindow.logmessage("Fetching data for "+nodedata['objectid']+" from "+urlpath+" with params "+json.dumps(urlparams))
+
+        self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
+                {2}".format(nodedata['objectid'],urlpath,urlparams))
+                
         return self.request(urlpath,urlparams)          
 
 
