@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         
         self.setWindowTitle("Facepager 3.2")                
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
-        self.setMinimumSize(900,400)
+        self.setMinimumSize(900,500)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
 
 
