@@ -41,7 +41,27 @@ class ApiTab(QWidget):
                  return getDictValue(nodedata['response'],match.group(1))
             else:  
                 return key
+    
+    def getURL(self,urlpath,params,nodedata):    
+        urlparams = {}                                
+        for name in params:
+            if (name == '<None>') | (name == ''): continue
+            if (params[name] == '<None>') | (params[name] == ''): continue
+                        
+            value = self.getvalue(params[name],nodedata)             
+            
+            #Replace url path...
+            match = re.match("^<(.*)>$",name)
+            if match:           
+                 urlpath = urlpath.replace(match.group(1),value)      
+             
+            #...or set parameter
+            else:  
+                urlparams[name] = value
         
+        return urlpath,urlparams                                    
+
+                  
     def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'
         return {}
     
@@ -132,30 +152,10 @@ class FacebookTab(ApiTab):
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Query",self.relationEdit)
 
-        #-Since
-        self.sinceEdit=QDateEdit(self)
-        self.sinceEdit.setDate(datetime.today()-timedelta( days=7))
-        mainLayout.addRow("Since",self.sinceEdit)
-        
-
-        #-Until
-        self.untilEdit=QDateEdit(self)
-        self.untilEdit.setDate(datetime.today())
-        mainLayout.addRow("Until",self.untilEdit)
-        
-        #-Offset
-        self.offsetEdit=QSpinBox(self)
-        self.offsetEdit.setMaximum(500)
-        self.offsetEdit.setMinimum(0)
-        self.offsetEdit.setValue(0)
-        mainLayout.addRow("Offset",self.offsetEdit)
-
-        #-Limit
-        self.limitEdit=QSpinBox(self)
-        self.limitEdit.setMaximum(1000)
-        self.limitEdit.setMinimum(1)
-        self.limitEdit.setValue(50)
-        mainLayout.addRow("Limit",self.limitEdit)
+        self.paramEdit = QParamEdit(self)
+        self.paramEdit.setNameOptions(['<None>','since','until','offset','limit','type'])
+        self.paramEdit.setValueOptions(['<None>','2013-07-17','page'])       
+        mainLayout.addRow("Parameters",self.paramEdit)
 
         #-Log in
         loginlayout=QHBoxLayout()
@@ -176,13 +176,10 @@ class FacebookTab(ApiTab):
     def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'     
         options={}                
         
-        #options for request                
+        #options for request                                
         options['relation']=self.relationEdit.currentText()
-        options['since']=self.sinceEdit.date().toString("yyyy-MM-dd")
-        options['until']=self.untilEdit.date().toString("yyyy-MM-dd")
-        options['offset']=self.offsetEdit.value()
-        options['limit']=self.limitEdit.value()
-        
+        options['params']=self.paramEdit.getParams()
+                
         if purpose != 'preset':
             options['querytype']=self.name+':'+self.relationEdit.currentText()
             options['accesstoken']= self.tokenEdit.text()
@@ -195,36 +192,36 @@ class FacebookTab(ApiTab):
         return options        
 
     def setOptions(self,options):         
-        self.relationEdit.setEditText(options.get('relation','<self>'))        
-        if options.has_key('since'): self.sinceEdit.setDate(datetime.strptime(options['since'],"%Y-%m-%d"))
-        if options.has_key('until'): self.untilEdit.setDate(datetime.strptime(options['until'],"%Y-%m-%d"))
-        self.offsetEdit.setValue(int(options.get('offset',0)))
-        self.limitEdit.setValue(int(options.get('limit',50)))
+        self.relationEdit.setEditText(options.get('relation','<self>'))
+        self.paramEdit.setParams(options.get('params',{}))        
+        
         if options.has_key('accesstoken'): self.tokenEdit.setText(options.get('accesstoken','')) 
 
 
     def fetchData(self,nodedata,options=None):          
+        #Preconditions
         if (options==None): options = self.getOptions()
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
-
-        if nodedata['objectid']==None:
-            raise Exception("Empty object id")
+        if nodedata['objectid']==None: raise Exception("Empty object id")
             
-        #build url        
+        #build url                
         if options['relation']=='<self>':
-            urlpath=self.idtostr(nodedata['objectid'])
+            urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])
             urlparams={'metadata':'1'}
+            urlparams.update(options['params'])
 
-        elif options['relation']=='<search>':
-            urlpath='search'
+        elif options['relation']=='<search>':  
+            urlpath='https://graph.facebook.com/search'
             urlparams={'q':self.idtostr(nodedata['objectid']),'type':'page'}
+            urlparams.update(options['params'])
         
         else:
-            urlpath=self.idtostr(nodedata['objectid'])+'/'+options['relation']            
-            urlparams= { key: options[key] for key in ['limit','offset','since','until'] }                   
-                
-        urlparams["access_token"] =   options['accesstoken']         
-        urlpath = "https://graph.facebook.com/" + urlpath
+            urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])+'/'+options['relation']            
+            urlparams= {'limit':'100'}
+            urlparams.update(options['params'])                   
+        
+        urlpath,urlparams = self.getURL(urlpath,urlparams, nodedata)        
+        urlparams["access_token"] = options['accesstoken']         
 
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
                 {2}".format(nodedata['objectid'],urlpath,urlparams))
@@ -367,22 +364,8 @@ class TwitterTab(ApiTab):
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
         
-        #Resource
         urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
-        
-        #Params
-        urlparams = {}                                
-        for name in options["params"]:
-            if (name == '<None>') | (name == ''): continue
-            if (options["params"][name] == '<None>') | (options["params"][name] == ''): continue
-                        
-            value = self.getvalue(options["params"][name],nodedata)             
-             
-            if name == '<:id>':
-              urlpath = urlpath.replace(':id',value)                                        
-            else:
-              urlparams[name] = value
-                
+        urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)               
 
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
                 {2}".format(nodedata['objectid'],urlpath,urlparams))                    
@@ -431,25 +414,18 @@ class GenericTab(ApiTab):
         mainLayout = QFormLayout()
                 
         #URL prefix 
-        self.prefixEdit=QComboBox(self)        
-        self.prefixEdit.insertItems(0,['https://api.twitter.com/1/statuses/user_timeline.json?screen_name='])
-        self.prefixEdit.insertItems(0,['https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q='])
+        self.urlpathEdit=QComboBox(self)        
+        self.urlpathEdit.insertItems(0,['https://api.twitter.com/1/statuses/user_timeline.json'])
+        self.urlpathEdit.insertItems(0,['https://gdata.youtube.com/feeds/api/videos'])
                        
-        self.prefixEdit.setEditable(True)
-        mainLayout.addRow("URL prefix",self.prefixEdit)
+        self.urlpathEdit.setEditable(True)
+        mainLayout.addRow("URL path",self.urlpathEdit)
 
-        #URL field 
-        self.fieldEdit=QComboBox(self)
-        self.fieldEdit.insertItems(0,['<Object ID>','<None>'])       
-        self.fieldEdit.setEditable(True)        
-        mainLayout.addRow("URL field",self.fieldEdit)
-        
-        #URL suffix 
-        self.suffixEdit=QComboBox(self)
-        self.suffixEdit.insertItems(0,[''])       
-        self.suffixEdit.setEditable(True)        
-        mainLayout.addRow("URL suffix",self.suffixEdit)
-        
+        #Parameter
+        self.paramEdit = QParamEdit(self)
+        self.paramEdit.setNameOptions(['<None>','<id>','q'])
+        self.paramEdit.setValueOptions(['<None>','<Object ID>'])        
+        mainLayout.addRow("Parameters",self.paramEdit)
 
         #Extract option 
         self.extractEdit=QComboBox(self)
@@ -476,9 +452,8 @@ class GenericTab(ApiTab):
         if purpose != 'preset':
             options['querytype']=self.name 
 
-        options['prefix']=self.prefixEdit.currentText()
-        options['urlfield']=self.fieldEdit.currentText()
-        options['suffix']=self.suffixEdit.currentText()      
+        options['urlpath']=self.urlpathEdit.currentText()
+        options['params']=self.paramEdit.getParams()   
                 
         #options for data handling
         options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
@@ -486,29 +461,21 @@ class GenericTab(ApiTab):
         
         return options  
 
-    def setOptions(self,options):         
-        self.prefixEdit.setEditText(options.get('prefix','https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q='))        
-        self.fieldEdit.setEditText(options.get('urlfield','<Object ID>'))
-        self.suffixEdit.setEditText(options.get('suffix',''))
+    def setOptions(self,options):       
+          
+        self.urlpathEdit.setEditText(options.get('urlpath',''))
+        self.paramEdit.setParams(options.get('params',{}))        
         self.extractEdit.setEditText(options.get('nodedata','data.feed.entry'))
         self.objectidEdit.setEditText(options.get('objectid','id.$t'))
         
         
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
-    
-        if(options['urlfield']=='<Object ID>'): 
-            queryterm=self.idtostr(nodedata['objectid'])
-        elif((options['urlfield']=='<None>') | (options['urlfield']=='')):
-            queryterm=''
-        else:    
-            queryterm=nodedata[options['urlfield']]
-                        
-                 
-        urlpath = options["prefix"]+queryterm+options["suffix"]        
-        
-        self.mainWindow.logmessage("Fetching data for "+self.idtostr(nodedata['objectid'])+" from "+urlpath)    
-        return self.request(urlpath)       
+            
+        urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)         
+        self.mainWindow.logmessage("Fetching data for {0} from {1} with params {2}".format(nodedata['objectid'],urlpath,urlparams))                    
+
+        return self.request(urlpath,urlparams)       
 
 
 
