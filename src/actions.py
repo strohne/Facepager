@@ -12,23 +12,23 @@ class Actions(object):
         self.mainWindow=mainWindow
         
         self.basicActions=QActionGroup(self.mainWindow)       
-        self.actionOpen=self.basicActions.addAction(QIcon(":/icons/facepager_icons/save.png"),"Open Database")        
-        self.actionNew=self.basicActions.addAction(QIcon(":/icons/facepager_icons/new.png"),"New Database")        
+        self.actionOpen=self.basicActions.addAction(QIcon(":/icons/save.png"),"Open Database")        
+        self.actionNew=self.basicActions.addAction(QIcon(":/icons/new.png"),"New Database")        
                 
         self.databaseActions=QActionGroup(self.mainWindow)
-        self.actionExport=self.databaseActions.addAction(QIcon(":/icons/facepager_icons/export.png"),"Export Data")        
-        self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/facepager_icons/add.png"),"Add Nodes")                
-        self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/facepager_icons/delete.png"),"Delete Nodes")
+        self.actionExport=self.databaseActions.addAction(QIcon(":/icons/export.png"),"Export Data")        
+        self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/add.png"),"Add Nodes")                
+        self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/delete.png"),"Delete Nodes")
         
         self.dataActions=QActionGroup(self.mainWindow)        
-        self.actionQuery=self.dataActions.addAction(QIcon(":/icons/facepager_icons/fetch.png"),"Query")                
+        self.actionQuery=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Query")                
         self.actionShowColumns=self.dataActions.addAction("Show Columns")
         #self.actionUnpackData=self.dataActions.addAction("Unpack Data")
-        self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/facepager_icons/expand.png"),"Expand nodes")
-        self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/facepager_icons/collapse.png"),"Collapse nodes")
-        self.actionHelp=self.dataActions.addAction(QIcon(":/icons/facepager_icons/help.png"),"Help")
+        self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/expand.png"),"Expand nodes")
+        self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
+        self.actionHelp=self.dataActions.addAction(QIcon(":/icons/help.png"),"Help")
         
-        self.actionLoadPreset=self.dataActions.addAction("Presets")
+        self.actionLoadPreset=self.dataActions.addAction(QIcon(":/icons/presets.png"),"Presets")
 
         #connect the actions to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)
