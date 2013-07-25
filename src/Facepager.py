@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         fetchdata.addWidget(self.levelEdit,0)
         
         #-button        
-        button=QPushButton(QIcon(":/icons/facepager_icons/fetch.png"),"Fetch Data", self.mainWidget)
+        button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.actions.actionQuery.trigger)
