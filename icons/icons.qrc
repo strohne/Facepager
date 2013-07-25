@@ -1,0 +1,24 @@
+
+
+<RCC>
+  <qresource prefix="icons">
+    <file>add.png</file>
+    <file>delete.png</file>
+    <file>export.png</file>
+    <file>login.png</file>
+    <file>new.png</file>
+    <file>save.png</file>
+    <file>fetch.png</file>
+    <file>icon_facepager.png</file>
+    <file>presets.png</file>
+    <file>collapse.png</file>
+    <file>expand.png</file>
+    <file>fetch.png</file>
+    <file>help.png</file>
+
+
+  </qresource>
+</RCC>
+
+<!-- This file must be compiled with the pyside-rcc application to a python file -->
+<!-- The resource prefix must be specified in the PySide application, ':/icons/filename.filetype' -->
