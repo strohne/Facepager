@@ -91,6 +91,7 @@ SetOutPath "$INSTDIR\presets"
 File "presets\Search_for_Facebook_Pages-3_2.json"
 File "presets\Search_for_recent_tweets_on_Twitter-3_2.json"
 File "presets\Search_for_Youtube_videos-3_2.json"
+File "presets\Search_recent_articles_on_Zeit-3_2.json"
 
 CreateDirectory "$INSTDIR\presets"
 ;CopyFiles "${NSISDIR}\Plugins\*.*" "C:\TEMP\test"
