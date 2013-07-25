@@ -28,7 +28,7 @@ class Actions(object):
         self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/facepager_icons/collapse.png"),"Collapse nodes")
         self.actionHelp=self.dataActions.addAction(QIcon(":/icons/facepager_icons/help.png"),"Help")
         
-        self.actionLoadPreset=self.dataActions.addAction("Load Preset")
+        self.actionLoadPreset=self.dataActions.addAction("Presets")
 
         #connect the actions to their corresponding action functions (slots)
         self.actionOpen.triggered.connect(self.openDB)

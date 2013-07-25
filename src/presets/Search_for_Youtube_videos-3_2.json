@@ -13,12 +13,11 @@
     "media$group.yt$videoid.$t"
   ],
   "options": {
-    "suffix": "",
-    "objectid": "media$group.yt$videoid.$t",
-    "urlfield": "<Object ID>",
     "prefix": "https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q=",
+    "urlfield": "<Object ID>",
+    "suffix": "",
     "nodedata": "feed.entry",
-    "querytype": "generic"
+    "objectid": "media$group.yt$videoid.$t"
   },
   "name": "Search for Youtube videos",
   "module": "Generic",

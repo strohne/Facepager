@@ -472,11 +472,13 @@ class GenericTab(ApiTab):
     def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'      
         options={}
         
-        #options for request 
-        options['querytype']='generic'
+        #options for request
+        if purpose != 'preset':
+            options['querytype']=self.name 
+
         options['prefix']=self.prefixEdit.currentText()
-        options['suffix']=self.suffixEdit.currentText()
         options['urlfield']=self.fieldEdit.currentText()
+        options['suffix']=self.suffixEdit.currentText()      
                 
         #options for data handling
         options['nodedata']=self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
