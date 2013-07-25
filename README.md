@@ -3,12 +3,14 @@
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
 All data is stored in a SQLite database and may be exported to csv. 
 
-###Version 3.1 features
+###Version 3.2 features
 
 - Refurbished user interface
 - Login to Facebook for fetching groups
 - Login to Twitter using the Twitter API 1.1
-- Experimental generic downloader for all sorts of webservices delivering JSON
+- generic downloader for all sorts of webservices delivering JSON
+- Storing and Loading Presets
+- Improved column syntax (Wildcard *Syntax for list extractions)
 - [Binary/Installer](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html) Version for Windows/OS X
 
     
@@ -25,7 +27,7 @@ You should be aware of error sources when dealing with Facebook API. There are a
 5. Select one or more nodes in the view and click "Fetch data".
 6. Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.
 7. Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
-8. For further information, click the "help" button
+8. For further information, click the "help" button and try the default presets
 
 
 ###Citation
