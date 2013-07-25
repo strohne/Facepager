@@ -218,7 +218,9 @@ A quick explanation:
 			but also enables a request against the API for multiple objects at once.
 		</li>
 		<li><b>Custom Table Column Setup:</b> 
-		Use custom columns to control the columns in the export files (CSV-File). Using nested columns like "user.entities.url.urls" (for Twitter Tweets) may have no effect in the object view, especially if the result of such a column setup is a list (which is content in square bracket [<i>content here</i>] ), however the result becomes visible when exporting the data.
+		Use custom columns to control the columns in the export files (CSV-File). Using nested columns like "user.entities.url.urls" might be usefull and may be combined with an astrix *-Operator to unfold list of attributes like this: entities.urls.*.display_url (try the twitter-preset to see the results)		</li>
+	<li><b>Presets:</b> 
+		Use presets to store your settings for certain API calls. Presets in bold face are stored inside the application directory and are included by default. Your own presets are automatically stored in your user directory (f.e. C:\Users\username\Facepager\Presets) and may be copied, distributed and shared with other users. <b>We encourage you to share your presets with us - do so by mailing the .json-file to the authors of the Facepager and provide a short description of your preset </b>. As you might notice, presets store your custom-table column setup and the query-details in the Query-Tab, but no data or private access-token is shared! To edit presets, either load an existing one, make changes and store them as a new preset, or go to the presets file-location an edit the preset with a text-editor. 
 		</li>
     </ul>
 
