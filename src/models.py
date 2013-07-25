@@ -327,7 +327,7 @@ class TreeModel(QAbstractItemModel):
                                     
                 newnodes=[]
                 for n in nodes:                    
-                    new=Node(getDictValue(n,options['objectid']),dbnode.id)
+                    new=Node(getDictValue(n,options.get('objectid',"")),dbnode.id)
                     new.response=n
                     new.level=dbnode.level+1
                     new.querystatus=querystatus

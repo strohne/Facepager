@@ -94,7 +94,7 @@ class PresetWindow(QDialog):
         elif __file__:
             self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
         
-        
+        self.presetSuffix = '-3_2.json'        
     
     def currentChanged(self):
         #hide
@@ -139,8 +139,8 @@ class PresetWindow(QDialog):
 
                         
             self.presetList.addItem(newItem)
-        except:
-             pass   
+        except Exception as e:
+             QMessageBox.information(self,"Facepager","Error loading preset:"+str(e))   
         
             
     def initPresets(self):
@@ -148,11 +148,11 @@ class PresetWindow(QDialog):
         self.presetList.clear()
         
         if os.path.exists(self.defaultPresetFolder):    
-            files = [f for f in os.listdir(self.defaultPresetFolder) if f.endswith('.json')]
+            files = [f for f in os.listdir(self.defaultPresetFolder) if f.endswith(self.presetSuffix)]
             for filename in files: self.addPresetItem(self.defaultPresetFolder,filename,True)
 
         if os.path.exists(self.presetFolder):
-            files = [f for f in os.listdir(self.presetFolder) if f.endswith('.json')]
+            files = [f for f in os.listdir(self.presetFolder) if f.endswith(self.presetSuffix)]
             for filename in files: self.addPresetItem(self.presetFolder,filename)
         
         self.presetList.setFocus()
@@ -178,10 +178,10 @@ class PresetWindow(QDialog):
         self.close()
                
     def uniqueFilename(self,name):
-        filename = os.path.join(self.presetFolder,re.sub('[^a-zA-Z0-9_-]+', '_', name )+'.json')
+        filename = os.path.join(self.presetFolder,re.sub('[^a-zA-Z0-9_-]+', '_', name )+self.presetSuffix)
         i = 1
         while os.path.exists(filename) and i < 10000:            
-            filename = os.path.join(self.presetFolder,re.sub('[^a-zA-Z0-9_-]+', '_', name )+str(i)+'.json')
+            filename = os.path.join(self.presetFolder,re.sub('[^a-zA-Z0-9_-]+', '_', name )+"-"+str(i)+self.presetSuffix)
             i+=1
         if os.path.exists(filename):
             raise Exception('Could not find unique filename')    
@@ -198,7 +198,7 @@ class PresetWindow(QDialog):
             QMessageBox.information(self,"Facepager","Cannot delete default presets.")
             return False
         
-        reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the preset {0}?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes: return
         
         os.remove(os.path.join(self.presetFolder, data.get('filename')))
