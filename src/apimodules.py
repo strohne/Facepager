@@ -31,24 +31,23 @@ class ApiTab(QWidget):
             return str(val)
         except UnicodeEncodeError as e:
             return val.encode('utf-8')     
-
-    def getvalue(self,key,nodedata):
-        if key == '<Object ID>':        
-          return self.idtostr(nodedata['objectid'])
-        else:
-            match = re.match("^<(.*)>$",key)
-            if match:                 
-                 return getDictValue(nodedata['response'],match.group(1))
-            else:  
-                return key
     
     def getURL(self,urlpath,params,nodedata):    
         urlparams = {}                                
         for name in params:
             if (name == '<None>') | (name == ''): continue
             if (params[name] == '<None>') | (params[name] == ''): continue
-                        
-            value = self.getvalue(params[name],nodedata)             
+                      
+            #Value                                  
+            if params[name] == '<Object ID>':        
+              value = self.idtostr(nodedata['objectid'])
+            else:
+                match = re.match("^<(.*)>$",params[name])
+                if match:                 
+                     return getDictValue(nodedata['response'],match.group(1))
+                else:  
+                    return params[name]
+                         
             
             #Replace url path...
             match = re.match("^<(.*)>$",name)
