@@ -13,9 +13,12 @@
     "media$group.yt$videoid.$t"
   ],
   "options": {
-    "prefix": "https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q=",
-    "urlfield": "<Object ID>",
-    "suffix": "",
+    "urlpath": "https://gdata.youtube.com/feeds/api/videos",
+    "params": {
+      "alt": "json",
+      "q=": "<Object ID>",
+      "v": "2"
+    },
     "nodedata": "feed.entry",
     "objectid": "media$group.yt$videoid.$t"
   },
