@@ -4,9 +4,12 @@
     "category"
   ],
   "options": {
+    "params": {
+      "type": "page"
+    },
     "relation": "<search>"
   },
   "name": "Search for Facebook Pages",
   "module": "Facebook",
-  "description": "The field Object ID is treated as search term. Simply add and select new nodes, login to Facebook and fetch data.\n\nParameters since, until, offset and limit do not have any effect.\n\nSee https://developers.facebook.com/docs/reference/api/search/"
+  "description": "Add search terms as new nodes (Object ID), login to Facebook and fetch data.\n\nTo search for other objects than pages change the type parameter to one of the following: post,user,page,event,group,place\n\nSee https://developers.facebook.com/docs/reference/api/search/"
 }
