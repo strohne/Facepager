@@ -345,7 +345,7 @@ class TwitterTab(ApiTab):
 
     def setOptions(self,options):         
         self.relationEdit.setEditText(options.get('query','search/tweets'))        
-        self.paramEdit.setParams(options.get('params',{'q':'<Object ID'}))
+        self.paramEdit.setParams(options.get('params',{'q':'<Object ID>'}))
         if options.has_key('access_token'): self.tokenEdit.setText(options.get('access_token',''))
         if options.has_key('access_token_secret'): self.tokensecretEdit.setText(options.get('access_token_secret',''))
         

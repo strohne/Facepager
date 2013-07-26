@@ -6,7 +6,7 @@ class QParamEdit(QTableWidget):
     def __init__(self, parent=None):
         super(QParamEdit, self).__init__(parent)
         
-        self.setStyleSheet("QParamEdit {border:0px;} QParamEdit::item {margin-bottom:5px;margin-right:5px;}")
+        self.setStyleSheet("QParamEdit {border:0px;} QParamEdit::item {margin-bottom:3px;margin-right:5px;}")
         self.setShowGrid(False)
         self.nameoptions = []
         self.valueoptions = []
@@ -48,7 +48,7 @@ class QParamEdit(QTableWidget):
         if combo is None:
             combo=QComboBox(self)
             combo.setEditable(True)    
-            combo.editTextChanged.connect(self.calcRows)    
+            combo.editTextChanged.connect(self.calcRows)
             self.setCellWidget(row,col,combo)
         
         return (combo)    
