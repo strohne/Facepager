@@ -424,7 +424,7 @@ class GenericTab(ApiTab):
 
         #Parameter
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>','<id>','q'])
+        self.paramEdit.setNameOptions(['<None>','<:id>','q'])
         self.paramEdit.setValueOptions(['<None>','<Object ID>'])        
         mainLayout.addRow("Parameters",self.paramEdit)
 
