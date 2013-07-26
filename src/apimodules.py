@@ -76,6 +76,7 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
                                           
     def loadSettings(self):
+
         #self.setOptions({})       
         #return (False) 
         self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
@@ -258,11 +259,12 @@ class TwitterTab(ApiTab):
         #-Query Type
         self.relationEdit=QComboBox(self)
         
+        self.relationEdit.insertItems(0,['search/tweets'])
         self.relationEdit.insertItems(0,['users/show','users/search'])      
         self.relationEdit.insertItems(0,['followers/list','friends/list'])        
         self.relationEdit.insertItems(0,['statuses/show/:id','statuses/retweets/:id'])
         self.relationEdit.insertItems(0,['statuses/user_timeline'])                       
-        self.relationEdit.insertItems(0,['search/tweets'])
+        
         
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Resource",self.relationEdit)
@@ -284,7 +286,7 @@ class TwitterTab(ApiTab):
          
         #Parameter
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>','<:id>','q','screen_name','user_id']) #'count','until'
+        self.paramEdit.setNameOptions(['<None>','<:id>','q','screen_name','user_id','count','result_type']) #'count','until'
         self.paramEdit.setValueOptions(['<None>','<Object ID>'])
         
         mainLayout.addRow("Parameters",self.paramEdit)
@@ -462,10 +464,10 @@ class GenericTab(ApiTab):
 
     def setOptions(self,options):       
           
-        self.urlpathEdit.setEditText(options.get('urlpath',''))
-        self.paramEdit.setParams(options.get('params',{}))        
-        self.extractEdit.setEditText(options.get('nodedata','data.feed.entry'))
-        self.objectidEdit.setEditText(options.get('objectid','id.$t'))
+        self.urlpathEdit.setEditText(options.get('urlpath','https://gdata.youtube.com/feeds/api/videos'))
+        self.paramEdit.setParams(options.get('params',{'q':'<Object ID>','alt':'json','v':'2'}))        
+        self.extractEdit.setEditText(options.get('nodedata','feed.entry'))
+        self.objectidEdit.setEditText(options.get('objectid','media$group.yt$videoid.$t'))
         
         
     def fetchData(self,nodedata,options=None):
