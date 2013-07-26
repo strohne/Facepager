@@ -118,7 +118,7 @@ class PresetWindow(QDialog):
      
         
     def showPresets(self):
-        self.initPresets()
+        self.initPresets()        
         self.exec_()
         
     def addPresetItem(self,folder,filename,default=False):
@@ -158,6 +158,7 @@ class PresetWindow(QDialog):
         
         self.presetList.setFocus()
         self.presetList.setCurrentRow(0)
+        self.applyButton.setDefault(True)
         
         #self.currentChanged()
         
