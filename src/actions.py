@@ -143,7 +143,7 @@ class Actions(object):
                         progress.setValue(no)
                         no+=1               
                         
-                        row=[node.level,node.id,node.parent_id,node.objectid_encoded,node.querystatus,node.querytime,node.querytype]    
+                        row=[node.level,node.id,node.parent_id,node.objectid_encoded,node.objecttype,node.querystatus,node.querytime,node.querytype]    
                         for key in self.mainWindow.treemodel.customcolumns:                    
                             row.append(node.getResponseValue(key,"utf-8"))    
                          

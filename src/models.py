@@ -89,9 +89,11 @@ class Node(Base):
         __tablename__='Nodes'
 
         objectid=Column(String)
+        objecttype=Column(String)
         querystatus=Column(String)
         querytype=Column(String)
         querytime=Column(String)
+        queryparams_raw=Column("queryparams",Text)
         response_raw=Column("response",Text)                                        
         id=Column(Integer,primary_key=True,index=True)
         parent_id = Column(Integer, ForeignKey('Nodes.id',ondelete='CASCADE'),index=True)
@@ -100,11 +102,12 @@ class Node(Base):
         childcount=Column(Integer)
 
         def __init__(self,objectid,parent_id=None):            
-            self.objectid=objectid
+            self.objectid=objectid            
             self.parent_id=parent_id
             self.level=0
             self.childcount=0
-            self.querystatus='new'
+            self.querystatus=''
+            self.objecttype = 'seed'            
             
         @property
         def response(self):
@@ -116,7 +119,18 @@ class Node(Base):
         @response.setter
         def response(self, response_raw):
             self.response_raw = json.dumps(response_raw)               
-            
+
+        @property
+        def queryparams(self):
+            if (self.queryparams_raw == None): 
+                return {}
+            else:
+                return  json.loads(self.queryparams_raw)
+    
+        @queryparams.setter
+        def queryparams(self, queryparams_raw):
+            self.queryparams_raw = json.dumps(queryparams_raw)     
+                        
         def getResponseValue(self,key,encoding=None):
             value=getDictValue(self.response,key)
             if encoding and isinstance(value, unicode):                
@@ -131,22 +145,22 @@ class Node(Base):
             except UnicodeEncodeError as e:
                 return self.objectid.encode('utf-8')
                  
-class Job(Base):
-        __tablename__='Jobs'
-        
-        status=Column(String)        
-        executed=Column(String)
-        level=Column(Integer)                                            
-        seeds=Column(Integer)
-        query=Column(String)
-        since=Column(String)
-        until=Column(String)
-        offset=Column(String)
-        limit=Column(String)
-        id=Column(Integer,primary_key=True)
-
-        def __init__(self):
-            pass            
+#class Job(Base):
+#        __tablename__='Jobs'
+#        
+#        status=Column(String)        
+#        executed=Column(String)
+#        level=Column(Integer)                                            
+#        seeds=Column(Integer)
+#        query=Column(String)
+#        since=Column(String)
+#        until=Column(String)
+#        offset=Column(String)
+#        limit=Column(String)
+#        id=Column(Integer,primary_key=True)
+#
+#        def __init__(self):
+#            pass            
                            
 class TreeItem(object):
     def __init__(self, parent=None,id=None,data=None):
@@ -293,6 +307,7 @@ class TreeModel(QAbstractItemModel):
                 
             treenode=index.internalPointer()
             dbnode=Node.query.get(treenode.id)
+            querytime = datetime.datetime.now()
                 
             #get data
             try:
@@ -313,9 +328,9 @@ class TreeModel(QAbstractItemModel):
     
                 #filter response
                 if options['nodedata'] != None:
-                    nodes=getDictValue(response,options['nodedata'],False)
+                    nodes=getDictValue(response,options['nodedata'],False)                    
                 else:
-                    nodes=response
+                    nodes=response                                
                 
                 #single record
                 if not (type(nodes) is list): nodes=[nodes]                                     
@@ -324,16 +339,33 @@ class TreeModel(QAbstractItemModel):
                 if (len(nodes) == 0) and (options.get('appendempty',True)):                    
                     nodes=[{}]
                     querystatus="empty"                      
-                                    
+                
+                #extracted nodes                    
                 newnodes=[]
                 for n in nodes:                    
                     new=Node(getDictValue(n,options.get('objectid',"")),dbnode.id)
+                    new.objecttype='data'
                     new.response=n
                     new.level=dbnode.level+1
                     new.querystatus=querystatus
-                    new.querytime=str(datetime.datetime.now())
+                    new.querytime=str(querytime)
                     new.querytype=options['querytype']
+                    new.queryparams=options                                        
                     newnodes.append(new)
+                
+                #Offcut
+                if (options['nodedata'] != None) and (options.get('appendoffcut',True)):
+                    offcut = filterDictValue(response,options['nodedata'],False)
+                    new=Node("",dbnode.id)
+                    new.objecttype='offcut'
+                    new.response=offcut
+                    new.level=dbnode.level+1
+                    new.querystatus=querystatus
+                    new.querytime=str(querytime)
+                    new.querytype=options['querytype']
+                    new.queryparams=options
+                    
+                    newnodes.append(new)                                            
     
                 self.database.session.add_all(newnodes)    
                 treenode._childcountall += len(newnodes)    
@@ -346,6 +378,7 @@ class TreeModel(QAbstractItemModel):
                 dbnode.querystatus=querystatus                
                 dbnode.querytime=str(datetime.datetime.now())
                 dbnode.querytype=options['querytype']
+                dbnode.queryparams=json.dumps(options)
                 self.database.session.commit()
                 treenode.data=self.getItemData(dbnode)
 
@@ -355,7 +388,7 @@ class TreeModel(QAbstractItemModel):
                             
                                 
     def columnCount(self, parent):
-        return 4+len(self.customcolumns)    
+        return 5+len(self.customcolumns)    
 
     def rowCount(self, parent):
         if parent.column() > 0:
@@ -371,7 +404,7 @@ class TreeModel(QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            captions=['Object ID','Query Status','Query Time','Query Type']+self.customcolumns                
+            captions=['Object ID','Object Type','Query Status','Query Time','Query Type']+self.customcolumns                
             return captions[section] if section < len(captions) else ""
 
         return None
@@ -417,13 +450,15 @@ class TreeModel(QAbstractItemModel):
         if index.column()==0:
             return item.data['objectid']
         elif index.column()==1:
-            return item.data['querystatus']      
+            return item.data['objecttype']              
         elif index.column()==2:
-            return item.data['querytime']      
+            return item.data['querystatus']      
         elif index.column()==3:
+            return item.data['querytime']      
+        elif index.column()==4:
             return item.data['querytype']      
         else:            
-            return getDictValue(item.data['response'],self.customcolumns[index.column()-4])
+            return getDictValue(item.data['response'],self.customcolumns[index.column()-5])
             
 
     def hasChildren(self, index):
@@ -443,10 +478,12 @@ class TreeModel(QAbstractItemModel):
     def getItemData(self,item):
         itemdata={}
         itemdata['level']=item.level
-        itemdata['objectid']=item.objectid        
+        itemdata['objectid']=item.objectid
+        itemdata['objecttype']=item.objecttype        
         itemdata['querystatus']=item.querystatus
         itemdata['querytime']=item.querytime
         itemdata['querytype']=item.querytype
+        itemdata['queryparams']=item.queryparams
         itemdata['response']=item.response     
         return itemdata   
         
