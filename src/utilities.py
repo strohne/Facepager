@@ -37,4 +37,44 @@ def getDictValue(data,multikey,dump=True):
     except Exception as e:
         return ""
 
+def filterDictValue(data,multikey,dump=True):
+    try:
+        keys=multikey.split('.',1)
+    
+        if type(data) is dict and keys[0] != '':
+            value = { key: data[key] for key in data.keys() if key != keys[0]}
+            if len(keys) > 1:
+                value[keys[0]] = filterDictValue(data[keys[0]],keys[1],False)
+                
+        elif type(data) is list and keys[0] != '':
+            try:
+                value=data
+                if len(keys) > 1:            
+                    value[int(keys[0])] = getDictValue(value[int(keys[0])],keys[1],False) 
+                else:
+                    value[int(keys[0])] = ''     
+            except:                                
+                if keys[0] == '*' and len(keys) > 1:
+                    listkey = keys[1]
+                elif keys[0] == '*':
+                    listkey = ''
+                else:
+                    listkey = keys[0]        
+                            
+                valuelist=[]
+                for elem in data:
+                    valuelist.append(filterDictValue(elem,listkey,False))                                     
+                value = valuelist
+        
+        else:
+            value = ''        
+            
+                    
+        if dump and (type(value) is dict or type(value) is list):
+            return json.dumps(value) 
+        else:        
+            return value
+    
+    except Exception as e:
+        return ""
 

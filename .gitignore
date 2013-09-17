@@ -6,3 +6,4 @@ src/*.pyc
 src/*.pyo
 src/credentials.py
 .project
+.pydevproject
