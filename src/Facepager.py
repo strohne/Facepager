@@ -4,6 +4,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import icons
 from tree import *
+from dictionarytree import *
 from models import *
 from actions import *
 from apimodules import * 
@@ -66,12 +67,12 @@ class MainWindow(QMainWindow):
          
          
         dataLayout=QHBoxLayout()
-        mainLayout.addLayout(dataLayout,0)
+        mainLayout.addLayout(dataLayout,4)
         dataSplitter = QSplitter(self)
         dataLayout.addWidget(dataSplitter)
         
         requestLayout=QHBoxLayout()
-        mainLayout.addLayout(requestLayout,0)
+        mainLayout.addLayout(requestLayout,2)
 
          
         #tree
@@ -79,29 +80,35 @@ class MainWindow(QMainWindow):
         self.tree=Tree(self.mainWidget,self)
         dataSplitter.addWidget(self.tree)
         dataSplitter.setStretchFactor(0, 1);
-        #dataLayout.addWidget(self.tree,1)
+
         
         #right sidebar
         detailWidget=QWidget()
         detailLayout=QVBoxLayout()
+        detailLayout.setContentsMargins(11,0,0,0)
         detailWidget.setLayout(detailLayout)
         dataSplitter.addWidget(detailWidget)        
         dataSplitter.setStretchFactor(1, 0);
-        #dataLayout.addLayout(detailLayout,0)
-        
      
         
         #detail data
-        detailGroup=QGroupBox("Raw Data")
-        detailLayout.addWidget(detailGroup)
-        groupLayout=QVBoxLayout()
-        detailGroup.setLayout(groupLayout)
+        #detailGroup=QGroupBox("Raw Data")
+        #detailLayout.addWidget(detailGroup)
+        #groupLayout=QVBoxLayout()
+        #detailGroup.setLayout(groupLayout)
                         
-        self.detailData=QTextEdit()                        
-        self.detailData.setLineWrapMode(QTextEdit.NoWrap)
-        self.detailData.setWordWrapMode(QTextOption.NoWrap)
-        self.detailData.acceptRichText=False    
-        groupLayout.addWidget(self.detailData)
+        self.detailTree=DictionaryTree(self.mainWidget,self)
+        detailLayout.addWidget(self.detailTree)
+
+        button=QPushButton("Add Column")
+        button.clicked.connect(self.actions.actionAddColumn.trigger)
+        detailLayout.addWidget(button)   
+                                        
+#        self.detailData=QTextEdit()                        
+#        self.detailData.setLineWrapMode(QTextEdit.NoWrap)
+#        self.detailData.setWordWrapMode(QTextOption.NoWrap)
+#        self.detailData.acceptRichText=False    
+#        groupLayout.addWidget(self.detailData)
         
 #        #unpack data
 #        detailGroup=QGroupBox("Unpack Data")
@@ -126,36 +133,6 @@ class MainWindow(QMainWindow):
 #        groupLayout.addWidget(button)   
         
                         
-        #fields
-        detailGroup=QGroupBox("Custom Table Columns (one key per line)")
-        detailLayout.addWidget(detailGroup)
-        groupLayout=QVBoxLayout()
-        detailGroup.setLayout(groupLayout)
-        
-        self.fieldList=QTextEdit()                        
-        self.fieldList.setLineWrapMode(QTextEdit.NoWrap)
-        self.fieldList.setWordWrapMode(QTextOption.NoWrap)
-        self.fieldList.acceptRichText=False
-        self.fieldList.clear()
-        self.fieldList.append('name')
-        self.fieldList.append('message')
-        self.fieldList.append('type')
-        self.fieldList.append('metadata.type')
-        self.fieldList.append('talking_about_count')
-        self.fieldList.append('likes')                
-        self.fieldList.append('likes.count')        
-        self.fieldList.append('shares.count')
-        self.fieldList.append('comments.count')
-        self.fieldList.append('created_time')
-        self.fieldList.append('updated_time')
-       
-        self.fieldList.setPlainText(self.settings.value('columns',self.fieldList.toPlainText()))       
-                    
-        groupLayout.addWidget(self.fieldList)        
-                
-        button=QPushButton("Apply Column Setup")
-        button.clicked.connect(self.actions.actionShowColumns.trigger)
-        groupLayout.addWidget(button)   
 
         
         #requests
@@ -214,6 +191,37 @@ class MainWindow(QMainWindow):
         self.loglist.acceptRichText=False
         self.loglist.clear()
         groupLayout.addWidget(self.loglist)
+
+        #fields
+        detailGroup=QGroupBox("Custom Table Columns (one key per line)")
+        requestLayout.addWidget(detailGroup)
+        groupLayout=QVBoxLayout()
+        detailGroup.setLayout(groupLayout)
+        
+        self.fieldList=QTextEdit()                        
+        self.fieldList.setLineWrapMode(QTextEdit.NoWrap)
+        self.fieldList.setWordWrapMode(QTextOption.NoWrap)
+        self.fieldList.acceptRichText=False
+        self.fieldList.clear()
+        self.fieldList.append('name')
+        self.fieldList.append('message')
+        self.fieldList.append('type')
+        self.fieldList.append('metadata.type')
+        self.fieldList.append('talking_about_count')
+        self.fieldList.append('likes')                
+        self.fieldList.append('likes.count')        
+        self.fieldList.append('shares.count')
+        self.fieldList.append('comments.count')
+        self.fieldList.append('created_time')
+        self.fieldList.append('updated_time')
+       
+        self.fieldList.setPlainText(self.settings.value('columns',self.fieldList.toPlainText()))       
+                    
+        groupLayout.addWidget(self.fieldList)        
+                
+        button=QPushButton("Apply Column Setup")
+        button.clicked.connect(self.actions.actionShowColumns.trigger)
+        groupLayout.addWidget(button)           
         
     def updateUI(self):
         #disable buttons that do not work without an opened database                   
