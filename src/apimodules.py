@@ -157,6 +157,11 @@ class FacebookTab(ApiTab):
         self.paramEdit.setValueOptions(['<None>','2013-07-17','page'])       
         mainLayout.addRow("Parameters",self.paramEdit)
 
+        self.pagesEdit=QSpinBox(self)
+        self.pagesEdit.setMinimum(1)        
+        self.pagesEdit.setMaximum(500)
+        mainLayout.addRow("Maximum pages",self.pagesEdit)
+        
         #-Log in
         loginlayout=QHBoxLayout()
         
@@ -178,6 +183,7 @@ class FacebookTab(ApiTab):
         
         #options for request                                
         options['relation']=self.relationEdit.currentText()
+        options['pages']=self.pagesEdit.value()
         options['params']=self.paramEdit.getParams()
                 
         if purpose != 'preset':
@@ -193,6 +199,11 @@ class FacebookTab(ApiTab):
 
     def setOptions(self,options):         
         self.relationEdit.setEditText(options.get('relation','<self>'))
+        try:
+          self.pagesEdit.setValue(int(options.get('pages',1)))
+        except:
+            self.pagesEdit.setValue(1)
+              
         self.paramEdit.setParams(options.get('params',{}))        
         
         if options.has_key('accesstoken'): self.tokenEdit.setText(options.get('accesstoken','')) 
@@ -204,29 +215,44 @@ class FacebookTab(ApiTab):
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
         if nodedata['objectid']==None: raise Exception("Empty object id")
             
-        #build url                
-        if options['relation']=='<self>':
-            urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])
-            urlparams={'metadata':'1'}
-            urlparams.update(options['params'])
-
-        elif options['relation']=='<search>':  
-            urlpath='https://graph.facebook.com/search'
-            urlparams={'q':self.idtostr(nodedata['objectid']),'type':'page'}
-            urlparams.update(options['params'])
-        
+        #build url
+        if not ('nexturl' in options):
+                            
+            if options['relation']=='<self>':
+                urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])
+                urlparams={'metadata':'1'}
+                urlparams.update(options['params'])
+    
+            elif options['relation']=='<search>':  
+                urlpath='https://graph.facebook.com/search'
+                urlparams={'q':self.idtostr(nodedata['objectid']),'type':'page'}
+                urlparams.update(options['params'])
+            
+            else:
+                urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])+'/'+options['relation']            
+                urlparams= {'limit':'100'}
+                urlparams.update(options['params'])                   
+            
+            urlpath,urlparams = self.getURL(urlpath,urlparams, nodedata)        
+            urlparams["access_token"] = options['accesstoken']
         else:
-            urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])+'/'+options['relation']            
-            urlparams= {'limit':'100'}
-            urlparams.update(options['params'])                   
-        
-        urlpath,urlparams = self.getURL(urlpath,urlparams, nodedata)        
-        urlparams["access_token"] = options['accesstoken']         
+            urlpath = options['nexturl']
+            urlparams = {}              
 
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
                 {2}".format(nodedata['objectid'],urlpath,urlparams))
-                
-        return self.request(urlpath,urlparams)          
+        
+        #data        
+        response = self.request(urlpath,urlparams)
+        
+        #paging
+        if (getDictValue(response,"paging.next",False)):
+            paging = options
+            paging['nexturl'] = getDictValue(response,"paging.next",False)
+        else:    
+            paging = False
+        
+        return response,paging          
 
 
     @Slot()

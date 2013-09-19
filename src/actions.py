@@ -23,6 +23,7 @@ class Actions(object):
         self.dataActions=QActionGroup(self.mainWindow)        
         self.actionQuery=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Query")                
         self.actionShowColumns=self.dataActions.addAction("Show Columns")
+        self.actionAddColumn=self.dataActions.addAction("Add Column")
         #self.actionUnpackData=self.dataActions.addAction("Unpack Data")
         self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/expand.png"),"Expand nodes")
         self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
@@ -38,6 +39,7 @@ class Actions(object):
         self.actionDelete.triggered.connect(self.deleteNodes)
         self.actionQuery.triggered.connect(self.queryNodes)
         self.actionShowColumns.triggered.connect(self.showColumns)
+        self.actionAddColumn.triggered.connect(self.addColumn)
         self.actionLoadPreset.triggered.connect(self.loadPreset)
         #self.actionUnpackData.triggered.connect(self.unpackData)
         self.actionExpandAll.triggered.connect(self.expandAll)
@@ -204,6 +206,13 @@ class Actions(object):
     @Slot()     
     def showColumns(self):
         self.mainWindow.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
+
+    @Slot()     
+    def addColumn(self):
+        key = self.mainWindow.detailTree.selectedKey()
+        if key != '': self.mainWindow.fieldList.append(key)
+        self.mainWindow.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
+
 
     @Slot()     
     def loadPreset(self):
