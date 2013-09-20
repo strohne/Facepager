@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
         
-        self.setWindowTitle("Facepager 3.2")                
+        self.setWindowTitle("Facepager 3.3")                
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
         self.setMinimumSize(900,500)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
