@@ -25,6 +25,7 @@ class DictionaryTree(QTreeView):
         
     def selectedKey(self):
         selected=[x for x in self.selectedIndexes() if x.column()==0]
+        if not len(selected):return ''
         index = selected[0]
         if not index.isValid():
             return ''
@@ -47,7 +48,7 @@ class DictionaryTreeModel(QAbstractItemModel):
           
     def setdata(self,data):
         self.reset()
-        if not isinstance(data, dict): data = {data} 
+        if not isinstance(data, dict): data = {'':data} 
         items = data.items()
         #items.sort()
         for item in items:

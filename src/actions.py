@@ -24,6 +24,7 @@ class Actions(object):
         self.actionQuery=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Query")                
         self.actionShowColumns=self.dataActions.addAction("Show Columns")
         self.actionAddColumn=self.dataActions.addAction("Add Column")
+        self.actionUnpack=self.dataActions.addAction("Unpack List")
         #self.actionUnpackData=self.dataActions.addAction("Unpack Data")
         self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/expand.png"),"Expand nodes")
         self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
@@ -40,6 +41,7 @@ class Actions(object):
         self.actionQuery.triggered.connect(self.queryNodes)
         self.actionShowColumns.triggered.connect(self.showColumns)
         self.actionAddColumn.triggered.connect(self.addColumn)
+        self.actionUnpack.triggered.connect(self.unpackList)
         self.actionLoadPreset.triggered.connect(self.loadPreset)
         #self.actionUnpackData.triggered.connect(self.unpackData)
         self.actionExpandAll.triggered.connect(self.expandAll)
@@ -220,8 +222,10 @@ class Actions(object):
 
                                         
     @Slot()     
-    def unpackData(self):
-        pass
+    def unpackList(self):
+        key = self.mainWindow.detailTree.selectedKey()
+        selected=[x for x in self.mainWindow.tree.selectedIndexes() if x.column()==0]
+        if (key != '') and (len(selected)): self.mainWindow.treemodel.unpackList(selected[0],key)   
   
     @Slot()     
     def expandAll(self):

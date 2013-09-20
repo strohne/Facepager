@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         #right sidebar
         detailWidget=QWidget()
         detailLayout=QVBoxLayout()
-        detailLayout.setContentsMargins(11,0,0,0)
+        detailLayout.setContentsMargins(11,0,0,11)
         detailWidget.setLayout(detailLayout)
         dataSplitter.addWidget(detailWidget)        
         dataSplitter.setStretchFactor(1, 0);
@@ -100,9 +100,17 @@ class MainWindow(QMainWindow):
         self.detailTree=DictionaryTree(self.mainWidget,self)
         detailLayout.addWidget(self.detailTree)
 
+        buttonLayout=QHBoxLayout()
+        detailLayout.addLayout(buttonLayout)
+        
         button=QPushButton("Add Column")
         button.clicked.connect(self.actions.actionAddColumn.trigger)
-        detailLayout.addWidget(button)   
+        buttonLayout.addWidget(button)
+
+        button=QPushButton("Unpack list")
+        button.clicked.connect(self.actions.actionUnpack.trigger)
+        buttonLayout.addWidget(button)   
+           
                                         
 #        self.detailData=QTextEdit()                        
 #        self.detailData.setLineWrapMode(QTextEdit.NoWrap)
