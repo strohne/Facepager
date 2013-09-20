@@ -31,7 +31,16 @@ class ApiTab(QWidget):
             return str(val)
         except UnicodeEncodeError as e:
             return val.encode('utf-8')     
-    
+
+    def parseURL(self,url):
+        url = url.split('?',1)
+        path = url[0]
+        query = url[1] if len(url) > 1 else ''
+        query = urlparse.parse_qs(query)
+        query = { key: query[key][0] for key in query.keys()} 
+         
+        return path,query  
+        
     def getURL(self,urlpath,params,nodedata):    
         urlparams = {}                                
         for name in params:
@@ -42,7 +51,7 @@ class ApiTab(QWidget):
             if params[name] == '<Object ID>':        
               value = self.idtostr(nodedata['objectid'])
             else:
-                match = re.match("^<(.*)>$",params[name])
+                match = re.match("^<(.*)>$",str(params[name]))
                 if match:                 
                      value = getDictValue(nodedata['response'],match.group(1))
                 else:  
@@ -216,7 +225,7 @@ class FacebookTab(ApiTab):
         if nodedata['objectid']==None: raise Exception("Empty object id")
             
         #build url
-        if not ('nexturl' in options):
+        if not ('url' in options):
                             
             if options['relation']=='<self>':
                 urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])
@@ -236,8 +245,8 @@ class FacebookTab(ApiTab):
             urlpath,urlparams = self.getURL(urlpath,urlparams, nodedata)        
             urlparams["access_token"] = options['accesstoken']
         else:
-            urlpath = options['nexturl']
-            urlparams = {}              
+            urlpath = options['url']
+            urlparams = options['params']              
 
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
                 {2}".format(nodedata['objectid'],urlpath,urlparams))
@@ -246,9 +255,11 @@ class FacebookTab(ApiTab):
         response = self.request(urlpath,urlparams)
         
         #paging
-        if (getDictValue(response,"paging.next",False)):
+        if (hasDictValue(response,"paging.next")):
             paging = options
-            paging['nexturl'] = getDictValue(response,"paging.next",False)
+            url,params = self.parseURL(getDictValue(response,"paging.next",False))
+            paging['params'] = params
+            paging['url'] = url            
         else:    
             paging = False
         
@@ -316,7 +327,12 @@ class TwitterTab(ApiTab):
         self.paramEdit.setValueOptions(['<None>','<Object ID>'])
         
         mainLayout.addRow("Parameters",self.paramEdit)
- 
+
+        self.pagesEdit=QSpinBox(self)
+        self.pagesEdit.setMinimum(1)        
+        self.pagesEdit.setMaximum(500)
+        mainLayout.addRow("Maximum pages",self.pagesEdit)
+         
         #-Log in
         loginlayout=QHBoxLayout()
         
@@ -347,6 +363,7 @@ class TwitterTab(ApiTab):
         #options for request 
         options['query'] = self.relationEdit.currentText()        
         options['params']=self.paramEdit.getParams()
+        options['pages']=self.pagesEdit.value()
         
         if purpose != 'preset':
             options['querytype']=self.name+':'+self.relationEdit.currentText()
@@ -372,6 +389,10 @@ class TwitterTab(ApiTab):
     def setOptions(self,options):         
         self.relationEdit.setEditText(options.get('query','search/tweets'))        
         self.paramEdit.setParams(options.get('params',{'q':'<Object ID>'}))
+        try:
+          self.pagesEdit.setValue(int(options.get('pages',1)))
+        except:
+            self.pagesEdit.setValue(1)        
         if options.has_key('access_token'): self.tokenEdit.setText(options.get('access_token',''))
         if options.has_key('access_token_secret'): self.tokensecretEdit.setText(options.get('access_token_secret',''))
         
@@ -391,13 +412,35 @@ class TwitterTab(ApiTab):
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
         
-        urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
-        urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)               
+        if not ('url' in options): 
+            urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
+            urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)
+        else:
+            urlpath = options['url']
+            urlparams =options["params"]                  
 
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
                 {2}".format(nodedata['objectid'],urlpath,urlparams))                    
- 
-        return self.request(urlpath,urlparams)
+    
+        #data
+        response = self.request(urlpath,urlparams)
+           
+        #paging-search
+        paging = False
+        if (hasDictValue(response,"search_metadata.next_results")):            
+            paging = options            
+            url,params = self.parseURL(getDictValue(response,"search_metadata.next_results",False))
+            paging['url'] = urlpath
+            paging['params'] = params
+        
+        #paging timeline
+        else:
+            ids = [item['id'] for item in response if 'id' in item] if isinstance(response, list) else []
+            if (ids):        
+                paging = options            
+                paging['params']['max_id'] = min(ids)-1
+        
+        return response,paging  
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
@@ -502,7 +545,7 @@ class GenericTab(ApiTab):
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)         
         self.mainWindow.logmessage("Fetching data for {0} from {1} with params {2}".format(nodedata['objectid'],urlpath,urlparams))                    
 
-        return self.request(urlpath,urlparams)       
+        return self.request(urlpath,urlparams),False       
 
 
 

@@ -1,5 +1,23 @@
 import json
 
+def hasDictValue(data,multikey):
+    try:
+        keys=multikey.split('.',1)
+                    
+        if type(data) is dict and keys[0] != '':            
+            if len(keys) > 1:
+                value=data.get(keys[0],"")            
+                value = hasDictValue(value,keys[1])
+            else:
+                value = keys[0] in data       
+                    
+        else:
+            value = False
+            
+        return value
+    except Exception as e:
+        return False
+
 def getDictValue(data,multikey,dump=True):
     try:
         keys=multikey.split('.',1)

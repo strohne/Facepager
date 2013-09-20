@@ -317,8 +317,8 @@ class TreeModel(QAbstractItemModel):
                     response,paging = self.mainWindow.RequestTabs.currentWidget().fetchData(treenode.data,options)
       
                 except Exception as e:
-                    querystatus=str(e)
-                    self.mainWindow.logmessage(str(e))
+                    querystatus=str(type(e))+str(e)
+                    self.mainWindow.logmessage(querystatus)
                     
                     response={}
                     paging = False
@@ -392,7 +392,40 @@ class TreeModel(QAbstractItemModel):
                 
         except Exception as e:
             self.mainWindow.logmessage(str(e))
-                            
+
+    def unpackList(self,index,key):
+        try:
+            if not index.isValid():
+                return False
+                
+            treenode=index.internalPointer()
+            dbnode=Node.query.get(treenode.id)
+                
+            nodes=getDictValue(dbnode.response,key,False)
+            if not (type(nodes) is list): return False                                     
+            
+            #extract nodes                    
+            newnodes=[]
+            for n in nodes:                    
+                new=Node(dbnode.objectid,dbnode.id)
+                new.objecttype='unpacked'
+                new.response=n
+                new.level=dbnode.level+1
+                new.querystatus=dbnode.querystatus
+                new.querytime=dbnode.querytime
+                new.querytype=dbnode.querytype
+                new.queryparams=dbnode.queryparams                                        
+                newnodes.append(new)
+            
+
+            self.database.session.add_all(newnodes)    
+            treenode._childcountall += len(newnodes)    
+            dbnode.childcount += len(newnodes)    
+            self.database.session.commit()                
+            self.layoutChanged.emit()
+                
+        except Exception as e:
+            self.mainWindow.logmessage(str(e))                            
                                 
     def columnCount(self, parent):
         return 5+len(self.customcolumns)    
