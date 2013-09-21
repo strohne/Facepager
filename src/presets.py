@@ -24,7 +24,7 @@ class PresetWindow(QDialog):
         #list view
         self.presetList = QListWidget(self)
         self.presetList.itemSelectionChanged.connect(self.currentChanged)
-        central.addWidget(self.presetList,1)
+        central.addWidget(self.presetList,2)
         
         #detail view                
         self.detailView=QFrame()
@@ -32,7 +32,7 @@ class PresetWindow(QDialog):
         self.detailForm=QFormLayout()
         self.detailView.setLayout(self.detailForm)
         
-        central.addWidget(self.detailView,2)               
+        central.addWidget(self.detailView,3)               
         
         self.detailName = QLabel('')
         self.detailForm.addRow('<b>Name</b>',self.detailName)

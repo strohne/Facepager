@@ -3,9 +3,9 @@ import sys
 from PySide.QtCore import *
 from PySide.QtGui import *
 import icons
-from tree import *
+from datatree import *
 from dictionarytree import *
-from models import *
+from database import *
 from actions import *
 from apimodules import * 
 from help import *
@@ -17,11 +17,9 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__()
         
         self.setWindowTitle("Facepager 3.3")                
-        self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
+        self.setWindowIcon(QIcon(":icon_facepager.png"))        
         self.setMinimumSize(900,500)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
-
-
         
         #self.deleteSettings()
         self.readSettings() 
@@ -31,16 +29,13 @@ class MainWindow(QMainWindow):
                                         
         self.updateUI()
         
-        
-        
     def createDB(self):        
         self.database = Database(self)
         lastpath = self.settings.value("lastpath")
         if lastpath and os.path.isfile(lastpath):
-            self.database.connect(self.settings.value("lastpath"))
+            self.database.connect(self.settings.value("lastpath"))        
         
-        self.treemodel = TreeModel(self,self.database)
-        self.tree.setModel(self.treemodel)        
+        self.tree.loadData(self.database)
         self.actions.actionShowColumns.trigger()
         
 
@@ -75,9 +70,8 @@ class MainWindow(QMainWindow):
         mainLayout.addLayout(requestLayout,2)
 
          
-        #tree
-                                                        
-        self.tree=Tree(self.mainWidget,self)
+        #tree                                                        
+        self.tree=DataTree(self.mainWidget,self)
         dataSplitter.addWidget(self.tree)
         dataSplitter.setStretchFactor(0, 1);
 
@@ -110,38 +104,6 @@ class MainWindow(QMainWindow):
         button=QPushButton("Unpack list")
         button.clicked.connect(self.actions.actionUnpack.trigger)
         buttonLayout.addWidget(button)   
-           
-                                        
-#        self.detailData=QTextEdit()                        
-#        self.detailData.setLineWrapMode(QTextEdit.NoWrap)
-#        self.detailData.setWordWrapMode(QTextOption.NoWrap)
-#        self.detailData.acceptRichText=False    
-#        groupLayout.addWidget(self.detailData)
-        
-#        #unpack data
-#        detailGroup=QGroupBox("Unpack Data")
-#        detailLayout.addWidget(detailGroup)
-#        groupLayout=QFormLayout()
-#        detailGroup.setLayout(groupLayout)
-#        
-#        #-Level
-#        self.unpackLevelEdit=QSpinBox(self.mainWidget)
-#        self.unpackLevelEdit.setMinimum(1)
-#        groupLayout.addRow("Level",self.unpackLevelEdit)
-#                
-#        #-Key
-#        self.unpackKeyEdit=QComboBox(self.mainWidget)
-#        #self.unpackKeyEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
-#        self.unpackKeyEdit.setEditable(True)
-#        groupLayout.addRow("Key",self.unpackKeyEdit)        
-#        
-#        #-Button 
-#        button=QPushButton("Unpack Data")
-#        button.clicked.connect(self.actions.actionUnpackData.trigger)
-#        groupLayout.addWidget(button)   
-        
-                        
-
         
         #requests
         actionlayout=QVBoxLayout()
@@ -305,11 +267,6 @@ class Toolbar(QToolBar):
         self.addAction(self.mainWindow.actions.actionCollapseAll)
         self.addAction(self.mainWindow.actions.actionLoadPreset)
         self.addAction(self.mainWindow.actions.actionHelp)
-        
-
-        
-
-            
     
 
             
