@@ -1,6 +1,6 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from models import *
+from database import *
 import csv
 import sys
 import help
@@ -11,42 +11,47 @@ class Actions(object):
 
         self.mainWindow=mainWindow
         
-        self.basicActions=QActionGroup(self.mainWindow)       
-        self.actionOpen=self.basicActions.addAction(QIcon(":/icons/save.png"),"Open Database")        
+        self.basicActions=QActionGroup(self.mainWindow)               
+        self.actionOpen=self.basicActions.addAction(QIcon(":/icons/save.png"),"Open Database")
+        self.actionOpen.triggered.connect(self.openDB)
+                
         self.actionNew=self.basicActions.addAction(QIcon(":/icons/new.png"),"New Database")        
+        self.actionNew.triggered.connect(self.makeDB)
                 
         self.databaseActions=QActionGroup(self.mainWindow)
-        self.actionExport=self.databaseActions.addAction(QIcon(":/icons/export.png"),"Export Data")        
-        self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/add.png"),"Add Nodes")                
+        self.actionExport=self.databaseActions.addAction(QIcon(":/icons/export.png"),"Export Data")
+        self.actionExport.triggered.connect(self.exportNodes)
+                
+        self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/add.png"),"Add Nodes")
+        self.actionAdd.triggered.connect(self.addNodes)
+                        
         self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/delete.png"),"Delete Nodes")
+        self.actionDelete.triggered.connect(self.deleteNodes)
         
         self.dataActions=QActionGroup(self.mainWindow)        
-        self.actionQuery=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Query")                
+        self.actionQuery=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Query")
+        self.actionQuery.triggered.connect(self.queryNodes)
+                        
         self.actionShowColumns=self.dataActions.addAction("Show Columns")
+        self.actionShowColumns.triggered.connect(self.showColumns)
+        
         self.actionAddColumn=self.dataActions.addAction("Add Column")
+        self.actionAddColumn.triggered.connect(self.addColumn)
+        
         self.actionUnpack=self.dataActions.addAction("Unpack List")
-        #self.actionUnpackData=self.dataActions.addAction("Unpack Data")
+        self.actionUnpack.triggered.connect(self.unpackList)
+        
         self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/expand.png"),"Expand nodes")
+        self.actionExpandAll.triggered.connect(self.expandAll)
+        
         self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
+        self.actionCollapseAll.triggered.connect(self.collapseAll)
+        
         self.actionHelp=self.dataActions.addAction(QIcon(":/icons/help.png"),"Help")
+        self.actionHelp.triggered.connect(self.help)
         
         self.actionLoadPreset=self.dataActions.addAction(QIcon(":/icons/presets.png"),"Presets")
-
-        #connect the actions to their corresponding action functions (slots)
-        self.actionOpen.triggered.connect(self.openDB)
-        self.actionNew.triggered.connect(self.makeDB)
-        self.actionExport.triggered.connect(self.exportNodes)
-        self.actionAdd.triggered.connect(self.addNodes)        
-        self.actionDelete.triggered.connect(self.deleteNodes)
-        self.actionQuery.triggered.connect(self.queryNodes)
-        self.actionShowColumns.triggered.connect(self.showColumns)
-        self.actionAddColumn.triggered.connect(self.addColumn)
-        self.actionUnpack.triggered.connect(self.unpackList)
         self.actionLoadPreset.triggered.connect(self.loadPreset)
-        #self.actionUnpackData.triggered.connect(self.unpackData)
-        self.actionExpandAll.triggered.connect(self.expandAll)
-        self.actionCollapseAll.triggered.connect(self.collapseAll)
-        self.actionHelp.triggered.connect(self.help)
        
     @Slot()
     def help(self):
@@ -62,7 +67,7 @@ class Actions(object):
             self.mainWindow.database.connect(fldg.selectedFiles()[0])           
             self.mainWindow.settings.setValue("lastpath",fldg.selectedFiles()[0])                            
             self.mainWindow.updateUI()
-            self.mainWindow.treemodel.reset()  
+            self.mainWindow.tree.treemodel.reset()  
 
             
     @Slot()
@@ -77,7 +82,7 @@ class Actions(object):
             self.mainWindow.database.createconnect(fldg.selectedFiles()[0])
             self.mainWindow.settings.setValue("lastpath",fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
-            self.mainWindow.treemodel.reset()
+            self.mainWindow.tree.treemodel.reset()
 
         
     @Slot()
@@ -99,7 +104,7 @@ class Actions(object):
             progress.setValue(c)
             c+=1            
             
-            self.mainWindow.treemodel.deleteNode(index)           
+            self.mainWindow.tree.treemodel.deleteNode(index)           
            
             if progress.wasCanceled():
                 break 
@@ -130,7 +135,7 @@ class Actions(object):
                 
                 #headers    
                 row=["level","id","parent_id","object_id","query_status","query_time","query_type"]
-                for key in self.mainWindow.treemodel.customcolumns:
+                for key in self.mainWindow.tree.treemodel.customcolumns:
                     row.append(key)                        
                 writer.writerow(row)
                 
@@ -148,7 +153,7 @@ class Actions(object):
                         no+=1               
                         
                         row=[node.level,node.id,node.parent_id,node.objectid_encoded,node.objecttype,node.querystatus,node.querytime,node.querytype]    
-                        for key in self.mainWindow.treemodel.customcolumns:                    
+                        for key in self.mainWindow.tree.treemodel.customcolumns:                    
                             row.append(node.getResponseValue(key,"utf-8"))    
                          
                         writer.writerow(row) 
@@ -193,7 +198,7 @@ class Actions(object):
         dialog.setLayout(layout)
         
         def createNodes():
-            self.mainWindow.treemodel.addNodes(input.toPlainText().splitlines())
+            self.mainWindow.tree.treemodel.addNodes(input.toPlainText().splitlines())
             dialog.close()  
 
         def close():
@@ -207,13 +212,13 @@ class Actions(object):
         
     @Slot()     
     def showColumns(self):
-        self.mainWindow.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
+        self.mainWindow.tree.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
 
     @Slot()     
     def addColumn(self):
         key = self.mainWindow.detailTree.selectedKey()
         if key != '': self.mainWindow.fieldList.append(key)
-        self.mainWindow.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
+        self.mainWindow.tree.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
 
 
     @Slot()     
@@ -225,7 +230,8 @@ class Actions(object):
     def unpackList(self):
         key = self.mainWindow.detailTree.selectedKey()
         selected=[x for x in self.mainWindow.tree.selectedIndexes() if x.column()==0]
-        if (key != '') and (len(selected)): self.mainWindow.treemodel.unpackList(selected[0],key)   
+        if (key != ''):
+            for item in selected: self.mainWindow.tree.treemodel.unpackList(item,key)   
   
     @Slot()     
     def expandAll(self):
@@ -253,7 +259,7 @@ class Actions(object):
         for index in todo:            
             progress.setValue(c)
             c+=1                        
-            self.mainWindow.treemodel.queryData(index)                                  
+            self.mainWindow.tree.treemodel.queryData(index)                                  
             if progress.wasCanceled(): break  
 
         progress.cancel()   

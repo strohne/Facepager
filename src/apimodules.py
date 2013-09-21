@@ -5,7 +5,7 @@ import urlparse
 import requests
 from requests.exceptions import *
 from datetime import datetime, timedelta
-from components import *
+from paramedit import *
 from rauth import OAuth1Service
 from utilities import *
 import re
