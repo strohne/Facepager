@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__()
         
         self.setWindowTitle("Facepager 3.3")                
-        self.setWindowIcon(QIcon(":icon_facepager.png"))        
+        self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
         self.setMinimumSize(900,500)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
         
@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         fetchdata.addWidget(label,0)
         fetchdata.addWidget(self.levelEdit,0)
         
-        #-button        
+        #-button
         button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))

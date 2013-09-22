@@ -5,6 +5,7 @@ import os
 import sys
 import re
 import json
+from textviewer import *
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
@@ -12,8 +13,8 @@ class PresetWindow(QDialog):
         
         self.mainWindow = parent
         self.setWindowTitle("Presets")   
-        self.setMinimumWidth(600);
-        self.setMinimumHeight(400);
+        self.setMinimumWidth(700);
+        self.setMinimumHeight(600);
         
         #layout
         layout = QVBoxLayout(self)        
@@ -27,40 +28,48 @@ class PresetWindow(QDialog):
         central.addWidget(self.presetList,2)
         
         #detail view                
-        self.detailView=QFrame()
-        self.detailView.setFrameStyle(QFrame.Box)                    
-        self.detailForm=QFormLayout()
-        self.detailView.setLayout(self.detailForm)
+        self.detailView=QScrollArea()        
+        self.detailView.setWidgetResizable(True)
+        self.detailWidget = QWidget()
+        self.detailWidget.setAutoFillBackground(True)
+        self.detailWidget.setStyleSheet("background-color: rgb(255,255,255);")
+        
+        #self.detailView.setFrameStyle(QFrame.Box)                    
+        self.detailLayout=QVBoxLayout()
+        self.detailWidget.setLayout(self.detailLayout)
+        self.detailView.setWidget(self.detailWidget)
         
         central.addWidget(self.detailView,3)               
         
         self.detailName = QLabel('')
-        self.detailForm.addRow('<b>Name</b>',self.detailName)
+        self.detailName.setWordWrap(True)
+        self.detailName.setStyleSheet("QLabel  {font-size:15pt;}")
+        
+        self.detailLayout.addWidget(self.detailName)
 
                
-        self.detailDescription = QTextEdit()
-        self.detailDescription.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
+        self.detailDescription = TextViewer()       
+        self.detailLayout.addWidget(self.detailDescription)
+           
         
-        self.detailDescription.acceptRichText=False
-        self.detailDescription.setReadOnly(True)
-        self.detailForm.addRow('<b>Description</b>',self.detailDescription)
+        self.detailForm=QFormLayout()
+        self.detailLayout.addLayout(self.detailForm,1)
 
         self.detailModule = QLabel('')
         self.detailForm.addRow('<b>Module</b>',self.detailModule)
                         
-        self.detailOptions = QTextEdit()
-        self.detailOptions.setStyleSheet("background: rgba(0,0,0,0);border:0px;")        
-        self.detailOptions.acceptRichText=False
-        self.detailOptions.setReadOnly(True)
+        self.detailOptions = QLabel()
+        self.detailOptions.setWordWrap(True)
+        #self.detailOptions.setStyleSheet("background: rgba(0,0,0,0);border:0px;")        
         self.detailForm.addRow('<b>Options</b>',self.detailOptions)
+
                 
-        self.detailColumns = QTextEdit()
-        self.detailColumns.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
-        self.detailColumns.acceptRichText=False
-        self.detailColumns.setReadOnly(True)
+        self.detailColumns = QLabel()
+        self.detailColumns.setWordWrap(True)
+        #self.detailColumns.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
         self.detailForm.addRow('<b>Columns</b>',self.detailColumns)        
                 
-                
+ 
 
         #buttons
         buttons=QDialogButtonBox()
@@ -110,13 +119,11 @@ class PresetWindow(QDialog):
             data = current.data(Qt.UserRole)   
             self.detailName.setText(data.get('name')) 
             self.detailModule.setText(data.get('module'))
-            self.detailDescription.setText(data.get('description'))
-            self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': ')))
-            self.detailColumns.setText("\n".join(data.get('columns',[])))
-
+            self.detailDescription.setText(data.get('description')+"\n")
             
-     
-        
+            self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': '))[2:-2].replace('\"',''))
+            self.detailColumns.setText("\n".join(data.get('columns',[])))                    
+            
     def showPresets(self):
         self.initPresets()        
         self.exec_()
