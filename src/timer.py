@@ -48,21 +48,23 @@ class TimerWindow(QDialog):
         settingsLayout=QFormLayout()
         central.addLayout(settingsLayout,1)
         
-        #Nodes
-        self.nodeCount = QLabel("0")
-        settingsLayout.addRow("Selected Nodes",self.nodeCount)
+
         
         #Start time
         self.startTimeEdit = QDateTimeEdit(QTime.currentTime())
         self.startTimeEdit.setDisplayFormat("hh:mm")
-        settingsLayout.addRow("Starting Time",self.startTimeEdit)
+        settingsLayout.addRow("Start Time (hh:mm)",self.startTimeEdit)
         
         #Interval
         self.intervalTimeEdit = QDateTimeEdit(QTime(0,5))
         self.intervalTimeEdit.setDisplayFormat("hh:mm")
         self.intervalTimeEdit.setMinimumTime(QTime(0,1))
-        settingsLayout.addRow("Interval",self.intervalTimeEdit)
+        settingsLayout.addRow("Interval (hh:mm)",self.intervalTimeEdit)
 
+        #Nodes
+        self.nodeCount = QLabel("0")
+        settingsLayout.addRow("Node Count",self.nodeCount)
+        
         #buttons
         buttons=QDialogButtonBox()
         self.startTimerButton = QPushButton('Start Timer')        
@@ -81,7 +83,11 @@ class TimerWindow(QDialog):
         self.nextdata = data
         self.nodeCount.setText(str(data.get('nodecount',0)))
         time = QTime.currentTime()        
-        self.startTimeEdit.setTime(QTime(time.hour(),time.minute()))      
+        self.startTimeEdit.setTime(QTime(time.hour(),time.minute()))
+        
+        self.stopTimerButton.setEnabled(self.state != TIMER_INACTIVE)
+        self.startTimerButton.setEnabled(data.get('nodecount',0) > 0)
+              
         self.exec_()
         
     def cancelTimer(self):
@@ -112,7 +118,7 @@ class TimerWindow(QDialog):
             self.firetime = self.firetime.addSecs(self.interval)             
                     
     def updateTimer(self):
-        self.remaining = max(0,QDateTime.currentDateTime().secsTo(self.firetime))
+        self.remaining = max(0,QDateTime.currentDateTime().secsTo(self.firetime)+1)
                 
         if  (self.remaining == 0):
             self.state = TIMER_FIRED            

@@ -147,13 +147,12 @@ class MainWindow(QMainWindow):
         fetchdata.addWidget(button,1)
         
         #-timer button
-        button=QPushButton(QIcon(":/icons/fetch.png"),"", self.mainWidget)
+        button=QToolButton(self.mainWidget)
+        button.setIcon(QIcon(":/icons/fetch.png"))
         button.setMinimumSize(QSize(40,40))
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.actions.actionTimer.trigger)
         fetchdata.addWidget(button,1)
-        
-
         
         #Status
         statusLayout=QVBoxLayout()        
@@ -214,7 +213,7 @@ class MainWindow(QMainWindow):
     @Slot()     
     def timerStarted(self,time):
         self.timerStatus.setStyleSheet("QLabel {color:red;}")
-        self.timerStatus.setText("Timer fired at "+time.toString("d MMM yyyy - hh:mm")+" ")
+        self.timerStatus.setText("Timer will be fired at "+time.toString("d MMM yyyy - hh:mm")+" ")
 
     @Slot()
     def timerStopped(self):
@@ -224,7 +223,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def timerCountdown(self,countdown):
         self.timerStatus.setStyleSheet("QLabel {color:red;}")
-        self.timerStatus.setText("Timer fired in "+str(countdown)+ " seconds ")
+        self.timerStatus.setText("Timer will be fired in "+str(countdown)+ " seconds ")
         
     @Slot()
     def timerFired(self,data):        

@@ -282,7 +282,7 @@ class Actions(object):
     def setupTimer(self):
         #Get data
         level=self.mainWindow.levelEdit.value()
-        indexes=self.mainWindow.tree.selectedIndexesAndChildren(level)
+        indexes=self.mainWindow.tree.selectedIndexesAndChildren(level,True)
         module = self.mainWindow.RequestTabs.currentWidget()
         options=module.getOptions();        
                         
