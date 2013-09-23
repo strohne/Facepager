@@ -30,7 +30,10 @@ class Actions(object):
         
         self.dataActions=QActionGroup(self.mainWindow)        
         self.actionQuery=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Query")
-        self.actionQuery.triggered.connect(self.queryNodes)
+        self.actionQuery.triggered.connect(self.querySelectedNodes)
+
+        self.actionTimer=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Time")
+        self.actionTimer.triggered.connect(self.setupTimer)        
                         
         self.actionShowColumns=self.dataActions.addAction("Show Columns")
         self.actionShowColumns.triggered.connect(self.showColumns)
@@ -64,6 +67,7 @@ class Actions(object):
         fldg=QFileDialog(caption="Open DB File",directory=datadir,filter="DB files (*.db)")
         fldg.setFileMode(QFileDialog.ExistingFile)
         if fldg.exec_():
+            self.mainWindow.timerWindow.cancelTimer()
             self.mainWindow.database.connect(fldg.selectedFiles()[0])           
             self.mainWindow.settings.setValue("lastpath",fldg.selectedFiles()[0])                            
             self.mainWindow.updateUI()
@@ -79,6 +83,7 @@ class Actions(object):
         fldg.setDefaultSuffix("db")
                
         if fldg.exec_():
+            self.mainWindow.timerWindow.cancelTimer()
             self.mainWindow.database.createconnect(fldg.selectedFiles()[0])
             self.mainWindow.settings.setValue("lastpath",fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
@@ -240,30 +245,50 @@ class Actions(object):
     @Slot()     
     def collapseAll(self):
         self.mainWindow.tree.collapseAll()
-              
-    @Slot()
-    def queryNodes(self):
-        #Show progress window         
+
+
+    def queryNodes(self,indexes=False,module = False,options = False):
+        #Show progress window                 
         progress = QProgressDialog("Fetching data...", "Abort", 0, 0,self.mainWindow)
         progress.setWindowModality(Qt.WindowModal)
         progress.setMinimumDuration(0)
         progress.forceShow()       
                                 
         #Get selected nodes
-        level=self.mainWindow.levelEdit.value()
-        todo=self.mainWindow.tree.selectedIndexesAndChildren(level)
-        progress.setMaximum(len(todo))
+        if indexes == False:
+            level=self.mainWindow.levelEdit.value()
+            indexes=self.mainWindow.tree.selectedIndexesAndChildren(level)
+        
+        if module == False: module = self.mainWindow.RequestTabs.currentWidget()
+        if options == False: options=module.getOptions();
+                
+        progress.setMaximum(len(indexes))
                             
         #Fetch data
         c=0
-        for index in todo:            
+        for index in indexes:            
             progress.setValue(c)
             c+=1                        
-            self.mainWindow.tree.treemodel.queryData(index)                                  
+            self.mainWindow.tree.treemodel.queryData(index,module,options)                                  
             if progress.wasCanceled(): break  
 
         progress.cancel()   
+                      
+    @Slot()
+    def querySelectedNodes(self):
+        self.queryNodes()
 
+    @Slot()
+    def setupTimer(self):
+        #Get data
+        level=self.mainWindow.levelEdit.value()
+        indexes=self.mainWindow.tree.selectedIndexesAndChildren(level)
+        module = self.mainWindow.RequestTabs.currentWidget()
+        options=module.getOptions();        
+                        
+        #show timer window
+        self.mainWindow.timerWindow.setupTimer({'indexes':indexes,'nodecount':len(indexes),'module':module,'options':options})
+                            
         
  
            

@@ -10,6 +10,7 @@ from actions import *
 from apimodules import * 
 from help import *
 from presets import *
+from timer import *
 
 class MainWindow(QMainWindow):
     
@@ -45,9 +46,16 @@ class MainWindow(QMainWindow):
                         
     def createUI(self):
         
-        self.helpwindow = HelpWindow(self)
-        self.presetWindow= PresetWindow(self)
+        self.helpwindow=HelpWindow(self)
+        self.presetWindow=PresetWindow(self)
+        self.timerWindow=TimerWindow(self)
         
+        self.timerWindow.timerstarted.connect(self.timerStarted)
+        self.timerWindow.timerstopped.connect(self.timerStopped)
+        self.timerWindow.timercountdown.connect(self.timerCountdown)
+        self.timerWindow.timerfired.connect(self.timerFired)
+        self.timerStatus = QLabel("Timer stopped ")
+        self.statusBar().addPermanentWidget(self.timerStatus)
         self.toolbar=Toolbar(parent=self,mainWindow=self)
         self.addToolBar(Qt.TopToolBarArea,self.toolbar)    
         
@@ -84,13 +92,6 @@ class MainWindow(QMainWindow):
         dataSplitter.addWidget(detailWidget)        
         dataSplitter.setStretchFactor(1, 0);
      
-        
-        #detail data
-        #detailGroup=QGroupBox("Raw Data")
-        #detailLayout.addWidget(detailGroup)
-        #groupLayout=QVBoxLayout()
-        #detailGroup.setLayout(groupLayout)
-                        
         self.detailTree=DictionaryTree(self.mainWidget,self)
         detailLayout.addWidget(self.detailTree)
 
@@ -144,6 +145,14 @@ class MainWindow(QMainWindow):
         button.clicked.connect(self.actions.actionQuery.trigger)
         button.setFont(f)
         fetchdata.addWidget(button,1)
+        
+        #-timer button
+        button=QPushButton(QIcon(":/icons/fetch.png"),"", self.mainWidget)
+        button.setMinimumSize(QSize(40,40))
+        button.setIconSize(QSize(32,32))
+        button.clicked.connect(self.actions.actionTimer.trigger)
+        fetchdata.addWidget(button,1)
+        
 
         
         #Status
@@ -192,7 +201,7 @@ class MainWindow(QMainWindow):
         button=QPushButton("Apply Column Setup")
         button.clicked.connect(self.actions.actionShowColumns.trigger)
         groupLayout.addWidget(button)           
-        
+                
     def updateUI(self):
         #disable buttons that do not work without an opened database                   
         self.actions.databaseActions.setEnabled(self.database.connected)
@@ -201,6 +210,28 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(self.database.filename)
         else:
             self.statusBar().showMessage('No database connection')    
+   
+    @Slot()     
+    def timerStarted(self,time):
+        self.timerStatus.setStyleSheet("QLabel {color:red;}")
+        self.timerStatus.setText("Timer fired at "+time.toString("d MMM yyyy - hh:mm")+" ")
+
+    @Slot()
+    def timerStopped(self):
+        self.timerStatus.setStyleSheet("QLabel {color:black;}")
+        self.timerStatus.setText("Timer stopped ")
+
+    @Slot()
+    def timerCountdown(self,countdown):
+        self.timerStatus.setStyleSheet("QLabel {color:red;}")
+        self.timerStatus.setText("Timer fired in "+str(countdown)+ " seconds ")
+        
+    @Slot()
+    def timerFired(self,data):        
+        self.timerStatus.setText("Timer fired ")
+        self.timerStatus.setStyleSheet("QLabel {color:red;}")
+        self.actions.queryNodes(data.get('indexes',[]),data.get('module',None),data.get('options',{}).copy() )
+        
         
         
     def writeSettings(self):

@@ -15,7 +15,7 @@ class DataTree(QTreeView):
                 
 
     def loadData(self,database):
-        self.treemodel = TreeModel(self,database)
+        self.treemodel = TreeModel(self.mainWindow,database)
         self.setModel(self.treemodel)        
 
     @Slot()
@@ -221,21 +221,20 @@ class TreeModel(QAbstractItemModel):
             QMessageBox.critical(self.mainWindow,"Facepager",str(e))                    
 
             
-    def queryData(self,index):
+    def queryData(self,index,module,options):
         try:
-            if not index.isValid():
-                return False
+            if not index.isValid(): return False
                 
             treenode=index.internalPointer()
             dbnode=Node.query.get(treenode.id)
-            options=self.mainWindow.RequestTabs.currentWidget().getOptions();
-            
+            if not dbnode: return False
+
             for page in range(0,options.get('pages',1)): 
                 
                 #get data
                 try:                
                     querytime = datetime.datetime.now()
-                    response,paging = self.mainWindow.RequestTabs.currentWidget().fetchData(treenode.data,options)
+                    response,paging = module.fetchData(treenode.data,options)
       
                 except Exception as e:
                     querystatus=str(type(e))+str(e)

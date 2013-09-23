@@ -279,7 +279,6 @@ class FacebookTab(ApiTab):
             if token:
                 self.tokenEdit.setText(token[0])
                 self.login_webview.parent().close()
-                #if (self.doQuery == True): self.mainWindow.actions.queryNodes()
            
 
 
@@ -467,7 +466,6 @@ class TwitterTab(ApiTab):
                 self.tokensecretEdit.setText(self.session.access_token_secret)              
                 
                 self.login_webview.parent().close()
-                #if (self.doQuery == True): self.mainWindow.actions.queryNodes()
 
 
 class GenericTab(ApiTab):
