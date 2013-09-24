@@ -14,6 +14,7 @@
     <file>collapse.png</file>
     <file>expand.png</file>
     <file>fetch.png</file>
+    <file>timer.png</file>
     <file>help.png</file>
 
 
@@ -21,4 +22,5 @@
 </RCC>
 
 <!-- This file must be compiled with the pyside-rcc application to a python file -->
+<!-- On command line execute: pyside-rcc icons.qrc > icons.py -->
 <!-- The resource prefix must be specified in the PySide application, ':/icons/filename.filetype' -->

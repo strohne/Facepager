@@ -148,9 +148,9 @@ class MainWindow(QMainWindow):
         
         #-timer button
         button=QToolButton(self.mainWidget)
-        button.setIcon(QIcon(":/icons/fetch.png"))
+        button.setIcon(QIcon(":/icons/timer.png"))
         button.setMinimumSize(QSize(40,40))
-        button.setIconSize(QSize(32,32))
+        button.setIconSize(QSize(25,25))
         button.clicked.connect(self.actions.actionTimer.trigger)
         fetchdata.addWidget(button,1)
         
