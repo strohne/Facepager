@@ -276,7 +276,8 @@ class MainWindow(QMainWindow):
             
     @Slot(str)        
     def logmessage(self,message):
-        self.loglist.append(str(datetime.now())+" "+message)            
+        self.loglist.append(str(datetime.now())+" "+message)
+        QApplication.processEvents()            
 
 class Toolbar(QToolBar):
     '''

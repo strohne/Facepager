@@ -12,10 +12,12 @@ class DictionaryTree(QTreeView):
         self.setSelectionBehavior(QTreeView.SelectRows)
         #self.setHeaderHidden(True)
         self.setUniformRowHeights(True)
-                
+        
+        delegate = DictionaryTreeItemDelegate();    
+        self.setItemDelegate(delegate);        
         
         self.treemodel = DictionaryTreeModel(self)
-        self.setModel(self.treemodel)   
+        self.setModel(self.treemodel)        
 
     def showDict(self,data={}):        
         self.treemodel.setdata(data)
@@ -34,7 +36,10 @@ class DictionaryTree(QTreeView):
         return treeitem.keyPath()            
         
 
+class DictionaryTreeItemDelegate(QItemDelegate):
 
+    def sizeHint(self,option, index ):
+        return QSize(20,17);
 
 class DictionaryTreeModel(QAbstractItemModel):
     def __init__(self, parent=None, dic={}):

@@ -16,7 +16,11 @@ class DataTree(QTreeView):
 
     def loadData(self,database):
         self.treemodel = TreeModel(self.mainWindow,database)
-        self.setModel(self.treemodel)        
+        self.setModel(self.treemodel)
+        
+        #self.proxymodel =  QSortFilterProxyModel(self)
+        #self.proxymodel.setSourceModel(self.treemodel)        
+        #self.setModel(self.proxymodel)
 
     @Slot()
     def currentChanged(self,current,previous):
@@ -483,4 +487,4 @@ class TreeModel(QAbstractItemModel):
             row += 1
                                         
         self.endInsertRows()
-        parent.loaded=parent.childCountAll()==parent.childCount()  
+        parent.loaded=parent.childCountAll()==parent.childCount()
