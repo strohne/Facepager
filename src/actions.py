@@ -237,7 +237,8 @@ class Actions(object):
     @Slot()     
     def unpackList(self):
         key = self.mainWindow.detailTree.selectedKey()
-        selected=[x for x in self.mainWindow.tree.selectedIndexes() if x.column()==0]
+        #selected=[x for x in self.mainWindow.tree.selectedIndexes() if x.column()==0]
+        selected = self.mainWindow.tree.selectedIndexes() 
         if (key != ''):
             for item in selected: self.mainWindow.tree.treemodel.unpackList(item,key)   
   

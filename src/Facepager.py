@@ -55,10 +55,12 @@ class MainWindow(QMainWindow):
         self.timerWindow.timercountdown.connect(self.timerCountdown)
         self.timerWindow.timerfired.connect(self.timerFired)
         self.timerStatus = QLabel("Timer stopped ")
-        self.statusBar().addPermanentWidget(self.timerStatus)
+        self.statusBar().addPermanentWidget(self.timerStatus)        
         self.toolbar=Toolbar(parent=self,mainWindow=self)
         self.addToolBar(Qt.TopToolBarArea,self.toolbar)    
         
+        self.selectionStatus = QLabel("0 node(s) selected ")
+        self.statusBar().addPermanentWidget(self.selectionStatus)        
         self.statusBar().showMessage('No database connection')
         self.statusBar().setSizeGripEnabled(False)       
         

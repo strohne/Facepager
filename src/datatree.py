@@ -24,6 +24,7 @@ class DataTree(QTreeView):
 
     @Slot()
     def currentChanged(self,current,previous):
+        super(DataTree,self).currentChanged(current,previous)
         self.mainWindow.detailTree.clear()
         if current.isValid():     
             item=current.internalPointer()
@@ -37,10 +38,22 @@ class DataTree(QTreeView):
             c=c.parent()
         
         self.mainWindow.levelEdit.setValue(level)
+        
+      
+    @Slot()
+    def selectionChanged(self,selected,deselected):
+        super(DataTree,self).selectionChanged(selected,deselected)
+        self.mainWindow.selectionStatus.setText(str(len(self.selectionModel().selectedRows() ))+' node(s) selected ')
+        
             
+            
+    def selectedIndexes(self):
+        return [x for x in super(DataTree,self).selectedIndexes() if x.column()==0]
+
             
     def selectedIndexesAndChildren(self,level=None,persistent=False,emptyonly=False):
-        selected=[x for x in self.selectedIndexes() if x.column()==0]
+        selected= self.selectedIndexes() 
+        #selected = [x for x in self.selectedIndexes() if x.column()==0]
         filtered=[]
 
         def getLevel(index):
