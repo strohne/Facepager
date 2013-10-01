@@ -104,6 +104,8 @@ class Actions(object):
         todo=self.mainWindow.tree.selectedIndexesAndChildren(None,True)
         progress.setMaximum(len(todo))            
         
+        #self.mainWindow.tree.treemodel.beginResetModel()
+        
         c=0
         for index in todo:            
             progress.setValue(c)
@@ -114,6 +116,7 @@ class Actions(object):
             if progress.wasCanceled():
                 break 
         progress.cancel()
+        #self.mainWindow.tree.treemodel.endResetModel()
 
                      
     @Slot()
