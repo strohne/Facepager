@@ -1,6 +1,8 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 from database import *
+import csv
+import StringIO
 
 class DataTree(QTreeView):
 
@@ -22,6 +24,45 @@ class DataTree(QTreeView):
         #self.proxymodel.setSourceModel(self.treemodel)        
         #self.setModel(self.proxymodel)
 
+    def keyPressEvent(self, e):
+        if e == QKeySequence.Copy:
+            self.copyToClipboard()
+        else:
+            super(DataTree,self).keyPressEvent(e)
+                            
+    def copyToClipboard(self):
+        self.mainWindow.showProgress(None,None,"Copy to clipboard")            
+
+        try:
+            indexes = self.selectedIndexesAndChildren()
+            self.mainWindow.showProgress(None,len(indexes))
+            
+            output = StringIO.StringIO()
+            writer = csv.writer(output,delimiter='\t',quotechar='"', quoting=csv.QUOTE_ALL,doublequote=True,lineterminator='\r\n')
+            
+            #headers    
+            row = [unicode(val).encode("utf-8") for val in self.treemodel.getRowHeader()]                        
+            writer.writerow(row)
+            
+            #rows
+            for no in range(len(indexes)):            
+                if self.mainWindow.progressCanceled(): break                               
+                self.mainWindow.showProgress(no)
+                
+                row = [unicode(val).encode("utf-8") for val in self.treemodel.getRowData(indexes[no])]                  
+                writer.writerow(row)                  
+                if self.mainWindow.progressCanceled(): break              
+            
+
+            clipboard = QApplication.clipboard()
+            clipboard.setText(output.getvalue())                                         
+        finally:                                                                       
+            output.close()
+            self.mainWindow.hideProgress()        
+        
+
+           
+        
     @Slot()
     def currentChanged(self,current,previous):
         super(DataTree,self).currentChanged(current,previous)
@@ -414,7 +455,27 @@ class TreeModel(QAbstractItemModel):
 
         return self.createIndex(parentItem.row(), 0, parentItem)
 
-            
+    def getRowHeader(self):
+        row=["id","parent_id","level","objectid","objecttype","querystatus","querytime","querytype"]            
+        for key in self.customcolumns: row.append(str(key))
+        return row
+
+        
+    def getRowData(self,index):
+        node = index.internalPointer()        
+        row=[node.id,
+             node.parentItem.id,
+             node.data['level'],
+             node.data['objectid'],
+             node.data['objecttype'],
+             node.data['querystatus'],
+             node.data['querytime'],
+             node.data['querytype']
+            ]     
+        for key in self.customcolumns: row.append(getDictValue(node.data['response'],key))
+        return row
+ 
+                    
     def data(self, index, role):
         if not index.isValid():
             return None

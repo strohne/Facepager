@@ -1,5 +1,6 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
+import json
 
 class DictionaryTree(QTreeView):
 
@@ -21,6 +22,7 @@ class DictionaryTree(QTreeView):
 
     def showDict(self,data={}):        
         self.treemodel.setdata(data)
+        self.datatext = json.dumps(data,indent=4)
         
     def clear(self):
         self.treemodel.reset()     
@@ -33,8 +35,18 @@ class DictionaryTree(QTreeView):
             return ''
         
         treeitem=index.internalPointer()
-        return treeitem.keyPath()            
-        
+        return treeitem.keyPath()
+
+    def keyPressEvent(self, e):
+        if e == QKeySequence.Copy:
+            self.copyToClipboard()
+        else:
+            super(DictionaryTree,self).keyPressEvent(e)
+            
+                
+    def copyToClipboard(self):            
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.datatext)        
 
 class DictionaryTreeItemDelegate(QItemDelegate):
 
