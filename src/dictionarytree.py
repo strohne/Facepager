@@ -161,6 +161,8 @@ class DictionaryTreeItem(object):
             for idx,item in enumerate(value):
                 self.appendChild(DictionaryTreeItem((idx,item), self))
 
+        elif isinstance(value, (int, long)):
+            self.itemDataValue = str(value)            
         else:
             self.itemDataValue = value
             
