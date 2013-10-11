@@ -22,7 +22,6 @@ class DictionaryTree(QTreeView):
 
     def showDict(self,data={}):        
         self.treemodel.setdata(data)
-        self.datatext = json.dumps(data,indent=4)
         
     def clear(self):
         self.treemodel.reset()     
@@ -44,9 +43,15 @@ class DictionaryTree(QTreeView):
             super(DictionaryTree,self).keyPressEvent(e)
             
                 
-    def copyToClipboard(self):            
+    def copyToClipboard(self):
         clipboard = QApplication.clipboard()
-        clipboard.setText(self.datatext)        
+        try:
+            value = self.treemodel.getdata()                        
+            clipboard.setText(json.dumps(value,indent=4))
+        except Exception as e:
+            clipboard.setText('')
+            
+                            
 
 class DictionaryTreeItemDelegate(QItemDelegate):
 
@@ -56,7 +61,7 @@ class DictionaryTreeItemDelegate(QItemDelegate):
 class DictionaryTreeModel(QAbstractItemModel):
     def __init__(self, parent=None, dic={}):
         super(DictionaryTreeModel, self).__init__(parent)        
-        self.rootItem = DictionaryTreeItem(('', ''), None)
+        self.rootItem = DictionaryTreeItem(('root',{}), None)
         self.setdata(dic)
 
     def reset(self):        
@@ -71,7 +76,10 @@ class DictionaryTreeModel(QAbstractItemModel):
         for item in items:
             newparent = DictionaryTreeItem(item, self.rootItem)
             self.rootItem.appendChild(newparent)
-
+    
+    def getdata(self):
+        key,val = self.rootItem.getValue()
+        return val
 
     def columnCount(self, parent):
         return 2   
@@ -148,22 +156,27 @@ class DictionaryTreeItem(object):
 
         self.itemDataKey = key
         self.itemDataValue = value
+        self.itemDataType = "atom"
         
         if isinstance(value, dict):            
             items = value.items()
             self.itemDataValue = '{'+str(len(items))+'}'
+            self.itemDataType = "dict"
             #items.sort()
             for item in items:
                 self.appendChild(DictionaryTreeItem(item, self))
         
         elif isinstance(value, list):
             self.itemDataValue = '['+str(len(value))+']'
+            self.itemDataType = "list"
             for idx,item in enumerate(value):
                 self.appendChild(DictionaryTreeItem((idx,item), self))
 
         elif isinstance(value, (int, long)):
+            self.itemDataType = "atom"
             self.itemDataValue = str(value)            
         else:
+            self.itemDataType = "atom"
             self.itemDataValue = value
             
 
@@ -194,9 +207,22 @@ class DictionaryTreeItem(object):
     def keyPath(self):
         node = self;
         nodes = [];
-        while (node.itemDataKey != ''):
+        while (node.parentItem != None):
             nodes.insert(0,str(node.itemDataKey))
             node = node.parentItem
         
         return '.'.join(nodes)
+    
+    def getValue(self):
+        if self.itemDataType == "atom":
+            value = self.itemDataValue 
+        elif self.itemDataType == "list":
+            value = [node.getValue()[1] for node in self.childItems]
+        elif (self.itemDataType == "dict"):
+            value = {}
+            for node in self.childItems:
+                key, val = node.getValue()
+                value[key] = val
+        
+        return (self.itemDataKey,value)
         

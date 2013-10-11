@@ -34,7 +34,7 @@ class DataTree(QTreeView):
         self.mainWindow.showProgress(None,None,"Copy to clipboard")            
 
         try:
-            indexes = self.selectedIndexesAndChildren()
+            indexes = self.selectedIndexes()
             self.mainWindow.showProgress(None,len(indexes))
             
             output = StringIO.StringIO()
@@ -211,7 +211,6 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns=[]
         self.rootItem = TreeItem()
         self.database=database
-        #self.requester=ApiRequester(mainWindow)
 
     def reset(self):        
         self.rootItem.clear()
@@ -496,7 +495,7 @@ class TreeModel(QAbstractItemModel):
         elif index.column()==4:
             return item.data['querytype']      
         else:            
-            return getDictValue(item.data['response'],self.customcolumns[index.column()-5])
+            return str(getDictValue(item.data['response'],self.customcolumns[index.column()-5]))
             
 
     def hasChildren(self, index):

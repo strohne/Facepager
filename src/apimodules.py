@@ -53,9 +53,9 @@ class ApiTab(QWidget):
             else:
                 match = re.match("^<(.*)>$",str(params[name]))
                 if match:                 
-                     value = getDictValue(nodedata['response'],match.group(1))
+                     value = str(getDictValue(nodedata['response'],match.group(1)))
                 else:  
-                    value = params[name]
+                    value = str(params[name])
                          
             
             #Replace url path...
