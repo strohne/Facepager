@@ -495,7 +495,7 @@ class TreeModel(QAbstractItemModel):
         elif index.column()==4:
             return item.data['querytype']      
         else:            
-            return str(getDictValue(item.data['response'],self.customcolumns[index.column()-5]))
+            return getDictValue(item.data['response'],self.customcolumns[index.column()-5])
             
 
     def hasChildren(self, index):
