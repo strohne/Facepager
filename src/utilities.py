@@ -49,7 +49,9 @@ def getDictValue(data,multikey,dump=True):
             value = data
             
         if dump and (type(value) is dict or type(value) is list):
-            return json.dumps(value) 
+            return json.dumps(value)
+        elif dump and (isinstance(value, (int, long))):
+            return str(value)          
         else:        
             return value
     except Exception as e:
