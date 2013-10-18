@@ -3,6 +3,7 @@ from PySide.QtGui import *
 from database import *
 import csv
 import StringIO
+from copy import deepcopy
 
 class DataTree(QTreeView):
 
@@ -278,8 +279,9 @@ class TreeModel(QAbstractItemModel):
             QMessageBox.critical(self.mainWindow,"Facepager",str(e))                    
 
             
-    def queryData(self,index,module,options):
+    def queryData(self,index,module,inputoptions):
         try:
+            options = deepcopy(inputoptions)
             if not index.isValid(): return False
                 
             treenode=index.internalPointer()
