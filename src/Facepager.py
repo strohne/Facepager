@@ -19,9 +19,9 @@ class MainWindow(QMainWindow):
         
         self.setWindowTitle("Facepager 3.3")                
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
-        self.setMinimumSize(900,500)
+        self.setMinimumSize(900,700)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
-        
+        #self.setStyleSheet("* {font-size:18px;}")
         #self.deleteSettings()
         self.readSettings() 
         self.createActions()
@@ -65,19 +65,30 @@ class MainWindow(QMainWindow):
         self.statusBar().setSizeGripEnabled(False)       
         
         #dummy widget to contain the layout manager
-        self.mainWidget=QWidget(self) 
+        #self.mainWidget=QWidget(self) 
+        self.mainWidget=QSplitter(self)
+        self.mainWidget.setOrientation(Qt.Vertical)        
         self.setCentralWidget(self.mainWidget)        
-        mainLayout=QVBoxLayout()
-        self.mainWidget.setLayout(mainLayout)                
+        
+        #top widget
+        topWidget=QWidget(self)
+        self.mainWidget.addWidget(topWidget)
+
+        bottomWidget=QWidget(self)
+        self.mainWidget.addWidget(bottomWidget)
+        self.mainWidget.setStretchFactor(0, 1);
+        
+        #mainLayout=QVBoxLayout()
+        #self.mainWidget.setLayout(mainLayout)                
          
          
         dataLayout=QHBoxLayout()
-        mainLayout.addLayout(dataLayout,4)
+        topWidget.setLayout(dataLayout)
         dataSplitter = QSplitter(self)
         dataLayout.addWidget(dataSplitter)
         
         requestLayout=QHBoxLayout()
-        mainLayout.addLayout(requestLayout,2)
+        bottomWidget.setLayout(requestLayout)
 
          
         #tree                                                        

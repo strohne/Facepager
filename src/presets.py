@@ -53,6 +53,11 @@ class PresetWindow(QDialog):
            
         
         self.detailForm=QFormLayout()
+        self.detailForm.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        self.detailForm.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        self.detailForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        self.detailForm.setLabelAlignment(Qt.AlignLeft);
+                
         self.detailLayout.addLayout(self.detailForm,1)
 
         self.detailModule = QLabel('')

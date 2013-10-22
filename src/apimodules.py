@@ -2,6 +2,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
+import urllib
 import requests
 from requests.exceptions import *
 from datetime import datetime, timedelta
@@ -154,6 +155,10 @@ class FacebookTab(ApiTab):
         super(FacebookTab,self).__init__(mainWindow,"Facebook")
 
         mainLayout = QFormLayout()
+        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        mainLayout.setLabelAlignment(Qt.AlignLeft);        
                 
         #-Query Type
         self.relationEdit=QComboBox(self)
@@ -248,8 +253,7 @@ class FacebookTab(ApiTab):
             urlpath = options['url']
             urlparams = options['params']              
 
-        self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
-                {2}".format(nodedata['objectid'],urlpath,urlparams))
+        self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
         
         #data        
         response = self.request(urlpath,urlparams)
@@ -291,6 +295,10 @@ class TwitterTab(ApiTab):
         super(TwitterTab,self).__init__(mainWindow,"Twitter")
 
         mainLayout = QFormLayout()
+        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        mainLayout.setLabelAlignment(Qt.AlignLeft);        
                 
         #-Query Type
         self.relationEdit=QComboBox(self)
@@ -418,9 +426,7 @@ class TwitterTab(ApiTab):
             urlpath = options['url']
             urlparams =options["params"]                  
 
-        self.mainWindow.logmessage("Fetching data for {0} from {1} with params \
-                {2}".format(nodedata['objectid'],urlpath,urlparams))                    
-    
+        self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
         #data
         response = self.request(urlpath,urlparams)
            
@@ -480,6 +486,10 @@ class GenericTab(ApiTab):
     def __init__(self, mainWindow=None,loadSettings=True):
         super(GenericTab,self).__init__(mainWindow,"Generic")
         mainLayout = QFormLayout()
+        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        mainLayout.setLabelAlignment(Qt.AlignLeft);        
                 
         #URL prefix 
         self.urlpathEdit=QComboBox(self)        
@@ -540,8 +550,8 @@ class GenericTab(ApiTab):
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
             
-        urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)         
-        self.mainWindow.logmessage("Fetching data for {0} from {1} with params {2}".format(nodedata['objectid'],urlpath,urlparams))                    
+        urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
+        self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
         return self.request(urlpath,urlparams),False       
 
