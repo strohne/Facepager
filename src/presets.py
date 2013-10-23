@@ -6,6 +6,7 @@ import sys
 import re
 import json
 from textviewer import *
+from urlparse import urlparse
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
@@ -139,17 +140,24 @@ class PresetWindow(QDialog):
                 data = json.load(input)
             data['filename'] = filename
             data['default'] = default
+            
+            if (data.get('module') == 'Generic'):
+                try: data['caption'] = data.get('module')  + ' ('+urlparse(data['options']['urlpath']).netloc + "): "+data.get('name')
+                except: data['caption'] = data.get('module') + ": "+data.get('name')  
+            else: data['caption'] = data.get('module') + ": "+data.get('name')    
+            if default: data['caption'] = data['caption'] +"*"     
         
             newItem = QListWidgetItem()
-            newItem.setText(data['name'])    
+            newItem.setText(data['caption'])    
             newItem.setData(Qt.UserRole,data)
+           
 
-            if default:
-                ft = newItem.font()
-                ft.setWeight(QFont.Bold)
-                newItem.setFont(ft)
+#            if default:
+#                ft = newItem.font()
+#                ft.setWeight(QFont.Bold)
+#                newItem.setFont(ft)
                 
-
+            
                         
             self.presetList.addItem(newItem)
         except Exception as e:
@@ -170,6 +178,7 @@ class PresetWindow(QDialog):
         
         self.presetList.setFocus()
         self.presetList.setCurrentRow(0)
+        self.presetList.sortItems()
         self.applyButton.setDefault(True)
         
         #self.currentChanged()
