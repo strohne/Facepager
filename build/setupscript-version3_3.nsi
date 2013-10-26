@@ -46,7 +46,21 @@ InstallDir "$PROGRAMFILES\Facepager"
 ;——————————–
 ;Data
 
+;——————————–
+;Unistall Previous Section
+; The "" makes the section hidden.
+Section "" SecUninstallPrevious
 
+    Call UninstallPrevious
+
+SectionEnd
+
+Function UninstallPrevious
+    DetailPrint "Removing previous installation."    
+    ; Run the uninstaller silently.
+    ExecWait '"$INSTDIR\Uninstall.exe" /S _?=$INSTDIR'
+
+FunctionEnd
 
 ;——————————–
 ;Installer Sections
