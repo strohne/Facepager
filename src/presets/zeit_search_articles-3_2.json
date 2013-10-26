@@ -1,0 +1,29 @@
+{
+  "columns": [
+    "title",
+    "supertitle",
+    "subtitle",
+    "teaser_text",
+    "teaser_title",
+    "release_date",
+    "uri",
+    "snippet"
+  ],
+  "options": {
+    "urlpath": "http://api.zeit.de/content",
+    "params": {
+      "q": "<Object ID>",
+      "api_key": null,
+      "sort": "release_date desc",      
+      "limit": "50",
+      "offset": "0"
+    },
+    "nodedata": "matches",
+    "objectid": "uuid"
+  },
+  "name": "Search recent articles on Zeit",
+  "module": "Generic",
+  "description": "Add nodes (Object ID) as search terms.\n\nYou need to get an API key and set the parameter api_key. Get one from http://developer.zeit.de/quickstart/\n\nSee http://developer.zeit.de/docs/ for API documentation \n"
+}
+
+

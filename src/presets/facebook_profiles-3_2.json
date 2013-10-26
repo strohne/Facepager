@@ -1,0 +1,20 @@
+
+{
+  "columns": [
+    "name",
+    "about",
+    "description",
+    "likes",
+    "talking_about_count"
+  ],
+  "options": {
+    "params": {
+    },
+    "relation": "<self>"
+  },
+  "name": "Get Facebook profiles",
+  "module": "Facebook",
+  "description": "Add Facebook-IDs as nodes, e.g. \"Tatort\". \n\nGets profile data for this node."
+}
+
+

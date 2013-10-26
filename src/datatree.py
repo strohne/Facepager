@@ -366,7 +366,7 @@ class TreeModel(QAbstractItemModel):
     
                 self.layoutChanged.emit()
                 
-                options = paging
+                #if paging == True: options should have been modified in fetchData 
                 if paging == False: break
                 
         except Exception as e:
