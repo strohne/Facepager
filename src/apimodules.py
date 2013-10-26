@@ -259,11 +259,11 @@ class FacebookTab(ApiTab):
         response = self.request(urlpath,urlparams)
         
         #paging
-        if (hasDictValue(response,"paging.next")):
-            paging = options
+        if (hasDictValue(response,"paging.next")):            
             url,params = self.parseURL(getDictValue(response,"paging.next",False))
-            paging['params'] = params
-            paging['url'] = url            
+            options['params'] = params
+            options['url'] = url
+            paging = True            
         else:    
             paging = False
         
@@ -433,17 +433,17 @@ class TwitterTab(ApiTab):
         #paging-search
         paging = False
         if (hasDictValue(response,"search_metadata.next_results")):            
-            paging = options            
+            paging = True            
             url,params = self.parseURL(getDictValue(response,"search_metadata.next_results",False))
-            paging['url'] = urlpath
-            paging['params'] = params
+            options['url'] = urlpath
+            options['params'] = params
         
         #paging timeline
         else:
             ids = [item['id'] for item in response if 'id' in item] if isinstance(response, list) else []
             if (ids):        
-                paging = options            
-                paging['params']['max_id'] = min(ids)-1
+                paging = True            
+                options['params']['max_id'] = min(ids)-1
         
         return response,paging  
     

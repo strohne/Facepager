@@ -18,5 +18,8 @@
 
   "name": "Search Offenes Parlement for MdB",
   "module": "Generic",
-  "description": "Searches the API of http://offenesparlament.de/ for informations to a member of the german parliament. See http://offenesparlament.de/info/daten for more options on this API. \n\nthe forename-lastname-party must be specified as a node (f.e. wolfgang-bosbach-cducsu). The \"id\"-key of the raw-data may be used as an object-id"
+  "description": "Searches the API of http://offenesparlament.de/ for information about a member of the german parliament. See http://offenesparlament.de/info/daten for more options. \n\nthe forename-lastname-party must be specified as a node (f.e. wolfgang-bosbach-cducsu). The \"id\"-key of the raw-data may be used as Object ID"
 }
+
+
+
