@@ -19,6 +19,7 @@ def loadTabs(mainWindow=None):
     mainWindow.RequestTabs.addTab(FacebookTab(mainWindow),"Facebook")
     mainWindow.RequestTabs.addTab(TwitterTab(mainWindow),"Twitter")
     mainWindow.RequestTabs.addTab(GenericTab(mainWindow),"Generic")    
+    mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
     
 class ApiTab(QWidget):
     def __init__(self, mainWindow=None,name="NoName",loadSettings=True):
@@ -286,7 +287,208 @@ class FacebookTab(ApiTab):
            
 
 
+class TwitterStreamingTab(ApiTab):
+
+    def __init__(self, mainWindow=None,loadSettings=True):
+        super(TwitterStreamingTab,self).__init__(mainWindow,"Twitter Streaming")
+
+        mainLayout = QFormLayout()
+        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        mainLayout.setLabelAlignment(Qt.AlignLeft);        
+                
+        #-Query Type
+        self.relationEdit=QComboBox(self)
+        self.relationEdit.insertItems(0,['statuses/sample'])                       
+        self.relationEdit.insertItems(0,['statuses/filter'])                       
         
+        
+        self.relationEdit.setEditable(False)
+        mainLayout.addRow("Resource",self.relationEdit)
+        
+        #Twitter OAUTH consumer key and secret should be defined in credentials.py         
+        self.oauthdata = {}
+        
+        self.twitter = OAuth1Service(
+                            consumer_key="LfkCIpc3V50vpBUSuSg",
+                            consumer_secret="iaEvKJ0GXXTFoQ19MzHtIWKP2ew5kuWb37U5WFwQSo",
+                            name='twitterstreaming',
+                            access_token_url='https://api.twitter.com/oauth/access_token',
+                            authorize_url='https://api.twitter.com/oauth/authorize',
+                            request_token_url='https://api.twitter.com/oauth/request_token',
+                            base_url='https://stream.twitter.com/1.1/')
+       
+
+         
+        #Parameter
+        self.paramEdit = QParamEdit(self)
+        self.paramEdit.setNameOptions(['track']) #'count','until'
+        self.paramEdit.setValueOptions(['<Object ID>'])
+        
+        mainLayout.addRow("Parameters",self.paramEdit)
+
+        self.pagesEdit=QSpinBox(self)
+        self.pagesEdit.setMinimum(1)        
+        self.pagesEdit.setMaximum(500)
+         
+        #-Log in
+        loginlayout=QHBoxLayout()
+        
+        self.tokenEdit=QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
+        
+        loginlayout.addWidget(QLabel("Access Token Secret"))
+
+        self.tokensecretEdit=QLineEdit()
+        self.tokensecretEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokensecretEdit)
+
+        self.loginButton=QPushButton(" Login to Twitter ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+        
+        mainLayout.addRow("Access Token",loginlayout)
+
+                 
+        self.setLayout(mainLayout)
+        if loadSettings: self.loadSettings()
+  
+              
+    def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'      
+        options={}
+        
+        #options for request 
+        options['query'] = self.relationEdit.currentText()        
+        options['params']=self.paramEdit.getParams()
+        options['pages']=self.pagesEdit.value()
+        
+        if purpose != 'preset':
+            options['querytype']=self.name+':'+self.relationEdit.currentText()
+            options['access_token'] = self.tokenEdit.text() 
+            options['access_token_secret'] = self.tokensecretEdit.text()
+                
+        #options for data handling
+        if purpose == 'fetch':                 
+            options['objectid']='id'
+            
+            if (options["query"] == 'search/tweets'):
+                options['nodedata']='statuses'
+            elif (options["query"] == 'followers/list'):
+                options['nodedata']='users'
+            elif (options["query"] == 'friends/list'):
+                options['nodedata']='users'
+            else:
+                options['nodedata']=None    
+                        
+        return options
+
+
+    def setOptions(self,options):         
+        if options.has_key('access_token'): self.tokenEdit.setText(options.get('access_token',''))
+        if options.has_key('access_token_secret'): self.tokensecretEdit.setText(options.get('access_token_secret',''))
+        
+    def initSession(self):
+        if hasattr(self,"session"):
+            return self.session
+                
+        elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):                  
+            self.session=self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
+            return self.session
+                    
+        else:
+            #self.doLogin(True)
+            raise Exception("No access, login please!")
+
+    def request(self, path, args=None,headers=None):
+        session = self.initSession()            
+        response = {"data":[]}
+        #die sollte eigtl nicht hier geworfen werden, oder?
+        if (not session): 
+            raise Exception("No session available.")        
+                
+        try:
+            if headers != None:
+                request = session.post(path,params=args,
+                            headers=headers,
+                            timeout=self.timeout,
+                            verify=False,
+                            stream=True)
+            else:
+                request = session.get(path,params=args,timeout=self.timeout,
+                        verify=False,stream=True)
+        except (HTTPError,ConnectionError),e: 
+            raise Exception("Request Error: {0}".format(e.message))
+        else:
+            if not request.ok:
+                raise Exception("Request Status Error: {0}".format(response.reason))
+                
+            else:
+                try:
+                    x=1
+                    for line in request.iter_lines():
+                        if x== 10: break
+                    # testen, ob line auch direct json-methode hat
+                        if line:
+                            try:
+                                jline = json.loads(line)
+                                print jline["id_str"]
+                            except:
+                                print line
+                            else:
+                                x+=1
+                                response["data"].append(jline)
+                except KeyboardInterrupt:
+                    print "Interrupted"
+                    request.close()
+                finally:
+                    return response,{}  
+
+    
+    def fetchData(self,nodedata,options=None):
+        if (options==None): options = self.getOptions()
+        
+        if not ('url' in options): 
+            urlpath = "https://stream.twitter.com/1.1/"+options["query"]+".json"
+            urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)
+        else:
+            urlpath = options['url']
+            urlparams =options["params"]                  
+
+        self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
+        #data
+        response = self.request(urlpath,urlparams)
+           
+        
+        return response
+    
+    @Slot()
+    def doLogin(self,query=False,caption="Twitter Login Page",url=""):
+
+        self.oauthdata.pop('oauth_verifier',None)
+        self.oauthdata['requesttoken'],self.oauthdata['requesttoken_secret']=self.twitter.get_request_token(verify=False)
+        
+        super(TwitterStreamingTab,self).doLogin(query,caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
+
+
+    @Slot()
+    def getToken(self):
+        url = urlparse.parse_qs(self.login_webview.url().toString())
+        if "oauth_verifier" in url:
+            token=url["oauth_verifier"]
+            if token:
+                self.oauthdata['oauth_verifier'] = token[0]
+                self.session=self.twitter.get_auth_session(self.oauthdata['requesttoken'],
+                                            self.oauthdata['requesttoken_secret'],method="POST",
+                                            data={'oauth_verifier':self.oauthdata['oauth_verifier']},verify=False)
+                
+                              
+                self.tokenEdit.setText(self.session.access_token)
+                self.tokensecretEdit.setText(self.session.access_token_secret)              
+                
+                self.login_webview.parent().close()
+       
 
 
 class TwitterTab(ApiTab):
