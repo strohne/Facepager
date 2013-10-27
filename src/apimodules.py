@@ -403,7 +403,7 @@ class TwitterStreamingTab(ApiTab):
 
     def request(self, path, args=None,headers=None):
         session = self.initSession()            
-        response = {"data":[]}
+        response = []
         #die sollte eigtl nicht hier geworfen werden, oder?
         if (not session): 
             raise Exception("No session available.")        
@@ -421,29 +421,26 @@ class TwitterStreamingTab(ApiTab):
         except (HTTPError,ConnectionError),e: 
             raise Exception("Request Error: {0}".format(e.message))
         else:
-            if not request.ok:
-                raise Exception("Request Status Error: {0}".format(response.reason))
-                
-            else:
-                try:
-                    x=1
-                    for line in request.iter_lines():
-                        if x== 10: break
-                    # testen, ob line auch direct json-methode hat
-                        if line:
-                            try:
-                                jline = json.loads(line)
-                                print jline["id_str"]
-                            except:
-                                print line
-                            else:
-                                x+=1
-                                response["data"].append(jline)
-                except KeyboardInterrupt:
-                    print "Interrupted"
-                    request.close()
-                finally:
-                    return response,{}  
+            #if not request.ok:
+            #    raise Exception("Request Status Error: {0}".format(request.reason))
+            #    
+            #else:
+            try:
+                x=1
+                for line in request.iter_lines():
+                    if x== 10: break
+                # testen, ob line auch direct json-methode hat
+                    if line:
+                          x+=1
+                          print line
+                          jline = json.loads(line)                          
+                          response.append(jline)
+                          
+            except KeyboardInterrupt:
+                print "Interrupted"
+                request.close()
+            finally:
+                return response  
 
     
     def fetchData(self,nodedata,options=None):
@@ -461,7 +458,7 @@ class TwitterStreamingTab(ApiTab):
         response = self.request(urlpath,urlparams)
            
         
-        return response
+        return response,False
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
