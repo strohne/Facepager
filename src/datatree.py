@@ -303,6 +303,66 @@ class TreeModel(QAbstractItemModel):
             dbnode=Node.query.get(treenode.id)
             if not dbnode: return False
 
+            def appendNodes(response_elem,querystatus):#append nodes
+                    if options.get('append',True):
+            
+                        #filter response
+                        if options['nodedata'] != None:
+                            nodes=getDictValue(response_elemt,options['nodedata'],False)                    
+                        else:
+                            nodes=response_elem                                
+                        
+                        #single record
+                        if not (type(nodes) is list): nodes=[nodes]                                     
+                        
+                        #empty records                    
+                        if (len(nodes) == 0) and (options.get('appendempty',True)):                    
+                            nodes=[{}]
+                            querystatus="empty"                      
+                        
+                        #extracted nodes                    
+                        newnodes=[]
+                        for n in nodes:                    
+                            new=Node(getDictValue(n,options.get('objectid',"")),dbnode.id)
+                            new.objecttype='data'
+                            new.response=n
+                            new.level=dbnode.level+1
+                            new.querystatus=querystatus
+                            new.querytime=str(querytime)
+                            new.querytype=options['querytype']
+                            new.queryparams=options                                        
+                            newnodes.append(new)
+                        
+                        #Offcut
+                        if (options['nodedata'] != None) and (options.get('appendoffcut',True)):
+                            offcut = filterDictValue(response_elem,options['nodedata'],False)
+                            new=Node(dbnode.objectid,dbnode.id)
+                            new.objecttype='offcut'
+                            new.response=offcut
+                            new.level=dbnode.level+1
+                            new.querystatus=querystatus
+                            new.querytime=str(querytime)
+                            new.querytype=options['querytype']
+                            new.queryparams=options
+                            
+                            newnodes.append(new)                                            
+            
+                        self.database.session.add_all(newnodes)    
+                        treenode._childcountall += len(newnodes)    
+                        dbnode.childcount += len(newnodes)    
+                        self.database.session.commit()                
+                        
+                    #update node    
+                    else:  
+                        dbnode.response = response_elem
+                        dbnode.querystatus=querystatus                
+                        dbnode.querytime=str(datetime.datetime.now())
+                        dbnode.querytype=options['querytype']
+                        dbnode.queryparams=json.dumps(options)
+                        self.database.session.commit()
+                        treenode.data=self.getItemData(dbnode)
+
+
             for page in range(0,options.get('pages',1)): 
                 
                 #get data
@@ -317,69 +377,14 @@ class TreeModel(QAbstractItemModel):
                     response={}
                     paging = False
                 else:
-                    querystatus="fetched"                
+                    querystatus="fetched"
+                    for response_elem in response:
+                        appendNodes(response_elem,querystatus)
+                        self.layoutChanged.emit()
                 
                 
-                #append nodes
-                if options.get('append',True):
-        
-                    #filter response
-                    if options['nodedata'] != None:
-                        nodes=getDictValue(response,options['nodedata'],False)                    
-                    else:
-                        nodes=response                                
-                    
-                    #single record
-                    if not (type(nodes) is list): nodes=[nodes]                                     
-                    
-                    #empty records                    
-                    if (len(nodes) == 0) and (options.get('appendempty',True)):                    
-                        nodes=[{}]
-                        querystatus="empty"                      
-                    
-                    #extracted nodes                    
-                    newnodes=[]
-                    for n in nodes:                    
-                        new=Node(getDictValue(n,options.get('objectid',"")),dbnode.id)
-                        new.objecttype='data'
-                        new.response=n
-                        new.level=dbnode.level+1
-                        new.querystatus=querystatus
-                        new.querytime=str(querytime)
-                        new.querytype=options['querytype']
-                        new.queryparams=options                                        
-                        newnodes.append(new)
-                    
-                    #Offcut
-                    if (options['nodedata'] != None) and (options.get('appendoffcut',True)):
-                        offcut = filterDictValue(response,options['nodedata'],False)
-                        new=Node(dbnode.objectid,dbnode.id)
-                        new.objecttype='offcut'
-                        new.response=offcut
-                        new.level=dbnode.level+1
-                        new.querystatus=querystatus
-                        new.querytime=str(querytime)
-                        new.querytype=options['querytype']
-                        new.queryparams=options
-                        
-                        newnodes.append(new)                                            
-        
-                    self.database.session.add_all(newnodes)    
-                    treenode._childcountall += len(newnodes)    
-                    dbnode.childcount += len(newnodes)    
-                    self.database.session.commit()                
-                    
-                #update node    
-                else:  
-                    dbnode.response = response
-                    dbnode.querystatus=querystatus                
-                    dbnode.querytime=str(datetime.datetime.now())
-                    dbnode.querytype=options['querytype']
-                    dbnode.queryparams=json.dumps(options)
-                    self.database.session.commit()
-                    treenode.data=self.getItemData(dbnode)
-    
-                self.layoutChanged.emit()
+                
+                
                 
                 #if paging == True: options should have been modified in fetchData 
                 if paging == False: break
