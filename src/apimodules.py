@@ -434,13 +434,14 @@ class TwitterStreamingTab(ApiTab):
                           x+=1
                           print line
                           jline = json.loads(line)                          
-                          response.append(jline)
+                          yield jline
+                          #response.append(jline)
                           
             except KeyboardInterrupt:
                 print "Interrupted"
                 request.close()
-            finally:
-                return response  
+            #finally:
+           #     return response  
 
     
     def fetchData(self,nodedata,options=None):
