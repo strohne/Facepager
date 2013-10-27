@@ -101,7 +101,7 @@ class Actions(object):
         progress.setMinimumDuration(0)
         progress.forceShow()     
                              
-        todo=self.mainWindow.tree.selectedIndexesAndChildren(None,True)
+        todo=self.mainWindow.tree.selectedIndexesAndChildren(True)
         progress.setMaximum(len(todo))            
         
         #self.mainWindow.tree.treemodel.beginResetModel()
@@ -260,8 +260,8 @@ class Actions(object):
                                 
         #Get selected nodes
         if indexes == False:
-            level=self.mainWindow.levelEdit.value()
-            indexes=self.mainWindow.tree.selectedIndexesAndChildren(level)
+            level=self.mainWindow.levelEdit.value()-1
+            indexes=self.mainWindow.tree.selectedIndexesAndChildren(False,{'level':level,'objecttype':['seed','data']})
         
         if module == False: module = self.mainWindow.RequestTabs.currentWidget()
         if options == False: options=module.getOptions();
@@ -285,8 +285,8 @@ class Actions(object):
     @Slot()
     def setupTimer(self):
         #Get data
-        level=self.mainWindow.levelEdit.value()
-        indexes=self.mainWindow.tree.selectedIndexesAndChildren(level,True)
+        level=self.mainWindow.levelEdit.value()-1
+        indexes=self.mainWindow.tree.selectedIndexesAndChildren(True,{'level':level,'objecttype':['seed','data']})
         module = self.mainWindow.RequestTabs.currentWidget()
         options=module.getOptions();        
                         

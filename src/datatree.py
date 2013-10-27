@@ -93,9 +93,12 @@ class DataTree(QTreeView):
         return [x for x in super(DataTree,self).selectedIndexes() if x.column()==0]
 
             
-    def selectedIndexesAndChildren(self,level=None,persistent=False,emptyonly=False):
+    def selectedIndexesAndChildren(self,persistent=False,filter={}):
+        
+        #emptyonly=filter.get('childcount',None)
+        level=filter.get('level',None)
+        
         selected= self.selectedIndexes() 
-        #selected = [x for x in self.selectedIndexes() if x.column()==0]
         filtered=[]
 
         def getLevel(index):
@@ -104,29 +107,41 @@ class DataTree(QTreeView):
             
             treeitem=index.internalPointer()
             if (treeitem.data != None) and (treeitem.data['level'] != None):
-                return treeitem.data['level']+1
+                return treeitem.data['level']
             else:
                 return 0
 
+        def checkFilter(index):
+            if not index.isValid():
+                return False
+            
+            treeitem=index.internalPointer()
+            for key, value in filter.iteritems():
+                if (treeitem.data != None) and (treeitem.data[key] != None):
+                    orlist = value if type(value) is list else [value]
+                    if (not (treeitem.data[key] in orlist)):
+                        return False 
+                    
+            return True
             
         def addIndex(index):
             if index not in filtered:
                 #child=index.child(0,0)
                 
-                if level==None or level==getLevel(index):
+
                     
-                    if emptyonly:
-                        child=index.child(0,0)
-                        append = not child.isValid()
+                    #if emptyonly:
+                    #    child=index.child(0,0)
+                    #    append = not child.isValid()
+                    #else:
+                    #    append=True    
+                    
+                if checkFilter(index):
+                    if persistent:
+                        filtered.append(QPersistentModelIndex(index))
                     else:
-                        append=True    
-                    
-                    if append==True:
-                        if persistent:
-                            filtered.append(QPersistentModelIndex(index))
-                        else:
-                            filtered.append(index)    
-                
+                        filtered.append(index)
+                            
                 if level==None or level>getLevel(index) :
                     self.model().fetchMore(index)
                     child=index.child(0,0)
