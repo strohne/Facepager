@@ -318,7 +318,7 @@ class TwitterStreamingTab(ApiTab):
                             authorize_url='https://api.twitter.com/oauth/authorize',
                             request_token_url='https://api.twitter.com/oauth/request_token',
                             base_url='https://stream.twitter.com/1.1/')
-                            #base müsste man dann rausnehmen
+                            #base muesste man dann rausnehmen
        
         self.connected = False
          
