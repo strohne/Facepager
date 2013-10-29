@@ -318,8 +318,9 @@ class TwitterStreamingTab(ApiTab):
                             authorize_url='https://api.twitter.com/oauth/authorize',
                             request_token_url='https://api.twitter.com/oauth/request_token',
                             base_url='https://stream.twitter.com/1.1/')
+                            #base müsste man dann rausnehmen
        
-
+        self.connected = False
          
         #Parameter
         self.paramEdit = QParamEdit(self)
@@ -402,48 +403,89 @@ class TwitterStreamingTab(ApiTab):
             raise Exception("No access, login please!")
 
     def request(self, path, args=None,headers=None):
-        session = self.initSession()            
-        response = []
-        #die sollte eigtl nicht hier geworfen werden, oder?
-        if (not session): 
-            raise Exception("No session available.")        
-                
-        try:
-            if headers != None:
-                request = session.post(path,params=args,
-                            headers=headers,
-                            timeout=self.timeout,
-                            verify=False,
-                            stream=True)
-            else:
-                request = session.get(path,params=args,timeout=self.timeout,
-                        verify=False,stream=True)
-        except (HTTPError,ConnectionError),e: 
-            raise Exception("Request Error: {0}".format(e.message))
-        else:
-            #if not request.ok:
-            #    raise Exception("Request Status Error: {0}".format(request.reason))
-            #    
-            #else:
-            try:
-                x=1
-                for line in request.iter_lines():
-                    if x== 10: break
-                # testen, ob line auch direct json-methode hat
-                    if line:
-                          x+=1
-                          print line
-                          jline = json.loads(line)                          
-                          yield jline
-                          #response.append(jline)
-                          
-            except KeyboardInterrupt:
-                print "Interrupted"
-                request.close()
-            #finally:
-           #     return response  
+        self.connected = True
+        self.initSession()
+        import pdb; pdb.set_trace()
+        def _send():
 
-    
+            while self.connected:
+                try:
+                    if headers != None:
+                        response = self.session.post(path,params=args,
+                                  headers=headers,
+                                  timeout=self.timeout,
+                                  verify=False,
+                                  stream=True)
+                    else:
+                        response = self.session.get(path,params=args,timeout=self.timeout,
+                                  verify=False,stream=True)
+
+                except requests.exceptions.Timeout:
+                    self.on_timeout()
+                else:
+                    if response.status_code != 200:
+                        self._on_error(response.status_code, response.content)
+
+                    return response
+
+        while self.connected:
+            response = _send()
+
+            for line in response.iter_lines():
+                if not self.connected:
+                    break
+                if line:
+                    try:
+                        data = json.loads(line)
+                        print data
+                    except ValueError:  # pragma: no cover
+                        self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
+                    else:
+                        yield self._on_success(data)
+        response.close()
+
+    def _on_success(self, data):  # pragma: no cover
+        """Called when data has been successfully received from the stream.
+        Returns True if other handlers for this message should be invoked.
+
+        Feel free to override this to handle your streaming data how you
+        want it handled.
+        See https://dev.twitter.com/docs/streaming-apis/messages for messages
+        sent along in stream responses.
+
+        :param data: data recieved from the stream
+        :type data: dict
+        """
+        #daten aus dem generator werden einfach nur returned, kann
+        #man hier aber auch aufbereiten etc.
+        return data
+
+    def _on_delete(self,data):
+        #Hier koennte man delete messages verabeiten
+        pass
+
+    def _on_error(self, status_code, data):  # pragma: no cover
+        """Called when stream returns non-200 status code
+
+        Feel free to override this to handle your streaming data how you
+        want it handled.
+
+        :param status_code: Non-200 status code sent from stream
+        :type status_code: int
+
+        :param data: Error message sent from stream
+        :type data: dict
+        """
+        return
+
+    def _on_timeout(self):  # pragma: no cover
+        """ Called when the request has timed out """
+        return
+
+    def _disconnect(self):
+        """Used to disconnect the streaming client manually"""
+        self.connected = False
+        
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
         
@@ -456,7 +498,7 @@ class TwitterStreamingTab(ApiTab):
 
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
         #data
-        response = self.request(urlpath,urlparams)
+        response = self.request(path=urlpath, args=urlparams)
            
         
         return response,False
