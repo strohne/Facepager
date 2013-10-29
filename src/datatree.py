@@ -297,11 +297,11 @@ class TreeModel(QAbstractItemModel):
     def queryData(self,index,module,inputoptions):
         try:
             options = deepcopy(inputoptions)
-            if not index.isValid(): return False
+            if not index.isValid(): yield False
                 
             treenode=index.internalPointer()
             dbnode=Node.query.get(treenode.id)
-            if not dbnode: return False
+            if not dbnode: yield False
 
             def appendNodes(response_elem,querystatus):#append nodes
                     if options.get('append',True):
@@ -381,6 +381,7 @@ class TreeModel(QAbstractItemModel):
                     for response_elem in response:
                         appendNodes(response_elem,querystatus)
                         self.layoutChanged.emit()
+                        yield 
                 
                 
                 

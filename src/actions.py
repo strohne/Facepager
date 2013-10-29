@@ -271,10 +271,12 @@ class Actions(object):
         #Fetch data
         c=0
         for index in indexes:            
-            progress.setValue(c)
-            c+=1                        
-            self.mainWindow.tree.treemodel.queryData(index,module,options)                                  
-            if progress.wasCanceled(): break  
+            for data in self.mainWindow.tree.treemodel.queryData(index,module,options):
+                progress.setValue(c)
+                c+=1
+                if progress.wasCanceled(): 
+                    break
+
 
         progress.cancel()   
                       

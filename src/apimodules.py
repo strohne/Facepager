@@ -405,7 +405,7 @@ class TwitterStreamingTab(ApiTab):
     def request(self, path, args=None,headers=None):
         self.connected = True
         self.initSession()
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         def _send():
 
             while self.connected:
