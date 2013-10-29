@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
         self.setMinimumSize(900,700)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
-        #self.setStyleSheet("* {font-size:18px;}")
+#        self.setStyleSheet("* {font-size:27px;}")
         #self.deleteSettings()
         self.readSettings() 
         self.createActions()
