@@ -453,13 +453,11 @@ class TwitterStreamingTab(ApiTab):
                         except ValueError:  # pragma: no cover
                             self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
                         else:
-                            #yield self._on_success(data)
-                            self.streamingData.emit(data)
+                            yield self._on_success(data)                            
             response.close()
             
         finally:            
             self.connected = False
-            return []
 
     def _on_success(self, data):  # pragma: no cover
         """Called when data has been successfully received from the stream.
@@ -516,7 +514,8 @@ class TwitterStreamingTab(ApiTab):
 
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
         #data
-        self.request(path=urlpath, args=urlparams)
+        for data in self.request(path=urlpath, args=urlparams):
+            self.streamingData.emit(data)
 
     
     @Slot()
