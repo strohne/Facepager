@@ -288,12 +288,9 @@ class Actions(object):
                     if not index.isValid(): continue                    
                     treenode=index.internalPointer()
     
-                    inputoptions['querytime'] = str(datetime.datetime.now())
-                                    
-                    response = module.fetchData(treenode.data,inputoptions)          
-                    for response_elem in response:
-                        treenode.appendNodes(response_elem,inputoptions)
-                        if progress.wasCanceled(): module.stopFetching()
+                    inputoptions['querytime'] = str(datetime.datetime.now())                                    
+                    module.fetchData(treenode.data,inputoptions)          
+
                     
                 except Exception as e:
                     self.mainWindow.logmessage(str(type(e))+str(e))
