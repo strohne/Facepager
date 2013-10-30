@@ -329,9 +329,9 @@ class TwitterStreamingTab(ApiTab):
         
         mainLayout.addRow("Parameters",self.paramEdit)
 
-        self.pagesEdit=QSpinBox(self)
-        self.pagesEdit.setMinimum(1)        
-        self.pagesEdit.setMaximum(500)
+        #self.pagesEdit=QSpinBox(self)
+        #self.pagesEdit.setMinimum(1)        
+        #self.pagesEdit.setMaximum(500)
          
         #-Log in
         loginlayout=QHBoxLayout()
@@ -363,7 +363,7 @@ class TwitterStreamingTab(ApiTab):
         #options for request 
         options['query'] = self.relationEdit.currentText()        
         options['params']=self.paramEdit.getParams()
-        options['pages']=self.pagesEdit.value()
+        #options['pages']=self.pagesEdit.value()
         
         if purpose != 'preset':
             options['querytype']=self.name+':'+self.relationEdit.currentText()
@@ -432,6 +432,7 @@ class TwitterStreamingTab(ApiTab):
             response = _send()
 
             for line in response.iter_lines():
+                #QApplication.processEvents() ???
                 if not self.connected:
                     break
                 if line:
