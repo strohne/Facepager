@@ -3,7 +3,6 @@ from PySide.QtGui import *
 from database import *
 import csv
 import StringIO
-from copy import deepcopy
 
 class DataTree(QTreeView):
 
@@ -158,7 +157,8 @@ class DataTree(QTreeView):
       
                            
 class TreeItem(object):
-    def __init__(self, parent=None,id=None,data=None):
+    def __init__(self,model=None, parent=None,id=None,data=None):
+        self.model = model
         self.id = id
         self.parentItem = parent        
         self.data = data
@@ -217,7 +217,85 @@ class TreeItem(object):
             return self.parentItem.childItems.index(self)
         return 0
 
-    
+    def appendNodes(self,data,options):
+        dbnode=Node.query.get(self.id)
+        if not dbnode: return(False)
+            
+        #filter response
+        if options['nodedata'] != None:
+            nodes=getDictValue(data,options['nodedata'],False)                    
+        else:
+            nodes=data                                
+        
+        #single record
+        if not (type(nodes) is list): nodes=[nodes]                                     
+        
+        #empty records                    
+        if (len(nodes) == 0) and (options.get('appendempty',True)):                    
+            nodes=[{}]
+            options['querystatus']="empty"
+        else:
+            options['querystatus']="fetched"                      
+        
+        #extracted nodes                    
+        newnodes=[]
+        for n in nodes:                    
+            new=Node(getDictValue(n,options.get('objectid',"")),dbnode.id)
+            new.objecttype='data'
+            new.response=n
+            new.level=dbnode.level+1
+            new.querystatus=options.get("querystatus","")
+            new.querytime=str(options.get("querytime",""))
+            new.querytype=options.get('querytype','')
+            new.queryparams=options                                        
+            newnodes.append(new)
+        
+        #Offcut
+        if (options['nodedata'] != None) and (options.get('appendoffcut',True)):
+            offcut = filterDictValue(data,options['nodedata'],False)
+            new=Node(dbnode.objectid,dbnode.id)
+            new.objecttype='offcut'
+            new.response=offcut
+            new.level=dbnode.level+1
+            new.querystatus=options.get("querystatus","")
+            new.querytime=str(options.get("querytime",""))
+            new.querytype=options.get('querytype','')
+            new.queryparams=options
+            
+            newnodes.append(new)                                            
+
+        self.model.database.session.add_all(newnodes)    
+        self._childcountall += len(newnodes)    
+        dbnode.childcount += len(newnodes)    
+        self.model.database.session.commit()     
+        self.model.layoutChanged.emit()
+
+    def unpackList(self,key):
+        dbnode=Node.query.get(self.id)
+            
+        nodes=getDictValue(dbnode.response,key,False)
+        if not (type(nodes) is list): return False                                     
+        
+        #extract nodes                    
+        newnodes=[]
+        for n in nodes:                    
+            new=Node(dbnode.objectid,dbnode.id)
+            new.objecttype='unpacked'
+            new.response=n
+            new.level=dbnode.level+1
+            new.querystatus=dbnode.querystatus
+            new.querytime=dbnode.querytime
+            new.querytype=dbnode.querytype
+            new.queryparams=dbnode.queryparams                                        
+            newnodes.append(new)
+        
+
+        self.model.database.session.add_all(newnodes)    
+        self._childcountall += len(newnodes)    
+        dbnode.childcount += len(newnodes)    
+        self.model.database.session.commit()                
+        self.model.layoutChanged.emit()
+        
 
 class TreeModel(QAbstractItemModel):
     
@@ -225,7 +303,7 @@ class TreeModel(QAbstractItemModel):
         super(TreeModel, self).__init__()
         self.mainWindow=mainWindow
         self.customcolumns=[]
-        self.rootItem = TreeItem()
+        self.rootItem = TreeItem(self)
         self.database=database
 
     def reset(self):        
@@ -292,140 +370,7 @@ class TreeModel(QAbstractItemModel):
             #self.endInsertRows()
         except Exception as e:
             QMessageBox.critical(self.mainWindow,"Facepager",str(e))                    
-
-            
-    def queryData(self,index,module,inputoptions):
-        try:
-            options = deepcopy(inputoptions)
-            if not index.isValid(): yield False
-                
-            treenode=index.internalPointer()
-            dbnode=Node.query.get(treenode.id)
-            if not dbnode: yield False
-
-            def appendNodes(response_elem,querystatus):#append nodes
-                    if options.get('append',True):
-            
-                        #filter response
-                        if options['nodedata'] != None:
-                            nodes=getDictValue(response_elemt,options['nodedata'],False)                    
-                        else:
-                            nodes=response_elem                                
-                        
-                        #single record
-                        if not (type(nodes) is list): nodes=[nodes]                                     
-                        
-                        #empty records                    
-                        if (len(nodes) == 0) and (options.get('appendempty',True)):                    
-                            nodes=[{}]
-                            querystatus="empty"                      
-                        
-                        #extracted nodes                    
-                        newnodes=[]
-                        for n in nodes:                    
-                            new=Node(getDictValue(n,options.get('objectid',"")),dbnode.id)
-                            new.objecttype='data'
-                            new.response=n
-                            new.level=dbnode.level+1
-                            new.querystatus=querystatus
-                            new.querytime=str(querytime)
-                            new.querytype=options['querytype']
-                            new.queryparams=options                                        
-                            newnodes.append(new)
-                        
-                        #Offcut
-                        if (options['nodedata'] != None) and (options.get('appendoffcut',True)):
-                            offcut = filterDictValue(response_elem,options['nodedata'],False)
-                            new=Node(dbnode.objectid,dbnode.id)
-                            new.objecttype='offcut'
-                            new.response=offcut
-                            new.level=dbnode.level+1
-                            new.querystatus=querystatus
-                            new.querytime=str(querytime)
-                            new.querytype=options['querytype']
-                            new.queryparams=options
-                            
-                            newnodes.append(new)                                            
-            
-                        self.database.session.add_all(newnodes)    
-                        treenode._childcountall += len(newnodes)    
-                        dbnode.childcount += len(newnodes)    
-                        self.database.session.commit()                
-                        
-                    #update node    
-                    else:  
-                        dbnode.response = response_elem
-                        dbnode.querystatus=querystatus                
-                        dbnode.querytime=str(datetime.datetime.now())
-                        dbnode.querytype=options['querytype']
-                        dbnode.queryparams=json.dumps(options)
-                        self.database.session.commit()
-                        treenode.data=self.getItemData(dbnode)
-
-
-            for page in range(0,options.get('pages',1)): 
-                
-                #get data
-                try:                
-                    querytime = datetime.datetime.now()
-                    response,paging = module.fetchData(treenode.data,options)
-      
-                except Exception as e:
-                    querystatus=str(type(e))+str(e)
-                    self.mainWindow.logmessage(querystatus)
-                    
-                    response={}
-                    paging = False
-                else:
-                    querystatus="fetched"
-                    for response_elem in response:
-                        appendNodes(response_elem,querystatus)
-                        self.layoutChanged.emit()
-                        yield 
-                
-                
-                
-                
-                
-                #if paging == True: options should have been modified in fetchData 
-                if paging == False: break
-                
-        except Exception as e:
-            self.mainWindow.logmessage(str(e))
-
-    def unpackList(self,index,key):
-        try:
-            if not index.isValid():
-                return False
-                
-            treenode=index.internalPointer()
-            dbnode=Node.query.get(treenode.id)
-                
-            nodes=getDictValue(dbnode.response,key,False)
-            if not (type(nodes) is list): return False                                     
-            
-            #extract nodes                    
-            newnodes=[]
-            for n in nodes:                    
-                new=Node(dbnode.objectid,dbnode.id)
-                new.objecttype='unpacked'
-                new.response=n
-                new.level=dbnode.level+1
-                new.querystatus=dbnode.querystatus
-                new.querytime=dbnode.querytime
-                new.querytype=dbnode.querytype
-                new.queryparams=dbnode.queryparams                                        
-                newnodes.append(new)
-            
-
-            self.database.session.add_all(newnodes)    
-            treenode._childcountall += len(newnodes)    
-            dbnode.childcount += len(newnodes)    
-            self.database.session.commit()                
-            self.layoutChanged.emit()
-                
-        except Exception as e:
-            self.mainWindow.logmessage(str(e))                            
+                      
                                 
     def columnCount(self, parent):
         return 5+len(self.customcolumns)    
@@ -575,7 +520,7 @@ class TreeModel(QAbstractItemModel):
 
         for item in items:
             itemdata=self.getItemData(item)
-            new=TreeItem(parent,item.id,itemdata)
+            new=TreeItem(self,parent,item.id,itemdata)
             new._childcountall=item.childcount
             new._childcountallloaded=True                                                               
             parent.appendChild(new)

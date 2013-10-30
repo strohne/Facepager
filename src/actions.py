@@ -4,6 +4,7 @@ from database import *
 import csv
 import sys
 import help
+from copy import deepcopy
 
 class Actions(object):
     
@@ -236,12 +237,16 @@ class Actions(object):
                                         
     @Slot()     
     def unpackList(self):
-        key = self.mainWindow.detailTree.selectedKey()
-        #selected=[x for x in self.mainWindow.tree.selectedIndexes() if x.column()==0]
-        selected = self.mainWindow.tree.selectedIndexes() 
-        if (key != ''):
-            for item in selected: self.mainWindow.tree.treemodel.unpackList(item,key)   
-  
+        try:
+            key = self.mainWindow.detailTree.selectedKey()
+            if (key == ''): return False
+            selected = self.mainWindow.tree.selectedIndexes() 
+            for item in selected:
+                if not item.isValid(): continue
+                treenode=item.internalPointer()
+                treenode.unpackList(key)   
+        except Exception as e:
+            self.mainWindow.logmessage(str(e))    
     @Slot()     
     def expandAll(self):
         self.mainWindow.tree.expandAll()
@@ -261,21 +266,33 @@ class Actions(object):
         #Get selected nodes
         if indexes == False:
             level=self.mainWindow.levelEdit.value()-1
-            indexes=self.mainWindow.tree.selectedIndexesAndChildren(False,{'level':level,'objecttype':['seed','data']})
+            indexes=self.mainWindow.tree.selectedIndexesAndChildren(False,{'level':level,'objecttype':['seed','data','unpacked']})
         
         if module == False: module = self.mainWindow.RequestTabs.currentWidget()
         if options == False: options=module.getOptions();
                 
         progress.setMaximum(len(indexes))
+        progress.setValue(0)
                             
         #Fetch data
         c=0
-        for index in indexes:            
-            for data in self.mainWindow.tree.treemodel.queryData(index,module,options):
+        for index in indexes:
+            try:
+                inputoptions = deepcopy(options)
+                if not index.isValid(): continue                    
+                treenode=index.internalPointer()
+
+                inputoptions['querytime'] = str(datetime.datetime.now())                
+                response = module.fetchData(treenode.data,inputoptions)          
+                for response_elem in response:
+                    treenode.appendNodes(response_elem,inputoptions)
+            except Exception as e:
+                self.mainWindow.logmessage(str(type(e))+str(e))
+                
+            finally:
                 progress.setValue(c)
                 c+=1
-                if progress.wasCanceled(): 
-                    break
+                if progress.wasCanceled(): break                    
 
 
         progress.cancel()   
@@ -288,13 +305,33 @@ class Actions(object):
     def setupTimer(self):
         #Get data
         level=self.mainWindow.levelEdit.value()-1
-        indexes=self.mainWindow.tree.selectedIndexesAndChildren(True,{'level':level,'objecttype':['seed','data']})
+        indexes=self.mainWindow.tree.selectedIndexesAndChildren(True,{'level':level,'objecttype':['seed','data','unpacked']})
         module = self.mainWindow.RequestTabs.currentWidget()
         options=module.getOptions();        
                         
         #show timer window
         self.mainWindow.timerWindow.setupTimer({'indexes':indexes,'nodecount':len(indexes),'module':module,'options':options})
                             
+    @Slot()     
+    def timerStarted(self,time):
+        self.mainWindow.timerStatus.setStyleSheet("QLabel {color:red;}")
+        self.mainWindow.timerStatus.setText("Timer will be fired at "+time.toString("d MMM yyyy - hh:mm")+" ")
+
+    @Slot()
+    def timerStopped(self):
+        self.mainWindow.timerStatus.setStyleSheet("QLabel {color:black;}")
+        self.mainWindow.timerStatus.setText("Timer stopped ")
+
+    @Slot()
+    def timerCountdown(self,countdown):
+        self.mainWindow.timerStatus.setStyleSheet("QLabel {color:red;}")
+        self.mainWindow.timerStatus.setText("Timer will be fired in "+str(countdown)+ " seconds ")
+        
+    @Slot()
+    def timerFired(self,data):        
+        self.mainWindow.timerStatus.setText("Timer fired ")
+        self.mainWindow.timerStatus.setStyleSheet("QLabel {color:red;}")
+        self.queryNodes(data.get('indexes',[]),data.get('module',None),data.get('options',{}).copy() )
         
  
            
