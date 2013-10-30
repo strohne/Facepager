@@ -286,12 +286,9 @@ class Actions(object):
                 try:
                     inputoptions = deepcopy(options)
                     if not index.isValid(): continue                    
-                    treenode=index.internalPointer()
-    
+                    treenode=index.internalPointer()   
                     inputoptions['querytime'] = str(datetime.datetime.now())                                    
                     module.fetchData(treenode.data,inputoptions)          
-
-                    
                 except Exception as e:
                     self.mainWindow.logmessage(str(type(e))+str(e))
                     
