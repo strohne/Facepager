@@ -286,8 +286,7 @@ class Actions(object):
                 response = module.fetchData(treenode.data,inputoptions)          
                 for response_elem in response:
                     treenode.appendNodes(response_elem,inputoptions)
-                    if progress.wasCanceled(): break
-                module.stopFetching()    
+                    if progress.wasCanceled(): module.stopFetching()    
             except Exception as e:
                 self.mainWindow.logmessage(str(type(e))+str(e))
                 
