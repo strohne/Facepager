@@ -22,6 +22,9 @@ def loadTabs(mainWindow=None):
     mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
     
 class ApiTab(QWidget):
+    
+    streamingData = Signal(list)
+    
     def __init__(self, mainWindow=None,name="NoName",loadSettings=True):
         QWidget.__init__(self, mainWindow)
         self.timeout=None
@@ -413,46 +416,52 @@ class TwitterStreamingTab(ApiTab):
 
     def request(self, path, args=None,headers=None):
         self.connected = True
-        self.initSession()
-        #import pdb; pdb.set_trace()
-        def _send():
-
-            while self.connected:
-                try:
-                    if headers != None:
-                        response = self.session.post(path,params=args,
-                                  headers=headers,
-                                  timeout=self.timeout,
-                                  verify=False,
-                                  stream=True)
-                    else:
-                        response = self.session.get(path,params=args,timeout=self.timeout,
-                                  verify=False,stream=True)
-
-                except requests.exceptions.Timeout:
-                    self.on_timeout()
-                else:
-                    if response.status_code != 200:
-                        self._on_error(response.status_code, response.content)
-
-                    return response
-
-        while self.connected:
-            response = _send()
-
-            for line in response.iter_lines():
-                QApplication.processEvents()
-                if not self.connected:
-                    break
-                if line:
+        try:
+            self.initSession()
+            #import pdb; pdb.set_trace()
+            def _send():
+    
+                while self.connected:
                     try:
-                        data = json.loads(line)
-                        #print data
-                    except ValueError:  # pragma: no cover
-                        self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
+                        if headers != None:
+                            response = self.session.post(path,params=args,
+                                      headers=headers,
+                                      timeout=self.timeout,
+                                      verify=False,
+                                      stream=True)
+                        else:
+                            response = self.session.get(path,params=args,timeout=self.timeout,
+                                      verify=False,stream=True)
+    
+                    except requests.exceptions.Timeout:
+                        self.on_timeout()
                     else:
-                        yield self._on_success(data)
-        response.close()
+                        if response.status_code != 200:
+                            self._on_error(response.status_code, response.content)
+    
+                        return response
+    
+            while self.connected:
+                response = _send()
+    
+                for line in response.iter_lines():
+                    QApplication.processEvents()
+                    if not self.connected:
+                        break
+                    if line:
+                        try:
+                            data = json.loads(line)
+                            #print data
+                        except ValueError:  # pragma: no cover
+                            self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
+                        else:
+                            #yield self._on_success(data)
+                            self.streamingData.emit(data)
+            response.close()
+            
+        finally:            
+            self.connected = False
+            return []
 
     def _on_success(self, data):  # pragma: no cover
         """Called when data has been successfully received from the stream.
@@ -468,6 +477,7 @@ class TwitterStreamingTab(ApiTab):
         """
         #daten aus dem generator werden einfach nur returned, kann
         #man hier aber auch aufbereiten etc.
+        
         return data
 
     def _on_delete(self,data):

@@ -275,25 +275,35 @@ class Actions(object):
         progress.setValue(0)
                             
         #Fetch data
-        c=0
-        for index in indexes:
-            try:
-                inputoptions = deepcopy(options)
-                if not index.isValid(): continue                    
-                treenode=index.internalPointer()
-
-                inputoptions['querytime'] = str(datetime.datetime.now())                
-                response = module.fetchData(treenode.data,inputoptions)          
-                for response_elem in response:
-                    treenode.appendNodes(response_elem,inputoptions)
-                    if progress.wasCanceled(): module.stopFetching()    
-            except Exception as e:
-                self.mainWindow.logmessage(str(type(e))+str(e))
-                
-            finally:
-                progress.setValue(c)
-                c+=1
-                if progress.wasCanceled(): break                    
+        def streamingData(data):
+            treenode.appendNodes(data,inputoptions)
+            if progress.wasCanceled(): module.stopFetching()    
+        
+        module.streamingData.connect(streamingData)
+        try:
+            c=0
+            for index in indexes:
+                try:
+                    inputoptions = deepcopy(options)
+                    if not index.isValid(): continue                    
+                    treenode=index.internalPointer()
+    
+                    inputoptions['querytime'] = str(datetime.datetime.now())
+                                    
+                    response = module.fetchData(treenode.data,inputoptions)          
+                    for response_elem in response:
+                        treenode.appendNodes(response_elem,inputoptions)
+                        if progress.wasCanceled(): module.stopFetching()
+                    
+                except Exception as e:
+                    self.mainWindow.logmessage(str(type(e))+str(e))
+                    
+                finally:
+                    progress.setValue(c)
+                    c+=1
+                    if progress.wasCanceled(): break
+        finally:
+            module.streamingData.disconnect(streamingData)                 
 
 
         progress.cancel()   
