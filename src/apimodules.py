@@ -229,46 +229,47 @@ class FacebookTab(ApiTab):
         if (options==None): options = self.getOptions()
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
         if nodedata['objectid']==None: raise Exception("Empty object id")
-            
-        #build url
-        if not ('url' in options):
-                            
-            if options['relation']=='<self>':
-                urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])
-                urlparams={'metadata':'1'}
-                urlparams.update(options['params'])
-    
-            elif options['relation']=='<search>':  
-                urlpath='https://graph.facebook.com/search'
-                urlparams={'q':self.idtostr(nodedata['objectid']),'type':'page'}
-                urlparams.update(options['params'])
-            
-            else:
-                urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])+'/'+options['relation']            
-                urlparams= {'limit':'100'}
-                urlparams.update(options['params'])                   
-            
-            urlpath,urlparams = self.getURL(urlpath,urlparams, nodedata)        
-            urlparams["access_token"] = options['accesstoken']
-        else:
-            urlpath = options['url']
-            urlparams = options['params']              
+        response = []
 
-        self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
+        for page in range(0,options.get('pages',1)):            
+            #build url
+            if not ('url' in options):
+                                
+                if options['relation']=='<self>':
+                    urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])
+                    urlparams={'metadata':'1'}
+                    urlparams.update(options['params'])
         
-        #data        
-        response = self.request(urlpath,urlparams)
-        
-        #paging
-        if (hasDictValue(response,"paging.next")):            
-            url,params = self.parseURL(getDictValue(response,"paging.next",False))
-            options['params'] = params
-            options['url'] = url
-            paging = True            
-        else:    
-            paging = False
-        
-        return response,paging          
+                elif options['relation']=='<search>':  
+                    urlpath='https://graph.facebook.com/search'
+                    urlparams={'q':self.idtostr(nodedata['objectid']),'type':'page'}
+                    urlparams.update(options['params'])
+                
+                else:
+                    urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])+'/'+options['relation']            
+                    urlparams= {'limit':'100'}
+                    urlparams.update(options['params'])                   
+                
+                urlpath,urlparams = self.getURL(urlpath,urlparams, nodedata)        
+                urlparams["access_token"] = options['accesstoken']
+            else:
+                urlpath = options['url']
+                urlparams = options['params']              
+    
+            self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
+            
+            #data        
+            data = self.request(urlpath,urlparams)
+            response.append(data)
+            
+            #paging
+            if (hasDictValue(data,"paging.next")):            
+                url,params = self.parseURL(getDictValue(data,"paging.next",False))
+                options['params'] = params
+                options['url'] = url           
+            else: break    
+                
+        return response          
 
 
     @Slot()
@@ -500,9 +501,8 @@ class TwitterStreamingTab(ApiTab):
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
         #data
         response = self.request(path=urlpath, args=urlparams)
-           
         
-        return response,False
+        return response
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
@@ -661,34 +661,38 @@ class TwitterTab(ApiTab):
     
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
-        
-        if not ('url' in options): 
-            urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
-            urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)
-        else:
-            urlpath = options['url']
-            urlparams =options["params"]                  
-
-        self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
-        #data
-        response = self.request(urlpath,urlparams)
-           
-        #paging-search
-        paging = False
-        if (hasDictValue(response,"search_metadata.next_results")):            
-            paging = True            
-            url,params = self.parseURL(getDictValue(response,"search_metadata.next_results",False))
-            options['url'] = urlpath
-            options['params'] = params
-        
-        #paging timeline
-        else:
-            ids = [item['id'] for item in response if 'id' in item] if isinstance(response, list) else []
-            if (ids):        
+        response = []
+        for page in range(0,options.get('pages',1)):  
+            if not ('url' in options): 
+                urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
+                urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)
+            else:
+                urlpath = options['url']
+                urlparams =options["params"]                  
+    
+            self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
+            #data
+            data = self.request(urlpath,urlparams)
+            response.append(data)
+               
+            #paging-search
+            paging = False
+            if (hasDictValue(data,"search_metadata.next_results")):            
                 paging = True            
-                options['params']['max_id'] = min(ids)-1
+                url,params = self.parseURL(getDictValue(data,"search_metadata.next_results",False))
+                options['url'] = urlpath
+                options['params'] = params
+            
+            #paging timeline
+            else:
+                ids = [item['id'] for item in data if 'id' in item] if isinstance(data, list) else []
+                if (ids):        
+                    paging = True            
+                    options['params']['max_id'] = min(ids)-1
+            
+            if (not paging):break
         
-        return response,paging  
+        return response  
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
@@ -796,7 +800,7 @@ class GenericTab(ApiTab):
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
-        return self.request(urlpath,urlparams),False       
+        return [self.request(urlpath,urlparams)]       
 
 
 
