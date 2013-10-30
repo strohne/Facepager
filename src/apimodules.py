@@ -240,7 +240,6 @@ class FacebookTab(ApiTab):
         if (options==None): options = self.getOptions()
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
         if nodedata['objectid']==None: raise Exception("Empty object id")
-        response = []
 
         for page in range(0,options.get('pages',1)):            
             #build url
@@ -271,7 +270,7 @@ class FacebookTab(ApiTab):
             
             #data        
             data = self.request(urlpath,urlparams)
-            response.append(data)
+            self.streamingData.emit(data)
             
             #paging
             if (hasDictValue(data,"paging.next")):            
@@ -279,8 +278,7 @@ class FacebookTab(ApiTab):
                 options['params'] = params
                 options['url'] = url           
             else: break    
-                
-        return response          
+         
 
 
     @Slot()
@@ -518,9 +516,8 @@ class TwitterStreamingTab(ApiTab):
 
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
         #data
-        response = self.request(path=urlpath, args=urlparams)
-        
-        return response
+        self.request(path=urlpath, args=urlparams)
+
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
@@ -679,7 +676,6 @@ class TwitterTab(ApiTab):
     
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
-        response = []
         for page in range(0,options.get('pages',1)):  
             if not ('url' in options): 
                 urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
@@ -691,7 +687,8 @@ class TwitterTab(ApiTab):
             self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
             #data
             data = self.request(urlpath,urlparams)
-            response.append(data)
+            self.streamingData.emit(data)
+            
                
             #paging-search
             paging = False
@@ -709,8 +706,6 @@ class TwitterTab(ApiTab):
                     options['params']['max_id'] = min(ids)-1
             
             if (not paging):break
-        
-        return response  
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
@@ -818,7 +813,7 @@ class GenericTab(ApiTab):
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
-        return [self.request(urlpath,urlparams)]       
+        self.streamingData.emit(self.request(urlpath,urlparams))
 
 
 
