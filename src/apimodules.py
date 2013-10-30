@@ -27,6 +27,7 @@ class ApiTab(QWidget):
         self.timeout=None
         self.mainWindow=mainWindow
         self.name=name
+        self.connected = False
 
     def idtostr(self,val):
         try:
@@ -123,6 +124,13 @@ class ApiTab(QWidget):
                 
             else:    
                 return response.json()     
+
+    def fetchData(self):
+        pass
+
+    def stopFetching(self):
+        self.connected = False
+
 
     @Slot()
     def doLogin(self,query=False,caption='',url=''):
@@ -433,13 +441,13 @@ class TwitterStreamingTab(ApiTab):
             response = _send()
 
             for line in response.iter_lines():
-                #QApplication.processEvents() ???
+                QApplication.processEvents()
                 if not self.connected:
                     break
                 if line:
                     try:
                         data = json.loads(line)
-                        print data
+                        #print data
                     except ValueError:  # pragma: no cover
                         self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
                     else:
@@ -487,7 +495,7 @@ class TwitterStreamingTab(ApiTab):
     def _disconnect(self):
         """Used to disconnect the streaming client manually"""
         self.connected = False
-        
+            
     def fetchData(self,nodedata,options=None):
         if (options==None): options = self.getOptions()
         
