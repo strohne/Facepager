@@ -3,13 +3,14 @@
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
 All data is stored in a SQLite database and may be exported to csv. 
 
-###Version 3.2 features
+###Version 3.3 features
 
 - Refurbished user interface
-- Login to Facebook for fetching groups
-- Login to Twitter using the Twitter API 1.1
-- generic downloader for all sorts of webservices delivering JSON
-- Storing and Loading Presets
+- Improved JSON-Viewer
+- Generic Pagination for Twitter & Facebook
+- Copy & Paste Export from the DataView (f.e. for direct imports to R)
+- Query-related metedata via the new "offcut"-element
+- Restructured Presets
 - Improved column syntax (Wildcard *Syntax for list extractions)
 - [Binary/Installer](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html) Version for Windows/OS X
 
@@ -32,4 +33,4 @@ You should be aware of error sources when dealing with Facebook API. There are a
 
 ###Citation
 
-[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2013). Facepager 3.2. Tool for Downloading Facebook, Twitter and API Data. Online at https://github.com/strohne/Facepager. 
+[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2013). Facepager 3.3. Tool for Downloading Facebook, Twitter and API Data. Online at https://github.com/strohne/Facepager. 
