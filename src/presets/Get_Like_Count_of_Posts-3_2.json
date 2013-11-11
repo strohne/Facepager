@@ -13,5 +13,5 @@
   },
   "name": "Get Like Count of Posts",
   "module": "Facebook",
-  "description": "Fetch posts first. Then get like count for the post nodes. Value is stored in the offcut value."
+  "description": "Fetch posts first. Then get like count for the post nodes. Value is stored in the offcut record.\n\nSee https://developers.facebook.com/docs/reference/api/post/"
 }
