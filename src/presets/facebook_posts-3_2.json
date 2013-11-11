@@ -3,7 +3,6 @@
     "from.name",
     "message",
     "type",
-    "likes.count",
     "shares.count",
     "created_time",
     "updated_time"
@@ -19,5 +18,5 @@
   },
   "name": "Get Facebook posts",
   "module": "Facebook",
-  "description": "Add Facebook-IDs as nodes, e.g. \"Tatort\". \n\nGets 10 postings at maximum, all from the 22nd of July 2013. \n\nNotice: the until-parameter always has to be one day later, the day starts at 0:00am."
+  "description": "Add Facebook-IDs as nodes, e.g. \"Tatort\". \n\nGets 10 postings at maximum, all from the 22nd of July 2013. \n\nNotice: the until-parameter always has to be one day later, the day starts at 0:00am.\n\nSee https://developers.facebook.com/docs/reference/api/page/ and https://developers.facebook.com/docs/reference/api/post/"
 }

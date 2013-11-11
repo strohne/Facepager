@@ -14,7 +14,7 @@
   },
   "name": "Get Facebook profiles",
   "module": "Facebook",
-  "description": "Add Facebook-IDs as nodes, e.g. \"Tatort\". \n\nGets profile data for this node."
+  "description": "Add Facebook-IDs as nodes, e.g. \"Tatort\". \n\nGets profile data for this node.\n\nSee https://developers.facebook.com/docs/reference/api/page/ "
 }
 
 
