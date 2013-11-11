@@ -1,0 +1,17 @@
+{
+  "columns": [
+    "shares.count",
+    "summary.total_count"
+  ],
+  "options": {
+    "params": {
+      "limit": "0",
+      "summary": "1"
+    },
+    "relation": "likes",
+    "pages": 1
+  },
+  "name": "Get Like Count of Posts",
+  "module": "Facebook",
+  "description": "Fetch posts first. Then get like count for the post nodes. Value is stored in the offcut value."
+}
