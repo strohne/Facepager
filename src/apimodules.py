@@ -174,13 +174,13 @@ class FacebookTab(ApiTab):
                 
         #-Query Type
         self.relationEdit=QComboBox(self)
-        self.relationEdit.insertItems(0,['<self>','<search>','feed','posts','comments','likes','global_brand_children','groups','insights','members','picture','docs','noreply','invited','attending','maybe','declined','videos','accounts','achievements','activities','albums','books','checkins','events','family','friendlists','friends','games','home','interests','links','locations','movies','music','notes','photos','questions','scores','statuses','subscribedto','tagged','television'])        
+        self.relationEdit.insertItems(0,['object','search','object/feed','object/posts','object/comments','object/likes','object/global_brand_children','object/groups','object/insights','object/members','object/picture','object/docs','object/noreply','object/invited','object/attending','object/maybe','object/declined','object/videos','object/accounts','object/achievements','object/activities','object/albums','object/books','object/checkins','object/events','object/family','object/friendlists','object/friends','object/games','object/home','object/interests','object/links','object/locations','object/movies','object/music','object/notes','object/photos','object/questions','object/scores','object/statuses','object/subscribedto','object/tagged','object/television'])        
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Query",self.relationEdit)
 
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>','since','until','offset','limit','type'])
-        self.paramEdit.setValueOptions(['<None>','2013-07-17','page'])       
+        self.paramEdit.setNameOptions(['<None>','<object>','since','until','offset','limit','type'])
+        self.paramEdit.setValueOptions(['<None>','<Object ID>','2013-07-17','page'])       
         mainLayout.addRow("Parameters",self.paramEdit)
 
         self.pagesEdit=QSpinBox(self)
@@ -219,12 +219,12 @@ class FacebookTab(ApiTab):
         #options for data handling
         if purpose == 'fetch':
             options['objectid']='id'            
-            options['nodedata']=None if (options['relation']=='<self>') else 'data'
+            options['nodedata']=None if (options['relation']=='object')  else 'data'
                
         return options        
 
     def setOptions(self,options):         
-        self.relationEdit.setEditText(options.get('relation','<self>'))
+        self.relationEdit.setEditText(options.get('relation','object'))
         try:
           self.pagesEdit.setValue(int(options.get('pages',1)))
         except:
@@ -239,26 +239,27 @@ class FacebookTab(ApiTab):
         #Preconditions
         if (options==None): options = self.getOptions()
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
-        if nodedata['objectid']==None: raise Exception("Empty object id")
+        #if nodedata['objectid']==None: raise Exception("Empty object id")
 
         for page in range(0,options.get('pages',1)):            
             #build url
-            if not ('url' in options):
-                                
-                if options['relation']=='<self>':
-                    urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])
-                    urlparams={'metadata':'1'}
-                    urlparams.update(options['params'])
-        
-                elif options['relation']=='<search>':  
-                    urlpath='https://graph.facebook.com/search'
-                    urlparams={'q':self.idtostr(nodedata['objectid']),'type':'page'}
-                    urlparams.update(options['params'])
+            if not ('url' in options):                                
+                urlpath="https://graph.facebook.com/"+options['relation']
+                urlparams= {}
                 
-                else:
-                    urlpath="https://graph.facebook.com/"+self.idtostr(nodedata['objectid'])+'/'+options['relation']            
-                    urlparams= {'limit':'100'}
-                    urlparams.update(options['params'])                   
+                if options['relation'] == 'search':
+                    urlparams['q'] = self.idtostr(nodedata['objectid'])
+                    urlparams['type'] = 'page'
+                
+                elif options['relation'] == 'object':
+                    urlparams['<object>'] = '<Object ID>'
+                    urlparams['metadata'] = '1'
+                    
+                elif 'object' in options['relation']: 
+                    urlparams['<object>'] = '<Object ID>'
+                    urlparams['limit'] = '100'              
+                    
+                urlparams.update(options['params'])                   
                 
                 urlpath,urlparams = self.getURL(urlpath,urlparams, nodedata)        
                 urlparams["access_token"] = options['accesstoken']
