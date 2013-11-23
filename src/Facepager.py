@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
         self.setMinimumSize(900,700)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
-        #self.setStyleSheet("* {font-size:18px;}")
+#        self.setStyleSheet("* {font-size:27px;}")
         #self.deleteSettings()
         self.readSettings() 
         self.createActions()
@@ -50,10 +50,10 @@ class MainWindow(QMainWindow):
         self.presetWindow=PresetWindow(self)
         self.timerWindow=TimerWindow(self)
         
-        self.timerWindow.timerstarted.connect(self.timerStarted)
-        self.timerWindow.timerstopped.connect(self.timerStopped)
-        self.timerWindow.timercountdown.connect(self.timerCountdown)
-        self.timerWindow.timerfired.connect(self.timerFired)
+        self.timerWindow.timerstarted.connect(self.actions.timerStarted)
+        self.timerWindow.timerstopped.connect(self.actions.timerStopped)
+        self.timerWindow.timercountdown.connect(self.actions.timerCountdown)
+        self.timerWindow.timerfired.connect(self.actions.timerFired)
         self.timerStatus = QLabel("Timer stopped ")
         self.statusBar().addPermanentWidget(self.timerStatus)        
         self.toolbar=Toolbar(parent=self,mainWindow=self)
@@ -223,28 +223,6 @@ class MainWindow(QMainWindow):
         else:
             self.statusBar().showMessage('No database connection')    
    
-    @Slot()     
-    def timerStarted(self,time):
-        self.timerStatus.setStyleSheet("QLabel {color:red;}")
-        self.timerStatus.setText("Timer will be fired at "+time.toString("d MMM yyyy - hh:mm")+" ")
-
-    @Slot()
-    def timerStopped(self):
-        self.timerStatus.setStyleSheet("QLabel {color:black;}")
-        self.timerStatus.setText("Timer stopped ")
-
-    @Slot()
-    def timerCountdown(self,countdown):
-        self.timerStatus.setStyleSheet("QLabel {color:red;}")
-        self.timerStatus.setText("Timer will be fired in "+str(countdown)+ " seconds ")
-        
-    @Slot()
-    def timerFired(self,data):        
-        self.timerStatus.setText("Timer fired ")
-        self.timerStatus.setStyleSheet("QLabel {color:red;}")
-        self.actions.queryNodes(data.get('indexes',[]),data.get('module',None),data.get('options',{}).copy() )
-        
-        
         
     def writeSettings(self):
         QCoreApplication.setOrganizationName("Keyling")
