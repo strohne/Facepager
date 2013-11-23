@@ -19,7 +19,7 @@ def loadTabs(mainWindow=None):
     mainWindow.RequestTabs.addTab(FacebookTab(mainWindow),"Facebook")
     mainWindow.RequestTabs.addTab(TwitterTab(mainWindow),"Twitter")
     mainWindow.RequestTabs.addTab(GenericTab(mainWindow),"Generic")    
-    mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
+    #mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
     
 class ApiTab(QWidget):
     
