@@ -24,11 +24,11 @@ class DataTree(QTreeView):
         #self.proxymodel.setSourceModel(self.treemodel)        
         #self.setModel(self.proxymodel)
 
-    def keyPressEvent(self, e):
-        if e == QKeySequence.Copy:
-            self.copyToClipboard()
-        else:
-            super(DataTree,self).keyPressEvent(e)
+#    def keyPressEvent(self, e):
+#        if e == QKeySequence.Copy:
+#            self.copyToClipboard()
+#        else:
+#            super(DataTree,self).keyPressEvent(e)
                             
     def copyToClipboard(self):
         self.mainWindow.showProgress(None,None,"Copy to clipboard")            

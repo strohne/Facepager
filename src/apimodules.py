@@ -12,13 +12,15 @@ from utilities import *
 import re
 import json
 from credentials import *
-
+import os
+import time
 
 
 def loadTabs(mainWindow=None):                    
     mainWindow.RequestTabs.addTab(FacebookTab(mainWindow),"Facebook")
     mainWindow.RequestTabs.addTab(TwitterTab(mainWindow),"Twitter")
     mainWindow.RequestTabs.addTab(GenericTab(mainWindow),"Generic")    
+    mainWindow.RequestTabs.addTab(FilesTab(mainWindow),"Files")
     #mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
     
 class ApiTab(QWidget):
@@ -47,7 +49,17 @@ class ApiTab(QWidget):
          
         return path,query  
         
-    def getURL(self,urlpath,params,nodedata):    
+    def getURL(self,urlpath,params,nodedata):
+        #Replace placeholders in urlpath
+        matches = re.findall("<([^>]*)>",urlpath)
+        for match in matches:                                                       
+            if match == 'Object ID':        
+                value = self.idtostr(nodedata['objectid'])
+            else:
+                value = getDictValue(nodedata['response'],match)
+            urlpath = urlpath.replace('<'+match+'>',value)                 
+        
+        #Replace placeholders in params    
         urlparams = {}                                
         for name in params:
             if (name == '<None>') | (name == ''): continue
@@ -128,6 +140,28 @@ class ApiTab(QWidget):
             else:    
                 return response.json()     
 
+    def download(self, path, args=None,headers=None,fullfilename=None):
+        session = self.initSession()            
+        if (not session): raise Exception("No session available.")        
+                
+        try:
+            if headers != None:
+                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False,stream=True)
+            else:
+                response = session.get(path,params=args,timeout=self.timeout,verify=False,stream=True)
+        except (HTTPError,ConnectionError),e: 
+            raise Exception("Request Error: {0}".format(e.message))
+        else:
+            if not response.ok:
+                raise Exception("Request Status Error: {0}".format(response.reason))
+            elif response.status_code != 200:
+                raise Exception("Wrong Response Status Code: {0}".format(response.status_code))                
+            else:
+                with open(fullfilename, 'wb') as f:
+                    for chunk in response.iter_content():
+                        f.write(chunk)                   
+                return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path} 
+
     def fetchData(self):
         pass
 
@@ -174,13 +208,13 @@ class FacebookTab(ApiTab):
                 
         #-Query Type
         self.relationEdit=QComboBox(self)
-        self.relationEdit.insertItems(0,['object','search','object/feed','object/posts','object/comments','object/likes','object/global_brand_children','object/groups','object/insights','object/members','object/picture','object/docs','object/noreply','object/invited','object/attending','object/maybe','object/declined','object/videos','object/accounts','object/achievements','object/activities','object/albums','object/books','object/checkins','object/events','object/family','object/friendlists','object/friends','object/games','object/home','object/interests','object/links','object/locations','object/movies','object/music','object/notes','object/photos','object/questions','object/scores','object/statuses','object/subscribedto','object/tagged','object/television'])        
+        self.relationEdit.insertItems(0,['<Object ID>','search','<Object ID>/feed','<Object ID>/posts','<Object ID>/comments','<Object ID>/likes','<Object ID>/global_brand_children','<Object ID>/groups','<Object ID>/insights','<Object ID>/members','<Object ID>/picture','<Object ID>/docs','<Object ID>/noreply','<Object ID>/invited','<Object ID>/attending','<Object ID>/maybe','<Object ID>/declined','<Object ID>/videos','<Object ID>/accounts','<Object ID>/achievements','<Object ID>/activities','<Object ID>/albums','<Object ID>/books','<Object ID>/checkins','<Object ID>/events','<Object ID>/family','<Object ID>/friendlists','<Object ID>/friends','<Object ID>/games','<Object ID>/home','<Object ID>/interests','<Object ID>/links','<Object ID>/locations','<Object ID>/movies','<Object ID>/music','<Object ID>/notes','<Object ID>/photos','<Object ID>/questions','<Object ID>/scores','<Object ID>/statuses','<Object ID>/subscribedto','<Object ID>/tagged','<Object ID>/television'])        
         self.relationEdit.setEditable(True)
         mainLayout.addRow("Query",self.relationEdit)
 
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>','<object>','since','until','offset','limit','type'])
-        self.paramEdit.setValueOptions(['<None>','<Object ID>','2013-07-17','page'])       
+        self.paramEdit.setNameOptions(['<None>','since','until','offset','limit','type'])
+        self.paramEdit.setValueOptions(['<None>','2013-07-17','page'])       
         mainLayout.addRow("Parameters",self.paramEdit)
 
         self.pagesEdit=QSpinBox(self)
@@ -219,7 +253,7 @@ class FacebookTab(ApiTab):
         #options for data handling
         if purpose == 'fetch':
             options['objectid']='id'            
-            options['nodedata']=None if (options['relation']=='object')  else 'data'
+            options['nodedata']='data' if ('/' in options['relation']) or (options['relation'] == 'search')  else None
                
         return options        
 
@@ -251,12 +285,10 @@ class FacebookTab(ApiTab):
                     urlparams['q'] = self.idtostr(nodedata['objectid'])
                     urlparams['type'] = 'page'
                 
-                elif options['relation'] == 'object':
-                    urlparams['<object>'] = '<Object ID>'
+                elif options['relation'] == '<Object ID>':
                     urlparams['metadata'] = '1'
                     
-                elif 'object' in options['relation']: 
-                    urlparams['<object>'] = '<Object ID>'
+                elif '<Object ID>/' in options['relation']: 
                     urlparams['limit'] = '100'              
                     
                 urlparams.update(options['params'])                   
@@ -564,7 +596,7 @@ class TwitterTab(ApiTab):
         self.relationEdit.insertItems(0,['search/tweets'])
         self.relationEdit.insertItems(0,['users/show','users/search'])      
         self.relationEdit.insertItems(0,['followers/list','friends/list'])        
-        self.relationEdit.insertItems(0,['statuses/show/:id','statuses/retweets/:id'])
+        self.relationEdit.insertItems(0,['statuses/show/<Object ID>','statuses/retweets/<Object ID>'])
         self.relationEdit.insertItems(0,['statuses/user_timeline'])                       
         
         
@@ -588,7 +620,7 @@ class TwitterTab(ApiTab):
          
         #Parameter
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>','<:id>','q','screen_name','user_id','count','result_type']) #'count','until'
+        self.paramEdit.setNameOptions(['<None>','q','screen_name','user_id','count','result_type']) #'count','until'
         self.paramEdit.setValueOptions(['<None>','<Object ID>'])
         
         mainLayout.addRow("Parameters",self.paramEdit)
@@ -816,6 +848,81 @@ class GenericTab(ApiTab):
         self.streamingData.emit(self.request(urlpath,urlparams))
 
 
+class FilesTab(ApiTab):
+
+
+    def __init__(self, mainWindow=None,loadSettings=True):
+        super(FilesTab,self).__init__(mainWindow,"Files")
+        mainLayout = QFormLayout()
+        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        mainLayout.setLabelAlignment(Qt.AlignLeft);        
+                
+        #URL field 
+        self.urlpathEdit=QComboBox(self)        
+        self.urlpathEdit.insertItems(0,['<url>'])                       
+        self.urlpathEdit.setEditable(True)
+        mainLayout.addRow("URL path",self.urlpathEdit)
+        
+        #Download folder
+        folderlayout=QHBoxLayout()
+        
+        self.folderEdit=QLineEdit()
+        folderlayout.addWidget(self.folderEdit)
+
+        self.folderButton=QPushButton("...", self)
+        self.folderButton.clicked.connect(self.selectFolder)
+        folderlayout.addWidget(self.folderButton)
+        
+        mainLayout.addRow("Folder",folderlayout)        
+
+        self.setLayout(mainLayout)
+        if loadSettings: self.loadSettings()
+        
+    def selectFolder(self):
+        datadir=self.mainWindow.settings.value("lastpath",os.path.expanduser("~"))
+        self.folderEdit.setText(QFileDialog.getExistingDirectory(self,"Select Download Folder",datadir,QFileDialog.ShowDirsOnly))
+        
+                
+    def getOptions(self,purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'      
+        options={}
+        
+        if purpose != 'preset':
+            options['querytype']=self.name 
+
+        options['urlpath']=self.urlpathEdit.currentText()
+        options['folder']=self.folderEdit.text()
+        options['nodedata'] = None
+        options['objectid']='filename'
+
+        return options  
+
+    def setOptions(self,options):       
+        self.urlpathEdit.setEditText(options.get('urlpath','<url>'))       
+        self.folderEdit.setText(options.get('folder',''))
+        
+    def fetchData(self,nodedata,options=None):
+        if (options==None): options = self.getOptions()
+        
+        foldername = options.get('folder',None)
+        if (foldername == None) or (not os.path.isdir(foldername)): raise Exception("Folder does not exists, select download folder, please!") 
+
+        urlpath,urlparams = self.getURL(options["urlpath"], {}, nodedata)
+        
+        #Create file name
+        filename,fileext = os.path.splitext(os.path.basename(urlparse.urlsplit(urlpath).path))
+        filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        filenumber = 1        
+        while True:
+            fullfilename = foldername+os.sep+filename+'-'+filetime+'-'+str(filenumber)+fileext
+            if (os.path.isfile(fullfilename)):
+                filenumber = filenumber+1
+            else:
+                break 
+        
+        self.mainWindow.logmessage("Downloading file for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
+        self.streamingData.emit(self.download(urlpath,urlparams,None,fullfilename))
 
 class QWebPageCustom(QWebPage):
     

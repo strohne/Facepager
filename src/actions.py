@@ -22,6 +22,9 @@ class Actions(object):
         self.databaseActions=QActionGroup(self.mainWindow)
         self.actionExport=self.databaseActions.addAction(QIcon(":/icons/export.png"),"Export Data")
         self.actionExport.triggered.connect(self.exportNodes)
+
+        self.actionExport=self.databaseActions.addAction(QIcon(":/icons/export.png"),"Data To Clipboard")
+        self.actionExport.triggered.connect(self.clipboardNodes)
                 
         self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/add.png"),"Add Nodes")
         self.actionAdd.triggered.connect(self.addNodes)
@@ -44,6 +47,9 @@ class Actions(object):
         
         self.actionUnpack=self.dataActions.addAction("Unpack List")
         self.actionUnpack.triggered.connect(self.unpackList)
+
+        self.actionJsonCopy=self.dataActions.addAction("Copy to Clipboard")
+        self.actionJsonCopy.triggered.connect(self.jsonCopy)
         
         self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/expand.png"),"Expand nodes")
         self.actionExpandAll.triggered.connect(self.expandAll)
@@ -118,6 +124,11 @@ class Actions(object):
                 break 
         progress.cancel()
         #self.mainWindow.tree.treemodel.endResetModel()
+
+
+    @Slot()
+    def clipboardNodes(self):
+        self.mainWindow.tree.copyToClipboard()
 
                      
     @Slot()
@@ -233,6 +244,10 @@ class Actions(object):
     @Slot()     
     def loadPreset(self):
         self.mainWindow.presetWindow.showPresets()
+
+    @Slot()     
+    def jsonCopy(self):
+        self.mainWindow.detailTree.copyToClipboard()
 
                                         
     @Slot()     

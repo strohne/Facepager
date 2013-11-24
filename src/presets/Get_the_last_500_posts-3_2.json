@@ -11,7 +11,7 @@
     "params": {
       "limit": "100"
     },
-    "relation": "posts",
+    "relation": "<Object ID>/posts",
     "pages": 5
   },
   "name": "Get the last 500 posts",

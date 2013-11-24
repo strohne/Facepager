@@ -85,7 +85,7 @@ table td, table th {
 			Objects may include objects (they may be nested): A Facebook-post may have comments related to
 			that post. When you request the comments for a post and a result is
 			returned, these comments are automatically inserted under the post
-			as single rows.You´ll notice - depending on your operating system - an arrow or
+			as single rows.Youï¿½ll notice - depending on your operating system - an arrow or
 			plus sign besides the objects. Clicking it, will unfold the object
 			show the related or "child"-objects. Of course, objects may have
 			multiple levels or relationships.
@@ -112,7 +112,7 @@ table td, table th {
 			object or row in the <b>Object View</b>.This data is displayed in
 			the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>,
 			which follows a quite simple logic of a "key":"value" -
-			notation <i>(NOTE: Most API´s return JSON-wrapped data)</i>i
+			notation <i>(NOTE: Most APIï¿½s return JSON-wrapped data)</i>i
 			<br>
 			While not all of the information in the raw data may be displayed in the
 			<b>Object View</b> as a single column, one can control the column
@@ -196,7 +196,7 @@ A quick explanation:
             (offset=[0,51,101,151,201,251,301,351,401,451])  
          </li>
         <li><b>Limit: </b> 
-		This is the number of individual objects that are returned on each page. This limit is API-specific (for Facebook, it´s usually 500 objects per page). Be aware			of the fact that the "limit" -field doesn´t referr to the total amount of available objects, but may be combined with the "offset" -parameter. 
+		This is the number of individual objects that are returned on each page. This limit is API-specific (for Facebook, itï¿½s usually 500 objects per page). Be aware			of the fact that the "limit" -field doesnï¿½t referr to the total amount of available objects, but may be combined with the "offset" -parameter. 
         </li>
         <li><b>Since: </b> 
             A date, f.e. denoting the objects creation time. In the above example, since="14.07.2013" would grab comments made after the 13.07.2013. 
@@ -226,7 +226,11 @@ A quick explanation:
 			When used in parameter values: the string in brackets is taken as key to extract data from the selected node. This works in analogy to the custom table columns setup.<br />
 			There are two reserved keywords: a) The parameter value "&lt;Object ID&gt;" is replaced by the Object ID of the selected node; b) Parameters with name or value set to "&lt;None&gt;" are ignored.  			   		
 		</li>
-		
+		<li><b>URL path:</b> 
+			Expressions in angle brackets (like &lt;Object ID&gt;) have special meanings in URL paths, Query-field and Resource-field. <br />			
+			The string in brackets is taken as a key to extract data from the selected node. This works in analogy to the custom table columns setup.<br />
+			There is one reserved keyword: The expression "&lt;Object ID&gt;" is replaced by the Object ID of the selected node.   			   		
+		</li>
 		<li><b>Presets:</b> 
 		Use presets to store your settings for certain API calls. Presets in bold face are stored inside the application directory and are included by default. Your own presets are automatically stored in your user directory (f.e. C:\Users\username\Facepager\Presets) and may be copied, distributed and shared with other users. <b>We encourage you to share your presets with us - do so by mailing the .json-file to the authors of the Facepager and provide a short description of your preset </b>. As you might notice, presets store your custom-table column setup and the query-details in the Query-Tab, but no data or private access-token is shared! To edit presets, either load an existing one, make changes and store them as a new preset, or go to the presets file-location an edit the preset with a text-editor. 
 		</li>
@@ -236,7 +240,7 @@ A quick explanation:
 
 <h1>Citation</h1>
 <p>
-  Keyling, Till / Jünger, Jakob (2013). Facepager 3. Tool for Downloading API Data. Online at https://github.com/strohne/Facepager.
+  Keyling, Till / Jï¿½nger, Jakob (2013). Facepager 3. Tool for Downloading API Data. Online at https://github.com/strohne/Facepager.
 </p>
 
 <h1>Copyright notices</h1>

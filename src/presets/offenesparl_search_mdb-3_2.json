@@ -8,10 +8,8 @@
     "berufsfeld"
   ],
   "options": {
-    "urlpath": "http://offenesparlament.de/person/:id.json",
-    "params": {
-      "<:id>": "<Object ID>"
-    },
+    "urlpath": "http://offenesparlament.de/person/<Object ID>/.json",
+    "params": {},
     "nodedata": null,
     "objectid": "id"
   },

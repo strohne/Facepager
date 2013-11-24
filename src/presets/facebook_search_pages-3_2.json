@@ -5,9 +5,10 @@
   ],
   "options": {
     "params": {
+      "q":"<Object ID>",
       "type": "page"
     },
-    "relation": "<search>"
+    "relation": "search"
   },
   "name": "Search for Facebook Pages",
   "module": "Facebook",
