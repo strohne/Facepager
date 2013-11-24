@@ -8,7 +8,7 @@
       "limit": "0",
       "summary": "1"
     },
-    "relation": "likes",
+    "relation": "<Object ID>/likes",
     "pages": 1
   },
   "name": "Get Like Count of Posts",

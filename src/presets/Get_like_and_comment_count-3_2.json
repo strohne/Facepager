@@ -12,7 +12,7 @@
       "fields": "message,from.name,created_time,updated_time,comments.limit(1).summary(true),likes.limit(1).summary(true)",
       "limit": "10"
     },
-    "relation": "posts",
+    "relation": "<Object ID>/posts",
     "pages": 1
   },
   "name": "Get like and comment count",

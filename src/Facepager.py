@@ -118,6 +118,10 @@ class MainWindow(QMainWindow):
         button=QPushButton("Unpack list")
         button.clicked.connect(self.actions.actionUnpack.trigger)
         buttonLayout.addWidget(button)   
+
+        button=QPushButton("Copy to Clipboard")
+        button.clicked.connect(self.actions.actionJsonCopy.trigger)
+        buttonLayout.addWidget(button)   
         
         #requests
         actionlayout=QVBoxLayout()

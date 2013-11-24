@@ -36,11 +36,11 @@ class DictionaryTree(QTreeView):
         treeitem=index.internalPointer()
         return treeitem.keyPath()
 
-    def keyPressEvent(self, e):
-        if e == QKeySequence.Copy:
-            self.copyToClipboard()
-        else:
-            super(DictionaryTree,self).keyPressEvent(e)
+#    def keyPressEvent(self, e):
+#        if e == QKeySequence.Copy:
+#            self.copyToClipboard()
+#        else:
+#            super(DictionaryTree,self).keyPressEvent(e)
             
                 
     def copyToClipboard(self):

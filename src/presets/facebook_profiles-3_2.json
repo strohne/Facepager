@@ -10,7 +10,7 @@
   "options": {
     "params": {
     },
-    "relation": "<self>"
+    "relation": "<Object ID>"
   },
   "name": "Get Facebook profiles",
   "module": "Facebook",

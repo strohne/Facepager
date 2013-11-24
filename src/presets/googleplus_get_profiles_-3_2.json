@@ -4,9 +4,8 @@
     "objectType"
   ],
   "options": {
-    "urlpath": "https://www.googleapis.com/plus/v1/people/userid",
+    "urlpath": "https://www.googleapis.com/plus/v1/people/<Object ID>",
     "params": {
-      "<userid>": "<Object ID>",
       "key": "XXX"
     },
     "nodedata": null,

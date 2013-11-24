@@ -8,9 +8,8 @@
     "updated"
   ],
   "options": {
-    "urlpath": "https://www.googleapis.com/plus/v1/people/userId/activities/public",
+    "urlpath": "https://www.googleapis.com/plus/v1/people/<Object ID>/activities/public",
     "params": {
-      "<userid>": "<Object ID>",
       "key": "XXX"
     },
     "nodedata": "items",
