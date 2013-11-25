@@ -75,16 +75,8 @@ class ApiTab(QWidget):
                      value = getDictValue(nodedata['response'],match.group(1))
                 else:  
                     value = params[name]
-                         
-            
-            #Replace url path...
-            match = re.match("^<(.*)>$",name)
-            if match:           
-                 urlpath = urlpath.replace(match.group(1),value)      
-             
-            #...or set parameter
-            else:  
-                urlparams[name] = value
+                                     
+            urlparams[name] = value
         
         return urlpath,urlparams                                    
 
@@ -97,7 +89,7 @@ class ApiTab(QWidget):
     
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
-        options=self.getOptions('settings'/down)
+        options=self.getOptions('settings')
 
         for key in options.keys():        
             self.mainWindow.settings.setValue(key,options[key])
@@ -181,7 +173,7 @@ class ApiTab(QWidget):
                 with open(fullfilename,'wb') as f:
                     for chunk in response.iter_content(1024) :
                         f.write(chunk)                   
-                return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path} 
+                return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path,'sourcequery':args} 
 
     def fetchData(self):
         pass
