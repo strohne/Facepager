@@ -4,6 +4,7 @@ from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
 import urllib
 import requests
+from mimetypes import guess_all_extensions
 from requests.exceptions import *
 from datetime import datetime, timedelta
 from paramedit import *
@@ -96,7 +97,7 @@ class ApiTab(QWidget):
     
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
-        options=self.getOptions('settings')
+        options=self.getOptions('settings'/down)
 
         for key in options.keys():        
             self.mainWindow.settings.setValue(key,options[key])
@@ -144,16 +145,21 @@ class ApiTab(QWidget):
         session = self.initSession()            
         if (not session): raise Exception("No session available.")        
                
-        #Create file name
-        filename,fileext = os.path.splitext(os.path.basename(path))
-        filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        filenumber = 1        
-        while True:
-            fullfilename = foldername+os.sep+filename+'-'+filetime+'-'+str(filenumber)+fileext
-            if (os.path.isfile(fullfilename)):
-                filenumber = filenumber+1
-            else:
-                break 
+        def makefilename(extbymime=None):#Create file name
+            filename,fileext = os.path.splitext(os.path.basename(path))
+            filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
+            filenumber = 1
+            if extbymime:
+                fileext=extbymime
+                
+            while True:
+                fullfilename = foldername+os.sep+filename+'-'+filetime+'-'+str(filenumber)+str(fileext)
+                if (os.path.isfile(fullfilename)):
+                    filenumber = filenumber+1
+                else:
+                    break
+            return fullfilename
+
                 
         try:
             if headers != None:
@@ -168,7 +174,11 @@ class ApiTab(QWidget):
             elif response.status_code != 200:
                 raise Exception("Wrong Response Status Code: {0}".format(response.status_code))                
             else:
-                with open(fullfilename, 'wb') as f:
+                guessed_ext = guess_all_extensions(response.headers["content-type"])[-1]
+                print guessed_ext
+                fullfilename = makefilename(guessed_ext)
+                print fullfilename
+                with open(fullfilename,'wb') as f:
                     for chunk in response.iter_content(1024) :
                         f.write(chunk)                   
                 return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path} 
