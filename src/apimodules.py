@@ -157,9 +157,9 @@ class ApiTab(QWidget):
                 
         try:
             if headers != None:
-                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False,stream=False)
+                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False,stream=True)
             else:
-                response = session.get(path,params=args,timeout=self.timeout,verify=False,stream=False)
+                response = session.get(path,params=args,timeout=self.timeout,verify=False,stream=True)
         except (HTTPError,ConnectionError),e: 
             raise Exception("Request Error: {0}".format(e.message))
         else:
