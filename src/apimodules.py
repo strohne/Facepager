@@ -60,7 +60,7 @@ class ApiTab(QWidget):
             urlpath = urlpath.replace('<'+match+'>',value)                 
         
         #Replace placeholders in params    
-        urlparams = {}                                
+        urlpath,urlparams = self.parseURL(urlpath)                               
         for name in params:
             if (name == '<None>') | (name == ''): continue
             if (params[name] == '<None>') | (params[name] == ''): continue
@@ -140,9 +140,20 @@ class ApiTab(QWidget):
             else:    
                 return response.json()     
 
-    def download(self, path, args=None,headers=None,fullfilename=None):
+    def download(self, path, args=None,headers=None,foldername=None):
         session = self.initSession()            
         if (not session): raise Exception("No session available.")        
+               
+        #Create file name
+        filename,fileext = os.path.splitext(os.path.basename(path))
+        filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        filenumber = 1        
+        while True:
+            fullfilename = foldername+os.sep+filename+'-'+filetime+'-'+str(filenumber)+fileext
+            if (os.path.isfile(fullfilename)):
+                filenumber = filenumber+1
+            else:
+                break 
                 
         try:
             if headers != None:
@@ -910,19 +921,8 @@ class FilesTab(ApiTab):
 
         urlpath,urlparams = self.getURL(options["urlpath"], {}, nodedata)
         
-        #Create file name
-        filename,fileext = os.path.splitext(os.path.basename(urlparse.urlsplit(urlpath).path))
-        filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        filenumber = 1        
-        while True:
-            fullfilename = foldername+os.sep+filename+'-'+filetime+'-'+str(filenumber)+fileext
-            if (os.path.isfile(fullfilename)):
-                filenumber = filenumber+1
-            else:
-                break 
-        
         self.mainWindow.logmessage("Downloading file for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
-        self.streamingData.emit(self.download(urlpath,urlparams,None,fullfilename))
+        self.streamingData.emit(self.download(urlpath,urlparams,None,foldername))
 
 class QWebPageCustom(QWebPage):
     
