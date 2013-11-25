@@ -157,9 +157,9 @@ class ApiTab(QWidget):
                 
         try:
             if headers != None:
-                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False,stream=True)
+                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False,stream=False)
             else:
-                response = session.get(path,params=args,timeout=self.timeout,verify=False,stream=True)
+                response = session.get(path,params=args,timeout=self.timeout,verify=False,stream=False)
         except (HTTPError,ConnectionError),e: 
             raise Exception("Request Error: {0}".format(e.message))
         else:
@@ -169,7 +169,7 @@ class ApiTab(QWidget):
                 raise Exception("Wrong Response Status Code: {0}".format(response.status_code))                
             else:
                 with open(fullfilename, 'wb') as f:
-                    for chunk in response.iter_content():
+                    for chunk in response.iter_content(1024) :
                         f.write(chunk)                   
                 return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path} 
 
