@@ -221,9 +221,8 @@ A quick explanation:
 			 Use custom columns to control the columns in the export files (CSV-File). Using nested columns like "user.entities.url.urls" might be usefull and may be combined with an astrix *-Operator to unfold list of attributes like this: entities.urls.*.display_url (try the twitter-preset to see the results)		
 		</li>
 		<li><b>Parameters:</b> 
-			Parameters in angle brackets (like &lt;Object ID&gt;) have special meanings. <br />
-			When used in parameter names: the URL path/Resource/Query is searched for the string in brackets, all occurences are replaced by the parameter value. An example is given in the preset "Search Offenes Parlament for MdB".<br />
-			When used in parameter values: the string in brackets is taken as key to extract data from the selected node. This works in analogy to the custom table columns setup.<br />
+			Parameter values in angle brackets (like &lt;Object ID&gt;) have special meanings.<br />			
+			The string in brackets is taken as key to extract data from the selected node. This works in analogy to the custom table columns setup.<br />
 			There are two reserved keywords: a) The parameter value "&lt;Object ID&gt;" is replaced by the Object ID of the selected node; b) Parameters with name or value set to "&lt;None&gt;" are ignored.  			   		
 		</li>
 		<li><b>URL path:</b> 
