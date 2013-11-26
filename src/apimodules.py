@@ -146,7 +146,7 @@ class ApiTab(QWidget):
                 fileext=extbymime
                 
             while True:
-                fullfilename = foldername+os.sep+filename+'-'+filetime+'-'+str(filenumber)+str(fileext)
+                fullfilename = os.path.join(foldername,filename+'-'+filetime+'-'+str(filenumber)+str(fileext))
                 if (os.path.isfile(fullfilename)):
                     filenumber = filenumber+1
                 else:
@@ -168,9 +168,7 @@ class ApiTab(QWidget):
                 raise Exception("Wrong Response Status Code: {0}".format(response.status_code))                
             else:
                 guessed_ext = guess_all_extensions(response.headers["content-type"])[-1]
-                print guessed_ext
                 fullfilename = makefilename(guessed_ext)
-                print fullfilename
                 with open(fullfilename,'wb') as f:
                     for chunk in response.iter_content(1024) :
                         f.write(chunk)                   

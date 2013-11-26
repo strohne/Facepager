@@ -11,7 +11,7 @@ from apimodules import *
 from help import *
 from presets import *
 from timer import *
-import traceback
+import logging
 
 class MainWindow(QMainWindow):
     
@@ -273,10 +273,9 @@ class MainWindow(QMainWindow):
     @Slot(str)        
     def logmessage(self,message):
         if isinstance(message,Exception):          
-            self.loglist.append(str(datetime.now())+" Exception: "+str(message))
-            self.loglist.append("")
-            self.loglist.append(traceback.format_exc())
-            self.loglist.append("")                        
+            self.loglist.append(str(datetime.now())+" Exception: "+str(message))          
+            logging.exception(message)
+                                    
         else:
             self.loglist.append(str(datetime.now())+" "+message)
             
@@ -338,5 +337,12 @@ def startMain():
   
 if __name__ == "__main__":
     #cProfile.run('startMain()')
-    startMain()
+    try:
+        logfolder = os.path.join(os.path.expanduser("~"),'Facepager','Logs')
+        if not os.path.isdir(logfolder): os.mkdir(logfolder)    
+        logging.basicConfig(filename=os.path.join(logfolder,'facepager.log'),level=logging.ERROR,format='%(asctime)s %(levelname)s:%(message)s')
+    except:
+        print "Error intitializing log file"
+    finally:    
+        startMain()
 
