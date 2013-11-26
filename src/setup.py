@@ -23,7 +23,7 @@ buildoptions = {
 
 setup(
         name = "Facepager 3",
-        version = "3.3",
+        version = "3.4",
         description = "The Facebook Page Crawler",
         options = {'build_exe': buildoptions},
         executables = [exe]

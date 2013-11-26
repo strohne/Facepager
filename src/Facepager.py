@@ -11,13 +11,14 @@ from apimodules import *
 from help import *
 from presets import *
 from timer import *
+import traceback
 
 class MainWindow(QMainWindow):
     
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
         
-        self.setWindowTitle("Facepager 3.3")                
+        self.setWindowTitle("Facepager 3.4")                
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))        
         self.setMinimumSize(900,700)
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
@@ -271,9 +272,16 @@ class MainWindow(QMainWindow):
             
     @Slot(str)        
     def logmessage(self,message):
-        self.loglist.append(str(datetime.now())+" "+message)
+        if isinstance(message,Exception):          
+            self.loglist.append(str(datetime.now())+" Exception: "+str(message))
+            self.loglist.append("")
+            self.loglist.append(traceback.format_exc())
+            self.loglist.append("")                        
+        else:
+            self.loglist.append(str(datetime.now())+" "+message)
+            
         QApplication.processEvents()            
-
+        
     def showProgress(self,current = None,maximum = None,message = None):                
         if not hasattr(self, 'progresswindow') or (self.progresswindow is None):
             if message == None: message = ""

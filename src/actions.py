@@ -261,7 +261,7 @@ class Actions(object):
                 treenode=item.internalPointer()
                 treenode.unpackList(key)   
         except Exception as e:
-            self.mainWindow.logmessage(str(e))    
+            self.mainWindow.logmessage(e)    
     @Slot()     
     def expandAll(self):
         self.mainWindow.tree.expandAll()
@@ -305,7 +305,7 @@ class Actions(object):
                     inputoptions['querytime'] = str(datetime.datetime.now())                                    
                     module.fetchData(treenode.data,inputoptions)          
                 except Exception as e:
-                    self.mainWindow.logmessage(str(type(e))+str(e))
+                    self.mainWindow.logmessage(e)                   
                     
                 finally:
                     progress.setValue(c)

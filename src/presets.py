@@ -110,7 +110,7 @@ class PresetWindow(QDialog):
         elif __file__:
             self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
         
-        self.presetSuffix = '-3_2.json'        
+        self.presetSuffix = '-3_4.json'        
     
     def currentChanged(self):
         #hide
