@@ -15,6 +15,7 @@ import json
 from credentials import *
 import os
 import time
+from collections import OrderedDict
 
 
 def loadTabs(mainWindow=None):                    
@@ -45,8 +46,8 @@ class ApiTab(QWidget):
         url = url.split('?',1)
         path = url[0]
         query = url[1] if len(url) > 1 else ''
-        query = urlparse.parse_qs(query)
-        query = { key: query[key][0] for key in query.keys()} 
+        query = urlparse.parse_qsl(query)
+        query = OrderedDict((k,v) for k,v in query) 
          
         return path,query  
         
