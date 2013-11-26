@@ -97,7 +97,7 @@ class ApiTab(QWidget):
     
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_"+self.name)
-        options=self.getOptions('settings'/down)
+        options=self.getOptions('settings')
 
         for key in options.keys():        
             self.mainWindow.settings.setValue(key,options[key])
