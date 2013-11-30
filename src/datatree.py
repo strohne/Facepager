@@ -234,8 +234,8 @@ class TreeItem(object):
         if (len(nodes) == 0) and (options.get('appendempty',True)):                    
             nodes=[{}]
             options['querystatus']="empty"
-        else:
-            options['querystatus']="fetched"                      
+        #else:
+        #    options['querystatus']="fetched"                      
         
         #extracted nodes                    
         newnodes=[]
