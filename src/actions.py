@@ -290,7 +290,8 @@ class Actions(object):
         progress.setValue(0)
                             
         #Fetch data
-        def streamingData(data):
+        def streamingData(data,status):
+            inputoptions['querystatus'] = 'fetched' if status else 'error'
             treenode.appendNodes(data,inputoptions)
             if progress.wasCanceled(): module.stopFetching()    
         

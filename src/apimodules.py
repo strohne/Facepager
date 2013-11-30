@@ -27,7 +27,7 @@ def loadTabs(mainWindow=None):
     
 class ApiTab(QWidget):
     
-    streamingData = Signal(list)
+    streamingData = Signal(list,bool)
     
     def __init__(self, mainWindow=None,name="NoName",loadSettings=True):
         QWidget.__init__(self, mainWindow)
@@ -126,13 +126,14 @@ class ApiTab(QWidget):
         except (HTTPError,ConnectionError),e: 
             raise Exception("Request Error: {0}".format(e.message))
         else:
-            if not response.ok:
-                raise Exception("Request Status Error: {0}".format(response.reason))
-            elif not response.json():
+            #if not response.ok:
+                #raise Exception("Request Status Error: {0}".format(response.reason))
+            #el
+            if not response.json():
                 raise Exception("Request Format Error: No JSON data!")
                 
             else:    
-                return response.json()     
+                return response.json(),response.ok     
 
     def download(self, path, args=None,headers=None,foldername=None):
         session = self.initSession()            
@@ -162,9 +163,10 @@ class ApiTab(QWidget):
         except (HTTPError,ConnectionError),e: 
             raise Exception("Request Error: {0}".format(e.message))
         else:
-            if not response.ok:
-                raise Exception("Request Status Error: {0}".format(response.reason))
-            elif response.status_code != 200:
+            #if not response.ok:
+            #    raise Exception("Request Status Error: {0}".format(response.reason))
+            #el
+            if response.status_code != 200:
                 raise Exception("Wrong Response Status Code: {0}".format(response.status_code))                
             else:
                 guessed_ext = guess_all_extensions(response.headers["content-type"])[-1]
@@ -172,7 +174,7 @@ class ApiTab(QWidget):
                 with open(fullfilename,'wb') as f:
                     for chunk in response.iter_content(1024) :
                         f.write(chunk)                   
-                return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path,'sourcequery':args} 
+                return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path,'sourcequery':args},response.ok
 
     def fetchData(self):
         pass
@@ -314,8 +316,8 @@ class FacebookTab(ApiTab):
             self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
             
             #data        
-            data = self.request(urlpath,urlparams)
-            self.streamingData.emit(data)
+            data,status = self.request(urlpath,urlparams)
+            self.streamingData.emit(data,status)
             
             #paging
             if (hasDictValue(data,"paging.next")):            
@@ -730,8 +732,8 @@ class TwitterTab(ApiTab):
     
             self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
             #data
-            data = self.request(urlpath,urlparams)
-            self.streamingData.emit(data)
+            data,status = self.request(urlpath,urlparams)
+            self.streamingData.emit(data,status)
             
                
             #paging-search
@@ -857,7 +859,8 @@ class GenericTab(ApiTab):
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
-        self.streamingData.emit(self.request(urlpath,urlparams))
+        data,status = self.request(urlpath,urlparams)
+        self.streamingData.emit(data,status)
 
 
 class FilesTab(ApiTab):
@@ -922,8 +925,9 @@ class FilesTab(ApiTab):
 
         urlpath,urlparams = self.getURL(options["urlpath"], {}, nodedata)
         
-        self.mainWindow.logmessage("Downloading file for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
-        self.streamingData.emit(self.download(urlpath,urlparams,None,foldername))
+        self.mainWindow.logmessage("Downloading file for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
+        data,status = self.download(urlpath,urlparams,None,foldername)         
+        self.streamingData.emit(data,status)
 
 class QWebPageCustom(QWebPage):
     
