@@ -223,46 +223,39 @@ class TreeItem(object):
             
         #filter response
         if options['nodedata'] != None:
-            nodes=getDictValue(data,options['nodedata'],False)                    
+            nodes=getDictValue(data,options['nodedata'],False)
+            offcut = filterDictValue(data,options['nodedata'],False)                     
         else:
             nodes=data                                
+            offcut = None
+            
+        if not (type(nodes) is list): nodes=[nodes]            
         
-        #single record
-        if not (type(nodes) is list): nodes=[nodes]                                     
-        
-        #empty records                    
-        if (len(nodes) == 0) and (options.get('appendempty',True)):                    
-            nodes=[{}]
-            options['querystatus']="empty"
-        #else:
-        #    options['querystatus']="fetched"                      
-        
-        #extracted nodes                    
+                                             
         newnodes=[]
-        for n in nodes:                    
-            new=Node(getDictValue(n,options.get('objectid',"")),dbnode.id)
-            new.objecttype='data'
-            new.response=n
+        def appendNode(objecttype,objectid,response):
+            new=Node(objectid,dbnode.id)
+            new.objecttype=objecttype
+            new.response=response
             new.level=dbnode.level+1
             new.querystatus=options.get("querystatus","")
             new.querytime=str(options.get("querytime",""))
             new.querytype=options.get('querytype','')
             new.queryparams=options                                        
             newnodes.append(new)
+                                            
+                       
+        #empty records                    
+        if (len(nodes) == 0):
+            appendNode('empty','',{})
+                                            
+        #extracted nodes                                
+        for n in nodes:      
+            appendNode('data',getDictValue(n,options.get('objectid',"")),n)              
         
         #Offcut
-        if (options['nodedata'] != None) and (options.get('appendoffcut',True)):
-            offcut = filterDictValue(data,options['nodedata'],False)
-            new=Node(dbnode.objectid,dbnode.id)
-            new.objecttype='offcut'
-            new.response=offcut
-            new.level=dbnode.level+1
-            new.querystatus=options.get("querystatus","")
-            new.querytime=str(options.get("querytime",""))
-            new.querytype=options.get('querytype','')
-            new.queryparams=options
-            
-            newnodes.append(new)                                            
+        if (offcut != None):
+            appendNode('offcut',dbnode.objectid,offcut)            
 
         self.model.database.session.add_all(newnodes)    
         self._childcountall += len(newnodes)    
