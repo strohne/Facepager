@@ -27,7 +27,7 @@ def loadTabs(mainWindow=None):
     
 class ApiTab(QWidget):
     
-    streamingData = Signal(list,bool)
+    streamingData = Signal(list,str)
     
     def __init__(self, mainWindow=None,name="NoName",loadSettings=True):
         QWidget.__init__(self, mainWindow)
@@ -126,14 +126,13 @@ class ApiTab(QWidget):
         except (HTTPError,ConnectionError),e: 
             raise Exception("Request Error: {0}".format(e.message))
         else:
-            #if not response.ok:
-                #raise Exception("Request Status Error: {0}".format(response.reason))
-            #el
             if not response.json():
                 raise Exception("Request Format Error: No JSON data!")
                 
-            else:    
-                return response.json(),response.ok     
+            else:
+                status =  'fetched' if response.ok else 'error'
+                status = status + ' ('+str(response.status_code)+')'   
+                return response.json(),status     
 
     def download(self, path, args=None,headers=None,foldername=None):
         session = self.initSession()            
@@ -163,18 +162,21 @@ class ApiTab(QWidget):
         except (HTTPError,ConnectionError),e: 
             raise Exception("Request Error: {0}".format(e.message))
         else:
-            #if not response.ok:
-            #    raise Exception("Request Status Error: {0}".format(response.reason))
-            #el
-            if response.status_code != 200:
-                raise Exception("Wrong Response Status Code: {0}".format(response.status_code))                
-            else:
-                guessed_ext = guess_all_extensions(response.headers["content-type"])[-1]
+            if response.status_code == 200:
+                guessed_ext = guess_all_extensions(response.headers["content-type"])
+                guessed_ext = guessed_ext[-1] if len(guessed_ext) > 0 else None 
+                
                 fullfilename = makefilename(guessed_ext)
                 with open(fullfilename,'wb') as f:
                     for chunk in response.iter_content(1024) :
-                        f.write(chunk)                   
-                return {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path,'sourcequery':args},response.ok
+                        f.write(chunk)
+                data = {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path,'sourcequery':args}
+                status =  'downloaded' + ' ('+str(response.status_code)+')'        
+            else:
+                data = {'sourcepath':path,'sourcequery':args}
+                status =  'error' + ' ('+str(response.status_code)+')'
+
+            return data,status
 
     def fetchData(self):
         pass
@@ -562,7 +564,7 @@ class TwitterStreamingTab(ApiTab):
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
         #data
         for data in self.request(path=urlpath, args=urlparams):
-            self.streamingData.emit(data)
+            self.streamingData.emit(data,'')
 
     
     @Slot()
