@@ -217,7 +217,7 @@ class TreeItem(object):
             return self.parentItem.childItems.index(self)
         return 0
 
-    def appendNodes(self,data,options):
+    def appendNodes(self,data,options,headers = None):
         dbnode=Node.query.get(self.id)
         if not dbnode: return(False)
             
@@ -228,6 +228,8 @@ class TreeItem(object):
         else:
             nodes=data                                
             offcut = None
+        
+            
             
         if not (type(nodes) is list): nodes=[nodes]            
         
@@ -255,7 +257,12 @@ class TreeItem(object):
         
         #Offcut
         if (offcut != None):
-            appendNode('offcut',dbnode.objectid,offcut)            
+            appendNode('offcut',dbnode.objectid,offcut)
+            
+        #Headers
+        if (headers != None):
+            appendNode('headers',dbnode.objectid,headers)
+                        
 
         self.model.database.session.add_all(newnodes)    
         self._childcountall += len(newnodes)    
