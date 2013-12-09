@@ -27,7 +27,7 @@ def loadTabs(mainWindow=None):
     
 class ApiTab(QWidget):
     
-    streamingData = Signal(list,str)
+    streamingData = Signal(list,list,str)
     
     def __init__(self, mainWindow=None,name="NoName",loadSettings=True):
         QWidget.__init__(self, mainWindow)
@@ -131,8 +131,8 @@ class ApiTab(QWidget):
                 
             else:
                 status =  'fetched' if response.ok else 'error'
-                status = status + ' ('+str(response.status_code)+')'   
-                return response.json(),status     
+                status = status + ' ('+str(response.status_code)+')'  
+                return response.json(),dict(response.headers.items()),status     
 
     def download(self, path, args=None,headers=None,foldername=None):
         session = self.initSession()            
@@ -176,7 +176,7 @@ class ApiTab(QWidget):
                 data = {'sourcepath':path,'sourcequery':args}
                 status =  'error' + ' ('+str(response.status_code)+')'
 
-            return data,status
+            return data,dict(response.headers),status
 
     def fetchData(self):
         pass
@@ -318,8 +318,8 @@ class FacebookTab(ApiTab):
             self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
             
             #data        
-            data,status = self.request(urlpath,urlparams)
-            self.streamingData.emit(data,status)
+            data,headers,status = self.request(urlpath,urlparams)
+            self.streamingData.emit(data,headers,status)
             
             #paging
             if (hasDictValue(data,"paging.next")):            
@@ -563,8 +563,9 @@ class TwitterStreamingTab(ApiTab):
 
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
         #data
+        headers = None
         for data in self.request(path=urlpath, args=urlparams):
-            self.streamingData.emit(data,'')
+            self.streamingData.emit(data,headers,'')
 
     
     @Slot()
@@ -734,8 +735,8 @@ class TwitterTab(ApiTab):
     
             self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
             #data
-            data,status = self.request(urlpath,urlparams)
-            self.streamingData.emit(data,status)
+            data,headers,status = self.request(urlpath,urlparams)
+            self.streamingData.emit(data,headers,status)
             
                
             #paging-search
@@ -861,8 +862,8 @@ class GenericTab(ApiTab):
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
-        data,status = self.request(urlpath,urlparams)
-        self.streamingData.emit(data,status)
+        data,headers,status = self.request(urlpath,urlparams)
+        self.streamingData.emit(data,headers,status)
 
 
 class FilesTab(ApiTab):
@@ -928,8 +929,8 @@ class FilesTab(ApiTab):
         urlpath,urlparams = self.getURL(options["urlpath"], {}, nodedata)
         
         self.mainWindow.logmessage("Downloading file for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
-        data,status = self.download(urlpath,urlparams,None,foldername)         
-        self.streamingData.emit(data,status)
+        data,headers,status = self.download(urlpath,urlparams,None,foldername)         
+        self.streamingData.emit(data,headers,status)
 
 class QWebPageCustom(QWebPage):
     
