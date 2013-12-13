@@ -370,14 +370,13 @@ class TwitterStreamingTab(ApiTab):
         self.oauthdata = {}
         
         self.twitter = OAuth1Service(
-                            consumer_key="LfkCIpc3V50vpBUSuSg",
-                            consumer_secret="iaEvKJ0GXXTFoQ19MzHtIWKP2ew5kuWb37U5WFwQSo",
+                            consumer_key=TWITTER_CONSUMER_KEY,
+                            consumer_secret=TWITTER_CONSUMER_SECRET,
                             name='twitterstreaming',
                             access_token_url='https://api.twitter.com/oauth/access_token',
                             authorize_url='https://api.twitter.com/oauth/authorize',
                             request_token_url='https://api.twitter.com/oauth/request_token',
                             base_url='https://stream.twitter.com/1.1/')
-                            #base muesste man dann rausnehmen
        
         self.connected = False
          
