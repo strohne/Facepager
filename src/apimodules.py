@@ -15,6 +15,7 @@ import json
 from credentials import *
 import os
 import time
+import dateutil.parser
 from collections import OrderedDict
 
 
@@ -291,6 +292,13 @@ class FacebookTab(ApiTab):
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
         #if nodedata['objectid']==None: raise Exception("Empty object id")
 
+        #Abort condition for time based pagination
+        since = options['params'].get('since',False)
+        if (since != False): 
+            since = dateutil.parser.parse(since,yearfirst=True,dayfirst=False)
+            since = int((since - datetime(1970, 1, 1)).total_seconds()) 
+        
+        #Abort condition: maximum page count
         for page in range(0,options.get('pages',1)):            
             #build url
             if not ('url' in options):                                
@@ -324,6 +332,12 @@ class FacebookTab(ApiTab):
             #paging
             if (hasDictValue(data,"paging.next")):            
                 url,params = self.parseURL(getDictValue(data,"paging.next",False))
+                
+                #abort time based pagination
+                until = params.get('until',False) 
+                if (since != False) and (until != False) and (int(until) < int(since)): 
+                    break
+                      
                 options['params'] = params
                 options['url'] = url           
             else: break    
