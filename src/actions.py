@@ -154,7 +154,7 @@ class Actions(object):
                 writer = csv.writer(f,delimiter=';',quotechar='"', quoting=csv.QUOTE_ALL,doublequote=True,lineterminator='\r\n')
                 
                 #headers    
-                row=["level","id","parent_id","object_id","query_status","query_time","query_type"]
+                row=["level","id","parent_id","object_id","object_type","query_status","query_time","query_type"]
                 for key in self.mainWindow.tree.treemodel.customcolumns:
                     row.append(key)                        
                 writer.writerow(row)
