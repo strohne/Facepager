@@ -288,6 +288,7 @@ class Actions(object):
                 
         progress.setMaximum(len(indexes))
         progress.setValue(0)
+        progress_nextupdate = QDateTime.currentDateTime().addSecs(3);
                             
         #Fetch data
         def streamingData(data,headers,status):
@@ -309,7 +310,9 @@ class Actions(object):
                     self.mainWindow.logmessage(e)                   
                     
                 finally:
-                    progress.setValue(c)
+                    if QDateTime.currentDateTime() > progress_nextupdate:
+                        progress.setValue(c)
+                        progress_nextupdate = QDateTime.currentDateTime().addSecs(3);
                     c+=1
                     if progress.wasCanceled(): break
         finally:

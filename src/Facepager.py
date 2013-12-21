@@ -335,14 +335,14 @@ def startMain():
     sys.exit(app.exec_())    
 
   
-if __name__ == "__main__":
-    #cProfile.run('startMain()')
+if __name__ == "__main__":    
     try:
         logfolder = os.path.join(os.path.expanduser("~"),'Facepager','Logs')
         if not os.path.isdir(logfolder): os.mkdir(logfolder)    
         logging.basicConfig(filename=os.path.join(logfolder,'facepager.log'),level=logging.ERROR,format='%(asctime)s %(levelname)s:%(message)s')
     except:
         print "Error intitializing log file"
-    finally:    
+    finally:
+        #cProfile.run('startMain()')    
         startMain()
 
