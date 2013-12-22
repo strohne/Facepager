@@ -1,6 +1,7 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 from database import *
+from apimodules import *
 import csv
 import sys
 import help
@@ -276,7 +277,9 @@ class Actions(object):
         progress = QProgressDialog("Fetching data...", "Abort", 0, 0,self.mainWindow)
         progress.setWindowModality(Qt.WindowModal)
         progress.setMinimumDuration(0)
-        progress.forceShow()       
+        progress.forceShow()
+        progress.setAutoReset(False)       
+        
                                 
         #Get selected nodes
         if indexes == False:
@@ -284,41 +287,49 @@ class Actions(object):
             indexes=self.mainWindow.tree.selectedIndexesAndChildren(False,{'level':level,'objecttype':['seed','data','unpacked']})
         
         if module == False: module = self.mainWindow.RequestTabs.currentWidget()
-        if options == False: options=module.getOptions();
-                
-        progress.setMaximum(len(indexes))
-        progress.setValue(0)
-        progress_nextupdate = QDateTime.currentDateTime().addSecs(3);
-                            
-        #Fetch data
-        def streamingData(data,headers,status):
-            inputoptions['querystatus'] = status
-            treenode.appendNodes(data,inputoptions,headers)
-            if progress.wasCanceled(): module.stopFetching()    
+        if options == False: options=module.getOptions();                
         
-        module.streamingData.connect(streamingData)
-        try:
-            c=0
-            for index in indexes:
-                try:
-                    inputoptions = deepcopy(options)
-                    if not index.isValid(): continue                    
-                    treenode=index.internalPointer()   
-                    inputoptions['querytime'] = str(datetime.datetime.now())                                    
-                    module.fetchData(treenode.data,inputoptions)          
-                except Exception as e:
-                    self.mainWindow.logmessage(e)                   
+        progress_max = len(indexes)
+        progress_value = 0
+
+        progress.setMaximum(progress_max)
+        progress.setValue(progress_value)
+            
+        #Spawn Thread
+        thread = ApiThread(module)        
                     
-                finally:
-                    if QDateTime.currentDateTime() > progress_nextupdate:
-                        progress.setValue(c)
-                        progress_nextupdate = QDateTime.currentDateTime().addSecs(3);
-                    c+=1
-                    if progress.wasCanceled(): break
-        finally:
-            module.streamingData.disconnect(streamingData)                 
+        #Fill Input Queue
+        for index in indexes:
+            if not index.isValid(): continue                    
+            treenode=index.internalPointer()               
+            job ={'nodeindex':index,'data':deepcopy(treenode.data),'options':deepcopy(options)}
+            thread.addJob(job)
+                        
+        #Sentinel
+        thread.addJob(None)
+        thread.start() 
+            
+          
+        #Process Output Queue
+        while True:
+            #Get nodes
+            job = thread.getJob()
+            if job == None: break 
 
+            try:
+                if not job['nodeindex'].isValid(): continue 
+                treenode=job['nodeindex'].internalPointer()                     
+                treenode.appendNodes(job['data'],job['options'],job['headers'])
+            finally:
+                #Update progress
+                progress_value+=1
+                progress.setValue(progress_value) 
+                QApplication.processEvents()
 
+            #Abort
+            if progress.wasCanceled():             
+                thread.stop()
+                            
         progress.cancel()   
                       
     @Slot()
@@ -356,6 +367,3 @@ class Actions(object):
         self.mainWindow.timerStatus.setText("Timer fired ")
         self.mainWindow.timerStatus.setStyleSheet("QLabel {color:red;}")
         self.queryNodes(data.get('indexes',[]),data.get('module',None),data.get('options',{}).copy() )
-        
- 
-           
