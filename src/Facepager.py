@@ -12,6 +12,7 @@ from help import *
 from presets import *
 from timer import *
 import logging
+import threading 
 
 class MainWindow(QMainWindow):
     
@@ -24,6 +25,7 @@ class MainWindow(QMainWindow):
         self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
 #        self.setStyleSheet("* {font-size:27px;}")
         #self.deleteSettings()
+        self.loglock =Lock()
         self.readSettings() 
         self.createActions()
         self.createUI()
@@ -272,14 +274,15 @@ class MainWindow(QMainWindow):
             
     @Slot(str)        
     def logmessage(self,message):
-        if isinstance(message,Exception):          
-            self.loglist.append(str(datetime.now())+" Exception: "+str(message))          
-            logging.exception(message)
-                                    
-        else:
-            self.loglist.append(str(datetime.now())+" "+message)
-            
-        QApplication.processEvents()            
+        with self.loglock:
+            if isinstance(message,Exception):          
+                self.loglist.append(str(datetime.now())+" Exception: "+str(message))          
+                logging.exception(message)
+                                        
+            else:
+                self.loglist.append(str(datetime.now())+" "+message)
+                
+            QApplication.processEvents()            
         
     def showProgress(self,current = None,maximum = None,message = None):                
         if not hasattr(self, 'progresswindow') or (self.progresswindow is None):

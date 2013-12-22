@@ -3,6 +3,7 @@ from PySide.QtGui import *
 from database import *
 import csv
 import StringIO
+import threading 
 
 class DataTree(QTreeView):
 
@@ -168,28 +169,32 @@ class TreeItem(object):
         self._childcountall=0
 
     def appendChild(self, item,persistent=False):
-        item.parentItem=self
-        self.childItems.append(item)
-        if persistent:
-            self._childcountall += 1
+        with self.model.modifylock:
+            item.parentItem=self
+            self.childItems.append(item)
+            if persistent:
+                self._childcountall += 1
 
     def child(self, row):
         return self.childItems[row]
     
     def clear(self):
-        self.childItems=[]
-        self.loaded=False
-        self._childcountallloaded=False
+        with self.model.modifylock:
+            self.childItems=[]
+            self.loaded=False
+            self._childcountallloaded=False
         
     def remove(self,persistent=False):
-        self.parentItem.removeChild(self,persistent)            
+        with self.model.modifylock:
+            self.parentItem.removeChild(self,persistent)            
         
 
     def removeChild(self,child,persistent=False):
-        if child in self.childItems:            
-            self.childItems.remove(child)
-            if persistent:
-                self._childcountall -= 1        
+        with self.model.modifylock:
+            if child in self.childItems:            
+                self.childItems.remove(child)
+                if persistent:
+                    self._childcountall -= 1        
         
     def childCount(self):
         return len(self.childItems)
@@ -218,83 +223,85 @@ class TreeItem(object):
         return 0
 
     def appendNodes(self,data,options,headers = None):
-        dbnode=Node.query.get(self.id)
-        if not dbnode: return(False)
+        with self.model.modifylock:
+            dbnode=Node.query.get(self.id)
+            if not dbnode: return(False)
+                
+            #filter response
+            if options['nodedata'] != None:
+                nodes=getDictValue(data,options['nodedata'],False)
+                offcut = filterDictValue(data,options['nodedata'],False)                     
+            else:
+                nodes=data                                
+                offcut = None
             
-        #filter response
-        if options['nodedata'] != None:
-            nodes=getDictValue(data,options['nodedata'],False)
-            offcut = filterDictValue(data,options['nodedata'],False)                     
-        else:
-            nodes=data                                
-            offcut = None
-        
+                
+                
+            if not (type(nodes) is list): nodes=[nodes]            
             
+                                                 
+            newnodes=[]
+            def appendNode(objecttype,objectid,response):
+                new=Node(objectid,dbnode.id)
+                new.objecttype=objecttype
+                new.response=response
+                new.level=dbnode.level+1
+                new.querystatus=options.get("querystatus","")
+                new.querytime=str(options.get("querytime",""))
+                new.querytype=options.get('querytype','')
+                new.queryparams=options                                        
+                newnodes.append(new)
+                                                
+                           
+            #empty records                    
+            if (len(nodes) == 0):
+                appendNode('empty','',{})
+                                                
+            #extracted nodes                                
+            for n in nodes:      
+                appendNode('data',getDictValue(n,options.get('objectid',"")),n)              
             
-        if not (type(nodes) is list): nodes=[nodes]            
-        
-                                             
-        newnodes=[]
-        def appendNode(objecttype,objectid,response):
-            new=Node(objectid,dbnode.id)
-            new.objecttype=objecttype
-            new.response=response
-            new.level=dbnode.level+1
-            new.querystatus=options.get("querystatus","")
-            new.querytime=str(options.get("querytime",""))
-            new.querytype=options.get('querytype','')
-            new.queryparams=options                                        
-            newnodes.append(new)
-                                            
-                       
-        #empty records                    
-        if (len(nodes) == 0):
-            appendNode('empty','',{})
-                                            
-        #extracted nodes                                
-        for n in nodes:      
-            appendNode('data',getDictValue(n,options.get('objectid',"")),n)              
-        
-        #Offcut
-        if (offcut != None):
-            appendNode('offcut',dbnode.objectid,offcut)
-            
-        #Headers
-        if (headers != None):
-            appendNode('headers',dbnode.objectid,headers)
-                        
-
-        self.model.database.session.add_all(newnodes)    
-        self._childcountall += len(newnodes)    
-        dbnode.childcount += len(newnodes)    
-        self.model.database.session.commit()     
-        self.model.layoutChanged.emit()
+            #Offcut
+            if (offcut != None):
+                appendNode('offcut',dbnode.objectid,offcut)
+                
+            #Headers
+            if (headers != None):
+                appendNode('headers',dbnode.objectid,headers)
+                            
+    
+            self.model.database.session.add_all(newnodes)    
+            self._childcountall += len(newnodes)    
+            dbnode.childcount += len(newnodes)    
+            self.model.database.session.commit()     
+            self.model.layoutChanged.emit()
 
     def unpackList(self,key):
-        dbnode=Node.query.get(self.id)
+        with self.model.modifylock:
+            dbnode=Node.query.get(self.id)
+                
+            nodes=getDictValue(dbnode.response,key,False)
+            if not (type(nodes) is list): return False                                     
             
-        nodes=getDictValue(dbnode.response,key,False)
-        if not (type(nodes) is list): return False                                     
-        
-        #extract nodes                    
-        newnodes=[]
-        for n in nodes:                    
-            new=Node(dbnode.objectid,dbnode.id)
-            new.objecttype='unpacked'
-            new.response=n
-            new.level=dbnode.level+1
-            new.querystatus=dbnode.querystatus
-            new.querytime=dbnode.querytime
-            new.querytype=dbnode.querytype
-            new.queryparams=dbnode.queryparams                                        
-            newnodes.append(new)
-        
-
-        self.model.database.session.add_all(newnodes)    
-        self._childcountall += len(newnodes)    
-        dbnode.childcount += len(newnodes)    
-        self.model.database.session.commit()                
-        self.model.layoutChanged.emit()
+            #extract nodes                    
+            newnodes=[]
+            for n in nodes:                    
+                new=Node(dbnode.objectid,dbnode.id)
+                new.objecttype='unpacked'
+                new.response=n
+                new.level=dbnode.level+1
+                new.querystatus=dbnode.querystatus
+                new.querytime=dbnode.querytime
+                new.querytype=dbnode.querytype
+                new.queryparams=dbnode.queryparams                                        
+                newnodes.append(new)
+            
+    
+            self.model.database.session.add_all(newnodes)    
+            self._childcountall += len(newnodes)    
+            dbnode.childcount += len(newnodes)    
+            self.model.database.session.commit()                
+            self.model.layoutChanged.emit()
         
 
 class TreeModel(QAbstractItemModel):
@@ -305,6 +312,7 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns=[]
         self.rootItem = TreeItem(self)
         self.database=database
+        self.modifylock = Lock()
 
     def reset(self):        
         self.rootItem.clear()
@@ -318,59 +326,62 @@ class TreeModel(QAbstractItemModel):
         if (not self.database.connected):
             return False                                               
 
-        #self.beginRemoveRows(index.parent(),index.row(),index.row())
-        #item=index.internalPointer()                 
-        self.beginResetModel()  
-        Node.query.filter(Node.level == level,Node.querytype==querytype).delete()                            
-        self.database.session.commit()                         
-        #item.remove(True)
-        
-        self.reset()
-        self.endResetModel()
-        #self.reset()       
-        #self.endRemoveRows()
+        with self.modifylock:
+            #self.beginRemoveRows(index.parent(),index.row(),index.row())
+            #item=index.internalPointer()                 
+            self.beginResetModel()  
+            Node.query.filter(Node.level == level,Node.querytype==querytype).delete()                            
+            self.database.session.commit()                         
+            #item.remove(True)
+            
+            self.reset()
+            self.endResetModel()
+            #self.reset()       
+            #self.endRemoveRows()
 
 
     def deleteNode(self,index):
-        if (not self.database.connected) or (not index.isValid()) or (index.column() <> 0):
-            return False                                               
-
-        self.beginRemoveRows(index.parent(),index.row(),index.row())
-        item=index.internalPointer()
-        
-        
-        #Node.query.filter(Node.id == item.parentid).update()
-                           
-        Node.query.filter(Node.id == item.id).delete()                            
-        self.database.session.commit()                         
-        item.remove(True)       
-        self.endRemoveRows()
+        with self.modifylock:
+            if (not self.database.connected) or (not index.isValid()) or (index.column() <> 0):
+                return False                                               
+    
+            self.beginRemoveRows(index.parent(),index.row(),index.row())
+            item=index.internalPointer()
+            
+            
+            #Node.query.filter(Node.id == item.parentid).update()
+                               
+            Node.query.filter(Node.id == item.id).delete()                            
+            self.database.session.commit()                         
+            item.remove(True)       
+            self.endRemoveRows()
 
             
     def addNodes(self,objectids):
-        try:       
-            if not self.database.connected:
-                return False
-                
-            #self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(facebookids)-1)
-            newnodes=[]   
-            for objectid in objectids: 
-                new=Node(objectid)
-                newnodes.append(new)
-                
-                #self.database.session.flush()
-                #itemdata=self.getItemData(new)     
-                #self.rootItem.appendChild(TreeItem(self.rootItem,new.id,itemdata),True)
-
-            self.database.session.add_all(newnodes)             
-            self.database.session.commit()
-            self.rootItem._childcountall+=len(objectids)
-            self.layoutChanged.emit()
-                                    
-            #self.endInsertRows()
-        except Exception as e:
-            QMessageBox.critical(self.mainWindow,"Facepager",str(e))                    
-                      
+        with self.modifylock:
+            try:       
+                if not self.database.connected:
+                    return False
+                    
+                #self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(facebookids)-1)
+                newnodes=[]   
+                for objectid in objectids: 
+                    new=Node(objectid)
+                    newnodes.append(new)
+                    
+                    #self.database.session.flush()
+                    #itemdata=self.getItemData(new)     
+                    #self.rootItem.appendChild(TreeItem(self.rootItem,new.id,itemdata),True)
+    
+                self.database.session.add_all(newnodes)             
+                self.database.session.commit()
+                self.rootItem._childcountall+=len(objectids)
+                self.layoutChanged.emit()
+                                        
+                #self.endInsertRows()
+            except Exception as e:
+                QMessageBox.critical(self.mainWindow,"Facepager",str(e))                    
+                          
                                 
     def columnCount(self, parent):
         return 5+len(self.customcolumns)    
@@ -504,28 +515,29 @@ class TreeModel(QAbstractItemModel):
         return item.childCountAll() > item.childCount()
         
     def fetchMore(self, index):
-        if not index.isValid():
-            parent = self.rootItem
-        else:
-            parent = index.internalPointer()                       
-        
-        if parent.childCountAll() == parent.childCount():
-            return False
-                
-        row=parent.childCount()        
-        items = Node.query.filter(Node.parent_id == parent.id).offset(row).all()
-
-        
-        self.beginInsertRows(index,row,row+len(items)-1)
-
-        for item in items:
-            itemdata=self.getItemData(item)
-            new=TreeItem(self,parent,item.id,itemdata)
-            new._childcountall=item.childcount
-            new._childcountallloaded=True                                                               
-            parent.appendChild(new)
-            self.createIndex(row, 0, index)
-            row += 1
-                                        
-        self.endInsertRows()
-        parent.loaded=parent.childCountAll()==parent.childCount()
+        with self.modifylock:        
+            if not index.isValid():
+                parent = self.rootItem
+            else:
+                parent = index.internalPointer()                       
+            
+            if parent.childCountAll() == parent.childCount():
+                return False
+                    
+            row=parent.childCount()        
+            items = Node.query.filter(Node.parent_id == parent.id).offset(row).all()
+    
+            
+            self.beginInsertRows(index,row,row+len(items)-1)
+    
+            for item in items:
+                itemdata=self.getItemData(item)
+                new=TreeItem(self,parent,item.id,itemdata)
+                new._childcountall=item.childcount
+                new._childcountallloaded=True                                                               
+                parent.appendChild(new)
+                self.createIndex(row, 0, index)
+                row += 1
+                                            
+            self.endInsertRows()
+            parent.loaded=parent.childCountAll()==parent.childCount()
