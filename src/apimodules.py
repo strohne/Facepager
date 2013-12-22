@@ -17,6 +17,8 @@ import os
 import time
 import dateutil.parser
 from collections import OrderedDict
+import threading
+import Queue
 
 
 def loadTabs(mainWindow=None):                    
@@ -24,11 +26,64 @@ def loadTabs(mainWindow=None):
     mainWindow.RequestTabs.addTab(TwitterTab(mainWindow),"Twitter")
     mainWindow.RequestTabs.addTab(GenericTab(mainWindow),"Generic")    
     mainWindow.RequestTabs.addTab(FilesTab(mainWindow),"Files")
-    #mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
+    mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
     
+#class ApiThread(QThread):
+class ApiThread(threading.Thread):
+
+    def __init__(self,module):
+        threading.Thread.__init__(self)
+        #self.daemon = True
+        #QThread.__init__(self, None)
+        self.input = Queue.Queue()
+        self.output = Queue.Queue()
+        self.module = module
+        self.dojobs = True
+        
+    def addJob(self,job):
+        self.input.put(job)
+        
+    def getJob(self):
+        job = self.output.get()
+        self.output.task_done()                        
+        return job
+        
+    
+    def stop(self):
+        self.module.connected = False
+        with self.input.mutex: self.input.queue.clear()
+        with self.output.mutex: self.output.queue.clear()
+        self.input.put(None)#sentinel        
+        
+                    
+    def run(self):       
+        def streamingData(data,options,headers):
+            out = {'nodeindex':job['nodeindex'],'data':data,'options':options,'headers':headers}            
+            self.output.put(out) 
+
+        self.module.streamingData.connect(streamingData)
+        try:
+            while self.dojobs:
+                try:                    
+                    job = self.input.get()            
+                    try:
+                        if job == None:
+                            self.output.put(None) #sentinel
+                            self.dojobs = False
+                        else: 
+                            self.module.fetchData(job['data'],job['options'])                             
+                    finally:                        
+                        self.input.task_done() 
+                except Exception as e:
+                    self.module.mainWindow.logmessage(e)                   
+                
+        finally:            
+            self.module.streamingData.disconnect(streamingData)
+
+        
 class ApiTab(QWidget):
     
-    streamingData = Signal(list,list,str)
+    streamingData = Signal(list,list,list)
     
     def __init__(self, mainWindow=None,name="NoName",loadSettings=True):
         QWidget.__init__(self, mainWindow)
@@ -36,6 +91,8 @@ class ApiTab(QWidget):
         self.mainWindow=mainWindow
         self.name=name
         self.connected = False
+        self.lock_fetching = threading.Lock()
+
 
     def idtostr(self,val):
         try:
@@ -116,76 +173,75 @@ class ApiTab(QWidget):
 
                 
     def request(self, path, args=None,headers=None):
-        session = self.initSession()            
-        if (not session): raise Exception("No session available.")        
-                
-        try:
-            if headers != None:
-                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
+        with self.lock_fetching:
+            session = self.initSession()            
+            if (not session): raise Exception("No session available.")        
+                    
+            try:
+                if headers != None:
+                    response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
+                else:
+                    response = session.get(path,params=args,timeout=self.timeout,verify=False)
+            except (HTTPError,ConnectionError),e: 
+                raise Exception("Request Error: {0}".format(e.message))
             else:
-                response = session.get(path,params=args,timeout=self.timeout,verify=False)
-        except (HTTPError,ConnectionError),e: 
-            raise Exception("Request Error: {0}".format(e.message))
-        else:
-            if not response.json():
-                raise Exception("Request Format Error: No JSON data!")
-                
-            else:
-                status =  'fetched' if response.ok else 'error'
-                status = status + ' ('+str(response.status_code)+')'  
-                return response.json(),dict(response.headers.items()),status     
+                if not response.json():
+                    raise Exception("Request Format Error: No JSON data!")
+                    
+                else:
+                    status =  'fetched' if response.ok else 'error'
+                    status = status + ' ('+str(response.status_code)+')'  
+                    return response.json(),dict(response.headers.items()),status     
 
     def download(self, path, args=None,headers=None,foldername=None):
-        session = self.initSession()            
-        if (not session): raise Exception("No session available.")        
-               
-        def makefilename(extbymime=None):#Create file name
-            filename,fileext = os.path.splitext(os.path.basename(path))
-            filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            filenumber = 1
-            if extbymime:
-                fileext=extbymime
-                
-            while True:
-                fullfilename = os.path.join(foldername,filename+'-'+filetime+'-'+str(filenumber)+str(fileext))
-                if (os.path.isfile(fullfilename)):
-                    filenumber = filenumber+1
+        with self.lock_fetching:
+            session = self.initSession()            
+            if (not session): raise Exception("No session available.")        
+                   
+            def makefilename(extbymime=None):#Create file name
+                filename,fileext = os.path.splitext(os.path.basename(path))
+                filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
+                filenumber = 1
+                if extbymime:
+                    fileext=extbymime
+                    
+                while True:
+                    fullfilename = os.path.join(foldername,filename+'-'+filetime+'-'+str(filenumber)+str(fileext))
+                    if (os.path.isfile(fullfilename)):
+                        filenumber = filenumber+1
+                    else:
+                        break
+                return fullfilename
+    
+                    
+            try:
+                if headers != None:
+                    response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False,stream=True)
                 else:
-                    break
-            return fullfilename
-
-                
-        try:
-            if headers != None:
-                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False,stream=True)
+                    response = session.get(path,params=args,timeout=self.timeout,verify=False,stream=True)
+            except (HTTPError,ConnectionError),e: 
+                raise Exception("Request Error: {0}".format(e.message))
             else:
-                response = session.get(path,params=args,timeout=self.timeout,verify=False,stream=True)
-        except (HTTPError,ConnectionError),e: 
-            raise Exception("Request Error: {0}".format(e.message))
-        else:
-            if response.status_code == 200:
-                guessed_ext = guess_all_extensions(response.headers["content-type"])
-                guessed_ext = guessed_ext[-1] if len(guessed_ext) > 0 else None 
-                
-                fullfilename = makefilename(guessed_ext)
-                with open(fullfilename,'wb') as f:
-                    for chunk in response.iter_content(1024) :
-                        f.write(chunk)
-                data = {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path,'sourcequery':args}
-                status =  'downloaded' + ' ('+str(response.status_code)+')'        
-            else:
-                data = {'sourcepath':path,'sourcequery':args}
-                status =  'error' + ' ('+str(response.status_code)+')'
-
-            return data,dict(response.headers),status
+                if response.status_code == 200:
+                    guessed_ext = guess_all_extensions(response.headers["content-type"])
+                    guessed_ext = guessed_ext[-1] if len(guessed_ext) > 0 else None 
+                    
+                    fullfilename = makefilename(guessed_ext)
+                    with open(fullfilename,'wb') as f:
+                        for chunk in response.iter_content(1024) :
+                            f.write(chunk)
+                    data = {'filename':os.path.basename(fullfilename),'targetpath':fullfilename,'sourcepath':path,'sourcequery':args}
+                    status =  'downloaded' + ' ('+str(response.status_code)+')'        
+                else:
+                    data = {'sourcepath':path,'sourcequery':args}
+                    status =  'error' + ' ('+str(response.status_code)+')'
+    
+                return data,dict(response.headers),status
 
     def fetchData(self):
         pass
 
-    def stopFetching(self):
-        self.connected = False
-
-
+            
     @Slot()
     def doLogin(self,query=False,caption='',url=''):
         self.doQuery=query
@@ -288,9 +344,7 @@ class FacebookTab(ApiTab):
 
     def fetchData(self,nodedata,options=None):          
         #Preconditions
-        if (options==None): options = self.getOptions()
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
-        #if nodedata['objectid']==None: raise Exception("Empty object id")
 
         #Abort condition for time based pagination
         since = options['params'].get('since',False)
@@ -325,9 +379,12 @@ class FacebookTab(ApiTab):
     
             self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
             
-            #data        
+            #data
+            options['querytime'] = str(datetime.now())        
             data,headers,status = self.request(urlpath,urlparams)
-            self.streamingData.emit(data,headers,status)
+            options['querystatus'] = status            
+                        
+            self.streamingData.emit(data,options,headers)
             
             #paging
             if (hasDictValue(data,"paging.next")):            
@@ -505,7 +562,7 @@ class TwitterStreamingTab(ApiTab):
                 response = _send()
     
                 for line in response.iter_lines():
-                    QApplication.processEvents()
+                    #QApplication.processEvents()
                     if not self.connected:
                         break
                     if line:
@@ -554,6 +611,7 @@ class TwitterStreamingTab(ApiTab):
         :param data: Error message sent from stream
         :type data: dict
         """
+        raise Exception("Error, Status Code "+str(status_code))
         return
 
     def _on_timeout(self):  # pragma: no cover
@@ -565,8 +623,6 @@ class TwitterStreamingTab(ApiTab):
         self.connected = False
             
     def fetchData(self,nodedata,options=None):
-        if (options==None): options = self.getOptions()
-        
         if not ('url' in options): 
             urlpath = "https://stream.twitter.com/1.1/"+options["query"]+".json"
             urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)
@@ -578,7 +634,11 @@ class TwitterStreamingTab(ApiTab):
         #data
         headers = None
         for data in self.request(path=urlpath, args=urlparams):
-            self.streamingData.emit(data,headers,'')
+            #data
+            options['querytime'] = str(datetime.now())                    
+            options['querystatus'] = 'stream'            
+                        
+            self.streamingData.emit(data,options,headers)                        
 
     
     @Slot()
@@ -737,7 +797,6 @@ class TwitterTab(ApiTab):
 
     
     def fetchData(self,nodedata,options=None):
-        if (options==None): options = self.getOptions()
         for page in range(0,options.get('pages',1)):  
             if not ('url' in options): 
                 urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
@@ -747,9 +806,14 @@ class TwitterTab(ApiTab):
                 urlparams =options["params"]                  
     
             self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))    
+            
+                                           
             #data
             data,headers,status = self.request(urlpath,urlparams)
-            self.streamingData.emit(data,headers,status)
+            options['querytime'] = str(datetime.now())
+            options['querystatus'] = status            
+            
+            self.streamingData.emit(data,options,headers)
             
                
             #paging-search
@@ -870,13 +934,15 @@ class GenericTab(ApiTab):
         
         
     def fetchData(self,nodedata,options=None):
-        if (options==None): options = self.getOptions()
-            
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
+        #data
         data,headers,status = self.request(urlpath,urlparams)
-        self.streamingData.emit(data,headers,status)
+        options['querytime'] = str(datetime.now())
+        options['querystatus'] = status            
+        
+        self.streamingData.emit(data,options,headers)        
 
 
 class FilesTab(ApiTab):
@@ -934,16 +1000,18 @@ class FilesTab(ApiTab):
         self.folderEdit.setText(options.get('folder',''))
         
     def fetchData(self,nodedata,options=None):
-        if (options==None): options = self.getOptions()
-        
         foldername = options.get('folder',None)
         if (foldername == None) or (not os.path.isdir(foldername)): raise Exception("Folder does not exists, select download folder, please!") 
 
         urlpath,urlparams = self.getURL(options["urlpath"], {}, nodedata)
         
         self.mainWindow.logmessage("Downloading file for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))
+        
         data,headers,status = self.download(urlpath,urlparams,None,foldername)         
-        self.streamingData.emit(data,headers,status)
+        options['querytime'] = str(datetime.now())
+        options['querystatus'] = status          
+        self.streamingData.emit(data,options,headers)
+        
 
 class QWebPageCustom(QWebPage):
     
