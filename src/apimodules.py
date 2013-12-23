@@ -31,56 +31,79 @@ def loadTabs(mainWindow=None):
 #class ApiThread(QThread):
 class ApiThread(threading.Thread):
 
-    def __init__(self,module):
+    def __init__(self,input,output,module,pool):
         threading.Thread.__init__(self)
         #self.daemon = True
         #QThread.__init__(self, None)
-        self.input = Queue.Queue()
-        self.output = Queue.Queue()
+        self.pool = pool
+        self.input = input
+        self.output = output
         self.module = module
-        self.dojobs = True
-        
+        self.halt = threading.Event()
+                         
+    def run(self):       
+        def streamingData(data,options,headers):
+            out = {'nodeindex':job['nodeindex'],'data':data,'options':options,'headers':headers}            
+            self.output.put(out) 
+
+        try:
+            while not self.halt.isSet():
+                try:                    
+                    job = self.input.get()            
+                    try:
+                        if job == None: self.halt.set()
+                        else: self.module.fetchData(job['data'],job['options'],streamingData)                             
+                    finally:                                                
+                        self.input.task_done()
+                        if job != None: self.output.put({'progress':job.get('number',0)})                         
+                except Exception as e:
+                    self.module.mainWindow.logmessage(e)                                   
+        finally:                    
+            self.pool.threadFinished()
+
+
+
+class ApiThreadPool():
+
+    def __init__(self,module):
+        self.input = Queue.Queue()
+        self.output = Queue.Queue(100)
+        self.module = module        
+        self.threads = []
+        self.pool_lock = threading.Lock()
+        self.threadcount = 0
+                
     def addJob(self,job):
         self.input.put(job)
         
     def getJob(self):
         job = self.output.get()
         self.output.task_done()                        
-        return job
+        return job            
         
-    
-    def stop(self):
-        self.module.connected = False
-        with self.input.mutex: self.input.queue.clear()
-        with self.output.mutex: self.output.queue.clear()
-        self.input.put(None)#sentinel        
-        
+    def processJobs(self):
+        with self.pool_lock:
+            self.threads = []
+            for x in range(5):
+                self.addJob(None) #sentinel
+                thread = ApiThread(self.input,self.output,self.module,self)
+                self.threadcount += 1            
+                self.threads.append(thread)
+                thread.start()
                     
-    def run(self):       
-        def streamingData(data,options,headers):
-            out = {'nodeindex':job['nodeindex'],'data':data,'options':options,'headers':headers}            
-            self.output.put(out) 
 
-        self.module.streamingData.connect(streamingData)
-        try:
-            while self.dojobs:
-                try:                    
-                    job = self.input.get()            
-                    try:
-                        if job == None:
-                            self.output.put(None) #sentinel
-                            self.dojobs = False
-                        else: 
-                            self.module.fetchData(job['data'],job['options'])                             
-                    finally:                        
-                        self.input.task_done() 
-                except Exception as e:
-                    self.module.mainWindow.logmessage(e)                   
-                
-        finally:            
-            self.module.streamingData.disconnect(streamingData)
+    def stopJobs(self):
+        for thread in self.threads: thread.halt.set()        
+        self.module.connected = False
+                   
+    def threadFinished(self):
+        with self.pool_lock:
+            self.threadcount -= 1
+            if (self.threadcount == 0):
+                with self.input.mutex: self.input.queue.clear()
+                self.output.put(None) #sentinel
 
-        
+
 class ApiTab(QWidget):
     
     streamingData = Signal(list,list,list)
@@ -91,7 +114,7 @@ class ApiTab(QWidget):
         self.mainWindow=mainWindow
         self.name=name
         self.connected = False
-        self.lock_fetching = threading.Lock()
+        self.lock_session = threading.Lock()
 
 
     def idtostr(self,val):
@@ -167,31 +190,32 @@ class ApiTab(QWidget):
         self.setOptions(options)                                    
 
     def initSession(self):
-        if not hasattr(self,"session"):
-            self.session = requests.Session()
-        return self.session
+        with self.lock_session:
+            if not hasattr(self,"session"):
+                self.session = requests.Session()
+            return self.session
 
                 
     def request(self, path, args=None,headers=None):
-        with self.lock_fetching:
-            session = self.initSession()            
-            if (not session): raise Exception("No session available.")        
-                    
-            try:
-                if headers != None:
-                    response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
-                else:
-                    response = session.get(path,params=args,timeout=self.timeout,verify=False)
-            except (HTTPError,ConnectionError),e: 
-                raise Exception("Request Error: {0}".format(e.message))
+        #with self.lock_fetching:
+        session = self.initSession()            
+        if (not session): raise Exception("No session available.")        
+                
+        try:
+            if headers != None:
+                response = session.post(path,params=args,headers=headers,timeout=self.timeout,verify=False)
             else:
-                if not response.json():
-                    raise Exception("Request Format Error: No JSON data!")
-                    
-                else:
-                    status =  'fetched' if response.ok else 'error'
-                    status = status + ' ('+str(response.status_code)+')'  
-                    return response.json(),dict(response.headers.items()),status     
+                response = session.get(path,params=args,timeout=self.timeout,verify=False)
+        except (HTTPError,ConnectionError),e: 
+            raise Exception("Request Error: {0}".format(e.message))
+        else:
+            if not response.json():
+                raise Exception("Request Format Error: No JSON data!")
+                
+            else:
+                status =  'fetched' if response.ok else 'error'
+                status = status + ' ('+str(response.status_code)+')'  
+                return response.json(),dict(response.headers.items()),status     
 
     def download(self, path, args=None,headers=None,foldername=None):
         with self.lock_fetching:
@@ -342,7 +366,7 @@ class FacebookTab(ApiTab):
         if options.has_key('accesstoken'): self.tokenEdit.setText(options.get('accesstoken','')) 
 
 
-    def fetchData(self,nodedata,options=None):          
+    def fetchData(self,nodedata,options=None,callback=None):          
         #Preconditions
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
 
@@ -384,9 +408,10 @@ class FacebookTab(ApiTab):
             data,headers,status = self.request(urlpath,urlparams)
             options['querystatus'] = status            
                         
-            self.streamingData.emit(data,options,headers)
+            if callback == None: self.streamingData.emit(data,options,headers)
+            else: callback(data,options,headers)
             
-            #paging
+            #paging            
             if (hasDictValue(data,"paging.next")):            
                 url,params = self.parseURL(getDictValue(data,"paging.next",False))
                 
@@ -397,7 +422,9 @@ class FacebookTab(ApiTab):
                       
                 options['params'] = params
                 options['url'] = url           
-            else: break    
+            else: break
+            
+            if not self.connected: break    
          
 
 
@@ -622,7 +649,7 @@ class TwitterStreamingTab(ApiTab):
         """Used to disconnect the streaming client manually"""
         self.connected = False
             
-    def fetchData(self,nodedata,options=None):
+    def fetchData(self,nodedata,options=None,callback=None):
         if not ('url' in options): 
             urlpath = "https://stream.twitter.com/1.1/"+options["query"]+".json"
             urlpath,urlparams = self.getURL(urlpath, options["params"], nodedata)
@@ -638,7 +665,9 @@ class TwitterStreamingTab(ApiTab):
             options['querytime'] = str(datetime.now())                    
             options['querystatus'] = 'stream'            
                         
-            self.streamingData.emit(data,options,headers)                        
+            if callback == None: self.streamingData.emit(data,options,headers)
+            else: callback(data,options,headers)
+                        
 
     
     @Slot()
@@ -796,7 +825,7 @@ class TwitterTab(ApiTab):
             raise Exception("No access, login please!")
 
     
-    def fetchData(self,nodedata,options=None):
+    def fetchData(self,nodedata,options=None,callback=None):
         for page in range(0,options.get('pages',1)):  
             if not ('url' in options): 
                 urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
@@ -813,7 +842,9 @@ class TwitterTab(ApiTab):
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status            
             
-            self.streamingData.emit(data,options,headers)
+            if callback == None: self.streamingData.emit(data,options,headers)
+            else: callback(data,options,headers)
+
             
                
             #paging-search
@@ -832,6 +863,8 @@ class TwitterTab(ApiTab):
                     options['params']['max_id'] = min(ids)-1
             
             if (not paging):break
+            
+            if not self.connected: break
     
     @Slot()
     def doLogin(self,query=False,caption="Twitter Login Page",url=""):
@@ -933,7 +966,7 @@ class GenericTab(ApiTab):
         self.objectidEdit.setEditText(options.get('objectid','media$group.yt$videoid.$t'))
         
         
-    def fetchData(self,nodedata,options=None):
+    def fetchData(self,nodedata,options=None,callback=None):
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
@@ -942,7 +975,8 @@ class GenericTab(ApiTab):
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status            
         
-        self.streamingData.emit(data,options,headers)        
+        if callback == None: self.streamingData.emit(data,options,headers)
+        else: callback(data,options,headers)        
 
 
 class FilesTab(ApiTab):
@@ -999,7 +1033,7 @@ class FilesTab(ApiTab):
         self.urlpathEdit.setEditText(options.get('urlpath','<url>'))       
         self.folderEdit.setText(options.get('folder',''))
         
-    def fetchData(self,nodedata,options=None):
+    def fetchData(self,nodedata,options=None,callback=None):
         foldername = options.get('folder',None)
         if (foldername == None) or (not os.path.isdir(foldername)): raise Exception("Folder does not exists, select download folder, please!") 
 
@@ -1010,7 +1044,8 @@ class FilesTab(ApiTab):
         data,headers,status = self.download(urlpath,urlparams,None,foldername)         
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status          
-        self.streamingData.emit(data,options,headers)
+        if callback == None: self.streamingData.emit(data,options,headers)
+        else: callback(data,options,headers)
         
 
 class QWebPageCustom(QWebPage):
