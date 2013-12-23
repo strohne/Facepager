@@ -6,6 +6,7 @@ import csv
 import sys
 import help
 from copy import deepcopy
+import Queue
 
 class Actions(object):
     
@@ -319,7 +320,7 @@ class Actions(object):
         #Process Output Queue
         while True:
             try:
-                job = thread.getJob(True,1)
+                job = thread.getJob()
                 
                 #-Finished all...
                 if job == None: 
@@ -357,7 +358,7 @@ class Actions(object):
                 if progress.wasCanceled():             
                     thread.stopJobs()   
                      
-            except threading.Empty as e:
+            except Queue.Empty as e:
                 pass
             
             finally:
