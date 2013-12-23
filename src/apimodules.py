@@ -50,7 +50,7 @@ class ApiThread(threading.Thread):
             while not self.halt.isSet():
                 try:   
                     time.sleep(0)                 
-                    job = self.input.get()            
+                    job = self.input.get()
                     try:
                         if job == None: self.halt.set()
                         else: self.module.fetchData(job['data'],job['options'],streamingData)                             
@@ -78,12 +78,18 @@ class ApiThreadPool():
         self.input.put(job)
         
     def getJob(self):
-        job = self.output.get(True,1)
-        self.output.task_done()                        
+        try:
+            if self.output.empty(): job = {'waiting':True} 
+            else:
+                job = self.output.get(True,1)
+                self.output.task_done()                                                     
+        except Queue.Empty as e:
+            job = {'waiting':True}
+
         return job            
         
     def processJobs(self):
-        with self.pool_lock:            
+        with self.pool_lock:
             if self.input.qsize > 50: maxthreads = 5
             elif self.input.qsize > 10: maxthreads = 2
             else: maxthreads = 1
@@ -194,7 +200,7 @@ class ApiTab(QWidget):
         self.setOptions(options)                                    
 
     def initSession(self):
-        with self.lock_session:
+        with self.lock_session:            
             if not hasattr(self,"session"):
                 self.session = requests.Session()
         return self.session
@@ -222,7 +228,7 @@ class ApiTab(QWidget):
                 return response.json(),dict(response.headers.items()),status     
 
     def download(self, path, args=None,headers=None,foldername=None):
-        with self.lock_fetching:
+        with self.lock_fetching:            
             session = self.initSession()            
             if (not session): raise Exception("No session available.")        
                    
@@ -373,6 +379,7 @@ class FacebookTab(ApiTab):
     def fetchData(self,nodedata,options=None,callback=None):          
         #Preconditions
         if (options['accesstoken'] == ""): raise Exception("Access token is missing, login please!")
+        self.connected = True
 
         #Abort condition for time based pagination
         since = options['params'].get('since',False)
@@ -830,6 +837,7 @@ class TwitterTab(ApiTab):
 
     
     def fetchData(self,nodedata,options=None,callback=None):
+        self.connected = True
         for page in range(0,options.get('pages',1)):  
             if not ('url' in options): 
                 urlpath = "https://api.twitter.com/1.1/"+options["query"]+".json"
@@ -971,6 +979,7 @@ class GenericTab(ApiTab):
         
         
     def fetchData(self,nodedata,options=None,callback=None):
+        self.connected = True
         urlpath,urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath+"?"+urllib.urlencode(urlparams)))         
 
@@ -1038,6 +1047,7 @@ class FilesTab(ApiTab):
         self.folderEdit.setText(options.get('folder',''))
         
     def fetchData(self,nodedata,options=None,callback=None):
+        self.connected = True
         foldername = options.get('folder',None)
         if (foldername == None) or (not os.path.isdir(foldername)): raise Exception("Folder does not exists, select download folder, please!") 
 

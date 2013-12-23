@@ -58,6 +58,9 @@ class Actions(object):
         
         self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
         self.actionCollapseAll.triggered.connect(self.collapseAll)
+
+        self.actionSelectNodes=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
+        self.actionSelectNodes.triggered.connect(self.selectNodes)        
         
         self.actionHelp=self.dataActions.addAction(QIcon(":/icons/help.png"),"Help")
         self.actionHelp.triggered.connect(self.help)
@@ -272,6 +275,10 @@ class Actions(object):
     def collapseAll(self):
         self.mainWindow.tree.collapseAll()
 
+    @Slot()     
+    def selectNodes(self):
+        self.mainWindow.selectNodesWindow.show()
+
 
     def queryNodes(self,indexes=False,module = False,options = False):
         #Show progress window                 
@@ -280,6 +287,7 @@ class Actions(object):
         progress.setMinimumDuration(0)
         progress.forceShow()
         progress.setAutoReset(False)       
+        progress.setAutoClose(False)
         progress.setMaximum(0)
         progress.setValue(0)        
                                 
@@ -287,6 +295,7 @@ class Actions(object):
         if indexes == False:
             level=self.mainWindow.levelEdit.value()-1
             indexes=self.mainWindow.tree.selectedIndexesAndChildren(False,{'level':level,'objecttype':['seed','data','unpacked']})
+            #indexes = self.mainWindow.tree.selectedIndexes()
         
         if module == False: module = self.mainWindow.RequestTabs.currentWidget()
         if options == False: options=module.getOptions();                
@@ -326,6 +335,10 @@ class Actions(object):
                 if job == None: 
                     break
                 
+                #-Waiting
+                elif job.has_key('waiting'):
+                    time.sleep(0)
+                
                 #-Finished one...
                 elif job.has_key('progress'): 
                     #Update progress
@@ -353,14 +366,12 @@ class Actions(object):
                     if not job['nodeindex'].isValid(): continue 
                     treenode=job['nodeindex'].internalPointer()                     
                     treenode.appendNodes(job['data'],job['options'],job['headers'],True)                
-
+    
                 #Abort
                 if progress.wasCanceled():             
                     thread.stopJobs()   
-                     
-            except Queue.Empty as e:
-                pass
-            
+    
+                
             finally:
                 QApplication.processEvents()
         
