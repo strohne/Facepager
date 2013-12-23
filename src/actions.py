@@ -279,7 +279,8 @@ class Actions(object):
         progress.setMinimumDuration(0)
         progress.forceShow()
         progress.setAutoReset(False)       
-        
+        progress.setMaximum(0)
+        progress.setValue(0)        
                                 
         #Get selected nodes
         if indexes == False:
@@ -289,47 +290,80 @@ class Actions(object):
         if module == False: module = self.mainWindow.RequestTabs.currentWidget()
         if options == False: options=module.getOptions();                
         
+            
+        #Spawn Threadpool
+        thread = ApiThreadPool(module)        
+                    
+        #Fill Input Queue
+        number = 0
+        for index in indexes:
+            number += 1
+            if not index.isValid(): continue                    
+            treenode=index.internalPointer()               
+            job ={'number':number,'nodeindex':index,'data':deepcopy(treenode.data),'options':deepcopy(options)}
+            thread.addJob(job)
+
         progress_max = len(indexes)
         progress_value = 0
+        progress_lastupdate = QDateTime.currentDateTime();
+        progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
+        progress_lastvalue = 0
+        
 
         progress.setMaximum(progress_max)
         progress.setValue(progress_value)
-            
-        #Spawn Thread
-        thread = ApiThread(module)        
-                    
-        #Fill Input Queue
-        for index in indexes:
-            if not index.isValid(): continue                    
-            treenode=index.internalPointer()               
-            job ={'nodeindex':index,'data':deepcopy(treenode.data),'options':deepcopy(options)}
-            thread.addJob(job)
-                        
-        #Sentinel
-        thread.addJob(None)
-        thread.start() 
+                                
+        thread.processJobs() 
             
           
         #Process Output Queue
         while True:
-            #Get nodes
-            job = thread.getJob()
-            if job == None: break 
-
             try:
-                if not job['nodeindex'].isValid(): continue 
-                treenode=job['nodeindex'].internalPointer()                     
-                treenode.appendNodes(job['data'],job['options'],job['headers'])
-            finally:
-                #Update progress
-                progress_value+=1
-                progress.setValue(progress_value) 
-                QApplication.processEvents()
+                job = thread.getJob(True,1)
+                
+                #-Finished all...
+                if job == None: 
+                    break
+                
+                #-Finished one...
+                elif job.has_key('progress'): 
+                    #Update progress
+                    progress_value +=1                
+                    progress.setValue(progress_value) 
+    
+                    #Calculate Speed
+                    if QDateTime.currentDateTime() > progress_nextupdate:                    
+                        try:    
+                            cur = QDateTime.currentDateTime()                 
+                            span = progress_lastupdate.secsTo(cur)
+                            rate = ((progress_value - progress_lastvalue) / float(span))* 60
+                        except:
+                            rate = 0  
+                        
+                        progress_lastupdate = cur
+                        progress_lastvalue =  progress_value
+                        progress_nextupdate = progress_lastupdate.addSecs(10);
+                        
+                        progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))                                    
+    
+                
+                #-Add data...    
+                else:                    
+                    if not job['nodeindex'].isValid(): continue 
+                    treenode=job['nodeindex'].internalPointer()                     
+                    treenode.appendNodes(job['data'],job['options'],job['headers'],True)                
 
-            #Abort
-            if progress.wasCanceled():             
-                thread.stop()
-                            
+                #Abort
+                if progress.wasCanceled():             
+                    thread.stopJobs()   
+                     
+            except threading.Empty as e:
+                pass
+            
+            finally:
+                QApplication.processEvents()
+        
+        self.mainWindow.tree.treemodel.commitNewNodes()                    
         progress.cancel()   
                       
     @Slot()
