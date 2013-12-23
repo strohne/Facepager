@@ -12,6 +12,7 @@ from apimodules import *
 from help import *
 from presets import *
 from timer import *
+from selectnodes import *
 import logging
 import threading
 
@@ -52,6 +53,7 @@ class MainWindow(QMainWindow):
         self.helpwindow=HelpWindow(self)
         self.presetWindow=PresetWindow(self)
         self.timerWindow=TimerWindow(self)
+        self.selectNodesWindow=SelectNodesWindow(self)
         
         self.timerWindow.timerstarted.connect(self.actions.timerStarted)
         self.timerWindow.timerstopped.connect(self.actions.timerStopped)
@@ -324,6 +326,7 @@ class Toolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.mainWindow.actions.actionExpandAll)        
         self.addAction(self.mainWindow.actions.actionCollapseAll)
+        self.addAction(self.mainWindow.actions.actionSelectNodes)
         self.addAction(self.mainWindow.actions.actionLoadPreset)
         self.addAction(self.mainWindow.actions.actionHelp)
     
