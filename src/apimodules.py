@@ -77,7 +77,7 @@ class ApiThreadPool():
         self.input.put(job)
         
     def getJob(self):
-        job = self.output.get()
+        job = self.output.get(True,1)
         self.output.task_done()                        
         return job            
         
@@ -89,8 +89,7 @@ class ApiThreadPool():
                 thread = ApiThread(self.input,self.output,self.module,self)
                 self.threadcount += 1            
                 self.threads.append(thread)
-                thread.start()
-                    
+                thread.start()                    
 
     def stopJobs(self):
         for thread in self.threads: thread.halt.set()        
