@@ -1,3 +1,4 @@
+#import yappi
 import cProfile
 import sys
 from PySide.QtCore import *
@@ -281,7 +282,7 @@ class MainWindow(QMainWindow):
             else:
                 self.loglist.append(str(datetime.now())+" "+message)
                 
-            QApplication.processEvents()            
+            #QApplication.processEvents()            
         
     def showProgress(self,current = None,maximum = None,message = None):                
         if not hasattr(self, 'progresswindow') or (self.progresswindow is None):
@@ -345,6 +346,9 @@ if __name__ == "__main__":
     except:
         print "Error intitializing log file"
     finally:
-        #cProfile.run('startMain()')    
+        #cProfile.run('startMain()')
+        #yappi.start()
         startMain()
+        #yappi.print_stats()
+
 
