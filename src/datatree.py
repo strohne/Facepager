@@ -217,7 +217,7 @@ class TreeItem(object):
             return self.parentItem.childItems.index(self)
         return 0
 
-    def appendNodes(self,data,options,headers = None):
+    def appendNodes(self,data,options,headers = None,delaycommit = False):
         dbnode=Node.query.get(self.id)
         if not dbnode: return(False)
             
@@ -243,7 +243,7 @@ class TreeItem(object):
             new.querystatus=options.get("querystatus","")
             new.querytime=str(options.get("querytime",""))
             new.querytype=options.get('querytype','')
-            new.queryparams=options                                        
+            #new.queryparams=options                                        
             newnodes.append(new)
                                             
                        
@@ -260,16 +260,19 @@ class TreeItem(object):
             appendNode('offcut',dbnode.objectid,offcut)
             
         #Headers
-        if (headers != None):
-            appendNode('headers',dbnode.objectid,headers)
+        #if (headers != None):
+        #    appendNode('headers',dbnode.objectid,headers)
                         
-
+        
         self.model.database.session.add_all(newnodes)    
         self._childcountall += len(newnodes)    
         dbnode.childcount += len(newnodes)    
-        self.model.database.session.commit()     
-        self.model.layoutChanged.emit()
-
+        
+        self.model.newnodes += len(newnodes)
+        self.model.commitNewNodes(delaycommit)
+        #self.model.database.session.commit()     
+        #self.model.layoutChanged.emit()
+        
     def unpackList(self,key):
         dbnode=Node.query.get(self.id)
             
@@ -305,6 +308,7 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns=[]
         self.rootItem = TreeItem(self)
         self.database=database
+        self.newnodes = 0
 
     def reset(self):        
         self.rootItem.clear()
@@ -371,7 +375,13 @@ class TreeModel(QAbstractItemModel):
         except Exception as e:
             QMessageBox.critical(self.mainWindow,"Facepager",str(e))                    
                       
-                                
+
+    def commitNewNodes(self,delaycommit=False):
+        if (not delaycommit and self.newnodes > 0) or (self.newnodes > 500):            
+            self.database.session.commit()     
+            self.layoutChanged.emit()
+            self.newnodes = 0
+                                        
     def columnCount(self, parent):
         return 5+len(self.customcolumns)    
 
