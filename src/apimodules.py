@@ -48,7 +48,8 @@ class ApiThread(threading.Thread):
 
         try:
             while not self.halt.isSet():
-                try:                    
+                try:   
+                    time.sleep(0)                 
                     job = self.input.get()            
                     try:
                         if job == None: self.halt.set()
@@ -82,9 +83,13 @@ class ApiThreadPool():
         return job            
         
     def processJobs(self):
-        with self.pool_lock:
+        with self.pool_lock:            
+            if self.input.qsize > 50: maxthreads = 5
+            elif self.input.qsize > 10: maxthreads = 2
+            else: maxthreads = 1
+            
             self.threads = []
-            for x in range(5):
+            for x in range(maxthreads):
                 self.addJob(None) #sentinel
                 thread = ApiThread(self.input,self.output,self.module,self)
                 self.threadcount += 1            
@@ -192,7 +197,7 @@ class ApiTab(QWidget):
         with self.lock_session:
             if not hasattr(self,"session"):
                 self.session = requests.Session()
-            return self.session
+        return self.session
 
                 
     def request(self, path, args=None,headers=None):
