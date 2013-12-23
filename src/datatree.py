@@ -378,9 +378,10 @@ class TreeModel(QAbstractItemModel):
 
     def commitNewNodes(self,delaycommit=False):
         if (not delaycommit and self.newnodes > 0) or (self.newnodes > 500):            
-            self.database.session.commit()     
-            self.layoutChanged.emit()
+            self.database.session.commit()                 
             self.newnodes = 0
+        if (not delaycommit):
+            self.layoutChanged.emit()    
                                         
     def columnCount(self, parent):
         return 5+len(self.customcolumns)    
