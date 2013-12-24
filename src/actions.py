@@ -290,7 +290,10 @@ class Actions(object):
         progress.setAutoClose(False)
         progress.setMaximum(0)
         progress.setValue(0)        
-                                
+              
+                                   
+             
+                                             
         #Get selected nodes
         if indexes == False:
             level=self.mainWindow.levelEdit.value()-1
@@ -300,7 +303,13 @@ class Actions(object):
         if module == False: module = self.mainWindow.RequestTabs.currentWidget()
         if options == False: options=module.getOptions();                
         
-            
+        #Init progress stats
+        progress_max = len(indexes)
+        progress_value = 0
+        progress_lastupdate = QDateTime.currentDateTime();
+        progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
+        progress_lastvalue = 0
+                            
         #Spawn Threadpool
         thread = ApiThreadPool(module)        
                     
@@ -312,40 +321,30 @@ class Actions(object):
             treenode=index.internalPointer()               
             job ={'number':number,'nodeindex':index,'data':deepcopy(treenode.data),'options':deepcopy(options)}
             thread.addJob(job)
-
-        progress_max = len(indexes)
-        progress_value = 0
-        progress_lastupdate = QDateTime.currentDateTime();
-        progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
-        progress_lastvalue = 0
-        
-
-        progress.setMaximum(progress_max)
-        progress.setValue(progress_value)
                                 
         thread.processJobs() 
-            
-          
+                   
         #Process Output Queue
         while True:
             try:
                 job = thread.getJob()
                 
-                #-Finished all...
+                #-Finished all nodes...
                 if job == None: 
                     break
                 
-                #-Waiting
+                #-Waiting...
                 elif job.has_key('waiting'):
                     time.sleep(0)
                 
-                #-Finished one...
+                #-Finished one node...
                 elif job.has_key('progress'): 
                     #Update progress
-                    progress_value +=1                
+                    progress_value +=1
+
+                    progress.setMaximum(progress_max)                                    
                     progress.setValue(progress_value) 
-    
-                    #Calculate Speed
+                    
                     if QDateTime.currentDateTime() > progress_nextupdate:                    
                         try:    
                             cur = QDateTime.currentDateTime()                 
@@ -358,8 +357,8 @@ class Actions(object):
                         progress_lastvalue =  progress_value
                         progress_nextupdate = progress_lastupdate.addSecs(10);
                         
-                        progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))                                    
-    
+                        progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate)))) 
+                        
                 
                 #-Add data...    
                 else:                    
