@@ -96,37 +96,50 @@ class MainWindow(QMainWindow):
         bottomWidget.setLayout(requestLayout)
 
          
-        #tree                                                        
+        #tree
+        dataWidget=QWidget()
+        dataLayout=QVBoxLayout()
+        dataLayout.setContentsMargins(0,0,0,0)
+        dataWidget.setLayout(dataLayout)
+        dataSplitter.addWidget(dataWidget)
+        dataSplitter.setStretchFactor(0, 1);                                                              
+
+        treetoolbar = QToolBar(self)
+        treetoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
+        treetoolbar.setIconSize(QSize(16,16))
+
+        treetoolbar.addActions(self.actions.treeActions.actions())
+        dataLayout.addWidget (treetoolbar)
+
         self.tree=DataTree(self.mainWidget,self)
-        dataSplitter.addWidget(self.tree)
-        dataSplitter.setStretchFactor(0, 1);
+        dataLayout.addWidget(self.tree)  
+           
+        
+        #button=QToolButton(self.mainWidget)
+        #button.setIcon(QIcon(":/icons/timer.png"))        
 
         
         #right sidebar
         detailWidget=QWidget()
         detailLayout=QVBoxLayout()
-        detailLayout.setContentsMargins(11,0,0,11)
+        detailLayout.setContentsMargins(11,0,0,0)
         detailWidget.setLayout(detailLayout)
         dataSplitter.addWidget(detailWidget)        
         dataSplitter.setStretchFactor(1, 0);
      
+        detailtoolbar = QToolBar(self)
+        detailtoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
+        detailtoolbar.setIconSize(QSize(16,16))
+
+        detailtoolbar.addActions(self.actions.detailActions.actions())
+        detailLayout.addWidget (detailtoolbar)
+        
         self.detailTree=DictionaryTree(self.mainWidget,self)
         detailLayout.addWidget(self.detailTree)
 
-        buttonLayout=QHBoxLayout()
-        detailLayout.addLayout(buttonLayout)
-        
-        button=QPushButton("Add Column")
-        button.clicked.connect(self.actions.actionAddColumn.trigger)
-        buttonLayout.addWidget(button)
 
-        button=QPushButton("Unpack list")
-        button.clicked.connect(self.actions.actionUnpack.trigger)
-        buttonLayout.addWidget(button)   
 
-        button=QPushButton("Copy to Clipboard")
-        button.clicked.connect(self.actions.actionJsonCopy.trigger)
-        buttonLayout.addWidget(button)   
+    
         
         #requests
         actionlayout=QVBoxLayout()
@@ -324,9 +337,9 @@ class Toolbar(QToolBar):
         self.addActions(self.mainWindow.actions.databaseActions.actions())
         
         self.addSeparator()
-        self.addAction(self.mainWindow.actions.actionExpandAll)        
-        self.addAction(self.mainWindow.actions.actionCollapseAll)
-        self.addAction(self.mainWindow.actions.actionSelectNodes)
+        #self.addAction(self.mainWindow.actions.actionExpandAll)        
+        #self.addAction(self.mainWindow.actions.actionCollapseAll)
+        #self.addAction(self.mainWindow.actions.actionSelectNodes)
         self.addAction(self.mainWindow.actions.actionLoadPreset)
         self.addAction(self.mainWindow.actions.actionHelp)
     
