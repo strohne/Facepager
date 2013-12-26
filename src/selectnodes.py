@@ -54,15 +54,20 @@ class SelectNodesWindow(QDialog):
         self.exec_()
         
     def selectNodes(self):  
-        level = self.levelEdit.value()-1      
-        filter = {'level':level,'objecttype':['seed','data','unpacked']}
+        level = self.levelEdit.value()-1
+              
+        filter = {'level':level} #,'objecttype':['seed','data','unpacked']
         indexes = self.mainWindow.tree.selectedIndexesAndChildren(False,filter)
-        
+
         selmod = self.mainWindow.tree.selectionModel()
-        selmod.clear()
-        for index in indexes:        
-            selmod.select(index, QItemSelectionModel.Select|QItemSelectionModel.Rows)
-                
+        selmod.clearSelection()
+        newselection = QItemSelection()
+        #selmod.select(indexes, QItemSelectionModel.Select)
+        for index in indexes:
+            newselection.merge(QItemSelection(index,index),QItemSelectionModel.Select)       
+        
+        selmod.select(newselection, QItemSelectionModel.Select|QItemSelectionModel.Rows)
+                         
         self.close()
                         
         

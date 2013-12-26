@@ -14,6 +14,7 @@ class Actions(object):
 
         self.mainWindow=mainWindow
         
+        #Basic actions
         self.basicActions=QActionGroup(self.mainWindow)               
         self.actionOpen=self.basicActions.addAction(QIcon(":/icons/save.png"),"Open Database")
         self.actionOpen.triggered.connect(self.openDB)
@@ -21,52 +22,63 @@ class Actions(object):
         self.actionNew=self.basicActions.addAction(QIcon(":/icons/new.png"),"New Database")        
         self.actionNew.triggered.connect(self.makeDB)
                 
+        #Database actions
         self.databaseActions=QActionGroup(self.mainWindow)
         self.actionExport=self.databaseActions.addAction(QIcon(":/icons/export.png"),"Export Data")
         self.actionExport.triggered.connect(self.exportNodes)
-
-        self.actionExport=self.databaseActions.addAction(QIcon(":/icons/export.png"),"Data To Clipboard")
-        self.actionExport.triggered.connect(self.clipboardNodes)
                 
         self.actionAdd=self.databaseActions.addAction(QIcon(":/icons/add.png"),"Add Nodes")
         self.actionAdd.triggered.connect(self.addNodes)
                         
         self.actionDelete=self.databaseActions.addAction(QIcon(":/icons/delete.png"),"Delete Nodes")
         self.actionDelete.triggered.connect(self.deleteNodes)
+
         
+        #Data actions
         self.dataActions=QActionGroup(self.mainWindow)        
         self.actionQuery=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Query")
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
+
         self.actionTimer=self.dataActions.addAction(QIcon(":/icons/fetch.png"),"Time")
         self.actionTimer.triggered.connect(self.setupTimer)        
-                        
-        self.actionShowColumns=self.dataActions.addAction("Show Columns")
-        self.actionShowColumns.triggered.connect(self.showColumns)
-        
-        self.actionAddColumn=self.dataActions.addAction("Add Column")
-        self.actionAddColumn.triggered.connect(self.addColumn)
-        
-        self.actionUnpack=self.dataActions.addAction("Unpack List")
-        self.actionUnpack.triggered.connect(self.unpackList)
 
-        self.actionJsonCopy=self.dataActions.addAction("Copy to Clipboard")
-        self.actionJsonCopy.triggered.connect(self.jsonCopy)
-        
-        self.actionExpandAll=self.dataActions.addAction(QIcon(":/icons/expand.png"),"Expand nodes")
-        self.actionExpandAll.triggered.connect(self.expandAll)
-        
-        self.actionCollapseAll=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
-        self.actionCollapseAll.triggered.connect(self.collapseAll)
-
-        self.actionSelectNodes=self.dataActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
-        self.actionSelectNodes.triggered.connect(self.selectNodes)        
         
         self.actionHelp=self.dataActions.addAction(QIcon(":/icons/help.png"),"Help")
         self.actionHelp.triggered.connect(self.help)
         
         self.actionLoadPreset=self.dataActions.addAction(QIcon(":/icons/presets.png"),"Presets")
         self.actionLoadPreset.triggered.connect(self.loadPreset)
+                                
+        self.actionShowColumns=self.dataActions.addAction("Show Columns")
+        self.actionShowColumns.triggered.connect(self.showColumns)
+       
+        #Detail actions
+        self.detailActions=QActionGroup(self.mainWindow)   
+        self.actionAddColumn=self.detailActions.addAction("Add Column")
+        self.actionAddColumn.triggered.connect(self.addColumn)
+        
+        self.actionUnpack=self.detailActions.addAction("Unpack List")
+        self.actionUnpack.triggered.connect(self.unpackList)
+
+        self.actionJsonCopy=self.detailActions.addAction("Copy to Clipboard")
+        self.actionJsonCopy.triggered.connect(self.jsonCopy)
+        
+        #Tree actions
+        self.treeActions=QActionGroup(self.mainWindow)
+        self.actionExpandAll=self.treeActions.addAction(QIcon(":/icons/expand.png"),"Expand nodes")
+        self.actionExpandAll.triggered.connect(self.expandAll)
+        
+        self.actionCollapseAll=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
+        self.actionCollapseAll.triggered.connect(self.collapseAll)
+
+        self.actionSelectNodes=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
+        self.actionSelectNodes.triggered.connect(self.selectNodes)
+
+        self.actionClipboard=self.treeActions.addAction(QIcon(":/icons/export.png"),"Copy To Clipboard")
+        self.actionClipboard.triggered.connect(self.clipboardNodes)
+                
+
        
     @Slot()
     def help(self):
@@ -107,27 +119,31 @@ class Actions(object):
 
         reply = QMessageBox.question(self.mainWindow, 'Delete Nodes',"Are you sure to delete all selected nodes?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes: return
-    
+        
         progress = QProgressDialog("Deleting data...", "Abort", 0, 0,self.mainWindow)
         progress.setWindowModality(Qt.WindowModal)
         progress.setMinimumDuration(0)
-        progress.forceShow()     
-                             
-        todo=self.mainWindow.tree.selectedIndexesAndChildren(True)
-        progress.setMaximum(len(todo))            
-        
-        #self.mainWindow.tree.treemodel.beginResetModel()
-        
-        c=0
-        for index in todo:            
-            progress.setValue(c)
-            c+=1            
+        progress.forceShow()
+        try:     
+                                 
+            todo=self.mainWindow.tree.selectedIndexesAndChildren(True)
+            progress.setMaximum(len(todo))            
             
-            self.mainWindow.tree.treemodel.deleteNode(index)           
+            #self.mainWindow.tree.treemodel.beginResetModel()
+            
+            c=0
+            for index in todo:            
+                progress.setValue(c)
+                c+=1            
+                
+                self.mainWindow.tree.treemodel.deleteNode(index,True)           
+               
+                if progress.wasCanceled():
+                    break 
+        finally:
+            self.mainWindow.tree.treemodel.commitNewNodes()
+            progress.cancel()
            
-            if progress.wasCanceled():
-                break 
-        progress.cancel()
         #self.mainWindow.tree.treemodel.endResetModel()
 
 
@@ -211,8 +227,8 @@ class Actions(object):
         
         input=QTextEdit()           
         input.setMinimumWidth(500)
-        input.LineWrapMode=QTextEdit.NoWrap
-        input.acceptRichText=False
+        input.LineWrapMode=QPlainTextEdit.NoWrap
+        #input.acceptRichText=False
         input.setFocus()
         layout.addWidget(input)
                 
@@ -260,7 +276,7 @@ class Actions(object):
         try:
             key = self.mainWindow.detailTree.selectedKey()
             if (key == ''): return False
-            selected = self.mainWindow.tree.selectedIndexes() 
+            selected = self.mainWindow.tree.selectionModel().selectedRows()
             for item in selected:
                 if not item.isValid(): continue
                 treenode=item.internalPointer()
@@ -281,101 +297,102 @@ class Actions(object):
 
 
     def queryNodes(self,indexes=False,module = False,options = False):
-        #Show progress window                 
-        progress = QProgressDialog("Fetching data...", "Abort", 0, 0,self.mainWindow)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimumDuration(0)
-        progress.forceShow()
-        progress.setAutoReset(False)       
-        progress.setAutoClose(False)
-        progress.setMaximum(0)
-        progress.setValue(0)        
-              
-                                   
-             
-                                             
-        #Get selected nodes
-        if indexes == False:
-            level=self.mainWindow.levelEdit.value()-1
-            indexes=self.mainWindow.tree.selectedIndexesAndChildren(False,{'level':level,'objecttype':['seed','data','unpacked']})
-            #indexes = self.mainWindow.tree.selectedIndexes()
-        
-        if module == False: module = self.mainWindow.RequestTabs.currentWidget()
-        if options == False: options=module.getOptions();                
-        
-        #Init progress stats
-        progress_max = len(indexes)
-        progress_value = 0
-        progress_lastupdate = QDateTime.currentDateTime();
-        progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
-        progress_lastvalue = 0
-                            
-        #Spawn Threadpool
-        thread = ApiThreadPool(module)        
-                    
-        #Fill Input Queue
-        number = 0
-        for index in indexes:
-            number += 1
-            if not index.isValid(): continue                    
-            treenode=index.internalPointer()               
-            job ={'number':number,'nodeindex':index,'data':deepcopy(treenode.data),'options':deepcopy(options)}
-            thread.addJob(job)
+        #Show progress window
+        try:                 
+            progress = QProgressDialog("Fetching data...", "Abort", 0, 0,self.mainWindow)
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+            progress.forceShow()
+            progress.setAutoReset(False)       
+            progress.setAutoClose(False)
+            progress.setMaximum(0)
+            progress.setValue(0)        
+                  
+                                       
+                 
+                                                 
+            #Get selected nodes
+            if indexes == False:
+                level=self.mainWindow.levelEdit.value()-1
+                indexes=self.mainWindow.tree.selectedIndexesAndChildren(False,{'level':level,'objecttype':['seed','data','unpacked']})
+                #indexes = self.mainWindow.tree.selectedIndexes()
+            
+            if module == False: module = self.mainWindow.RequestTabs.currentWidget()
+            if options == False: options=module.getOptions();                
+            
+            #Init progress stats
+            progress_max = len(indexes)
+            progress_value = 0
+            progress_lastupdate = QDateTime.currentDateTime();
+            progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
+            progress_lastvalue = 0
                                 
-        thread.processJobs() 
-                   
-        #Process Output Queue
-        while True:
-            try:
-                job = thread.getJob()
-                
-                #-Finished all nodes...
-                if job == None: 
-                    break
-                
-                #-Waiting...
-                elif job.has_key('waiting'):
-                    time.sleep(0)
-                
-                #-Finished one node...
-                elif job.has_key('progress'): 
-                    #Update progress
-                    progress_value +=1
-
-                    progress.setMaximum(progress_max)                                    
-                    progress.setValue(progress_value) 
+            #Spawn Threadpool
+            thread = ApiThreadPool(module)        
+                        
+            #Fill Input Queue
+            number = 0
+            for index in indexes:
+                number += 1
+                if not index.isValid(): continue                    
+                treenode=index.internalPointer()               
+                job ={'number':number,'nodeindex':index,'data':deepcopy(treenode.data),'options':deepcopy(options)}
+                thread.addJob(job)
+                                    
+            thread.processJobs() 
+                       
+            #Process Output Queue
+            while True:
+                try:
+                    job = thread.getJob()
                     
-                    if QDateTime.currentDateTime() > progress_nextupdate:                    
-                        try:    
-                            cur = QDateTime.currentDateTime()                 
-                            span = progress_lastupdate.secsTo(cur)
-                            rate = ((progress_value - progress_lastvalue) / float(span))* 60
-                        except:
-                            rate = 0  
-                        
-                        progress_lastupdate = cur
-                        progress_lastvalue =  progress_value
-                        progress_nextupdate = progress_lastupdate.addSecs(10);
-                        
-                        progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate)))) 
-                        
-                
-                #-Add data...    
-                else:                    
-                    if not job['nodeindex'].isValid(): continue 
-                    treenode=job['nodeindex'].internalPointer()                     
-                    treenode.appendNodes(job['data'],job['options'],job['headers'],True)                
+                    #-Finished all nodes...
+                    if job == None: 
+                        break
+                    
+                    #-Waiting...
+                    elif job.has_key('waiting'):
+                        time.sleep(0)
+                    
+                    #-Finished one node...
+                    elif job.has_key('progress'): 
+                        #Update progress
+                        progress_value +=1
     
-                #Abort
-                if progress.wasCanceled():             
-                    thread.stopJobs()   
-    
-                
-            finally:
-                QApplication.processEvents()
+                        progress.setMaximum(progress_max)                                    
+                        progress.setValue(progress_value) 
+                        
+                        if QDateTime.currentDateTime() > progress_nextupdate:                    
+                            try:    
+                                cur = QDateTime.currentDateTime()                 
+                                span = progress_lastupdate.secsTo(cur)
+                                rate = ((progress_value - progress_lastvalue) / float(span))* 60
+                            except:
+                                rate = 0  
+                            
+                            progress_lastupdate = cur
+                            progress_lastvalue =  progress_value
+                            progress_nextupdate = progress_lastupdate.addSecs(10);
+                            
+                            progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate)))) 
+                            
+                    
+                    #-Add data...    
+                    else:                    
+                        if not job['nodeindex'].isValid(): continue 
+                        treenode=job['nodeindex'].internalPointer()                     
+                        treenode.appendNodes(job['data'],job['options'],job['headers'],True)                
         
-        self.mainWindow.tree.treemodel.commitNewNodes()                    
-        progress.cancel()   
+                    #Abort
+                    if progress.wasCanceled():             
+                        thread.stopJobs()   
+        
+                    
+                finally:
+                    QApplication.processEvents()
+        finally:
+            self.mainWindow.tree.treemodel.commitNewNodes()                    
+            progress.cancel()   
                       
     @Slot()
     def querySelectedNodes(self):
