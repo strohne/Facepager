@@ -26,7 +26,7 @@ def loadTabs(mainWindow=None):
     mainWindow.RequestTabs.addTab(TwitterTab(mainWindow),"Twitter")
     mainWindow.RequestTabs.addTab(GenericTab(mainWindow),"Generic")    
     mainWindow.RequestTabs.addTab(FilesTab(mainWindow),"Files")
-    mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Streaming")    
+    mainWindow.RequestTabs.addTab(TwitterStreamingTab(mainWindow),"Twitter Streaming")    
     
 #class ApiThread(QThread):
 class ApiThread(threading.Thread):
