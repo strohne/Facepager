@@ -34,7 +34,7 @@ class DataTree(QTreeView):
         self.mainWindow.showProgress(None,None,"Copy to clipboard")            
 
         try:
-            indexes = self.selectedIndexes()
+            indexes = self.selectionModel().selectedRows()
             self.mainWindow.showProgress(None,len(indexes))
             
             output = StringIO.StringIO()
@@ -86,18 +86,13 @@ class DataTree(QTreeView):
         super(DataTree,self).selectionChanged(selected,deselected)
         self.mainWindow.selectionStatus.setText(str(len(self.selectionModel().selectedRows() ))+' node(s) selected ')
         
-            
-            
-    def selectedIndexes(self):
-        return [x for x in super(DataTree,self).selectedIndexes() if x.column()==0]
-
-            
+                
     def selectedIndexesAndChildren(self,persistent=False,filter={}):
         
         #emptyonly=filter.get('childcount',None)
         level=filter.get('level',None)
         
-        selected= self.selectedIndexes() 
+         
         filtered=[]
 
         def getLevel(index):
@@ -147,9 +142,8 @@ class DataTree(QTreeView):
                     while child.isValid():
                         addIndex(child)
                         child=index.child(child.row()+1,0)
-                            
-        
-        for index in selected:
+                             
+        for index in self.selectionModel().selectedRows():
             addIndex(index)
             
         return filtered     
@@ -166,9 +160,11 @@ class TreeItem(object):
         self.loaded=False                
         self._childcountallloaded=False
         self._childcountall=0
+        self._row = None
 
     def appendChild(self, item,persistent=False):
         item.parentItem=self
+        item._row =len(self.childItems)
         self.childItems.append(item)
         if persistent:
             self._childcountall += 1
@@ -180,14 +176,21 @@ class TreeItem(object):
         self.childItems=[]
         self.loaded=False
         self._childcountallloaded=False
-        
+            
     def remove(self,persistent=False):
         self.parentItem.removeChild(self,persistent)            
         
 
     def removeChild(self,child,persistent=False):
-        if child in self.childItems:            
+        if child in self.childItems:
+            rowidx = child.row()            
+            #del self.childItems[rowidx]
             self.childItems.remove(child)
+            
+            #Update row indexes
+            for row in xrange(rowidx,len(self.childItems)-1): 
+                self.childItems[row]._row = row
+              
             if persistent:
                 self._childcountall -= 1        
         
@@ -199,7 +202,12 @@ class TreeItem(object):
             self._childcountall=Node.query.filter(Node.parent_id == self.id).count()
             self._childcountallloaded=True            
         return self._childcountall     
+    
+#    def allIndexes(self):
+#        yield self
+#        for index in self.childItems:
             
+                    
     def parent(self):
         return self.parentItem
     
@@ -213,9 +221,9 @@ class TreeItem(object):
             return self.data['level']
 
     def row(self):
-        if self.parentItem:
-            return self.parentItem.childItems.index(self)
-        return 0
+        if self._row == None:
+            self._row = self.parentItem.childItems.index(self) if self.parentItem else 0            
+        return self._row
 
     def appendNodes(self,data,options,headers = None,delaycommit = False):
         dbnode=Node.query.get(self.id)
@@ -335,7 +343,7 @@ class TreeModel(QAbstractItemModel):
         #self.endRemoveRows()
 
 
-    def deleteNode(self,index):
+    def deleteNode(self,index,delaycommit = False):
         if (not self.database.connected) or (not index.isValid()) or (index.column() <> 0):
             return False                                               
 
@@ -345,8 +353,10 @@ class TreeModel(QAbstractItemModel):
         
         #Node.query.filter(Node.id == item.parentid).update()
                            
-        Node.query.filter(Node.id == item.id).delete()                            
-        self.database.session.commit()                         
+        Node.query.filter(Node.id == item.id).delete()
+        self.newnodes += 1
+        self.commitNewNodes(delaycommit)                            
+        #self.database.session.commit()                         
         item.remove(True)       
         self.endRemoveRows()
 
@@ -425,8 +435,8 @@ class TreeModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        childItem = index.internalPointer()
-        parentItem = childItem.parent()
+        #childItem = index.internalPointer()
+        parentItem = index.internalPointer().parent()
 
         if parentItem == self.rootItem:
             return QModelIndex()
