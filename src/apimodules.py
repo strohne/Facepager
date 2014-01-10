@@ -1065,7 +1065,11 @@ class FilesTab(ApiTab):
 class QWebPageCustom(QWebPage):
     
     logmessage = Signal(str)
-    
+
+    def __init__(self,*args,**kwargs):
+        super(QWebPageCustom, self).__init__(*args,**kwargs)
+        self.networkAccessManager().sslErrors.connect(self.onSslErrors)
+        
     def supportsExtension(self,extension): 
         if (extension == QWebPage.ErrorPageExtension):
             return True
@@ -1091,5 +1095,10 @@ class QWebPageCustom(QWebPage):
         
         self.logmessage.emit(msg)
                 
-        return False;        
+        return True        
 
+    def onSslErrors(self,reply, errors):
+       url = unicode(reply.url().toString())
+       reply.ignoreSslErrors()
+       self.logmessage.emit("SSL certificate error ignored: %s" % url)
+ 
