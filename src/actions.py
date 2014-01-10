@@ -72,8 +72,8 @@ class Actions(object):
         self.actionCollapseAll=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Collapse nodes")
         self.actionCollapseAll.triggered.connect(self.collapseAll)
 
-        self.actionSelectNodes=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
-        self.actionSelectNodes.triggered.connect(self.selectNodes)
+        #self.actionSelectNodes=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
+        #self.actionSelectNodes.triggered.connect(self.selectNodes)
 
         self.actionClipboard=self.treeActions.addAction(QIcon(":/icons/export.png"),"Copy To Clipboard")
         self.actionClipboard.triggered.connect(self.clipboardNodes)
