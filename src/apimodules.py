@@ -1100,5 +1100,4 @@ class QWebPageCustom(QWebPage):
     def onSslErrors(self,reply, errors):
        url = unicode(reply.url().toString())
        reply.ignoreSslErrors()
-       self.logmessage.emit("SSL certificate error ignored: %s" % url)
- 
+       self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
