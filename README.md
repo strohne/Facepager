@@ -33,4 +33,4 @@ You should be aware of error sources when dealing with Facebook API. There are a
 
 ###Citation
 
-[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2013). Facepager 3.3. Tool for Downloading Facebook, Twitter and API Data. Online at https://github.com/strohne/Facepager. 
+[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2013). Facepager 3.3. GUI-Toolkit for generic data retrieval on API.
