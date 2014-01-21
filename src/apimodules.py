@@ -659,7 +659,7 @@ class TwitterStreamingTab(ApiTab):
         self.relationEdit.insertItems(0,['statuses/filter'])                       
         
         
-        self.relationEdit.setEditable(False)
+        self.relationEdit.setEditable(True)
         mainLayout.addRow("Resource",self.relationEdit)
         
         #Twitter OAUTH consumer key and secret should be defined in credentials.py         
@@ -678,8 +678,8 @@ class TwitterStreamingTab(ApiTab):
          
         #Parameter
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['track']) #'count','until'
-        self.paramEdit.setValueOptions(['<Object ID>'])
+        #self.paramEdit.setNameOptions(['track']) #'count','until'
+        #self.paramEdit.setValueOptions(['<Object ID>'])
         mainLayout.addRow("Parameters",self.paramEdit)
 
          
