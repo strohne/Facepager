@@ -147,8 +147,11 @@ class MainWindow(QMainWindow):
         
         self.RequestTabs=QTabWidget()
         actionlayout.addWidget(self.RequestTabs)        
-        loadTabs(self)
-        
+        self.RequestTabs.addTab(FacebookTab(self),"Facebook")
+        self.RequestTabs.addTab(TwitterTab(self),"Twitter")
+        self.RequestTabs.addTab(GenericTab(self),"Generic")    
+        self.RequestTabs.addTab(FilesTab(self),"Files")
+        self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")    
     
         #fetch data      
         f=QFont()
