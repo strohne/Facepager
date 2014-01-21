@@ -1,3 +1,4 @@
+![Logo](https://raw.github.com/strohne/Facepager/master/icons/icon_facepager.png)
 ###Description
 
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
