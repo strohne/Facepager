@@ -2,93 +2,87 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import json
 
-class DictionaryTree(QTreeView):
 
-    def __init__(self,parent=None,mainWindow=None):
-        super(DictionaryTree,self).__init__(parent)
-        self.mainWindow=mainWindow
-                
+class DictionaryTree(QTreeView):
+    def __init__(self, parent=None, mainWindow=None):
+        super(DictionaryTree, self).__init__(parent)
+        self.mainWindow = mainWindow
+
         #self.setSortingEnabled(True)
         #self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QTreeView.SelectRows)
         #self.setHeaderHidden(True)
         self.setUniformRowHeights(True)
-        
-        delegate = DictionaryTreeItemDelegate();    
-        self.setItemDelegate(delegate);        
-        
-        self.treemodel = DictionaryTreeModel(self)
-        self.setModel(self.treemodel)        
 
-    def showDict(self,data={}):        
+        delegate = DictionaryTreeItemDelegate()
+        self.setItemDelegate(delegate)
+
+        self.treemodel = DictionaryTreeModel(self)
+        self.setModel(self.treemodel)
+
+    def showDict(self, data={}):
         self.treemodel.setdata(data)
-        
+
     def clear(self):
-        self.treemodel.reset()     
-        
+        self.treemodel.reset()
+
     def selectedKey(self):
-        selected=[x for x in self.selectedIndexes() if x.column()==0]
-        if not len(selected):return ''
+        selected = [x for x in self.selectedIndexes() if x.column() == 0]
+        if not len(selected):
+            return ''
         index = selected[0]
         if not index.isValid():
             return ''
-        
-        treeitem=index.internalPointer()
+
+        treeitem = index.internalPointer()
         return treeitem.keyPath()
 
-#    def keyPressEvent(self, e):
-#        if e == QKeySequence.Copy:
-#            self.copyToClipboard()
-#        else:
-#            super(DictionaryTree,self).keyPressEvent(e)
-            
-                
     def copyToClipboard(self):
         clipboard = QApplication.clipboard()
         try:
-            value = self.treemodel.getdata()                        
-            clipboard.setText(json.dumps(value,indent=4))
-        except Exception as e:
+            value = self.treemodel.getdata()
+            clipboard.setText(json.dumps(value, indent=4))
+        except Exception:
             clipboard.setText('')
-            
-                            
+
 
 class DictionaryTreeItemDelegate(QItemDelegate):
+    def sizeHint(self, option, index):
+        return QSize(20, 17)
 
-    def sizeHint(self,option, index ):
-        return QSize(20,17);
 
 class DictionaryTreeModel(QAbstractItemModel):
     def __init__(self, parent=None, dic={}):
-        super(DictionaryTreeModel, self).__init__(parent)        
-        self.rootItem = DictionaryTreeItem(('root',{}), None)
+        super(DictionaryTreeModel, self).__init__(parent)
+        self.rootItem = DictionaryTreeItem(('root', {}), None)
         self.setdata(dic)
 
-    def reset(self):        
+    def reset(self):
         self.rootItem.clear()
-        super(DictionaryTreeModel, self).reset()     
-          
-    def setdata(self,data):
+        super(DictionaryTreeModel, self).reset()
+
+    def setdata(self, data):
         self.reset()
-        if not isinstance(data, dict): data = {'':data} 
+        if not isinstance(data, dict):
+            data = {'': data}
         items = data.items()
         #items.sort()
         for item in items:
             newparent = DictionaryTreeItem(item, self.rootItem)
             self.rootItem.appendChild(newparent)
-    
+
     def getdata(self):
-        key,val = self.rootItem.getValue()
+        key, val = self.rootItem.getValue()
         return val
 
     def columnCount(self, parent):
-        return 2   
-                                            
+        return 2
+
 
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            captions=['Key','Value']                
-            return captions[section] if section < len(captions) else ""
+            captions = ['Key', 'Value']
+            return captions[section] if section < len(captions) else ''
 
         return None
 
@@ -100,11 +94,11 @@ class DictionaryTreeModel(QAbstractItemModel):
             return None
 
         item = index.internalPointer()
-       
-        if index.column()==0:
+
+        if index.column() == 0:
             return item.itemDataKey
-        elif index.column()==1:
-            return item.itemDataValue              
+        elif index.column() == 1:
+            return item.itemDataValue
 
         return None
 
@@ -148,7 +142,6 @@ class DictionaryTreeModel(QAbstractItemModel):
 
 
 class DictionaryTreeItem(object):
-
     def __init__(self, dicItem, parentItem):
         key, value = dicItem
         self.parentItem = parentItem
@@ -156,33 +149,30 @@ class DictionaryTreeItem(object):
 
         self.itemDataKey = key
         self.itemDataValue = value
-        self.itemDataType = "atom"
-        
-        if isinstance(value, dict):            
+        self.itemDataType = 'atom'
+
+        if isinstance(value, dict):
             items = value.items()
-            self.itemDataValue = '{'+str(len(items))+'}'
-            self.itemDataType = "dict"
+            self.itemDataValue = '{' + str(len(items)) + '}'
+            self.itemDataType = 'dict'
             #items.sort()
             for item in items:
                 self.appendChild(DictionaryTreeItem(item, self))
-        
+
         elif isinstance(value, list):
-            self.itemDataValue = '['+str(len(value))+']'
-            self.itemDataType = "list"
-            for idx,item in enumerate(value):
-                self.appendChild(DictionaryTreeItem((idx,item), self))
+            self.itemDataValue = '[' + str(len(value)) + ']'
+            self.itemDataType = 'list'
+            for idx, item in enumerate(value):
+                self.appendChild(DictionaryTreeItem((idx, item), self))
 
         elif isinstance(value, (int, long)):
-            self.itemDataType = "atom"
-            self.itemDataValue = str(value)            
-        else:
-            self.itemDataType = "atom"
-            self.itemDataValue = value
-            
+            self.itemDataType = 'atom'
+            self.itemDataValue = str(value)
+
 
     def clear(self):
-        self.childItems=[]
-        
+        self.childItems = []
+
     def appendChild(self, item):
         self.childItems.append(item)
 
@@ -205,24 +195,23 @@ class DictionaryTreeItem(object):
         return 0
 
     def keyPath(self):
-        node = self;
-        nodes = [];
-        while (node.parentItem != None):
-            nodes.insert(0,str(node.itemDataKey))
+        node = self
+        nodes = []
+        while node.parentItem is None:
+            nodes.insert(0, str(node.itemDataKey))
             node = node.parentItem
-        
+
         return '.'.join(nodes)
-    
+
     def getValue(self):
-        if self.itemDataType == "atom":
-            value = self.itemDataValue 
-        elif self.itemDataType == "list":
+        if self.itemDataType == 'atom':
+            value = self.itemDataValue
+        elif self.itemDataType == 'list':
             value = [node.getValue()[1] for node in self.childItems]
-        elif (self.itemDataType == "dict"):
+        elif self.itemDataType == 'dict':
             value = {}
             for node in self.childItems:
                 key, val = node.getValue()
                 value[key] = val
-        
-        return (self.itemDataKey,value)
-        
+                # any pythonic dict-update solution here?
+        return (self.itemDataKey, value)
