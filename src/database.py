@@ -39,9 +39,10 @@ class Database(object):
             self.engine = create_engine('sqlite:///%s'%filename, convert_unicode=True)
             self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
             Base.query = self.session.query_property()
+            #Create a query attribute by inheritance from the declarative base
             Base.metadata.create_all(bind=self.engine)
-            self.filename=filename
-            self.connected=True
+            self.filename = filename
+            self.connected = True
         except Exception as e:
             self.filename=""
             self.connected=False
@@ -55,6 +56,7 @@ class Database(object):
         self.connected=False
         
     def createconnect(self,filename):    
+        """ Creates a new file (overwrite existing?!) and connects the DB to that file"""
         self.disconnect()
         if os.path.isfile(filename):
             os.remove(filename)
@@ -81,6 +83,10 @@ class Database(object):
 
             
 class Node(Base):
+        """
+        This is the central class for all db-entries 
+        relevant to the data-view. It creates an empty node on __init__
+        """
         __tablename__='Nodes'
 
         objectid=Column(String)
@@ -106,6 +112,9 @@ class Node(Base):
             
         @property
         def response(self):
+            """
+            The response attribute holds the data (JSON) itself
+            """
             if (self.response_raw == None): 
                 return {}
             else:
@@ -113,10 +122,18 @@ class Node(Base):
     
         @response.setter
         def response(self, response_raw):
+            """
+            Tries to dump the data as JSON
+            Note: Error Handling should be implemented here
+            """
             self.response_raw = json.dumps(response_raw)               
 
         @property
         def queryparams(self):
+            """
+            The queryparams atrribute holds the Query-Parameters
+            spcified in the API-Tab
+            """
             if (self.queryparams_raw == None): 
                 return {}
             else:
@@ -135,10 +152,7 @@ class Node(Base):
             
         @property
         def objectid_encoded(self):
-            try:
-                return str(self.objectid)
-            except UnicodeEncodeError as e:
-                return self.objectid.encode('utf-8')
+            return self.objectid.encode('utf-8')
                  
 
 

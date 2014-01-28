@@ -326,9 +326,9 @@ class MainWindow(QMainWindow):
         
                  
 class Toolbar(QToolBar):
-    '''
+    """
     Initialize the main toolbar for the facepager - that provides the central interface and functions.
-    '''
+    """
     def __init__(self,parent=None,mainWindow=None):
         super(Toolbar,self).__init__(parent)
         self.mainWindow=mainWindow

@@ -9,7 +9,7 @@ from setuptools import setup
 
 APP = ['Facepager.py']
 DATA_FILES = []
-OPTIONS = {'argv_emulation': True,
+OPTIONS = {'argv_emulation': False,
  'includes': 'PySide,sqlite3,atexit,PySide.QtNetwork,PySide.QtWebKit,credentials',
  'packages': 'sqlalchemy,dateutil',
  'resources': 'presets/'}
