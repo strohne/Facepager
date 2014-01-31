@@ -367,9 +367,8 @@ class FacebookTab(ApiTab):
         self.relationEdit.setEditText(options.get('relation', 'object'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
         self.paramEdit.setParams(options.get('params', {}))
-        # set acces tokens, use generic APITab-Method
-        super(FacebookTab, self).setOptions(options)
-
+        if options.has_key('accesstoken'):
+            self.tokenEdit.setText(options.get('accesstoken',''))
 
     def fetchData(self, nodedata, options=None, callback=None):
     # Preconditions
@@ -664,10 +663,11 @@ class TwitterStreamingTab(ApiTab):
 
         # Construct login-Layout
         loginlayout = QHBoxLayout()
-        loginlayout.addWidget(self.loginButton)
+        
         loginlayout.addWidget(self.tokenEdit)
-        loginlayout.addWidget(self.tokensecretEdit)
         loginlayout.addWidget(QLabel("Access Token Secret"))
+        loginlayout.addWidget(self.tokensecretEdit)        
+        loginlayout.addWidget(self.loginButton)
 
         # Construct main-Layout
         mainLayout = QFormLayout()
