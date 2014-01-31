@@ -168,6 +168,10 @@ class DictionaryTreeItem(object):
         elif isinstance(value, (int, long)):
             self.itemDataType = 'atom'
             self.itemDataValue = str(value)
+            
+        else:
+            self.itemDataType = 'atom'
+            self.itemDataValue = value            
 
 
     def clear(self):
@@ -197,7 +201,7 @@ class DictionaryTreeItem(object):
     def keyPath(self):
         node = self
         nodes = []
-        while node.parentItem is None:
+        while node.parentItem is not None:
             nodes.insert(0, str(node.itemDataKey))
             node = node.parentItem
 
