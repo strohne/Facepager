@@ -305,9 +305,6 @@ class Actions(object):
             progress.setMaximum(0)
             progress.setValue(0)
 
-
-
-
             #Get selected nodes
             if indexes == False:
                 level = self.mainWindow.levelEdit.value() - 1
@@ -322,6 +319,8 @@ class Actions(object):
 
             #Init progress stats
             progress_max = len(indexes)
+            if isinstance(apimodule, TwitterStreamingTab):
+                progress_max = 100
             progress_value = 0
             progress_lastupdate = QDateTime.currentDateTime();
             progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
@@ -360,8 +359,8 @@ class Actions(object):
                     #-Finished one node...
                     elif 'progress' in job:
                     #Update progress
-                        progress_value += 1
 
+                        progress_value += 1
                         progress.setMaximum(progress_max)
                         progress.setValue(progress_value)
 
@@ -379,8 +378,32 @@ class Actions(object):
 
                             progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))
 
+                    #special handling for the streaminAPI
+                    elif 'streamprogress' in job:
 
-                            #-Add data...
+                        progress_value = 100
+                        progress.setMaximum(progress_max)
+                        progress.setValue(progress_value)
+
+                        if QDateTime.currentDateTime() > progress_nextupdate:
+                            try:
+                                cur = QDateTime.currentDateTime()
+                                span = progress_lastupdate.secsTo(cur)
+                                rate = ((progress_value - progress_lastvalue) / float(span)) * 60
+                            except:
+                                rate = 0
+
+                            progress_lastupdate = cur
+                            progress_lastvalue = progress_value
+                            progress_nextupdate = progress_lastupdate.addSecs(10);
+
+                            progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))
+                        progress.setValue(0)
+                        #Append the data of the streamingAPI
+                        treenode = job['nodeindex'].internalPointer()
+                        treenode.appendNodes(job['data'], job['options'], job['headers'], True)
+
+                    #-Add data...
                     else:
                         if not job['nodeindex'].isValid():
                             continue
