@@ -680,6 +680,8 @@ class TwitterStreamingTab(ApiTab):
         mainLayout.addRow("Resource", self.relationEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Access Token", loginlayout)
+        if loadSettings:
+            self.loadSettings()
         self.setLayout(mainLayout)
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
