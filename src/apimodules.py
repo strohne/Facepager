@@ -32,8 +32,10 @@ class ApiThread(threading.Thread):
         self.halt = threading.Event()
 
     def run(self):
-        def streamingData(data, options, headers):
+        def streamingData(data, options, headers, streamingTab=False):
             out = {'nodeindex': job['nodeindex'], 'data': data, 'options': options, 'headers': headers}
+            if streamingTab:
+                out["streamprogress"] = True
             self.output.put(out)
 
         try:
@@ -767,28 +769,13 @@ class TwitterStreamingTab(ApiTab):
                         except ValueError:  # pragma: no cover
                             self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
                         else:
-                            yield self._on_success(data)
+                            yield data
             response.close()
 
         finally:
             self.connected = False
 
-    def _on_success(self, data):  # pragma: no cover
-        """Called when data has been successfully received from the stream.
-        Returns True if other handlers for this message should be invoked.
 
-        Feel free to override this to handle your streaming data how you
-        want it handled.
-        See https://dev.twitter.com/docs/streaming-apis/messages for messages
-        sent along in stream responses.
-
-        :param data: data recieved from the stream
-        :type data: dict
-        """
-        # daten aus dem generator werden einfach nur returned, kann
-        # man hier aber auch aufbereiten etc.
-
-        return data
 
     def _on_delete(self, data):
         # Hier koennte man delete messages verabeiten
@@ -796,13 +783,10 @@ class TwitterStreamingTab(ApiTab):
 
     def _on_error(self, status_code, data):  # pragma: no cover
         """Called when stream returns non-200 status code
-
         Feel free to override this to handle your streaming data how you
         want it handled.
-
         :param status_code: Non-200 status code sent from stream
         :type status_code: int
-
         :param data: Error message sent from stream
         :type data: dict
         """
@@ -836,7 +820,7 @@ class TwitterStreamingTab(ApiTab):
             if callback is None:
                 self.streamingData.emit(data, options, headers)
             else:
-                callback(data, options, headers)
+                callback(data, options, headers, streamingTab=True)
 
 
     @Slot()
