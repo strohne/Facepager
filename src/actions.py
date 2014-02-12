@@ -346,7 +346,7 @@ class Actions(object):
                     #-Finished one node...
                     elif 'progress' in job:
                     #Update progress
-                    progress.setValue(progress.value() + 1)
+                        progress.setValue(progress.value() + 1)
 
                     if QDateTime.currentDateTime() > progress.nowd:
                         try:
