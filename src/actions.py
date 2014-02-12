@@ -1,12 +1,9 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+import csv
+from copy import deepcopy
+from progressbar import ProgressBar
 from database import *
 from apimodules import *
-import csv
-import sys
-import help
-from copy import deepcopy
-import Queue
+from src.apithread import ApiThreadPool
 
 
 class Actions(object):
@@ -294,37 +291,27 @@ class Actions(object):
 
 
     def queryNodes(self, indexes=False, apimodule=False, options=False):
+        #Get selected nodes
+        if indexes == False:
+            level = self.mainWindow.levelEdit.value() - 1
+            indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
+                                                                              'objecttype': ['seed', 'data',
+                                                                                             'unpacked']})
+
+        if apimodule == False:
+            apimodule = self.mainWindow.RequestTabs.currentWidget()
+        if options == False:
+            options = apimodule.getOptions()
+
         #Show progress window
+        progress = ProgressBar(u"Fetching Data", u"Cancel", max=len(indexes), parent=self.mainWindow)
+        progress.forceShow()
         try:
-            progress = QProgressDialog("Fetching data...", "Abort", 0, 0, self.mainWindow)
-            progress.setWindowModality(Qt.WindowModal)
-            progress.setMinimumDuration(0)
-            progress.forceShow()
-            progress.setAutoReset(False)
-            progress.setAutoClose(False)
-            progress.setMaximum(0)
-            progress.setValue(0)
 
-            #Get selected nodes
-            if indexes == False:
-                level = self.mainWindow.levelEdit.value() - 1
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
-                                                                                  'objecttype': ['seed', 'data',
-                                                                                                 'unpacked']})
 
-            if apimodule == False:
-                apimodule = self.mainWindow.RequestTabs.currentWidget()
-            if options == False:
-                options = apimodule.getOptions()
 
             #Init progress stats
-            progress_max = len(indexes)
-            if isinstance(apimodule, TwitterStreamingTab):
-                progress_max = 100
-            progress_value = 0
-            progress_lastupdate = QDateTime.currentDateTime();
-            progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
-            progress_lastvalue = 0
+
 
             #Spawn Threadpool
             threadpool = ApiThreadPool(apimodule)
@@ -359,49 +346,23 @@ class Actions(object):
                     #-Finished one node...
                     elif 'progress' in job:
                     #Update progress
+                    progress.setValue(progress.value() + 1)
 
-                        progress_value += 1
-                        progress.setMaximum(progress_max)
-                        progress.setValue(progress_value)
-
-                        if QDateTime.currentDateTime() > progress_nextupdate:
-                            try:
+                    if QDateTime.currentDateTime() > progress.nowd:
+                        try:
                                 cur = QDateTime.currentDateTime()
                                 span = progress_lastupdate.secsTo(cur)
                                 rate = ((progress_value - progress_lastvalue) / float(span)) * 60
                             except:
                                 rate = 0
 
-                            progress_lastupdate = cur
-                            progress_lastvalue = progress_value
-                            progress_nextupdate = progress_lastupdate.addSecs(10);
+                                #progress_lastupdate = cur
+                                #progress_lastvalue = progress_value
+                                #progress_nextupdate = progress_lastupdate.addSecs(10);
 
-                            progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))
+                                #progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))
 
-                    #special handling for the streaminAPI
-                    elif 'streamprogress' in job:
 
-                        progress_value = 100
-                        progress.setMaximum(progress_max)
-                        progress.setValue(progress_value)
-
-                        if QDateTime.currentDateTime() > progress_nextupdate:
-                            try:
-                                cur = QDateTime.currentDateTime()
-                                span = progress_lastupdate.secsTo(cur)
-                                rate = ((progress_value - progress_lastvalue) / float(span)) * 60
-                            except:
-                                rate = 0
-
-                            progress_lastupdate = cur
-                            progress_lastvalue = progress_value
-                            progress_nextupdate = progress_lastupdate.addSecs(10);
-
-                            progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))
-                        progress.setValue(0)
-                        #Append the data of the streamingAPI
-                        treenode = job['nodeindex'].internalPointer()
-                        treenode.appendNodes(job['data'], job['options'], job['headers'], True)
 
                     #-Add data...
                     else:
@@ -419,6 +380,8 @@ class Actions(object):
                     QApplication.processEvents()
         finally:
             self.mainWindow.tree.treemodel.commitNewNodes()
+            # according to the Docs, one should set the max value in the end (Maybe as a destructor inside the class ProgressBar?)
+            #progress.setValue(len(indexes))
             progress.cancel()
 
     @Slot()
