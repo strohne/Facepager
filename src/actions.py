@@ -219,7 +219,7 @@ class Actions(object):
         label = QLabel("<b>Object IDs (one ID per line):</b>")
         layout.addWidget(label)
 
-        input = QTextEdit()
+        input = QPlainTextEdit()
         input.setMinimumWidth(500)
         input.LineWrapMode = QPlainTextEdit.NoWrap
         #input.acceptRichText=False
