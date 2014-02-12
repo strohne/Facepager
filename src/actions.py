@@ -3,7 +3,7 @@ from copy import deepcopy
 from progressbar import ProgressBar
 from database import *
 from apimodules import *
-from src.apithread import ApiThreadPool
+from apithread import ApiThreadPool
 
 
 class Actions(object):
@@ -304,7 +304,7 @@ class Actions(object):
             options = apimodule.getOptions()
 
         #Show progress window
-        progress = ProgressBar(u"Fetching Data", u"Cancel", max=len(indexes), parent=self.mainWindow)
+        progress = ProgressBar(u"Fetching Data", u"Cancel",min=0, max=len(indexes), parent=self.mainWindow)
 
         try:
 
@@ -378,10 +378,11 @@ class Actions(object):
 
                 finally:
                     QApplication.processEvents()
+
         finally:
             self.mainWindow.tree.treemodel.commitNewNodes()
             # according to the Docs, one should set the max value in the end (Maybe as a destructor inside the class ProgressBar?)
-            #progress.setValue(len(indexes))
+            progress.setValue(progress.maximum())
             progress.cancel()
 
     @Slot()
