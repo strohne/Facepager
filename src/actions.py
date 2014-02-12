@@ -305,7 +305,7 @@ class Actions(object):
 
         #Show progress window
         progress = ProgressBar(u"Fetching Data", u"Cancel", max=len(indexes), parent=self.mainWindow)
-        progress.forceShow()
+
         try:
 
 
@@ -353,8 +353,8 @@ class Actions(object):
                                 cur = QDateTime.currentDateTime()
                                 span = progress_lastupdate.secsTo(cur)
                                 rate = ((progress_value - progress_lastvalue) / float(span)) * 60
-                            except:
-                                rate = 0
+                        except:
+                            rate = 0
 
                                 #progress_lastupdate = cur
                                 #progress_lastvalue = progress_value
