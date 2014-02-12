@@ -7,25 +7,24 @@ class ProgressBar(QProgressDialog):
     valueChanged = Signal(int)
 
     def __init__(self, mainmessage, buttontext,parent=None, min=0, max=0, interval=5,intervalmessage=None):
-        super(ProgressBar,self).__init__(mainmessage,buttontext,min,max,parent)
-        # set initial up values        
-        self.delayedmaximum = max
-        self.setMinimumDuration(0)
-        self.setLabelText(mainmessage)
-        self.setCancelButtonText(buttontext)
-        self.setWindowModality(Qt.WindowModal)
-        self.forceShow()
-        self.setAutoReset(False)
-        self.setAutoClose(False)
+        super(ProgressBar,self).__init__("",buttontext,min,max,parent)
         
-        #set date
+        # set initial up values
         self.interval = interval
         self.interval_nextupdate = None
         self.interval_message = intervalmessage
+        self.main_message = mainmessage
+        
+        self.setWindowTitle(mainmessage)
+        self.setWindowModality(Qt.WindowModal)
+        self.setMinimumDuration(0)
+        self.forceShow()
+        self.setAutoReset(False)
+        self.setAutoClose(False) #TODO: why doesn't this work anymore? Clicking cancel should not close window.
+        self.setMaximum(max,False)
+        self.setValue(0)      
         
         #self.valueChanged.connect(self.printChange)
-        self.setValue(0)
-        
 
     def setValue(self, progress):
         '''
@@ -46,7 +45,7 @@ class ProgressBar(QProgressDialog):
         
     def step(self):
         '''
-        Increment progress bar for one step
+        Increment progress bar one step
         '''
         
         self.setMaximum(self.delayedmaximum, False)        
@@ -79,6 +78,12 @@ class ProgressBar(QProgressDialog):
             self.interval_nextupdate = self.interval_lastupdate.addSecs(self.interval)
                     
             self.setLabelText(self.interval_message.format(int(round(rate))))
+            
+    def showInfo(self,key,info):
+        '''
+          TODO: show additional information in the label 
+        '''        
+        pass
 
 
 
