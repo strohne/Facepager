@@ -292,7 +292,7 @@ class Actions(object):
 
     def queryNodes(self, indexes=False, apimodule=False, options=False):
         #Show progress window
-        progress = ProgressBar(u"Fetching Data", u"Cancel",parent=self.mainWindow,intervalmessage="Fetching data ({} nodes per minute)")
+        progress = ProgressBar(u"Fetching Data", u"Cancel",parent=self.mainWindow,intervalmessage="Completing {} nodes per minute")
 
         #Get selected nodes
         if indexes == False:
