@@ -291,28 +291,24 @@ class Actions(object):
 
 
     def queryNodes(self, indexes=False, apimodule=False, options=False):
+        #Show progress window
+        progress = ProgressBar(u"Fetching Data", u"Cancel",parent=self.mainWindow,intervalmessage="Fetching data ({} nodes per minute)")
+
         #Get selected nodes
         if indexes == False:
             level = self.mainWindow.levelEdit.value() - 1
             indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
                                                                               'objecttype': ['seed', 'data',
                                                                                              'unpacked']})
-
+        #Update progress window
+        progress.setMaximum(len(indexes))
+        
         if apimodule == False:
             apimodule = self.mainWindow.RequestTabs.currentWidget()
         if options == False:
             options = apimodule.getOptions()
 
-        #Show progress window
-        progress = ProgressBar(u"Fetching Data", u"Cancel",min=0, max=len(indexes), parent=self.mainWindow)
-
         try:
-
-
-
-            #Init progress stats
-
-
             #Spawn Threadpool
             threadpool = ApiThreadPool(apimodule)
 
@@ -345,24 +341,8 @@ class Actions(object):
 
                     #-Finished one node...
                     elif 'progress' in job:
-                    #Update progress
-                        progress.setValue(progress.value() + 1)
-
-                    if QDateTime.currentDateTime() > progress.nowd:
-                        try:
-                                cur = QDateTime.currentDateTime()
-                                span = progress_lastupdate.secsTo(cur)
-                                rate = ((progress_value - progress_lastvalue) / float(span)) * 60
-                        except:
-                            rate = 0
-
-                                #progress_lastupdate = cur
-                                #progress_lastvalue = progress_value
-                                #progress_nextupdate = progress_lastupdate.addSecs(10);
-
-                                #progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))
-
-
+                        #Update progress
+                        progress.step()                        
 
                     #-Add data...
                     else:
@@ -381,8 +361,6 @@ class Actions(object):
 
         finally:
             self.mainWindow.tree.treemodel.commitNewNodes()
-            # according to the Docs, one should set the max value in the end (Maybe as a destructor inside the class ProgressBar?)
-            progress.setValue(progress.maximum())
             progress.cancel()
 
     @Slot()
