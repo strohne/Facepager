@@ -360,6 +360,7 @@ class Actions(object):
                     QApplication.processEvents()
 
         finally:
+            progress.setValue(progress.maximum())
             self.mainWindow.tree.treemodel.commitNewNodes()
             progress.cancel()
 

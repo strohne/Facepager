@@ -21,9 +21,9 @@ class ProgressBar(QProgressDialog):
         self.forceShow()
         self.setAutoReset(False)
         self.setAutoClose(False) #TODO: why doesn't this work anymore? Clicking cancel should not close window.
-        self.setMaximum(max,False)
-        self.setValue(0)      
-        
+        self.setMaximum(max)
+        self.setValue(0)
+
         #self.valueChanged.connect(self.printChange)
 
     def setValue(self, progress):
@@ -37,18 +37,17 @@ class ProgressBar(QProgressDialog):
 
     def setMaximum(self,maximum,delay=True):
         '''
-        override setMaximum to keep endless progress bar until first step was done
+        override setMaximum to keep deleayed/endless progress bar until first step was done
         '''
         self.delayedmaximum = maximum
-        if not delay:
+        if delay==False:
             super(ProgressBar,self).setMaximum(maximum)
-        
+
     def step(self):
         '''
         Increment progress bar one step
         '''
-        
-        self.setMaximum(self.delayedmaximum, False)        
+        self.setMaximum(self.delayedmaximum, False)
         self.setValue(self.value() + 1)
         
         
