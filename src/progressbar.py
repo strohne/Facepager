@@ -4,8 +4,6 @@ from PySide.QtGui import *
 
 class ProgressBar(QProgressDialog):
 
-    valueChanged = Signal(int)
-
     def __init__(self, mainmessage, buttontext,parent=None, min=0, max=0, interval=5,intervalmessage=None):
         super(ProgressBar,self).__init__("",buttontext,min,max,parent)
         
@@ -24,8 +22,6 @@ class ProgressBar(QProgressDialog):
         self.setMaximum(max)
         self.setValue(0)
 
-        #self.valueChanged.connect(self.printChange)
-
     def cancel(self):
         '''
         override cancel to automatically set maximum value when cancelling
@@ -41,7 +37,6 @@ class ProgressBar(QProgressDialog):
         '''
         super(ProgressBar,self).setValue(progress)           
         self.computeRate()                 
-        self.valueChanged.emit(progress)
 
     def setMaximum(self,maximum,delay=True):
         '''
@@ -56,12 +51,7 @@ class ProgressBar(QProgressDialog):
         Increment progress bar one step
         '''
         self.setMaximum(self.delayedmaximum, False)
-        self.setValue(self.value() + 1)
-        
-        
-    @Slot()
-    def printChange(self,int):
-        print int
+        self.setValue(self.value() + 1)                
 
     def computeRate(self):
         '''
@@ -91,7 +81,4 @@ class ProgressBar(QProgressDialog):
           TODO: show additional information in the label 
         '''        
         pass
-
-
-
-               
+    
