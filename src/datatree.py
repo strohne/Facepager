@@ -274,6 +274,7 @@ class TreeItem(object):
         dbnode.childcount += len(newnodes)
 
         self.model.newnodes += len(newnodes)
+        self.model.nodecounter += len(newnodes)
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
@@ -313,6 +314,7 @@ class TreeModel(QAbstractItemModel):
         self.rootItem = TreeItem(self)
         self.database = database
         self.newnodes = 0
+        self.nodecounter = 0
 
     def reset(self):
         self.rootItem.clear()
