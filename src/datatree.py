@@ -4,7 +4,6 @@ from database import *
 import csv
 import StringIO
 
-
 class DataTree(QTreeView):
     def __init__(self, parent=None, mainWindow=None):
         super(DataTree, self).__init__(parent)
