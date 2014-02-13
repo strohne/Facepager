@@ -627,6 +627,13 @@ class TwitterStreamingTab(ApiTab):
 
         return options
 
+    def setOptions(self, options):
+        self.relationEdit.setEditText(options.get('query', 'statuses/filter'))
+        self.paramEdit.setParams(options.get('params', {'track': '<Object ID>'}))
+
+        # set Access-tokens,use generic method from APITab
+        super(TwitterStreamingTab, self).setOptions(options)
+        
     def initSession(self):
         if hasattr(self, "session"):
             return self.session
