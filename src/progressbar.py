@@ -5,7 +5,7 @@ from PySide.QtGui import *
 class ProgressBar(QProgressDialog):
 
     def __init__(self, mainmessage, buttontext,parent=None, min=0, max=0, interval=5,intervalmessage=None):
-        super(ProgressBar,self).__init__("",buttontext,min,max,parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        super(ProgressBar,self).__init__(mainmessage,buttontext,min,max,parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
         
         # set initial up values
         self.interval = interval
@@ -19,8 +19,7 @@ class ProgressBar(QProgressDialog):
         self.forceShow()
         self.setAutoReset(False)
         self.setAutoClose(False) #TODO: why doesn't this work anymore? Clicking cancel should not close window.
-        self.setMaximum(max)
-        self.setValue(0)
+
 
     def cancel(self):
         '''
@@ -51,7 +50,10 @@ class ProgressBar(QProgressDialog):
         Increment progress bar one step
         '''
         self.setMaximum(self.delayedmaximum, False)
-        self.setValue(self.value() + 1)                
+        if self.value() < 0:
+            self.setValue(1)
+        else:
+            self.setValue(self.value() + 1)                
 
     def computeRate(self):
         '''
