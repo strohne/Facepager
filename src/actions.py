@@ -302,6 +302,7 @@ class Actions(object):
                                                                                              'unpacked']})
         #Update progress window
         progress.setMaximum(len(indexes))
+        self.mainWindow.tree.treemodel.nodecounter = 0
         
         if apimodule == False:
             apimodule = self.mainWindow.RequestTabs.currentWidget()
@@ -350,6 +351,7 @@ class Actions(object):
                             continue
                         treenode = job['nodeindex'].internalPointer()
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
+                        progress.showInfo('newnodes',u"{} new nodes created".format(self.mainWindow.tree.treemodel.nodecounter))
 
                         #Abort
                     if progress.wasCanceled:
