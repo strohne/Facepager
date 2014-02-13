@@ -26,6 +26,14 @@ class ProgressBar(QProgressDialog):
 
         #self.valueChanged.connect(self.printChange)
 
+    def cancel(self):
+        '''
+        override cancel to automatically set maximum value when cancelling
+        '''
+        self.setValue(self.maximum())
+        super(ProgressBar,self).cancel()  
+        
+        
     def setValue(self, progress):
         '''
         override setValue to calculate speed 
