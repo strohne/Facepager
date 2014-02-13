@@ -5,7 +5,7 @@ from PySide.QtGui import *
 class ProgressBar(QProgressDialog):
 
     def __init__(self, mainmessage, buttontext,parent=None, min=0, max=0, interval=5,intervalmessage=None):
-        super(ProgressBar,self).__init__("",buttontext,min,max,parent)
+        super(ProgressBar,self).__init__("",buttontext,min,max,parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
         
         # set initial up values
         self.interval = interval
