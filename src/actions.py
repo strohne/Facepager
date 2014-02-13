@@ -351,7 +351,7 @@ class Actions(object):
                             continue
                         treenode = job['nodeindex'].internalPointer()
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
-                        progress.showInfo('newnodes',u"{} new nodes created".format(self.mainWindow.tree.treemodel.nodecounter))
+                        progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
 
                         #Abort
                     if progress.wasCanceled:

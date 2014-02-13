@@ -156,6 +156,10 @@ class ApiTab(QWidget):
             else:
                 return response
 
+    def disconnect(self):
+        """Used to disconnect when canceling requests"""
+        self.connected = False
+
 
     @Slot()
     def doLogin(self, query=False, caption='', url=''):
@@ -712,9 +716,10 @@ class TwitterStreamingTab(ApiTab):
         """ Called when the request has timed out """
         return
 
-    def _disconnect(self):
-        """Used to disconnect the streaming client manually"""
+    def disconnect(self):
+        """Used to hardly disconnect the streaming client"""
         self.connected = False
+        self.session.close() #does not work! problem is blocking response.iter_lines in fetchData
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):
