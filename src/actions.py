@@ -292,7 +292,7 @@ class Actions(object):
 
     def queryNodes(self, indexes=False, apimodule=False, options=False):
         #Show progress window
-        progress = ProgressBar(u"Fetching Data", u"Cancel",parent=self.mainWindow,intervalmessage="Completing {} nodes per minute")
+        progress = ProgressBar(u"Fetching Data",parent=self.mainWindow)
 
         #Get selected nodes
         if indexes == False:
@@ -352,7 +352,7 @@ class Actions(object):
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
 
                         #Abort
-                    if progress.wasCanceled():
+                    if progress.wasCanceled:
                         threadpool.stopJobs()
 
 
@@ -361,7 +361,7 @@ class Actions(object):
 
         finally:            
             self.mainWindow.tree.treemodel.commitNewNodes()
-            progress.cancel()
+            progress.close()
 
     @Slot()
     def querySelectedNodes(self):

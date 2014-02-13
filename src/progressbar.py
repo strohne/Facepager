@@ -1,86 +1,136 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
+from datetime import timedelta
 
+class ProgressBar(QDialog):
 
-class ProgressBar(QProgressDialog):
+    def __init__(self, mainmessage, parent=None):
+        #Init dialog
+        super(ProgressBar,self).__init__(parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowTitle(mainmessage)                
 
-    def __init__(self, mainmessage, buttontext,parent=None, min=0, max=0, interval=5,intervalmessage=None):
-        super(ProgressBar,self).__init__(mainmessage,buttontext,min,max,parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        #Create layout
+        layout = QVBoxLayout(self)        
+        self.setLayout(layout)
         
-        # set initial up values
-        self.interval = interval
-        self.interval_nextupdate = None
-        self.interval_message = intervalmessage
-        self.main_message = mainmessage
+        self.progressBar = QProgressBar()
+        self.progressBar.setRange(0,0)
+        layout.addWidget(self.progressBar,0)        
         
-        self.setWindowTitle(mainmessage)
-        self.setWindowModality(Qt.WindowModal)
-        self.setMinimumDuration(0)
-        self.forceShow()
-        self.setAutoReset(False)
-        self.setAutoClose(False) #TODO: why doesn't this work anymore? Clicking cancel should not close window.
-
-
+        self.infoPanel = QFormLayout()
+        self.infoPanel.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        self.infoPanel.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        self.infoPanel.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.infoPanel.setLabelAlignment(Qt.AlignLeft)
+        self.infos = {}
+        layout.addLayout(self.infoPanel)                      
+        
+        buttons = QDialogButtonBox()
+        self.cancelButton = QPushButton(u"Cancel")
+        self.cancelButton.clicked.connect(self.cancel)
+        buttons.addButton(self.cancelButton,QDialogButtonBox.ActionRole)
+        layout.addWidget(buttons)
+        
+                              
+        # set initial values
+        self.wasCanceled = False
+        
+        #show
+        self.open()
+                        
+        
     def cancel(self):
         '''
-        override cancel to automatically set maximum value when cancelling
+        Set cancel flag, but doesn't close the dialog
         '''
-        self.setValue(self.maximum())
-        super(ProgressBar,self).cancel()  
+        self.wasCanceled = True
+        self.cancelButton.setText("Canceling")
+        self.cancelButton.setDisabled(True)
         
+    
+    def close(self):        
+        return super(ProgressBar,self).close()
         
     def setValue(self, progress):
         '''
-        override setValue to calculate speed 
-        emits valueChanged signal which is not available in the progress dialog
+        set value of the progressbar
         '''
-        super(ProgressBar,self).setValue(progress)           
+        self.progressBar.setValue(progress)           
         self.computeRate()                 
 
     def setMaximum(self,maximum,delay=True):
         '''
-        override setMaximum to keep deleayed/endless progress bar until first step was done
+        Set maximum of the progressbar
+        If delay is true the progressbar stays in endless mode until first step was done 
         '''
         self.delayedmaximum = maximum
         if delay==False:
-            super(ProgressBar,self).setMaximum(maximum)
+            self.progressBar.setMaximum(maximum)
 
     def step(self):
         '''
         Increment progress bar one step
         '''
         self.setMaximum(self.delayedmaximum, False)
-        if self.value() < 0:
-            self.setValue(1)
+        if self.progressBar.value() < 0:
+            self.progressBar.setValue(1)
         else:
-            self.setValue(self.value() + 1)                
+            self.progressBar.setValue(self.progressBar.value() + 1)
+        
+        self.computeRate()                
 
     def computeRate(self):
         '''
-          compute the speed of operations
+          Compute the speed of operations (rolling average)
         '''
-        if self.interval_nextupdate is None:
-            self.interval_lastvalue = self.value()
-            self.interval_lastupdate = QDateTime.currentDateTime()
-            self.interval_nextupdate = self.interval_lastupdate.addSecs(self.interval)
+        if not hasattr(self,'rate_update_next'):
+            self.rate_update_frequency = 3
+            self.rate_interval = 30
             
-        elif self.interval_message is not None and QDateTime.currentDateTime() > self.interval_nextupdate:            
+            #Set time for next calculation
+            self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)
+            
+            #Save time and value for calculation of rolling average                         
+            self.rate_values = [{'time':QDateTime.currentDateTime(),'value':self.progressBar.value()}]            
+            
+            
+        elif QDateTime.currentDateTime() > self.rate_update_next:            
             try:
-                cur = QDateTime.currentDateTime()
-                span = self.interval_lastupdate.secsTo(cur)
-                rate = ((self.value() - self.interval_lastvalue) / float(span)) * 60
+                #Save value for calculation of rolling average
+                current = QDateTime.currentDateTime()
+                self.rate_values = [v for v in self.rate_values if v['time'].secsTo(current) <= self.rate_interval]
+                self.rate_values.append({'time':current,'value':self.progressBar.value()})                
+                
+                   
+                #Calculate rolling average
+                timespan = self.rate_values[0]['time'].secsTo(self.rate_values[-1]['time'])
+                valuespan = self.rate_values[-1]['value'] - self.rate_values[0]['value'] 
+                
+                rate = (valuespan / float(timespan)) * 60
+                remainingseconds = round((self.progressBar.maximum() - self.progressBar.value()) / float(rate) * 60)
+                remaining = timedelta(seconds=remainingseconds)
             except:
                 rate = 0
+                remaining = 0                
             
-            self.interval_lastupdate = cur
-            self.interval_lastvalue = self.value()
-            self.interval_nextupdate = self.interval_lastupdate.addSecs(self.interval)
-                    
-            self.setLabelText(self.interval_message.format(int(round(rate))))
-            
-    def showInfo(self,key,info):
+            self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)                
+            self.showInfo('rate',u"Completing {} nodes per minute".format(int(round(rate))))
+            self.showInfo('remaining',u"Estimated remaining time is {}".format(str(remaining)))
+                                
+        
+    def showInfo(self,key,message):
         '''
-          TODO: show additional information in the label 
+          Show additional information in a label
+          Label is updated when using the same key more the once 
         '''        
-        pass
+
+        if key in self.infos:
+            widget = self.infos[key]
+        else:
+            widget = QLabel(message)
+            self.infoPanel.addRow(widget)
+            self.infos[key] = widget
+        
+        widget.setText(message)
     
