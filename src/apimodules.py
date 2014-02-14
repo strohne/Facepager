@@ -671,14 +671,14 @@ class TwitterStreamingTab(ApiTab):
                         self.on_timeout()
                     else:
                         if response.status_code != 200:
-                            self._on_error(response.status_code, response.content)
+                            raise Exception("Request error. Status code: " + str(response.status_code) + ". Message: "+response.content )
 
                         return response
 
             while self.connected:
-                response = _send()
+                self.response = _send()
 
-                for line in response.iter_lines():
+                for line in self.response.iter_lines():
                     #QApplication.processEvents()
                     if not self.connected:
                         break
@@ -687,39 +687,20 @@ class TwitterStreamingTab(ApiTab):
                             data = json.loads(line)
                             #print data
                         except ValueError:  # pragma: no cover
-                            self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
+                            raise Exception("Unable to decode response, not valid JSON.")
                         else:
                             yield data
-            response.close()
+            self.response.close()
 
         finally:
-            self.connected = False
-
-
-
-    def _on_delete(self, data):
-        # Hier koennte man delete messages verabeiten
-        pass
-
-    def _on_error(self, status_code, data):  # pragma: no cover
-        """Called when stream returns non-200 status code
-        Feel free to override this to handle your streaming data how you
-        want it handled.
-        :param status_code: Non-200 status code sent from stream
-        :type status_code: int
-        :param data: Error message sent from stream
-        :type data: dict
-        """
-        raise Exception("Error, Status Code " + str(status_code))
-
-    def _on_timeout(self):  # pragma: no cover
-        """ Called when the request has timed out """
-        return
+            self.connected = False      
 
     def disconnect(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
-        self.session.close() #does not work! problem is blocking response.iter_lines in fetchData
+        #s = requests.session(config={'keep_alive': False})
+        #r = requests.post(url=url, data=body, headers={'Connection':'close'})
+        #self.response.connection.close() #does not work! problem is blocking response.iter_lines in fetchData
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):
