@@ -335,8 +335,7 @@ class Actions(object):
                     #-Finished all nodes...
                     if job is None:
                         break
-                    elif "ending" in job:
-                        break
+
                     #-Waiting...
                     elif 'waiting' in job:
                         time.sleep(0)

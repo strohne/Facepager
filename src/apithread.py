@@ -29,9 +29,9 @@ class ApiThreadPool():
 
     def processJobs(self):
         with self.pool_lock:
-            if self.input.qsize > 50:
+            if self.input.qsize() > 50:
                 maxthreads = 5
-            elif self.input.qsize > 10:
+            elif self.input.qsize() > 10:
                 maxthreads = 2
             else:
                 maxthreads = 1
@@ -47,7 +47,6 @@ class ApiThreadPool():
     def stopJobs(self):
         for thread in self.threads:
             thread.halt.set()
-        self.output.put({"ending":True})
         self.module.disconnect()
 
     def threadFinished(self):

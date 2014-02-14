@@ -692,15 +692,18 @@ class TwitterStreamingTab(ApiTab):
                             yield data
             self.response.close()
 
+        except AttributeError:
+            #This exception is thrown when canceling the connection
+            #Only re-raise if not manually canceled
+            if self.connected:
+                raise
         finally:
             self.connected = False      
 
     def disconnect(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
-        #s = requests.session(config={'keep_alive': False})
-        #r = requests.post(url=url, data=body, headers={'Connection':'close'})
-        #self.response.connection.close() #does not work! problem is blocking response.iter_lines in fetchData
+        self.response.close()
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):

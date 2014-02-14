@@ -45,7 +45,7 @@ class ProgressBar(QDialog):
         Set cancel flag, but doesn't close the dialog
         '''
         self.wasCanceled = True
-        self.cancelButton.setText("Canceling")
+        self.cancelButton.setText("Please wait...")
         self.cancelButton.setDisabled(True)
         
     
