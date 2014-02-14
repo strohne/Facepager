@@ -47,6 +47,7 @@ class ApiThreadPool():
     def stopJobs(self):
         for thread in self.threads:
             thread.halt.set()
+        self.output.put({"ending":True})
         self.module.disconnect()
 
     def threadFinished(self):
