@@ -357,6 +357,7 @@ class Actions(object):
                         #Abort
                     if progress.wasCanceled:
                         threadpool.stopJobs()
+                        break
 
 
                 finally:
