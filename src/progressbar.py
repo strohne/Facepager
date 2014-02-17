@@ -57,7 +57,7 @@ class ProgressBar(QDialog):
         set value of the progressbar
         '''
         self.progressBar.setValue(progress)           
-        self.computeRate()                 
+        self.computeRate()
 
     def setMaximum(self,maximum,delay=True):
         '''
@@ -78,7 +78,7 @@ class ProgressBar(QDialog):
         else:
             self.progressBar.setValue(self.progressBar.value() + 1)
         
-        self.computeRate()                
+        self.computeRate()
 
     def computeRate(self):
         '''

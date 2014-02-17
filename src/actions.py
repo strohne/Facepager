@@ -116,25 +116,21 @@ class Actions(object):
         if reply != QMessageBox.Yes:
             return
 
-        progress = QProgressDialog("Deleting data...", "Abort", 0, 0, self.mainWindow)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimumDuration(0)
-        progress.forceShow()
+        progress = ProgressBar("Deleting data...", self.mainWindow)
 
         try:
             todo = self.mainWindow.tree.selectedIndexesAndChildren(True)
             progress.setMaximum(len(todo))
-            #self.mainWindow.tree.treemodel.beginResetModel()
-            c = 0
+            #self.mainWindow.tree.treemodel.beginResetModel() ???
             for index in todo:
-                progress.setValue(c)
-                c += 1
+                progress.step()
                 self.mainWindow.tree.treemodel.deleteNode(index, True)
-                if progress.wasCanceled():
+                QApplication.processEvents()
+                if progress.wasCanceled:
                     break
         finally:
             self.mainWindow.tree.treemodel.commitNewNodes()
-            progress.cancel()
+            progress.close()
 
     @Slot()
     def clipboardNodes(self):
@@ -148,11 +144,7 @@ class Actions(object):
         fldg.setDefaultSuffix("csv")
 
         if fldg.exec_():
-            progress = QProgressDialog("Saving data...", "Abort", 0, 0, self.mainWindow)
-            progress.setWindowModality(Qt.WindowModal)
-            progress.setMinimumDuration(0)
-            progress.forceShow()
-
+            progress = ProgressBar("Exporting data...", self.mainWindow)
             progress.setMaximum(Node.query.count())
 
             if os.path.isfile(fldg.selectedFiles()[0]):
@@ -169,38 +161,33 @@ class Actions(object):
                 for key in self.mainWindow.tree.treemodel.customcolumns:
                     row.append(key)
                 writer.writerow(row)
-
-                #rows             
+                #rows
                 page = 0
-                no = 0
+
                 while True:
                     allnodes = Node.query.offset(page * 5000).limit(5000).all()
-
+                    if len(allnodes) == 0:
+                        break
                     for node in allnodes:
-                        if progress.wasCanceled():
+                        if progress.wasCanceled:
                             break
-
-                        progress.setValue(no)
-                        no += 1
-
                         row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
                                node.querystatus, node.querytime, node.querytype]
                         for key in self.mainWindow.tree.treemodel.customcolumns:
                             row.append(node.getResponseValue(key, "utf-8"))
-
                         writer.writerow(row)
-
-                    if progress.wasCanceled():
-                        break
-
-                    if len(allnodes) == 0:
+                        # step the Bar
+                        progress.step()
+                        # Enable Interaction with the Bar after each step
+                        QApplication.processEvents()
+                    if progress.wasCanceled:
                         break
                     else:
                         page += 1
 
             finally:
                 f.close()
-                progress.cancel()
+                progress.close()
 
 
     @Slot()
