@@ -121,11 +121,9 @@ class Actions(object):
         try:
             todo = self.mainWindow.tree.selectedIndexesAndChildren(True)
             progress.setMaximum(len(todo))
-            #self.mainWindow.tree.treemodel.beginResetModel() ???
             for index in todo:
                 progress.step()
                 self.mainWindow.tree.treemodel.deleteNode(index, True)
-                QApplication.processEvents()
                 if progress.wasCanceled:
                     break
         finally:
@@ -178,8 +176,6 @@ class Actions(object):
                         writer.writerow(row)
                         # step the Bar
                         progress.step()
-                        # Enable Interaction with the Bar after each step
-                        QApplication.processEvents()
                     if progress.wasCanceled:
                         break
                     else:
