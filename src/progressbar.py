@@ -79,6 +79,7 @@ class ProgressBar(QDialog):
             self.progressBar.setValue(self.progressBar.value() + 1)
         
         self.computeRate()
+        QApplication.processEvents()
 
     def computeRate(self):
         '''
