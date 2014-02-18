@@ -699,7 +699,8 @@ class TwitterStreamingTab(ApiTab):
     def disconnect(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
-        self.response.close()
+        self.response.raw._fp.close()
+        #self.response.close()
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):
