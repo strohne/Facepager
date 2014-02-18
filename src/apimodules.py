@@ -655,37 +655,35 @@ class TwitterStreamingTab(ApiTab):
             self.initSession()
 
             def _send():
-                while self.connected:
-                    try:
-                        if headers is not None:
-                            response = self.session.post(path, params=args,
-                                                         headers=headers,
-                                                         timeout=self.timeout,
-                                                         verify=False,
-                                                         stream=True)
-                        else:
-                            response = self.session.get(path, params=args, timeout=self.timeout,
-                                                        verify=False, stream=True)
-
-                    except requests.exceptions.Timeout:
-                        self.on_timeout()
+                try:
+                    if headers is not None:
+                        response = self.session.post(path, params=args,
+                                                     headers=headers,
+                                                     timeout=self.timeout,
+                                                     verify=False,
+                                                     stream=True)
                     else:
-                        if response.status_code != 200:
-                            raise Exception("Request error. Status code: " + str(response.status_code) + ". Message: "+response.content )
+                        response = self.session.get(path, params=args, timeout=self.timeout,
+                                                    verify=False, stream=True)
 
-                        return response
+                except requests.exceptions.Timeout:
+                    raise Exception('Reques timed out.')
+                else:
+                    if response.status_code != 200:
+                        raise Exception("Request error. Status code: " + str(response.status_code) + ". Message: "+response.content )
+
+                    return response
 
             while self.connected:
                 self.response = _send()
 
                 for line in self.response.iter_lines():
-                    #QApplication.processEvents()
+
                     if not self.connected:
                         break
                     if line:
                         try:
                             data = json.loads(line)
-                            #print data
                         except ValueError:  # pragma: no cover
                             raise Exception("Unable to decode response, not valid JSON.")
                         else:
