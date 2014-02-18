@@ -605,6 +605,7 @@ class TwitterStreamingTab(ApiTab):
             authorize_url='https://api.twitter.com/oauth/authorize',
             request_token_url='https://api.twitter.com/oauth/request_token',
             base_url='https://stream.twitter.com/1.1/')
+        self.timeout = 60
         self.connected = False
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -667,7 +668,7 @@ class TwitterStreamingTab(ApiTab):
                                                     verify=False, stream=True)
 
                 except requests.exceptions.Timeout:
-                    raise Exception('Reques timed out.')
+                    raise Exception('Request timed out.')
                 else:
                     if response.status_code != 200:
                         raise Exception("Request error. Status code: " + str(response.status_code) + ". Message: "+response.content )
@@ -676,7 +677,7 @@ class TwitterStreamingTab(ApiTab):
             while self.connected:
                 self.response = _send()
 
-                for line in self.response.iter_lines():
+                for line in self.response.iter_lines(1):
 
                     if not self.connected:
                         break
@@ -700,7 +701,7 @@ class TwitterStreamingTab(ApiTab):
     def disconnect(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
-        self.response.close()
+        #self.response.close()
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):
