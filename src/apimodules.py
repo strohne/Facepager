@@ -659,11 +659,11 @@ class TwitterStreamingTab(ApiTab):
                     if headers is not None:
                         response = self.session.post(path, params=args,
                                                      headers=headers,
-                                                     timeout=10,
+                                                     timeout=self.timeout,
                                                      verify=False,
                                                      stream=True)
                     else:
-                        response = self.session.get(path, params=args, timeout=10,
+                        response = self.session.get(path, params=args, timeout=self.timeout,
                                                     verify=False, stream=True)
 
                 except requests.exceptions.Timeout:
