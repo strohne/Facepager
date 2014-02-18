@@ -123,10 +123,11 @@ class Actions(object):
             progress.setMaximum(len(todo))
             for index in todo:
                 progress.step()
-                self.mainWindow.tree.treemodel.deleteNode(index, True)
+                self.mainWindow.tree.treemodel.deleteNode(index, delaycommit=True)
                 if progress.wasCanceled:
                     break
         finally:
+            # commit the operation on the db-layer afterwards (delaycommit is True)
             self.mainWindow.tree.treemodel.commitNewNodes()
             progress.close()
 

@@ -31,8 +31,7 @@ class ProgressBar(QDialog):
         self.cancelButton.clicked.connect(self.cancel)
         buttons.addButton(self.cancelButton,QDialogButtonBox.ActionRole)
         layout.addWidget(buttons)
-        
-                              
+
         # set initial values
         self.wasCanceled = False
         
@@ -83,7 +82,7 @@ class ProgressBar(QDialog):
 
     def computeRate(self):
         '''
-          Compute the speed of operations (rolling average)
+          Compute the speed of operations (rolling average) after three seconds
         '''
         if not hasattr(self,'rate_update_next'):
             self.rate_update_frequency = 3
@@ -93,17 +92,15 @@ class ProgressBar(QDialog):
             self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)
             
             #Save time and value for calculation of rolling average                         
-            self.rate_values = [{'time':QDateTime.currentDateTime(),'value':self.progressBar.value()}]            
-            
-            
+            self.rate_values = [{'time':QDateTime.currentDateTime(),'value':self.progressBar.value()}]
+
         elif QDateTime.currentDateTime() > self.rate_update_next:            
             try:
                 #Save value for calculation of rolling average
                 current = QDateTime.currentDateTime()
                 self.rate_values = [v for v in self.rate_values if v['time'].secsTo(current) <= self.rate_interval]
                 self.rate_values.append({'time':current,'value':self.progressBar.value()})                
-                
-                   
+
                 #Calculate rolling average
                 timespan = self.rate_values[0]['time'].secsTo(self.rate_values[-1]['time'])
                 valuespan = self.rate_values[-1]['value'] - self.rate_values[0]['value'] 

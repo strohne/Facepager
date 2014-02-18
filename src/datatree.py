@@ -348,13 +348,9 @@ class TreeModel(QAbstractItemModel):
         self.beginRemoveRows(index.parent(), index.row(), index.row())
         item = index.internalPointer()
 
-
-        #Node.query.filter(Node.id == item.parentid).update()
-
         Node.query.filter(Node.id == item.id).delete()
         self.newnodes += 1
         self.commitNewNodes(delaycommit)
-        #self.database.session.commit()                         
         item.remove(True)
         self.endRemoveRows()
 
@@ -388,7 +384,7 @@ class TreeModel(QAbstractItemModel):
         if (not delaycommit and self.newnodes > 0) or (self.newnodes > 500):
             self.database.session.commit()
             self.newnodes = 0
-        if (not delaycommit):
+        if not delaycommit:
             self.layoutChanged.emit()
 
     def columnCount(self, parent):
