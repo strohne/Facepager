@@ -22,12 +22,15 @@ class Actions(object):
         #Database actions
         self.databaseActions = QActionGroup(self.mainWindow)
         self.actionExport = self.databaseActions.addAction(QIcon(":/icons/export.png"), "Export Data")
+        self.actionExport.setToolTip("Export all data to a .csv file")
         self.actionExport.triggered.connect(self.exportNodes)
 
         self.actionAdd = self.databaseActions.addAction(QIcon(":/icons/add.png"), "Add Nodes")
+        self.actionAdd.setToolTip("Add new nodes as a starting point for your data collection")
         self.actionAdd.triggered.connect(self.addNodes)
 
         self.actionDelete = self.databaseActions.addAction(QIcon(":/icons/delete.png"), "Delete Nodes")
+        self.actionDelete.setToolTip("Delete Nodes(s) and their children")
         self.actionDelete.triggered.connect(self.deleteNodes)
 
 
@@ -50,13 +53,16 @@ class Actions(object):
 
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
-        self.actionAddColumn = self.detailActions.addAction("Add Column")
+        self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
+        self.actionAddColumn.setToolTip("Add the current JSON-Key as a column in the data view")
         self.actionAddColumn.triggered.connect(self.addColumn)
 
-        self.actionUnpack = self.detailActions.addAction("Unpack List")
+        self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
+        self.actionUnpack.setToolTip("Unpacks a list in the JSON-data and creates a new node containing the list content")
         self.actionUnpack.triggered.connect(self.unpackList)
 
-        self.actionJsonCopy = self.detailActions.addAction("Copy to Clipboard")
+        self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
+        self.actionJsonCopy.setToolTip("Copy the selected JSON-data to the clipboard")
         self.actionJsonCopy.triggered.connect(self.jsonCopy)
 
         #Tree actions
@@ -70,7 +76,8 @@ class Actions(object):
         #self.actionSelectNodes=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
         #self.actionSelectNodes.triggered.connect(self.selectNodes)
 
-        self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/export.png"), "Copy To Clipboard")
+        self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/toclip.png"), "Copy Node(s) to Clipboard")
+        self.actionClipboard.setToolTip("Copy the selected Nodes(s) to the clipboard")
         self.actionClipboard.triggered.connect(self.clipboardNodes)
 
 

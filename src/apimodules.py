@@ -659,11 +659,11 @@ class TwitterStreamingTab(ApiTab):
                     if headers is not None:
                         response = self.session.post(path, params=args,
                                                      headers=headers,
-                                                     timeout=self.timeout,
+                                                     timeout=10,
                                                      verify=False,
                                                      stream=True)
                     else:
-                        response = self.session.get(path, params=args, timeout=self.timeout,
+                        response = self.session.get(path, params=args, timeout=10,
                                                     verify=False, stream=True)
 
                 except requests.exceptions.Timeout:
@@ -671,7 +671,6 @@ class TwitterStreamingTab(ApiTab):
                 else:
                     if response.status_code != 200:
                         raise Exception("Request error. Status code: " + str(response.status_code) + ". Message: "+response.content )
-
                     return response
 
             while self.connected:
