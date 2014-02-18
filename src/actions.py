@@ -181,6 +181,10 @@ class Actions(object):
             progress = ProgressBar("Exporting data...", self.mainWindow)
             
             indexes = self.mainWindow.tree.selectionModel().selectedRows()
+            
+            #if child nodes should be exported as well, uncomment this line an comment the previous one
+            #indexes = self.mainWindow.tree.selectedIndexesAndChildren()
+            
             progress.setMaximum(len(indexes))
 
             if os.path.isfile(fldg.selectedFiles()[0]):
