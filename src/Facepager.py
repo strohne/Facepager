@@ -298,30 +298,6 @@ class MainWindow(QMainWindow):
                                         
             else:
                 self.loglist.append(str(datetime.now())+" "+message)
-                
-            #QApplication.processEvents()            
-        
-    def showProgress(self,current = None,maximum = None,message = None):                
-        if not hasattr(self, 'progresswindow') or (self.progresswindow is None):
-            if message == None: message = ""
-            self.progresswindow = QProgressDialog(message, "Abort", 0, 0,self)
-            self.progresswindow.setWindowModality(Qt.WindowModal)
-            self.progresswindow.setMinimumDuration(0)
-            self.progresswindow.forceShow()
-        
-        if maximum != None: self.progresswindow.setMaximum(maximum)                           
-        if current != None: self.progresswindow.setValue(current)
-        if message != None: self.progresswindow.setLabelText(message)
-        QApplication.processEvents()
-            
-    
-    def progressCanceled(self):
-        return (not self.progresswindow) or (self.progresswindow.wasCanceled()) 
-        
-    def hideProgress(self):
-        self.progresswindow.cancel()
-        self.progresswindow = None
-        
         
                  
 class Toolbar(QToolBar):
