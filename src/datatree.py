@@ -2,7 +2,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from database import *
 import csv
-import StringIO
+
 
 class DataTree(QTreeView):
     def __init__(self, parent=None, mainWindow=None):
@@ -29,37 +29,7 @@ class DataTree(QTreeView):
     #        else:
     #            super(DataTree,self).keyPressEvent(e)
 
-    def copyToClipboard(self):
-        self.mainWindow.showProgress(None, None, "Copy to clipboard")
 
-        try:
-            indexes = self.selectionModel().selectedRows()
-            self.mainWindow.showProgress(None, len(indexes))
-
-            output = StringIO.StringIO()
-            writer = csv.writer(output, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
-                                lineterminator='\r\n')
-
-            #headers    
-            row = [unicode(val).encode("utf-8") for val in self.treemodel.getRowHeader()]
-            writer.writerow(row)
-
-            #rows
-            for no in range(len(indexes)):
-                if self.mainWindow.progressCanceled():
-                    break
-                self.mainWindow.showProgress(no)
-
-                row = [unicode(val).encode("utf-8") for val in self.treemodel.getRowData(indexes[no])]
-                writer.writerow(row)
-                if self.mainWindow.progressCanceled():
-                    break
-
-            clipboard = QApplication.clipboard()
-            clipboard.setText(output.getvalue())
-        finally:
-            output.close()
-            self.mainWindow.hideProgress()
 
 
     @Slot()
