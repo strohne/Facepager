@@ -674,11 +674,9 @@ class TwitterStreamingTab(ApiTab):
                         raise Exception("Request error. Status code: " + str(response.status_code) + ". Message: "+response.content )
                     return response
 
+            self.response = _send()
             while self.connected:
-                self.response = _send()
-
-                for line in self.response.iter_lines(1):
-
+                for line in self.response.iter_lines():
                     if not self.connected:
                         break
                     if line:
@@ -701,7 +699,7 @@ class TwitterStreamingTab(ApiTab):
     def disconnect(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
-        #self.response.close()
+        self.response.close()
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):
