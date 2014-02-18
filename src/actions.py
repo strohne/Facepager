@@ -4,7 +4,7 @@ from progressbar import ProgressBar
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
-
+import StringIO
 
 class Actions(object):
     def __init__(self, mainWindow):
@@ -23,7 +23,7 @@ class Actions(object):
         self.databaseActions = QActionGroup(self.mainWindow)
         self.actionExport = self.databaseActions.addAction(QIcon(":/icons/export.png"), "Export Data")
         self.actionExport.setToolTip("Export all data to a .csv file")
-        self.actionExport.triggered.connect(self.exportNodes)
+        self.actionExport.triggered.connect(self.exportAllNodes)
 
         self.actionAdd = self.databaseActions.addAction(QIcon(":/icons/add.png"), "Add Nodes")
         self.actionAdd.setToolTip("Add new node(s) as a starting point for further data collection")
@@ -141,12 +141,79 @@ class Actions(object):
 
     @Slot()
     def clipboardNodes(self):
-        self.mainWindow.tree.copyToClipboard()
+        progress = ProgressBar("Copy to clipboard", self.mainWindow)
+        
+        indexes = self.mainWindow.tree.selectionModel().selectedRows()
+        progress.setMaximum(len(indexes))
+
+        output = StringIO.StringIO()
+        try:
+            writer = csv.writer(output, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+                                lineterminator='\r\n')
+
+            #headers    
+            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            writer.writerow(row)
+
+            #rows
+            for no in range(len(indexes)):
+                if progress.wasCanceled:
+                    break
+
+                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                writer.writerow(row)
+
+                progress.step()
+                
+            clipboard = QApplication.clipboard()
+            clipboard.setText(output.getvalue())
+        finally:
+            output.close()
+            progress.close()
+
+    @Slot()
+    def exportSelectedNodes(self):
+        fldg = QFileDialog(caption="Export selected nodes to CSV", filter="CSV Files (*.csv)")
+        fldg.setAcceptMode(QFileDialog.AcceptSave)
+        fldg.setDefaultSuffix("csv")
+
+        if fldg.exec_():        
+            progress = ProgressBar("Exporting data...", self.mainWindow)
+            
+            indexes = self.mainWindow.tree.selectionModel().selectedRows()
+            progress.setMaximum(len(indexes))
+
+            if os.path.isfile(fldg.selectedFiles()[0]):
+                os.remove(fldg.selectedFiles()[0])
+            output = open(fldg.selectedFiles()[0], 'wb')
+    
+            try:
+                writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+                                    lineterminator='\r\n')
+
+    
+                #headers    
+                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+                writer.writerow(row)
+    
+                #rows
+                for no in range(len(indexes)):
+                    if progress.wasCanceled:
+                        break
+    
+                    row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                    writer.writerow(row)
+    
+                    progress.step()
+
+            finally:
+                output.close()
+                progress.close()
 
 
     @Slot()
-    def exportNodes(self):
-        fldg = QFileDialog(caption="Export DB File to CSV", filter="CSV Files (*.csv)")
+    def exportAllNodes(self):
+        fldg = QFileDialog(caption="Export all nodes to CSV", filter="CSV Files (*.csv)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("csv")
 
