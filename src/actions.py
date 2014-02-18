@@ -40,6 +40,7 @@ class Actions(object):
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
         self.actionTimer = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Time")
+        self.actionTimer.setToolTip("Time your data collection with a timer. Fetches the data for the selected node(s) in user-defined intervalls")
         self.actionTimer.triggered.connect(self.setupTimer)
 
         self.actionHelp = self.dataActions.addAction(QIcon(":/icons/help.png"), "Help")
