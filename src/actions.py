@@ -26,11 +26,11 @@ class Actions(object):
         self.actionExport.triggered.connect(self.exportNodes)
 
         self.actionAdd = self.databaseActions.addAction(QIcon(":/icons/add.png"), "Add Nodes")
-        self.actionAdd.setToolTip("Add new nodes as a starting point for your data collection")
+        self.actionAdd.setToolTip("Add new node(s) as a starting point for further data collection")
         self.actionAdd.triggered.connect(self.addNodes)
 
         self.actionDelete = self.databaseActions.addAction(QIcon(":/icons/delete.png"), "Delete Nodes")
-        self.actionDelete.setToolTip("Delete Nodes(s) and their children")
+        self.actionDelete.setToolTip("Delete nodes(s) and their children")
         self.actionDelete.triggered.connect(self.deleteNodes)
 
 
@@ -55,7 +55,7 @@ class Actions(object):
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
         self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
-        self.actionAddColumn.setToolTip("Add the current JSON-Key as a column in the data view")
+        self.actionAddColumn.setToolTip("Add the current JSON-key as a column in the data view")
         self.actionAddColumn.triggered.connect(self.addColumn)
 
         self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
@@ -78,7 +78,7 @@ class Actions(object):
         #self.actionSelectNodes.triggered.connect(self.selectNodes)
 
         self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/toclip.png"), "Copy Node(s) to Clipboard")
-        self.actionClipboard.setToolTip("Copy the selected Nodes(s) to the clipboard")
+        self.actionClipboard.setToolTip("Copy the selected nodes(s) to the clipboard")
         self.actionClipboard.triggered.connect(self.clipboardNodes)
 
 
