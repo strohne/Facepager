@@ -347,8 +347,9 @@ class Actions(object):
 
                         #Abort
                     if progress.wasCanceled:
+                        progress.showInfo('cancel',u"Disconnecting from stream may take up to one minute.")
                         threadpool.stopJobs()
-                        break
+                        #break
 
                 finally:
                     QApplication.processEvents()
