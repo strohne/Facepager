@@ -18,7 +18,7 @@ def event_stream():
 @app.route('/fakestream')
 def sse_request():
     return Response(
-            event_stream(),mimetype="text/event-stream")
+            event_stream(),mimetype="text/html", status=420)
 
 if __name__ == '__main__':
     http_server = WSGIServer(('127.0.0.1', 8001), app)
