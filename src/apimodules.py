@@ -676,8 +676,8 @@ class TwitterStreamingTab(ApiTab):
                     else:
                         if response.status_code != 200:
                             if self.retry_counter<=5:
-                                self.mainWindow.logmessage("Reconnecting in 10 Seconds: " + str(response.status_code) + ". Message: "+response.content)
-                                time.sleep(10)
+                                self.mainWindow.logmessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+response.content)
+                                time.sleep(3)
                                 if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
                                     self.retry_counter = 0
                                     _send()
@@ -686,21 +686,25 @@ class TwitterStreamingTab(ApiTab):
                                     _send()
                             else:
                                 raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
+                        print "good response"
                         return response
 
 
             while self.connected:
                 self.response = _send()
-                for line in self.response.iter_lines():
-                    if not self.connected:
-                        break
-                    if line:
-                        try:
-                            data = json.loads(line)
-                        except ValueError:  # pragma: no cover
-                            raise Exception("Unable to decode response, not valid JSON.")
-                        else:
-                            yield data
+                if self.response:
+                    for line in self.response.iter_lines():
+                        if not self.connected:
+                            break
+                        if line:
+                            try:
+                                data = json.loads(line)
+                            except ValueError:  # pragma: no cover
+                                raise Exception("Unable to decode response, not valid JSON")
+                            else:
+                                yield data
+                else:
+                    break
             self.response.close()
 
         except AttributeError:
