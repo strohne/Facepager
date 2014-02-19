@@ -658,6 +658,7 @@ class TwitterStreamingTab(ApiTab):
             self.initSession()
 
             def _send():
+                self.last_reconnect = QDateTime.currentDateTime()
                 while self.connected:
                     try:
                         if headers is not None:
@@ -677,7 +678,7 @@ class TwitterStreamingTab(ApiTab):
                             if self.retry_counter<=5:
                                 self.mainWindow.logmessage("Reconnecting in 10 Seconds: " + str(response.status_code) + ". Message: "+response.content)
                                 time.sleep(10)
-                                if QDateTime.currentDateTime().secsTo(self.last_reconnect)>120:
+                                if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
                                     self.retry_counter = 0
                                     _send()
                                 else:
