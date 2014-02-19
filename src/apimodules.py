@@ -576,10 +576,10 @@ class TwitterStreamingTab(ApiTab):
 
         # Construct login-Layout
         loginlayout = QHBoxLayout()
-        
+
         loginlayout.addWidget(self.tokenEdit)
         loginlayout.addWidget(QLabel("Access Token Secret"))
-        loginlayout.addWidget(self.tokensecretEdit)        
+        loginlayout.addWidget(self.tokensecretEdit)
         loginlayout.addWidget(self.loginButton)
 
         # Construct main-Layout
@@ -638,7 +638,7 @@ class TwitterStreamingTab(ApiTab):
 
         # set Access-tokens,use generic method from APITab
         super(TwitterStreamingTab, self).setOptions(options)
-        
+
     def initSession(self):
         if hasattr(self, "session"):
             return self.session
@@ -652,30 +652,44 @@ class TwitterStreamingTab(ApiTab):
 
     def request(self, path, args=None, headers=None):
         self.connected = True
+        self.retry_counter=0
+        self.last_reconnect=QDateTime.currentDateTime()
         try:
             self.initSession()
 
             def _send():
-                try:
-                    if headers is not None:
-                        response = self.session.post(path, params=args,
-                                                     headers=headers,
-                                                     timeout=self.timeout,
-                                                     verify=False,
-                                                     stream=True)
+                while self.connected:
+                    try:
+                        if headers is not None:
+                            response = self.session.post(path, params=args,
+                                                         headers=headers,
+                                                         timeout=self.timeout,
+                                                         verify=False,
+                                                         stream=True)
+                        else:
+                            response = self.session.get(path, params=args, timeout=self.timeout,
+                                                        verify=False, stream=True)
+
+                    except requests.exceptions.Timeout:
+                        raise Exception('Request timed out.')
                     else:
-                        response = self.session.get(path, params=args, timeout=self.timeout,
-                                                    verify=False, stream=True)
+                        if response.status_code != 200:
+                            if self.retry_counter<=5:
+                                self.mainWindow.logmessage("Reconnecting in 10 Seconds: " + str(response.status_code) + ". Message: "+response.content)
+                                time.sleep(10)
+                                if QDateTime.currentDateTime().secsTo(self.last_reconnect)>120:
+                                    self.retry_counter = 0
+                                    _send()
+                                else:
+                                    self.retry_counter+=1
+                                    _send()
+                            else:
+                                raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
+                        return response
 
-                except requests.exceptions.Timeout:
-                    raise Exception('Request timed out.')
-                else:
-                    if response.status_code != 200:
-                        raise Exception("Request error. Status code: " + str(response.status_code) + ". Message: "+response.content )
-                    return response
 
-            self.response = _send()
             while self.connected:
+                self.response = _send()
                 for line in self.response.iter_lines():
                     if not self.connected:
                         break
@@ -694,7 +708,7 @@ class TwitterStreamingTab(ApiTab):
             if self.connected:
                 raise
         finally:
-            self.connected = False      
+            self.connected = False
 
     def disconnect(self):
         """Used to hardly disconnect the streaming client"""
