@@ -35,7 +35,6 @@ class ApiTab(QWidget):
         self.mainWindow = mainWindow
         self.name = name
         self.connected = False
-        self.loadDocs()
         self.lock_session = threading.Lock()
 
     def idtostr(self, val):
@@ -123,16 +122,6 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
         self.setOptions(options)
 
-    def loadDocs(self):
-        try:
-            with open("docs/{}.json".format(self.__class__.__name__),"r") as docfile:
-                if docfile:
-                    self.apidoc = json.load(docfile)
-                else:
-                    self.apidoc = None
-        except:
-            self.apidoc = None
-
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
@@ -217,15 +206,27 @@ class FacebookTab(ApiTab):
 
         # Query Box
         self.relationEdit = QComboBox(self)
-        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
-            self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
-            self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
-
+        self.relationEdit.insertItems(0, ['<Object ID>', 'search', '<Object ID>/feed', '<Object ID>/posts',
+                                          '<Object ID>/comments', '<Object ID>/likes',
+                                          '<Object ID>/global_brand_children', '<Object ID>/groups',
+                                          '<Object ID>/insights', '<Object ID>/members', '<Object ID>/picture',
+                                          '<Object ID>/docs', '<Object ID>/noreply', '<Object ID>/invited',
+                                          '<Object ID>/attending', '<Object ID>/maybe', '<Object ID>/declined',
+                                          '<Object ID>/videos', '<Object ID>/accounts', '<Object ID>/achievements',
+                                          '<Object ID>/activities', '<Object ID>/albums', '<Object ID>/books',
+                                          '<Object ID>/checkins', '<Object ID>/events', '<Object ID>/family',
+                                          '<Object ID>/friendlists', '<Object ID>/friends', '<Object ID>/games',
+                                          '<Object ID>/home', '<Object ID>/interests', '<Object ID>/links',
+                                          '<Object ID>/locations', '<Object ID>/movies', '<Object ID>/music',
+                                          '<Object ID>/notes', '<Object ID>/photos', '<Object ID>/questions',
+                                          '<Object ID>/scores', '<Object ID>/statuses', '<Object ID>/subscribedto',
+                                          '<Object ID>/tagged', '<Object ID>/television'])
         self.relationEdit.setEditable(True)
 
         # Param Box
         self.paramEdit = QParamEdit(self)
-
+        self.paramEdit.setNameOptions(['<None>', 'since', 'until', 'offset', 'limit', 'type'])
+        self.paramEdit.setValueOptions(['<None>', '2013-07-17', 'page'])
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -257,19 +258,6 @@ class FacebookTab(ApiTab):
 
         if loadSettings:
             self.loadSettings()
-
-        self.relationEdit.activated.connect(self.onchangedRelation)
-
-    @Slot()
-    def onchangedRelation(self):
-        paramswithtip = []
-        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
-            for pa in endpoint["method"].get("params",[]):
-                if pa:
-                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))# Extract paramters and its content-description to a dict
-
-        self.paramEdit.setNameOptions(paramswithtip)
-        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -385,18 +373,19 @@ class TwitterTab(ApiTab):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
         # Query Box
-
-        #set Relations as API-Endpoints
         self.relationEdit = QComboBox(self)
-        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
-            self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
-            self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
-
+        self.relationEdit.insertItems(0, ['search/tweets'])
+        self.relationEdit.insertItems(0, ['users/show', 'users/search'])
+        self.relationEdit.insertItems(0, ['followers/list', 'friends/list'])
+        self.relationEdit.insertItems(0, ['statuses/show/<Object ID>', 'statuses/retweets/<Object ID>'])
+        self.relationEdit.insertItems(0, ['statuses/user_timeline'])
         self.relationEdit.setEditable(True)
 
         # Parameter-Box
         self.paramEdit = QParamEdit(self)
-
+        self.paramEdit.setNameOptions(
+            ['<None>', 'q', 'screen_name', 'user_id', 'count', 'result_type'])  # 'count','until'
+        self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -442,36 +431,6 @@ class TwitterTab(ApiTab):
             authorize_url='https://api.twitter.com/oauth/authorize',
             request_token_url='https://api.twitter.com/oauth/request_token',
             base_url='https://api.twitter.com/1.1/')
-
-        self.relationEdit.activated.connect(self.onchangedRelation)
-
-    @Slot()
-    def onchangedRelation(self):
-        '''
-        Handles the automated paramter suggestion for the current
-        selected API Relation/Endpoint
-        '''
-
-        paramswithtip = []
-        # look for the matching endpoint in the JSON-File
-        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
-            # for each endpoint-parameter, get it's name, description and the "required" value
-            for pa in endpoint["method"].get("params",[]):
-                if pa:
-                    option = [pa["name"],pa.get("doc",{}).get("content","No description available").replace(".",".\n")]
-                    # .replace is just a very bad shortcut for a better format (block)
-                    if pa["required"]==True:
-                        # as a test: color mandatory tooltip, better solution: color combobox and set param as default
-                        option[-1]="<font color='#FF0000'>{0}</font>".format(option[-1])
-                        # reverse ordering: display mandatory paramters first
-                        paramswithtip.append(option)
-                    else:
-                        paramswithtip.insert(0,option)
-
-        self.paramEdit.setNameOptions(paramswithtip)
-
-        # todo: Are there default values inside the JSON? If yes, they should be suggested
-        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams(),
@@ -600,7 +559,8 @@ class TwitterStreamingTab(ApiTab):
 
         # Query Box
         self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['statuses/sample','statuses/filter'])
+        self.relationEdit.insertItems(0, ['statuses/sample'])
+        self.relationEdit.insertItems(0, ['statuses/filter'])
         self.relationEdit.setEditable(True)
 
         # Construct Parameter-Edit
@@ -716,7 +676,6 @@ class TwitterStreamingTab(ApiTab):
                     else:
                         if response.status_code != 200:
                             if self.retry_counter<=5:
-                                print self.retry_counter
                                 self.mainWindow.logmessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+response.content)
                                 time.sleep(3)
                                 if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
@@ -726,7 +685,6 @@ class TwitterStreamingTab(ApiTab):
                                     self.retry_counter+=1
                                     _send()
                             else:
-                                self.connected = False
                                 raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
                         print "good response"
                         return response
@@ -841,8 +799,8 @@ class GenericTab(ApiTab):
 
         #Parameter
         self.paramEdit = QParamEdit(self)
-        #self.paramEdit.setNameOptions(['<None>', '<:id>', 'q'])
-        #self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
+        self.paramEdit.setNameOptions(['<None>', '<:id>', 'q'])
+        self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
         mainLayout.addRow("Parameters", self.paramEdit)
 
         #Extract option 
