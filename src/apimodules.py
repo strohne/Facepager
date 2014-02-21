@@ -35,6 +35,7 @@ class ApiTab(QWidget):
         self.mainWindow = mainWindow
         self.name = name
         self.connected = False
+        self.loadDocs()
         self.lock_session = threading.Lock()
 
     def idtostr(self, val):
@@ -122,6 +123,16 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
         self.setOptions(options)
 
+    def loadDocs(self):
+        try:
+            with open("docs/{}.json".format(self.__class__.__name__),"r") as docfile:
+                if docfile:
+                    self.apidoc = json.load(docfile)
+                else:
+                    self.apidoc = None
+        except:
+            self.apidoc = None
+
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
@@ -205,11 +216,8 @@ class FacebookTab(ApiTab):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         # Query Box
-        with open("docs/facebookdocs.json") as docfile:
-            apidoc=json.load(docfile)
-
         self.relationEdit = QComboBox(self)
-        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
+        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
             self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
             self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
 
@@ -217,15 +225,7 @@ class FacebookTab(ApiTab):
 
         # Param Box
         self.paramEdit = QParamEdit(self)
-        # Extract paramters and its content-description to a dict
-        paramswithtip = []
-        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
-            for pa in endpoint["method"].get("params",[]):
-                if pa:
-                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))
 
-        self.paramEdit.setNameOptions(paramswithtip)
-        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -257,6 +257,19 @@ class FacebookTab(ApiTab):
 
         if loadSettings:
             self.loadSettings()
+
+        self.relationEdit.activated.connect(self.onchangedRelation)
+
+    @Slot()
+    def onchangedRelation(self):
+        paramswithtip = []
+        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
+            for pa in endpoint["method"].get("params",[]):
+                if pa:
+                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))# Extract paramters and its content-description to a dict
+
+        self.paramEdit.setNameOptions(paramswithtip)
+        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -372,9 +385,8 @@ class TwitterTab(ApiTab):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
         # Query Box
-        with open("docs/twitterdocs.json") as docfile:
-            self.apidoc=json.load(docfile)
 
+        #set Relations as API-Endpoints
         self.relationEdit = QComboBox(self)
         for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
             self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
@@ -384,15 +396,6 @@ class TwitterTab(ApiTab):
 
         # Parameter-Box
         self.paramEdit = QParamEdit(self)
-        paramswithtip = []
-        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
-            for pa in endpoint["method"].get("params",[]):
-                if pa:
-                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))# Extract paramters and its content-description to a dict
-
-
-        self.paramEdit.setNameOptions(paramswithtip)
-        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
 
         # Pages-Box
