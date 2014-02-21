@@ -373,10 +373,10 @@ class TwitterTab(ApiTab):
 
         # Query Box
         with open("docs/twitterdocs.json") as docfile:
-            apidoc=json.load(docfile)
+            self.apidoc=json.load(docfile)
 
         self.relationEdit = QComboBox(self)
-        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
+        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
             self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
             self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
 
@@ -384,15 +384,16 @@ class TwitterTab(ApiTab):
 
         # Parameter-Box
         self.paramEdit = QParamEdit(self)
-        # Extract paramters and its content-description to a dict
         paramswithtip = []
-        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
+        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
             for pa in endpoint["method"].get("params",[]):
                 if pa:
-                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))
+                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))# Extract paramters and its content-description to a dict
+
 
         self.paramEdit.setNameOptions(paramswithtip)
         self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
+
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -438,6 +439,19 @@ class TwitterTab(ApiTab):
             authorize_url='https://api.twitter.com/oauth/authorize',
             request_token_url='https://api.twitter.com/oauth/request_token',
             base_url='https://api.twitter.com/1.1/')
+
+        self.relationEdit.activated.connect(self.onchangedRelation)
+
+    @Slot()
+    def onchangedRelation(self):
+        paramswithtip = []
+        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
+            for pa in endpoint["method"].get("params",[]):
+                if pa:
+                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))# Extract paramters and its content-description to a dict
+
+        self.paramEdit.setNameOptions(paramswithtip)
+        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams(),
