@@ -27,23 +27,23 @@ class QParamEdit(QTableWidget):
         self.calcRows()
         self.resizeRowsToContents()
     
-    def setNameOptions(self, options):
+    def setNameOptions(self,options):
         self.isCalculating = True        
         self.nameoptions = options
       
-        for row in range(0, self.rowCount()):
+        for row in range(0,self.rowCount()):
             self.setComboBox(row,0,options)
         self.isCalculating = False           
           
-    def setValueOptions(self, options):
+    def setValueOptions(self,options):
         self.isCalculating = True
         self.valueoptions=options
 
-        for row in range(0, self.rowCount()):
+        for row in range(0,self.rowCount()):
             self.setComboBox(row,1,options)
         self.isCalculating = False      
 
-    def getComboBox(self, row, col):
+    def getComboBox(self,row,col):
         combo = self.cellWidget(row,col)
         if combo is None:
             combo=QComboBox(self)
@@ -51,16 +51,12 @@ class QParamEdit(QTableWidget):
             combo.editTextChanged.connect(self.calcRows)
             self.setCellWidget(row,col,combo)
         
-        return (combo)
+        return (combo)    
                     
     def setComboBox(self,row,col,options):
         combo = self.getComboBox(row,col)
         combo.clear()
-        # edited: Insert each Item seperatly and set Tooltip
-        for o in options:
-            combo.insertItem(0,o[0])
-            # this one sets the tooltip
-            combo.setItemData(0,o[1],Qt.ToolTipRole)
+        combo.insertItems(0,options)
         return (combo)    
         
     def setValue(self,row,col,val):
