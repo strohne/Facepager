@@ -451,7 +451,14 @@ class TwitterTab(ApiTab):
         for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
             for pa in endpoint["method"].get("params",[]):
                 if pa:
-                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))# Extract paramters and its content-description to a dict
+                    option = [pa["name"],pa.get("doc",{}).get("content","No description available").replace(".",".\n")]
+                    # .replace is just a bad shortcut for a better format (block)
+                    if pa["required"]==True:
+                        # as a test: color mandatory tooltip, better solution: color combobox and set param as default
+                        option[-1]="<font color='#FF0000'>{0}</font>".format(option[-1])
+                        paramswithtip.append(option)
+                    else:
+                        paramswithtip.insert(0,option)# Extract paramters and its content-description to a dict
 
         self.paramEdit.setNameOptions(paramswithtip)
         self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
@@ -825,7 +832,7 @@ class GenericTab(ApiTab):
         #Parameter
         self.paramEdit = QParamEdit(self)
         #self.paramEdit.setNameOptions(['<None>', '<:id>', 'q'])
-        self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
+        #self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
         mainLayout.addRow("Parameters", self.paramEdit)
 
         #Extract option 
