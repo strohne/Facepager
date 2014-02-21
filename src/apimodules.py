@@ -217,8 +217,15 @@ class FacebookTab(ApiTab):
 
         # Param Box
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>', 'since', 'until', 'offset', 'limit', 'type'])
-        self.paramEdit.setValueOptions(['<None>', '2013-07-17', 'page'])
+        # Extract paramters and its content-description to a dict
+        paramswithtip = []
+        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
+            for pa in endpoint["method"].get("params",[]):
+                if pa:
+                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))
+
+        self.paramEdit.setNameOptions(paramswithtip)
+        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -378,15 +385,14 @@ class TwitterTab(ApiTab):
         # Parameter-Box
         self.paramEdit = QParamEdit(self)
         # Extract paramters and its content-description to a dict
-        paramswithtip = {"params":[],"tips":[]}
+        paramswithtip = []
         for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
             for pa in endpoint["method"].get("params",[]):
                 if pa:
-                    paramswithtip["params"].append(pa["name"])
-                    paramswithtip["tips"].append(pa["doc"]["content"])
+                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))
 
-        self.paramEdit.setNameOptions(paramswithtip["params"], "Testootlipnotworking" )  # 'count','until'
-        self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
+        self.paramEdit.setNameOptions(paramswithtip)
+        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -801,7 +807,7 @@ class GenericTab(ApiTab):
 
         #Parameter
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>', '<:id>', 'q'])
+        #self.paramEdit.setNameOptions(['<None>', '<:id>', 'q'])
         self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
         mainLayout.addRow("Parameters", self.paramEdit)
 
