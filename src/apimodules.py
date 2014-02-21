@@ -373,12 +373,14 @@ class TwitterTab(ApiTab):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
         # Query Box
+        with open("docs/twittertab.json") as docfile:
+            apidoc=json.load(docfile)
+
         self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['search/tweets'])
-        self.relationEdit.insertItems(0, ['users/show', 'users/search'])
-        self.relationEdit.insertItems(0, ['followers/list', 'friends/list'])
-        self.relationEdit.insertItems(0, ['statuses/show/<Object ID>', 'statuses/retweets/<Object ID>'])
-        self.relationEdit.insertItems(0, ['statuses/user_timeline'])
+        for endpoint in apidoc:
+            self.relationEdit.insertItem(0, endpoint["resource"])
+            self.relationEdit.setItemData(0, endpoint["description"],Qt.ToolTipRole)
+
         self.relationEdit.setEditable(True)
 
         # Parameter-Box
@@ -676,6 +678,7 @@ class TwitterStreamingTab(ApiTab):
                     else:
                         if response.status_code != 200:
                             if self.retry_counter<=5:
+                                print self.retry_counter
                                 self.mainWindow.logmessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+response.content)
                                 time.sleep(3)
                                 if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
@@ -685,6 +688,7 @@ class TwitterStreamingTab(ApiTab):
                                     self.retry_counter+=1
                                     _send()
                             else:
+                                self.connected = False
                                 raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
                         print "good response"
                         return response
