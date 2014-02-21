@@ -25,7 +25,7 @@ class SelectNodesWindow(QDialog):
         #Params
         self.paramEdit = QParamEdit(self)
         self.paramEdit.setNameOptions(['<None>','since','until','offset','limit','type'])
-        self.paramEdit.setValueOptions(['<None>','2013-07-17','page'])       
+        self.paramEdit.setValueOptions(['<None>','2013-07-17','page'])
         settingsLayout.addRow("Parameters",self.paramEdit)
         
         #Checkboxes
