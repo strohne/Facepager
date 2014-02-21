@@ -205,22 +205,14 @@ class FacebookTab(ApiTab):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         # Query Box
+        with open("docs/facebookdocs.json") as docfile:
+            apidoc=json.load(docfile)
+
         self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['<Object ID>', 'search', '<Object ID>/feed', '<Object ID>/posts',
-                                          '<Object ID>/comments', '<Object ID>/likes',
-                                          '<Object ID>/global_brand_children', '<Object ID>/groups',
-                                          '<Object ID>/insights', '<Object ID>/members', '<Object ID>/picture',
-                                          '<Object ID>/docs', '<Object ID>/noreply', '<Object ID>/invited',
-                                          '<Object ID>/attending', '<Object ID>/maybe', '<Object ID>/declined',
-                                          '<Object ID>/videos', '<Object ID>/accounts', '<Object ID>/achievements',
-                                          '<Object ID>/activities', '<Object ID>/albums', '<Object ID>/books',
-                                          '<Object ID>/checkins', '<Object ID>/events', '<Object ID>/family',
-                                          '<Object ID>/friendlists', '<Object ID>/friends', '<Object ID>/games',
-                                          '<Object ID>/home', '<Object ID>/interests', '<Object ID>/links',
-                                          '<Object ID>/locations', '<Object ID>/movies', '<Object ID>/music',
-                                          '<Object ID>/notes', '<Object ID>/photos', '<Object ID>/questions',
-                                          '<Object ID>/scores', '<Object ID>/statuses', '<Object ID>/subscribedto',
-                                          '<Object ID>/tagged', '<Object ID>/television'])
+        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
+            self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
+            self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
+
         self.relationEdit.setEditable(True)
 
         # Param Box
@@ -373,20 +365,27 @@ class TwitterTab(ApiTab):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
         # Query Box
-        with open("docs/twittertab.json") as docfile:
+        with open("docs/twitterdocs.json") as docfile:
             apidoc=json.load(docfile)
 
         self.relationEdit = QComboBox(self)
-        for endpoint in apidoc:
-            self.relationEdit.insertItem(0, endpoint["resource"])
-            self.relationEdit.setItemData(0, endpoint["description"],Qt.ToolTipRole)
+        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
+            self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
+            self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
 
         self.relationEdit.setEditable(True)
 
         # Parameter-Box
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(
-            ['<None>', 'q', 'screen_name', 'user_id', 'count', 'result_type'])  # 'count','until'
+        # Extract paramters and its content-description to a dict
+        paramswithtip = {"params":[],"tips":[]}
+        for endpoint in apidoc["application"]["endpoints"][0]["resources"]:
+            for pa in endpoint["method"].get("params",[]):
+                if pa:
+                    paramswithtip["params"].append(pa["name"])
+                    paramswithtip["tips"].append(pa["doc"]["content"])
+
+        self.paramEdit.setNameOptions(paramswithtip["params"], "Testootlipnotworking" )  # 'count','until'
         self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
 
         # Pages-Box
@@ -561,8 +560,7 @@ class TwitterStreamingTab(ApiTab):
 
         # Query Box
         self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['statuses/sample'])
-        self.relationEdit.insertItems(0, ['statuses/filter'])
+        self.relationEdit.insertItems(0, ['statuses/sample','statuses/filter'])
         self.relationEdit.setEditable(True)
 
         # Construct Parameter-Edit
