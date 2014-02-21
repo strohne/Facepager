@@ -447,20 +447,30 @@ class TwitterTab(ApiTab):
 
     @Slot()
     def onchangedRelation(self):
+        '''
+        Handles the automated paramter suggestion for the current
+        selected API Relation/Endpoint
+        '''
+
         paramswithtip = []
+        # look for the matching endpoint in the JSON-File
         for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
+            # for each endpoint-parameter, get it's name, description and the "required" value
             for pa in endpoint["method"].get("params",[]):
                 if pa:
                     option = [pa["name"],pa.get("doc",{}).get("content","No description available").replace(".",".\n")]
-                    # .replace is just a bad shortcut for a better format (block)
+                    # .replace is just a very bad shortcut for a better format (block)
                     if pa["required"]==True:
                         # as a test: color mandatory tooltip, better solution: color combobox and set param as default
                         option[-1]="<font color='#FF0000'>{0}</font>".format(option[-1])
+                        # reverse ordering: display mandatory paramters first
                         paramswithtip.append(option)
                     else:
-                        paramswithtip.insert(0,option)# Extract paramters and its content-description to a dict
+                        paramswithtip.insert(0,option)
 
         self.paramEdit.setNameOptions(paramswithtip)
+
+        # todo: Are there default values inside the JSON? If yes, they should be suggested
         self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
