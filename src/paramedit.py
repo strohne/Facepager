@@ -57,10 +57,14 @@ class QParamEdit(QTableWidget):
         combo = self.getComboBox(row,col)
         combo.clear()
         # edited: Insert each Item seperatly and set Tooltip
-        for o in options:
+        for o in reversed(options):
             combo.insertItem(0,o[0])
             # this one sets the tooltip
             combo.setItemData(0,o[1],Qt.ToolTipRole)
+            #set color
+            if ((len(o) > 2) and (o[2])):
+                combo.setItemData(0,QColor(Qt.darkRed),Qt.TextColorRole)
+
         return (combo)    
         
     def setValue(self,row,col,val):
@@ -72,7 +76,7 @@ class QParamEdit(QTableWidget):
         return(combo.currentText())
 
     def setParams(self,vals={}):
-        self.setRowCount(len(vals)+1)
+        self.setRowCount(len(vals))
         self.setValueOptions(self.valueoptions)
         self.setNameOptions(self.nameoptions)
         
@@ -82,6 +86,7 @@ class QParamEdit(QTableWidget):
             self.setValue(row,1, vals[name])            
             row = row+1
         
+        self.calcRows()
         self.resizeRowsToContents()    
 
     def getParams(self):
