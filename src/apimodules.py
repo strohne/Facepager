@@ -182,11 +182,14 @@ class ApiTab(QWidget):
         '''
 
         self.relationEdit = QComboBox(self)
-        #self.relationEdit.setCompleter(QCompleter(self.relationEdit))
         if self.apidoc:
+            #Insert one item for every endpoint
             for endpoint in reversed(self.apidoc):
+                #store url as item text
                 self.relationEdit.insertItem(0, endpoint["path"])
+                #store doc as tooltip 
                 self.relationEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
+                #store params-dict for later use in onChangedRelation
                 self.relationEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
                         
         self.relationEdit.setEditable(True)
@@ -200,7 +203,8 @@ class ApiTab(QWidget):
         '''
         Handles the automated paramter suggestion for the current
         selected API Relation/Endpoint
-        '''
+        '''        
+        #retrieve param-dict stored in setRelations-method
         params = self.relationEdit.itemData(index,Qt.UserRole)
         
         #Set name options nd build value dict
