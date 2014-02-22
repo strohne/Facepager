@@ -24,7 +24,7 @@ class ApiTab(QWidget):
     """
     Generic API Tab Class
         - handles URL-Substitutions
-        - saves current Settings
+        - saves current Settings 
     """
 
     streamingData = Signal(list, list, list)
@@ -124,61 +124,105 @@ class ApiTab(QWidget):
         self.setOptions(options)
 
     def loadDocs(self):
+        '''
+        Loads and prepares documentation
+        '''
         try:
             with open("docs/{}.json".format(self.__class__.__name__),"r") as docfile:
                 if docfile:
-                    self.apidoc = json.load(docfile)
+                    self.apidoc = []
+                    rawdoc = json.load(docfile)
+                    
+                    #Filter out everything besides get requests
+                    rawdoc = [endpoint for endpoint in rawdoc["application"]["endpoints"][0]["resources"] if endpoint["method"]["name"]=="GET"]
+                    
+                    for endpoint in rawdoc:
+                        #Prepare path
+                        pathname = endpoint["path"].split(".json")[0].lstrip("/").replace('{','<').replace('}','>')                        
+                        
+                        #Prepare documentation
+                        docstring = "<p>"+endpoint["method"]["doc"]["content"]+"</p>"                        
+                        
+                        #Prepare params
+                        params = []
+                        for param in endpoint["method"].get("params",[]):
+                            paramreq = param.get("required",False)
+                            paramname = param["name"]
+                            if param.get("style","query") == "template":
+                                paramname = '<'+paramname+'>'
+                                paramdefault = '<Object ID>'
+                            else:
+                                paramdefault = ''
+                                    
+                            paramdoc = "<p>{0}</p>".format(param.get("doc",{}).get("content","No description found").encode("utf8"))
+                            if paramreq:
+                                paramdoc = "<font color='#FF0000'>{0}</font><b>[Mandatory Parameter]</b>".format(paramdoc)
+                            
+                            params.append({'name':paramname,
+                                           'doc':paramdoc,
+                                           'required':paramreq,
+                                           'default':paramdefault
+                                           })
+                         
+                        #Append data  
+                        self.apidoc.append({'path': pathname,
+                                            'doc': docstring,
+                                            'params':params
+                                            })
+
                 else:
                     self.apidoc = None
         except:
             self.apidoc = None
 
-    def setRelations(self):
+    def setRelations(self,params=True):
         '''
-        Set the relations according to the APIdocs, if any docs are available
+        Create relations box and paramedit
+        Set the relations according to the APIdocs, if any docs are available        
         '''
 
         self.relationEdit = QComboBox(self)
+        #self.relationEdit.setCompleter(QCompleter(self.relationEdit))
         if self.apidoc:
-            for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
-                if endpoint["method"]["name"]=="GET":
-                    pathname = endpoint["path"].split(".json")[0].lstrip("/")
-                    docstring = endpoint["method"]["doc"]["content"]
-                    self.relationEdit.insertItem(0, pathname)
-                    self.relationEdit.setItemData(0, "<p>" +docstring +"</p>" ,
-                                          Qt.ToolTipRole)
-
+            for endpoint in reversed(self.apidoc):
+                self.relationEdit.insertItem(0, endpoint["path"])
+                self.relationEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
+                self.relationEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
+                        
         self.relationEdit.setEditable(True)
+        if params:
+            self.paramEdit = QParamEdit(self)
+            self.relationEdit.activated.connect(self.onchangedRelation)
+            self.onchangedRelation()
 
     @Slot()
-    def onchangedRelation(self):
+    def onchangedRelation(self,index=0):
         '''
         Handles the automated paramter suggestion for the current
         selected API Relation/Endpoint
         '''
+        params = self.relationEdit.itemData(index,Qt.UserRole)
+        
+        #Set name options nd build value dict
+        values = {}
+        nameoptions = []
+        if params:
+            for param in params:
+                if param["required"]==True:
+                    nameoptions.append([param["name"],param["doc"],True])
+                    values[param["name"]] = param["default"]
+                else:
+                    nameoptions.insert(0,[param["name"],param["doc"]])        
+        nameoptions.insert(0,((None,None,None)))
+        self.paramEdit.setNameOptions(nameoptions)
 
-        paramswithtip = []
-        # look for the matching endpoint in the JSON-File
-        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0].lstrip("/")==self.relationEdit.currentText()]:
-            # for each endpoint-parameter, get it's name, description and the "required" value
-            if endpoint["method"]["name"]=="GET":
-                for pa in endpoint["method"].get("params",[]):
-                    if pa:
-                        option = [pa["name"],"<p>{0}</p>".format(pa.get("doc",{}).get("content","No description found").encode("utf8"))]
-                        # .replace is just a very bad shortcut for a better format (block)
-                        if pa["required"]==True:
-                            # as a test: color mandatory tooltip, better solution: color combobox and set param as default
-                            option[-1]="<font color='#FF0000'>{0}</font><b>[Mandatory Parameter]</b>".format(option[-1])
-                            # reverse ordering: display mandatory paramters first
-                            paramswithtip.append(option)
-                        else:
-                            paramswithtip.insert(0,option)
-        paramswithtip.insert(0,((None,None,None)))
-        self.paramEdit.setNameOptions(paramswithtip)
-
+        #Set value options
         # todo:  (V.3.5) Are there default values inside the JSON? If yes, they should be suggested
-        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
+        self.paramEdit.setValueOptions([('',"No Value"),('<Object ID>',"The value in the Object ID-column of the datatree.")])
 
+        #Set values
+        self.paramEdit.setParams(values) 
+        
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
@@ -264,10 +308,6 @@ class FacebookTab(ApiTab):
         # Query Box
         self.setRelations()
 
-        # Param Box
-        self.paramEdit = QParamEdit(self)
-
-
         # Pages Box
         self.pagesEdit = QSpinBox(self)
         self.pagesEdit.setMinimum(1)
@@ -298,8 +338,6 @@ class FacebookTab(ApiTab):
 
         if loadSettings:
             self.loadSettings()
-
-        self.relationEdit.activated.connect(self.onchangedRelation)
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -414,11 +452,8 @@ class TwitterTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
-        # Query Box
+        # Query and Parameter Box
         self.setRelations()
-
-        # Parameter-Box
-        self.paramEdit = QParamEdit(self)
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -465,7 +500,7 @@ class TwitterTab(ApiTab):
             request_token_url='https://api.twitter.com/oauth/request_token',
             base_url='https://api.twitter.com/1.1/')
 
-        self.relationEdit.activated.connect(self.onchangedRelation)
+        
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -596,9 +631,6 @@ class TwitterStreamingTab(ApiTab):
         # Query Box
         self.setRelations()
 
-        # Construct Parameter-Edit
-        self.paramEdit = QParamEdit(self)
-
         # Construct Log-In elements
         self.tokenEdit = QLineEdit()
         self.tokenEdit.setEchoMode(QLineEdit.Password)
@@ -641,7 +673,6 @@ class TwitterStreamingTab(ApiTab):
         self.timeout = 60
         self.connected = False
 
-        self.relationEdit.activated.connect(self.onchangedRelation)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams()}
