@@ -4,9 +4,8 @@ import json
 
 
 class DictionaryTree(QTreeView):
-    def __init__(self, parent=None, mainWindow=None):
+    def __init__(self, parent=None):
         super(DictionaryTree, self).__init__(parent)
-        self.mainWindow = mainWindow
 
         #self.setSortingEnabled(True)
         #self.setSelectionMode(QAbstractItemView.ExtendedSelection)
