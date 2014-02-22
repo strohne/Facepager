@@ -56,6 +56,17 @@ class DataTree(QTreeView):
         self.mainWindow.selectionStatus.setText(str(len(self.selectionModel().selectedRows())) + ' node(s) selected ')
 
 
+    def noneOrAllSelected(self):
+        indexes = self.selectionModel().selectedRows()
+        
+        if len(indexes) == 0:
+            return True
+        else:
+            model = self.model()
+            indexes = [idx for idx in indexes if idx.parent() == self.rootIndex()] 
+            return len(indexes) == model.rootItem.childCount()
+        
+        
     def selectedIndexesAndChildren(self, persistent=False, filter={}):
 
         #emptyonly=filter.get('childcount',None)

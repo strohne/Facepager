@@ -22,8 +22,8 @@ class Actions(object):
         #Database actions
         self.databaseActions = QActionGroup(self.mainWindow)
         self.actionExport = self.databaseActions.addAction(QIcon(":/icons/export.png"), "Export Data")
-        self.actionExport.setToolTip("Export selected node(s) and their children to a .csv file. \n If no node(s) are selected inside the data-view, a complete export of all data in the DB is performed")
-        self.actionExport.triggered.connect(self.exportSelectedNodes)
+        self.actionExport.setToolTip("Export selected node(s) and their children to a .csv file. \n If no or all node(s) are selected inside the data-view, a complete export of all data in the DB is performed")
+        self.actionExport.triggered.connect(self.exportNodes)
 
         self.actionAdd = self.databaseActions.addAction(QIcon(":/icons/add.png"), "Add Nodes")
         self.actionAdd.setToolTip("Add new node(s) as a starting point for further data collection")
@@ -172,55 +172,58 @@ class Actions(object):
             progress.close()
 
     @Slot()
-    def exportSelectedNodes(self):
-        indexes = self.mainWindow.tree.selectedIndexesAndChildren()
-
-        # if none is selected, export all
-        if len(indexes)==0:
-            self.exportAllNodes()
-        # if one or more is selected, export selective
+    def exportNodes(self):
+        # if none or all are selected, export all
+        # if one or more are selected, export selective
+        if self.mainWindow.tree.noneOrAllSelected():
+            self.exportAllNodes()        
         else:
-            fldg = QFileDialog(caption="Export selected nodes to CSV", filter="CSV Files (*.csv)")
-            fldg.setAcceptMode(QFileDialog.AcceptSave)
-            fldg.setDefaultSuffix("csv")
+            self.exportSelectedNodes()
+        
+        
+    @Slot()
+    def exportSelectedNodes(self):
+        fldg = QFileDialog(caption="Export selected nodes to CSV", filter="CSV Files (*.csv)")
+        fldg.setAcceptMode(QFileDialog.AcceptSave)
+        fldg.setDefaultSuffix("csv")
 
-            if fldg.exec_():
+        if fldg.exec_():
 
-                progress = ProgressBar("Exporting data...", self.mainWindow)
+            progress = ProgressBar("Exporting data...", self.mainWindow)
 
-                #indexes = self.mainWindow.tree.selectionModel().selectedRows()
-                #if child nodes should be exported as well, uncomment this line an comment the previous one
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren()
-
-
-                progress.setMaximum(len(indexes))
-
-                if os.path.isfile(fldg.selectedFiles()[0]):
-                    os.remove(fldg.selectedFiles()[0])
-                output = open(fldg.selectedFiles()[0], 'wb')
-
-                try:
-                    writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
-                                        lineterminator='\r\n')
+            #indexes = self.mainWindow.tree.selectionModel().selectedRows()
+            #if child nodes should be exported as well, uncomment this line an comment the previous one
+            indexes = self.mainWindow.tree.selectedIndexesAndChildren()
 
 
-                    #headers
-                    row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            progress.setMaximum(len(indexes))
+
+            if os.path.isfile(fldg.selectedFiles()[0]):
+                os.remove(fldg.selectedFiles()[0])
+            output = open(fldg.selectedFiles()[0], 'wb')
+
+            try:
+                writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+                                    lineterminator='\r\n')
+
+
+                #headers
+                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+                writer.writerow(row)
+
+                #rows
+                for no in range(len(indexes)):
+                    if progress.wasCanceled:
+                        break
+
+                    row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                     writer.writerow(row)
 
-                    #rows
-                    for no in range(len(indexes)):
-                        if progress.wasCanceled:
-                            break
+                    progress.step()
 
-                        row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
-                        writer.writerow(row)
-
-                        progress.step()
-
-                finally:
-                    output.close()
-                    progress.close()
+            finally:
+                output.close()
+                progress.close()
 
 
     @Slot()
