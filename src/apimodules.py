@@ -1,114 +1,23 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtWebKit import QWebView, QWebPage
 import urlparse
 import urllib
-import requests
 from mimetypes import guess_all_extensions
-from requests.exceptions import *
-from datetime import datetime, timedelta
-from paramedit import *
-from rauth import OAuth1Service
-from utilities import *
+from datetime import datetime
 import re
-import json
-from credentials import *
 import os
 import time
-import dateutil.parser
 from collections import OrderedDict
 import threading
-import Queue
 
+from PySide.QtWebKit import QWebView, QWebPage
+import requests
+from requests.exceptions import *
+from rauth import OAuth1Service
+import dateutil.parser
 
-class ApiThread(threading.Thread):
-    def __init__(self, input, output, module, pool):
-        threading.Thread.__init__(self)
-        #self.daemon = True
-        self.pool = pool
-        self.input = input
-        self.output = output
-        self.module = module
-        self.halt = threading.Event()
+from paramedit import *
 
-    def run(self):
-        def streamingData(data, options, headers):
-            out = {'nodeindex': job['nodeindex'], 'data': data, 'options': options, 'headers': headers}
-            self.output.put(out)
-
-        try:
-            while not self.halt.isSet():
-                try:
-                    time.sleep(0)
-                    job = self.input.get()
-                    try:
-                        if job is None:
-                            self.halt.set()
-                        else:
-                            self.module.fetchData(job['data'], job['options'], streamingData)
-                    finally:
-                        self.input.task_done()
-                        if job is not None:
-                            self.output.put({'progress': job.get('number', 0)})
-                except Exception as e:
-                    self.module.mainWindow.logmessage(e)
-        finally:
-            self.pool.threadFinished()
-
-
-class ApiThreadPool():
-    def __init__(self, module):
-        self.input = Queue.Queue()
-        self.output = Queue.Queue(100)
-        self.module = module
-        self.threads = []
-        self.pool_lock = threading.Lock()
-        self.threadcount = 0
-
-    def addJob(self, job):
-        self.input.put(job)
-
-    def getJob(self):
-        try:
-            if self.output.empty():
-                job = {'waiting': True}
-            else:
-                job = self.output.get(True, 1)
-                self.output.task_done()
-        except Queue.Empty as e:
-            job = {'waiting': True}
-        finally:
-            return job
-
-    def processJobs(self):
-        with self.pool_lock:
-            if self.input.qsize > 50:
-                maxthreads = 5
-            elif self.input.qsize > 10:
-                maxthreads = 2
-            else:
-                maxthreads = 1
-
-            self.threads = []
-            for x in range(maxthreads):
-                self.addJob(None)  # sentinel empty job
-                thread = ApiThread(self.input, self.output, self.module, self)
-                self.threadcount += 1
-                self.threads.append(thread)
-                thread.start()
-
-    def stopJobs(self):
-        for thread in self.threads:
-            thread.halt.set()
-        self.module.connected = False
-
-    def threadFinished(self):
-        with self.pool_lock:
-            self.threadcount -= 1
-            if (self.threadcount == 0):
-                with self.input.mutex:
-                    self.input.queue.clear()
-                self.output.put(None) #sentinel
+from utilities import *
+from credentials import *
 
 
 class ApiTab(QWidget):
@@ -246,6 +155,10 @@ class ApiTab(QWidget):
                     return response.json(), dict(response.headers.items()), status
             else:
                 return response
+
+    def disconnect(self):
+        """Used to disconnect when canceling requests"""
+        self.connected = False
 
 
     @Slot()
@@ -663,10 +576,10 @@ class TwitterStreamingTab(ApiTab):
 
         # Construct login-Layout
         loginlayout = QHBoxLayout()
-        
+
         loginlayout.addWidget(self.tokenEdit)
         loginlayout.addWidget(QLabel("Access Token Secret"))
-        loginlayout.addWidget(self.tokensecretEdit)        
+        loginlayout.addWidget(self.tokensecretEdit)
         loginlayout.addWidget(self.loginButton)
 
         # Construct main-Layout
@@ -678,6 +591,8 @@ class TwitterStreamingTab(ApiTab):
         mainLayout.addRow("Resource", self.relationEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Access Token", loginlayout)
+        if loadSettings:
+            self.loadSettings()
         self.setLayout(mainLayout)
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
@@ -690,6 +605,7 @@ class TwitterStreamingTab(ApiTab):
             authorize_url='https://api.twitter.com/oauth/authorize',
             request_token_url='https://api.twitter.com/oauth/request_token',
             base_url='https://stream.twitter.com/1.1/')
+        self.timeout = 60
         self.connected = False
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -716,6 +632,13 @@ class TwitterStreamingTab(ApiTab):
 
         return options
 
+    def setOptions(self, options):
+        self.relationEdit.setEditText(options.get('query', 'statuses/filter'))
+        self.paramEdit.setParams(options.get('params', {'track': '<Object ID>'}))
+
+        # set Access-tokens,use generic method from APITab
+        super(TwitterStreamingTab, self).setOptions(options)
+
     def initSession(self):
         if hasattr(self, "session"):
             return self.session
@@ -729,10 +652,13 @@ class TwitterStreamingTab(ApiTab):
 
     def request(self, path, args=None, headers=None):
         self.connected = True
+        self.retry_counter=0
+        self.last_reconnect=QDateTime.currentDateTime()
         try:
             self.initSession()
 
             def _send():
+                self.last_reconnect = QDateTime.currentDateTime()
                 while self.connected:
                     try:
                         if headers is not None:
@@ -746,75 +672,54 @@ class TwitterStreamingTab(ApiTab):
                                                         verify=False, stream=True)
 
                     except requests.exceptions.Timeout:
-                        self.on_timeout()
+                        raise Exception('Request timed out.')
                     else:
                         if response.status_code != 200:
-                            self._on_error(response.status_code, response.content)
-
+                            if self.retry_counter<=5:
+                                self.mainWindow.logmessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+response.content)
+                                time.sleep(3)
+                                if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
+                                    self.retry_counter = 0
+                                    _send()
+                                else:
+                                    self.retry_counter+=1
+                                    _send()
+                            else:
+                                raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
+                        print "good response"
                         return response
 
+
             while self.connected:
-                response = _send()
+                self.response = _send()
+                if self.response:
+                    for line in self.response.iter_lines():
+                        if not self.connected:
+                            break
+                        if line:
+                            try:
+                                data = json.loads(line)
+                            except ValueError:  # pragma: no cover
+                                raise Exception("Unable to decode response, not valid JSON")
+                            else:
+                                yield data
+                else:
+                    break
+            self.response.close()
 
-                for line in response.iter_lines():
-                    #QApplication.processEvents()
-                    if not self.connected:
-                        break
-                    if line:
-                        try:
-                            data = json.loads(line)
-                            #print data
-                        except ValueError:  # pragma: no cover
-                            self._on_error(response.status_code, 'Unable to decode response, not valid JSON.')
-                        else:
-                            yield self._on_success(data)
-            response.close()
-
+        except AttributeError:
+            #This exception is thrown when canceling the connection
+            #Only re-raise if not manually canceled
+            if self.connected:
+                raise
         finally:
             self.connected = False
 
-    def _on_success(self, data):  # pragma: no cover
-        """Called when data has been successfully received from the stream.
-        Returns True if other handlers for this message should be invoked.
-
-        Feel free to override this to handle your streaming data how you
-        want it handled.
-        See https://dev.twitter.com/docs/streaming-apis/messages for messages
-        sent along in stream responses.
-
-        :param data: data recieved from the stream
-        :type data: dict
-        """
-        # daten aus dem generator werden einfach nur returned, kann
-        # man hier aber auch aufbereiten etc.
-
-        return data
-
-    def _on_delete(self, data):
-        # Hier koennte man delete messages verabeiten
-        pass
-
-    def _on_error(self, status_code, data):  # pragma: no cover
-        """Called when stream returns non-200 status code
-
-        Feel free to override this to handle your streaming data how you
-        want it handled.
-
-        :param status_code: Non-200 status code sent from stream
-        :type status_code: int
-
-        :param data: Error message sent from stream
-        :type data: dict
-        """
-        raise Exception("Error, Status Code " + str(status_code))
-
-    def _on_timeout(self):  # pragma: no cover
-        """ Called when the request has timed out """
-        return
-
-    def _disconnect(self):
-        """Used to disconnect the streaming client manually"""
+    def disconnect(self):
+        """Used to hardly disconnect the streaming client"""
         self.connected = False
+        self.response.raw._fp.close()
+        #self.response.close()
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):
@@ -836,7 +741,7 @@ class TwitterStreamingTab(ApiTab):
             if callback is None:
                 self.streamingData.emit(data, options, headers)
             else:
-                callback(data, options, headers)
+                callback(data, options, headers, streamingTab=True)
 
 
     @Slot()

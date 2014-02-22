@@ -1,13 +1,10 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+import csv
+from copy import deepcopy
+from progressbar import ProgressBar
 from database import *
 from apimodules import *
-import csv
-import sys
-import help
-from copy import deepcopy
-import Queue
-
+from apithread import ApiThreadPool
+import StringIO
 
 class Actions(object):
     def __init__(self, mainWindow):
@@ -25,12 +22,15 @@ class Actions(object):
         #Database actions
         self.databaseActions = QActionGroup(self.mainWindow)
         self.actionExport = self.databaseActions.addAction(QIcon(":/icons/export.png"), "Export Data")
+        self.actionExport.setToolTip("Export selected node(s) and their children to a .csv file. \n If no or all node(s) are selected inside the data-view, a complete export of all data in the DB is performed")
         self.actionExport.triggered.connect(self.exportNodes)
 
         self.actionAdd = self.databaseActions.addAction(QIcon(":/icons/add.png"), "Add Nodes")
+        self.actionAdd.setToolTip("Add new node(s) as a starting point for further data collection")
         self.actionAdd.triggered.connect(self.addNodes)
 
         self.actionDelete = self.databaseActions.addAction(QIcon(":/icons/delete.png"), "Delete Nodes")
+        self.actionDelete.setToolTip("Delete nodes(s) and their children")
         self.actionDelete.triggered.connect(self.deleteNodes)
 
 
@@ -40,6 +40,7 @@ class Actions(object):
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
         self.actionTimer = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Time")
+        self.actionTimer.setToolTip("Time your data collection with a timer. Fetches the data for the selected node(s) in user-defined intervalls")
         self.actionTimer.triggered.connect(self.setupTimer)
 
         self.actionHelp = self.dataActions.addAction(QIcon(":/icons/help.png"), "Help")
@@ -53,13 +54,16 @@ class Actions(object):
 
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
-        self.actionAddColumn = self.detailActions.addAction("Add Column")
+        self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
+        self.actionAddColumn.setToolTip("Add the current JSON-key as a column in the data view")
         self.actionAddColumn.triggered.connect(self.addColumn)
 
-        self.actionUnpack = self.detailActions.addAction("Unpack List")
+        self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
+        self.actionUnpack.setToolTip("Unpacks a list in the JSON-data and creates a new node containing the list content")
         self.actionUnpack.triggered.connect(self.unpackList)
 
-        self.actionJsonCopy = self.detailActions.addAction("Copy to Clipboard")
+        self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
+        self.actionJsonCopy.setToolTip("Copy the selected JSON-data to the clipboard")
         self.actionJsonCopy.triggered.connect(self.jsonCopy)
 
         #Tree actions
@@ -73,7 +77,8 @@ class Actions(object):
         #self.actionSelectNodes=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
         #self.actionSelectNodes.triggered.connect(self.selectNodes)
 
-        self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/export.png"), "Copy To Clipboard")
+        self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/toclip.png"), "Copy Node(s) to Clipboard")
+        self.actionClipboard.setToolTip("Copy the selected nodes(s) to the clipboard")
         self.actionClipboard.triggered.connect(self.clipboardNodes)
 
 
@@ -119,43 +124,116 @@ class Actions(object):
         if reply != QMessageBox.Yes:
             return
 
-        progress = QProgressDialog("Deleting data...", "Abort", 0, 0, self.mainWindow)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimumDuration(0)
-        progress.forceShow()
+        progress = ProgressBar("Deleting data...", self.mainWindow)
 
         try:
             todo = self.mainWindow.tree.selectedIndexesAndChildren(True)
             progress.setMaximum(len(todo))
-            #self.mainWindow.tree.treemodel.beginResetModel()
-            c = 0
             for index in todo:
-                progress.setValue(c)
-                c += 1
-                self.mainWindow.tree.treemodel.deleteNode(index, True)
-                if progress.wasCanceled():
+                progress.step()
+                self.mainWindow.tree.treemodel.deleteNode(index, delaycommit=True)
+                if progress.wasCanceled:
                     break
         finally:
+            # commit the operation on the db-layer afterwards (delaycommit is True)
             self.mainWindow.tree.treemodel.commitNewNodes()
-            progress.cancel()
+            progress.close()
 
     @Slot()
     def clipboardNodes(self):
-        self.mainWindow.tree.copyToClipboard()
+        progress = ProgressBar("Copy to clipboard", self.mainWindow)
+        
+        indexes = self.mainWindow.tree.selectionModel().selectedRows()
+        progress.setMaximum(len(indexes))
 
+        output = StringIO.StringIO()
+        try:
+            writer = csv.writer(output, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+                                lineterminator='\r\n')
+
+            #headers    
+            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            writer.writerow(row)
+
+            #rows
+            for no in range(len(indexes)):
+                if progress.wasCanceled:
+                    break
+
+                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                writer.writerow(row)
+
+                progress.step()
+                
+            clipboard = QApplication.clipboard()
+            clipboard.setText(output.getvalue())
+        finally:
+            output.close()
+            progress.close()
 
     @Slot()
     def exportNodes(self):
-        fldg = QFileDialog(caption="Export DB File to CSV", filter="CSV Files (*.csv)")
+        # if none or all are selected, export all
+        # if one or more are selected, export selective
+        if self.mainWindow.tree.noneOrAllSelected():
+            self.exportAllNodes()        
+        else:
+            self.exportSelectedNodes()
+        
+        
+    @Slot()
+    def exportSelectedNodes(self):
+        fldg = QFileDialog(caption="Export selected nodes to CSV", filter="CSV Files (*.csv)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("csv")
 
         if fldg.exec_():
-            progress = QProgressDialog("Saving data...", "Abort", 0, 0, self.mainWindow)
-            progress.setWindowModality(Qt.WindowModal)
-            progress.setMinimumDuration(0)
-            progress.forceShow()
 
+            progress = ProgressBar("Exporting data...", self.mainWindow)
+
+            #indexes = self.mainWindow.tree.selectionModel().selectedRows()
+            #if child nodes should be exported as well, uncomment this line an comment the previous one
+            indexes = self.mainWindow.tree.selectedIndexesAndChildren()
+
+
+            progress.setMaximum(len(indexes))
+
+            if os.path.isfile(fldg.selectedFiles()[0]):
+                os.remove(fldg.selectedFiles()[0])
+            output = open(fldg.selectedFiles()[0], 'wb')
+
+            try:
+                writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+                                    lineterminator='\r\n')
+
+
+                #headers
+                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+                writer.writerow(row)
+
+                #rows
+                for no in range(len(indexes)):
+                    if progress.wasCanceled:
+                        break
+
+                    row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                    writer.writerow(row)
+
+                    progress.step()
+
+            finally:
+                output.close()
+                progress.close()
+
+
+    @Slot()
+    def exportAllNodes(self):
+        fldg = QFileDialog(caption="Export all nodes to CSV", filter="CSV Files (*.csv)")
+        fldg.setAcceptMode(QFileDialog.AcceptSave)
+        fldg.setDefaultSuffix("csv")
+
+        if fldg.exec_():
+            progress = ProgressBar("Exporting data...", self.mainWindow)
             progress.setMaximum(Node.query.count())
 
             if os.path.isfile(fldg.selectedFiles()[0]):
@@ -172,38 +250,31 @@ class Actions(object):
                 for key in self.mainWindow.tree.treemodel.customcolumns:
                     row.append(key)
                 writer.writerow(row)
-
-                #rows             
+                #rows
                 page = 0
-                no = 0
+
                 while True:
                     allnodes = Node.query.offset(page * 5000).limit(5000).all()
-
+                    if len(allnodes) == 0:
+                        break
                     for node in allnodes:
-                        if progress.wasCanceled():
+                        if progress.wasCanceled:
                             break
-
-                        progress.setValue(no)
-                        no += 1
-
                         row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
                                node.querystatus, node.querytime, node.querytype]
                         for key in self.mainWindow.tree.treemodel.customcolumns:
                             row.append(node.getResponseValue(key, "utf-8"))
-
                         writer.writerow(row)
-
-                    if progress.wasCanceled():
-                        break
-
-                    if len(allnodes) == 0:
+                        # step the Bar
+                        progress.step()
+                    if progress.wasCanceled:
                         break
                     else:
                         page += 1
 
             finally:
                 f.close()
-                progress.cancel()
+                progress.close()
 
 
     @Slot()
@@ -295,38 +366,24 @@ class Actions(object):
 
     def queryNodes(self, indexes=False, apimodule=False, options=False):
         #Show progress window
+        progress = ProgressBar(u"Fetching Data",parent=self.mainWindow)
+
+        #Get selected nodes
+        if indexes == False:
+            level = self.mainWindow.levelEdit.value() - 1
+            indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
+                                                                              'objecttype': ['seed', 'data',
+                                                                                             'unpacked']})
+        #Update progress window
+        progress.setMaximum(len(indexes))
+        self.mainWindow.tree.treemodel.nodecounter = 0
+        
+        if apimodule == False:
+            apimodule = self.mainWindow.RequestTabs.currentWidget()
+        if options == False:
+            options = apimodule.getOptions()
+
         try:
-            progress = QProgressDialog("Fetching data...", "Abort", 0, 0, self.mainWindow)
-            progress.setWindowModality(Qt.WindowModal)
-            progress.setMinimumDuration(0)
-            progress.forceShow()
-            progress.setAutoReset(False)
-            progress.setAutoClose(False)
-            progress.setMaximum(0)
-            progress.setValue(0)
-
-
-
-
-            #Get selected nodes
-            if indexes == False:
-                level = self.mainWindow.levelEdit.value() - 1
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
-                                                                                  'objecttype': ['seed', 'data',
-                                                                                                 'unpacked']})
-
-            if apimodule == False:
-                apimodule = self.mainWindow.RequestTabs.currentWidget()
-            if options == False:
-                options = apimodule.getOptions()
-
-            #Init progress stats
-            progress_max = len(indexes)
-            progress_value = 0
-            progress_lastupdate = QDateTime.currentDateTime();
-            progress_nextupdate = QDateTime.currentDateTime().addSecs(10);
-            progress_lastvalue = 0
-
             #Spawn Threadpool
             threadpool = ApiThreadPool(apimodule)
 
@@ -359,44 +416,29 @@ class Actions(object):
 
                     #-Finished one node...
                     elif 'progress' in job:
-                    #Update progress
-                        progress_value += 1
+                        #Update progress
+                        progress.step()                        
 
-                        progress.setMaximum(progress_max)
-                        progress.setValue(progress_value)
-
-                        if QDateTime.currentDateTime() > progress_nextupdate:
-                            try:
-                                cur = QDateTime.currentDateTime()
-                                span = progress_lastupdate.secsTo(cur)
-                                rate = ((progress_value - progress_lastvalue) / float(span)) * 60
-                            except:
-                                rate = 0
-
-                            progress_lastupdate = cur
-                            progress_lastvalue = progress_value
-                            progress_nextupdate = progress_lastupdate.addSecs(10);
-
-                            progress.setLabelText("Fetching data ({} nodes per minute)".format(int(round(rate))))
-
-
-                            #-Add data...
+                    #-Add data...
                     else:
                         if not job['nodeindex'].isValid():
                             continue
                         treenode = job['nodeindex'].internalPointer()
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
+                        progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
 
                         #Abort
-                    if progress.wasCanceled():
+                    if progress.wasCanceled:
+                        progress.showInfo('cancel',u"Disconnecting from stream may take up to one minute.")
                         threadpool.stopJobs()
-
+                        #break
 
                 finally:
                     QApplication.processEvents()
-        finally:
+
+        finally:            
             self.mainWindow.tree.treemodel.commitNewNodes()
-            progress.cancel()
+            progress.close()
 
     @Slot()
     def querySelectedNodes(self):

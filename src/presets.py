@@ -81,10 +81,12 @@ class PresetWindow(QDialog):
         buttons=QDialogButtonBox()
         self.saveButton = QPushButton('New preset')        
         self.saveButton.clicked.connect(self.newPreset)
+        self.saveButton.setToolTip("Create a new preset using the current tab and parameters")
         buttons.addButton(self.saveButton,QDialogButtonBox.ActionRole)
         
         self.deleteButton = QPushButton('Delete preset')
         self.deleteButton.clicked.connect(self.deletePreset)
+        self.deleteButton.setToolTip("Delete the selected preset. Default presets can not be deleted.")
         buttons.addButton(self.deleteButton,QDialogButtonBox.ActionRole)
         
         #layout.addWidget(buttons,1)        
@@ -95,6 +97,7 @@ class PresetWindow(QDialog):
         self.applyButton=QPushButton('Apply')
         self.applyButton.setDefault(True)
         self.applyButton.clicked.connect(self.loadPreset)
+        self.applyButton.setToolTip("Load the selected preset.")
         buttons.addButton(self.applyButton,QDialogButtonBox.AcceptRole)
         
         buttons.addButton(QDialogButtonBox.Cancel)
