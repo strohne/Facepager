@@ -133,6 +133,52 @@ class ApiTab(QWidget):
         except:
             self.apidoc = None
 
+    def setRelations(self):
+        '''
+        Set the relations according to the APIdocs, if any docs are available
+        '''
+
+        self.relationEdit = QComboBox(self)
+        if self.apidoc:
+            for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
+                if endpoint["method"]["name"]=="GET":
+                    pathname = endpoint["path"].split(".json")[0].lstrip("/")
+                    docstring = endpoint["method"]["doc"]["content"]
+                    self.relationEdit.insertItem(0, pathname)
+                    self.relationEdit.setItemData(0, "<p>" +docstring +"</p>" ,
+                                          Qt.ToolTipRole)
+
+        self.relationEdit.setEditable(True)
+
+    @Slot()
+    def onchangedRelation(self):
+        '''
+        Handles the automated paramter suggestion for the current
+        selected API Relation/Endpoint
+        '''
+
+        paramswithtip = []
+        # look for the matching endpoint in the JSON-File
+        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0].lstrip("/")==self.relationEdit.currentText()]:
+            # for each endpoint-parameter, get it's name, description and the "required" value
+            if endpoint["method"]["name"]=="GET":
+                for pa in endpoint["method"].get("params",[]):
+                    if pa:
+                        option = [pa["name"],pa.get("doc",{}).get("content","No description found")]
+                        # .replace is just a very bad shortcut for a better format (block)
+                        if pa["required"]==True:
+                            # as a test: color mandatory tooltip, better solution: color combobox and set param as default
+                            option[-1]="<font color='#FF0000'>{0}</font>".format(option[-1])
+                            # reverse ordering: display mandatory paramters first
+                            paramswithtip.append(option)
+                        else:
+                            paramswithtip.insert(0,option)
+        paramswithtip.insert(0,((None,None,None)))
+        self.paramEdit.setNameOptions(paramswithtip)
+
+        # todo:  (V.3.5) Are there default values inside the JSON? If yes, they should be suggested
+        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
+
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
@@ -216,12 +262,7 @@ class FacebookTab(ApiTab):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         # Query Box
-        self.relationEdit = QComboBox(self)
-        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
-            self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
-            self.relationEdit.setItemData(0, '<p>'+endpoint["method"]["doc"]["content"]+'</p>',Qt.ToolTipRole)
-
-        self.relationEdit.setEditable(True)
+        self.setRelations()
 
         # Param Box
         self.paramEdit = QParamEdit(self)
@@ -259,17 +300,6 @@ class FacebookTab(ApiTab):
             self.loadSettings()
 
         self.relationEdit.activated.connect(self.onchangedRelation)
-
-    @Slot()
-    def onchangedRelation(self):
-        paramswithtip = []
-        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
-            for pa in endpoint["method"].get("params",[]):
-                if pa:
-                    paramswithtip.append((pa["name"],pa.get("doc",{}).get("content","No description available")))# Extract paramters and its content-description to a dict
-
-        self.paramEdit.setNameOptions(paramswithtip)
-        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -385,18 +415,10 @@ class TwitterTab(ApiTab):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
         # Query Box
-
-        #set Relations as API-Endpoints
-        self.relationEdit = QComboBox(self)
-        for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
-            self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
-            self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
-
-        self.relationEdit.setEditable(True)
+        self.setRelations()
 
         # Parameter-Box
         self.paramEdit = QParamEdit(self)
-
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -445,33 +467,6 @@ class TwitterTab(ApiTab):
 
         self.relationEdit.activated.connect(self.onchangedRelation)
 
-    @Slot()
-    def onchangedRelation(self):
-        '''
-        Handles the automated paramter suggestion for the current
-        selected API Relation/Endpoint
-        '''
-
-        paramswithtip = []
-        # look for the matching endpoint in the JSON-File
-        for endpoint in [resource for resource in self.apidoc["application"]["endpoints"][0]["resources"] if resource["path"].split(".json")[0]==self.relationEdit.currentText()]:
-            # for each endpoint-parameter, get it's name, description and the "required" value
-            for pa in endpoint["method"].get("params",[]):
-                if pa:
-                    option = [pa["name"],pa.get("doc",{}).get("content","No description available").replace(".",".\n")]
-                    # .replace is just a very bad shortcut for a better format (block)
-                    if pa["required"]==True:
-                        # as a test: color mandatory tooltip, better solution: color combobox and set param as default
-                        option[-1]="<font color='#FF0000'>{0}</font>".format(option[-1])
-                        # reverse ordering: display mandatory paramters first
-                        paramswithtip.append(option)
-                    else:
-                        paramswithtip.insert(0,option)
-
-        self.paramEdit.setNameOptions(paramswithtip)
-
-        # todo: Are there default values inside the JSON? If yes, they should be suggested
-        self.paramEdit.setValueOptions([('<None>',"No Value"),('<Object ID>',"")])
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams(),
@@ -599,9 +594,7 @@ class TwitterStreamingTab(ApiTab):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
         # Query Box
-        self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['statuses/sample','statuses/filter'])
-        self.relationEdit.setEditable(True)
+        self.setRelations()
 
         # Construct Parameter-Edit
         self.paramEdit = QParamEdit(self)
@@ -647,6 +640,8 @@ class TwitterStreamingTab(ApiTab):
             base_url='https://stream.twitter.com/1.1/')
         self.timeout = 60
         self.connected = False
+
+        self.relationEdit.activated.connect(self.onchangedRelation)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams()}
