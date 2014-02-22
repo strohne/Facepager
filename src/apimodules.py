@@ -164,11 +164,11 @@ class ApiTab(QWidget):
             if endpoint["method"]["name"]=="GET":
                 for pa in endpoint["method"].get("params",[]):
                     if pa:
-                        option = [pa["name"],pa.get("doc",{}).get("content","No description found")]
+                        option = [pa["name"],"<p>{0}</p>".format(pa.get("doc",{}).get("content","No description found"))]
                         # .replace is just a very bad shortcut for a better format (block)
                         if pa["required"]==True:
                             # as a test: color mandatory tooltip, better solution: color combobox and set param as default
-                            option[-1]="<font color='#FF0000'>{0}</font>".format(option[-1])
+                            option[-1]="<font color='#FF0000'>{0}</font><b>[Mandatory Parameter]</b>".format(option[-1])
                             # reverse ordering: display mandatory paramters first
                             paramswithtip.append(option)
                         else:
