@@ -219,7 +219,7 @@ class FacebookTab(ApiTab):
         self.relationEdit = QComboBox(self)
         for endpoint in self.apidoc["application"]["endpoints"][0]["resources"]:
             self.relationEdit.insertItem(0, endpoint["path"].split(".json")[0])
-            self.relationEdit.setItemData(0, endpoint["method"]["doc"]["content"],Qt.ToolTipRole)
+            self.relationEdit.setItemData(0, '<p>'+endpoint["method"]["doc"]["content"]+'</p>',Qt.ToolTipRole)
 
         self.relationEdit.setEditable(True)
 
