@@ -64,25 +64,16 @@ class ApiTab(QWidget):
         Replaces the Facepager placeholders ("<",">" of the inside the query-Parameter
         by the Object-ID or any other Facepager-Placeholder
         Example: http://www.facebook.com/<Object-ID>/friends
-        """
-
-        #Replace placeholders in urlpath
-        matches = re.findall("<([^>]*)>", urlpath)
-        for match in matches:
-            if match == 'Object ID':
-                value = self.idtostr(nodedata['objectid'])
-            else:
-                value = getDictValue(nodedata['response'], match)
-            urlpath = urlpath.replace('<' + match + '>', value)
-
-            #Replace placeholders in params
+        """        
         urlpath, urlparams = self.parseURL(urlpath)
+               
+        #Replace placeholders in params and collect template params
+        templateparams = {}
         for name in params:
-            if (name == '<None>') | (name == ''):
+            #Filter empty params
+            if (name == '<None>') or (params[name] == '<None>') or (name == '') or (params[name] == ''):
                 continue
-            if (params[name] == '<None>') | (params[name] == ''):
-                continue
-
+            
             # Set the value for the ObjectID or any other placeholder-param
             if params[name] == '<Object ID>':
                 value = self.idtostr(nodedata['objectid'])
@@ -93,8 +84,24 @@ class ApiTab(QWidget):
                 else:
                     value = params[name]
 
-            urlparams[name] = value
+            #check for template params
+            match = re.match("^<(.*)>$", str(name))
+            if match:
+                templateparams[match.group(1)] = value
+            else:
+                urlparams[name] = value
 
+        #Replace placeholders in urlpath
+        matches = re.findall("<([^>]*)>", urlpath)
+        for match in matches:
+            if match in templateparams:
+                value = templateparams[match]
+            elif match == 'Object ID':
+                value = self.idtostr(nodedata['objectid'])
+            else:
+                value = getDictValue(nodedata['response'], match)
+            urlpath = urlpath.replace('<' + match + '>', value)
+            
         return urlpath, urlparams
 
 
@@ -379,7 +386,7 @@ class FacebookTab(ApiTab):
             since = dateutil.parser.parse(since, yearfirst=True, dayfirst=False)
             since = int((since - datetime(1970, 1, 1)).total_seconds())
 
-            # Abort condition: maximum page count
+        # Abort condition: maximum page count
         for page in range(0, options.get('pages', 1)):
         # build url
             if not ('url' in options):
