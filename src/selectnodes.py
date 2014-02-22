@@ -6,10 +6,10 @@ from paramedit import *
 class SelectNodesWindow(QDialog):
     
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None,tree=None):
         super(SelectNodesWindow,self).__init__(parent)
         
-        self.mainWindow = parent
+        self.tree = tree
         self.setWindowTitle("Select Nodes")
         
         
@@ -57,9 +57,9 @@ class SelectNodesWindow(QDialog):
         level = self.levelEdit.value()-1
               
         filter = {'level':level} #,'objecttype':['seed','data','unpacked']
-        indexes = self.mainWindow.tree.selectedIndexesAndChildren(False,filter)
+        indexes = self.tree.selectedIndexesAndChildren(False,filter)
 
-        selmod = self.mainWindow.tree.selectionModel()
+        selmod = self.tree.selectionModel()
         selmod.clearSelection()
         newselection = QItemSelection()
         #selmod.select(indexes, QItemSelectionModel.Select)

@@ -4,10 +4,11 @@ import time
 
 
 class ApiThreadPool():
-    def __init__(self, module):
+    def __init__(self, module,logcallback):
         self.input = Queue.Queue()
         self.output = Queue.Queue(100)
         self.module = module
+        self.logcallback = logcallback
         self.threads = []
         self.pool_lock = threading.Lock()
         self.threadcount = 0
@@ -39,7 +40,7 @@ class ApiThreadPool():
             self.threads = []
             for x in range(maxthreads):
                 self.addJob(None)  # sentinel empty job
-                thread = ApiThread(self.input, self.output, self.module, self)
+                thread = ApiThread(self.input, self.output, self.module, self,self.logcallback)
                 self.threadcount += 1
                 self.threads.append(thread)
                 thread.start()
@@ -59,13 +60,14 @@ class ApiThreadPool():
 
 
 class ApiThread(threading.Thread):
-    def __init__(self, input, output, module, pool):
+    def __init__(self, input, output, module, pool,logcallback):
         threading.Thread.__init__(self)
         #self.daemon = True
         self.pool = pool
         self.input = input
         self.output = output
         self.module = module
+        self.logcallback = logcallback
         self.halt = threading.Event()
 
     def run(self):
@@ -90,6 +92,6 @@ class ApiThread(threading.Thread):
                         if job is not None:
                             self.output.put({'progress': job.get('number', 0)})
                 except Exception as e:
-                    self.module.mainWindow.logmessage(e)
+                    self.logcallback(e)
         finally:
             self.pool.threadFinished()

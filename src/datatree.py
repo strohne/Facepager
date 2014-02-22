@@ -5,9 +5,11 @@ import csv
 
 
 class DataTree(QTreeView):
-    def __init__(self, parent=None, mainWindow=None):
+    
+    nodeSelected = Signal(list, list)
+    
+    def __init__(self, parent=None):
         super(DataTree, self).__init__(parent)
-        self.mainWindow = mainWindow
 
         #self.setSortingEnabled(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -16,7 +18,7 @@ class DataTree(QTreeView):
 
 
     def loadData(self, database):
-        self.treemodel = TreeModel(self.mainWindow, database)
+        self.treemodel = TreeModel(database)
         self.setModel(self.treemodel)
 
         #self.proxymodel =  QSortFilterProxyModel(self)
@@ -29,32 +31,16 @@ class DataTree(QTreeView):
     #        else:
     #            super(DataTree,self).keyPressEvent(e)
 
-
-
-
     @Slot()
     def currentChanged(self, current, previous):
-        super(DataTree, self).currentChanged(current, previous)
-        self.mainWindow.detailTree.clear()
-        if current.isValid():
-            item = current.internalPointer()
-            self.mainWindow.detailTree.showDict(item.data['response'])
-
-        #select level
-        level = 0
-        c = current
-        while c.isValid():
-            level += 1
-            c = c.parent()
-
-        self.mainWindow.levelEdit.setValue(level)
-
+        super(DataTree, self).currentChanged(current, previous)        
+        self.nodeSelected.emit(current,self.selectionModel().selectedRows())
 
     @Slot()
     def selectionChanged(self, selected, deselected):
-        super(DataTree, self).selectionChanged(selected, deselected)
-        self.mainWindow.selectionStatus.setText(str(len(self.selectionModel().selectedRows())) + ' node(s) selected ')
-
+        super(DataTree, self).selectionChanged(selected, deselected)        
+        current = self.currentIndex()
+        self.nodeSelected.emit(current,self.selectionModel().selectedRows())
 
     def noneOrAllSelected(self):
         indexes = self.selectionModel().selectedRows()
@@ -288,9 +274,8 @@ class TreeItem(object):
 
 
 class TreeModel(QAbstractItemModel):
-    def __init__(self, mainWindow=None, database=None):
+    def __init__(self,database=None):
         super(TreeModel, self).__init__()
-        self.mainWindow = mainWindow
         self.customcolumns = []
         self.rootItem = TreeItem(self)
         self.database = database
@@ -358,7 +343,7 @@ class TreeModel(QAbstractItemModel):
 
             #self.endInsertRows()
         except Exception as e:
-            QMessageBox.critical(self.mainWindow, "Facepager", str(e))
+            QMessageBox.critical(self, "Facepager", str(e))
 
 
     def commitNewNodes(self, delaycommit=False):

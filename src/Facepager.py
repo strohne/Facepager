@@ -53,7 +53,7 @@ class MainWindow(QMainWindow):
         self.helpwindow=HelpWindow(self)
         self.presetWindow=PresetWindow(self)
         self.timerWindow=TimerWindow(self)
-        self.selectNodesWindow=SelectNodesWindow(self)
+        #self.selectNodesWindow=SelectNodesWindow(self,self.tree)
         
         self.timerWindow.timerstarted.connect(self.actions.timerStarted)
         self.timerWindow.timerstopped.connect(self.actions.timerStopped)
@@ -111,7 +111,8 @@ class MainWindow(QMainWindow):
         treetoolbar.addActions(self.actions.treeActions.actions())
         dataLayout.addWidget (treetoolbar)
 
-        self.tree=DataTree(self.mainWidget,self)
+        self.tree=DataTree(self.mainWidget)
+        self.tree.nodeSelected.connect(self.actions.treeNodeSelected)
         dataLayout.addWidget(self.tree)  
            
         
@@ -134,7 +135,7 @@ class MainWindow(QMainWindow):
         detailtoolbar.addActions(self.actions.detailActions.actions())
         detailLayout.addWidget (detailtoolbar)
         
-        self.detailTree=DictionaryTree(self.mainWidget,self)
+        self.detailTree=DictionaryTree(self.mainWidget)
         detailLayout.addWidget(self.detailTree)
 
         
@@ -289,7 +290,7 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
             
-    @Slot(str)        
+    @Slot(str)
     def logmessage(self,message):
         with self.lock_logging:
             if isinstance(message,Exception):          

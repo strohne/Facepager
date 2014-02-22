@@ -385,7 +385,7 @@ class Actions(object):
 
         try:
             #Spawn Threadpool
-            threadpool = ApiThreadPool(apimodule)
+            threadpool = ApiThreadPool(apimodule,self.mainWindow.logmessage)
 
             #Fill Input Queue
             number = 0
@@ -477,3 +477,24 @@ class Actions(object):
         self.mainWindow.timerStatus.setText("Timer fired ")
         self.mainWindow.timerStatus.setStyleSheet("QLabel {color:red;}")
         self.queryNodes(data.get('indexes', []), data.get('module', None), data.get('options', {}).copy())
+
+    @Slot()
+    def treeNodeSelected(self, current, selected):
+        #show details
+        self.mainWindow.detailTree.clear()
+        if current.isValid():
+            item = current.internalPointer()
+            self.mainWindow.detailTree.showDict(item.data['response'])
+
+        #select level
+        level = 0
+        c = current
+        while c.isValid():
+            level += 1
+            c = c.parent()
+
+        self.mainWindow.levelEdit.setValue(level)
+        
+        #show node count        
+        self.mainWindow.selectionStatus.setText(str(len(selected)) + ' node(s) selected ')
+
