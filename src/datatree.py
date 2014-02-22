@@ -2,7 +2,6 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 from database import *
 import csv
-import StringIO
 
 
 class DataTree(QTreeView):
@@ -30,37 +29,7 @@ class DataTree(QTreeView):
     #        else:
     #            super(DataTree,self).keyPressEvent(e)
 
-    def copyToClipboard(self):
-        self.mainWindow.showProgress(None, None, "Copy to clipboard")
 
-        try:
-            indexes = self.selectionModel().selectedRows()
-            self.mainWindow.showProgress(None, len(indexes))
-
-            output = StringIO.StringIO()
-            writer = csv.writer(output, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
-                                lineterminator='\r\n')
-
-            #headers    
-            row = [unicode(val).encode("utf-8") for val in self.treemodel.getRowHeader()]
-            writer.writerow(row)
-
-            #rows
-            for no in range(len(indexes)):
-                if self.mainWindow.progressCanceled():
-                    break
-                self.mainWindow.showProgress(no)
-
-                row = [unicode(val).encode("utf-8") for val in self.treemodel.getRowData(indexes[no])]
-                writer.writerow(row)
-                if self.mainWindow.progressCanceled():
-                    break
-
-            clipboard = QApplication.clipboard()
-            clipboard.setText(output.getvalue())
-        finally:
-            output.close()
-            self.mainWindow.hideProgress()
 
 
     @Slot()
@@ -87,6 +56,17 @@ class DataTree(QTreeView):
         self.mainWindow.selectionStatus.setText(str(len(self.selectionModel().selectedRows())) + ' node(s) selected ')
 
 
+    def noneOrAllSelected(self):
+        indexes = self.selectionModel().selectedRows()
+        
+        if len(indexes) == 0:
+            return True
+        else:
+            model = self.model()
+            indexes = [idx for idx in indexes if idx.parent() == self.rootIndex()] 
+            return len(indexes) == model.rootItem.childCount()
+        
+        
     def selectedIndexesAndChildren(self, persistent=False, filter={}):
 
         #emptyonly=filter.get('childcount',None)
@@ -275,6 +255,7 @@ class TreeItem(object):
         dbnode.childcount += len(newnodes)
 
         self.model.newnodes += len(newnodes)
+        self.model.nodecounter += len(newnodes)
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
@@ -314,6 +295,7 @@ class TreeModel(QAbstractItemModel):
         self.rootItem = TreeItem(self)
         self.database = database
         self.newnodes = 0
+        self.nodecounter = 0
 
     def reset(self):
         self.rootItem.clear()
@@ -347,13 +329,9 @@ class TreeModel(QAbstractItemModel):
         self.beginRemoveRows(index.parent(), index.row(), index.row())
         item = index.internalPointer()
 
-
-        #Node.query.filter(Node.id == item.parentid).update()
-
         Node.query.filter(Node.id == item.id).delete()
         self.newnodes += 1
         self.commitNewNodes(delaycommit)
-        #self.database.session.commit()                         
         item.remove(True)
         self.endRemoveRows()
 
@@ -387,7 +365,7 @@ class TreeModel(QAbstractItemModel):
         if (not delaycommit and self.newnodes > 0) or (self.newnodes > 500):
             self.database.session.commit()
             self.newnodes = 0
-        if (not delaycommit):
+        if not delaycommit:
             self.layoutChanged.emit()
 
     def columnCount(self, parent):

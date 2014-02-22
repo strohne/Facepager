@@ -137,9 +137,6 @@ class MainWindow(QMainWindow):
         self.detailTree=DictionaryTree(self.mainWidget,self)
         detailLayout.addWidget(self.detailTree)
 
-
-
-    
         
         #requests
         actionlayout=QVBoxLayout()
@@ -178,6 +175,7 @@ class MainWindow(QMainWindow):
         
         #-button
         button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
+        button.setToolTip("Fetch data from the API with the current settings")
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.actions.actionQuery.trigger)
@@ -236,6 +234,7 @@ class MainWindow(QMainWindow):
         groupLayout.addWidget(self.fieldList)        
                 
         button=QPushButton("Apply Column Setup")
+        button.setToolTip("Apply the columns to the cental data view. New columns may be hidden and are appended on the right side")
         button.clicked.connect(self.actions.actionShowColumns.trigger)
         groupLayout.addWidget(button)           
                 
@@ -299,30 +298,6 @@ class MainWindow(QMainWindow):
                                         
             else:
                 self.loglist.append(str(datetime.now())+" "+message)
-                
-            #QApplication.processEvents()            
-        
-    def showProgress(self,current = None,maximum = None,message = None):                
-        if not hasattr(self, 'progresswindow') or (self.progresswindow is None):
-            if message == None: message = ""
-            self.progresswindow = QProgressDialog(message, "Abort", 0, 0,self)
-            self.progresswindow.setWindowModality(Qt.WindowModal)
-            self.progresswindow.setMinimumDuration(0)
-            self.progresswindow.forceShow()
-        
-        if maximum != None: self.progresswindow.setMaximum(maximum)                           
-        if current != None: self.progresswindow.setValue(current)
-        if message != None: self.progresswindow.setLabelText(message)
-        QApplication.processEvents()
-            
-    
-    def progressCanceled(self):
-        return (not self.progresswindow) or (self.progresswindow.wasCanceled()) 
-        
-    def hideProgress(self):
-        self.progresswindow.cancel()
-        self.progresswindow = None
-        
         
                  
 class Toolbar(QToolBar):
