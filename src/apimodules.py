@@ -153,6 +153,7 @@ class ApiTab(QWidget):
                         #Prepare params
                         params = []
                         for param in endpoint["method"].get("params",[]):
+                            #Properties of param
                             paramreq = param.get("required",False)
                             paramname = param["name"]
                             if param.get("style","query") == "template":
@@ -161,14 +162,22 @@ class ApiTab(QWidget):
                             else:
                                 paramdefault = ''
                                     
-                            paramdoc = "<p>{0}</p>".format(param.get("doc",{}).get("content","No description found").encode("utf8"))
+                            #Documentation of param
+                            paramdoc = param.get("doc",{}).get("content","No description found").encode("utf8")
                             if paramreq:
-                                paramdoc = "<font color='#FF0000'>{0}</font><b>[Mandatory Parameter]</b>".format(paramdoc)
+                                paramdoc = '<p style="color:#FF0000;">{0}</p><b>[Mandatory Parameter]</b>'.format(paramdoc)
+                            else:
+                                paramdoc = '<p>{0}</p>'.format(paramdoc)
+                                
+                            #Options of param
+                            paramoptions = [{'name':val.get("value","")} for val in param.get('options',[])]
                             
+                            #Append param
                             params.append({'name':paramname,
                                            'doc':paramdoc,
                                            'required':paramreq,
-                                           'default':paramdefault
+                                           'default':paramdefault,
+                                           'options':paramoptions
                                            })
                          
                         #Append data  
@@ -214,26 +223,33 @@ class ApiTab(QWidget):
         #retrieve param-dict stored in setRelations-method
         params = self.relationEdit.itemData(index,Qt.UserRole)
         
-        #Set name options nd build value dict
+        #Set name options and build value dict
         values = {}
         nameoptions = []
         if params:
             for param in params:
                 if param["required"]==True:
-                    nameoptions.append([param["name"],param["doc"],True])
+                    nameoptions.append(param)
                     values[param["name"]] = param["default"]
                 else:
-                    nameoptions.insert(0,[param["name"],param["doc"]])        
-        nameoptions.insert(0,((None,None,None)))
+                    nameoptions.insert(0,param)        
+        nameoptions.insert(0,{})
         self.paramEdit.setNameOptions(nameoptions)
 
         #Set value options
         # todo:  (V.3.5) Are there default values inside the JSON? If yes, they should be suggested
-        self.paramEdit.setValueOptions([('',"No Value"),('<Object ID>',"The value in the Object ID-column of the datatree.")])
+        self.paramEdit.setValueOptions([{'name':'',
+                                         'doc':"No Value"},
+                                         {'name':'<Object ID>',
+                                          'doc':"The value in the Object ID-column of the datatree."}])
 
         #Set values
         self.paramEdit.setParams(values) 
-        
+
+    @Slot()
+    def onChangedParam(self,index=0):
+        pass
+                
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
@@ -878,8 +894,11 @@ class GenericTab(ApiTab):
 
         #Parameter
         self.paramEdit = QParamEdit(self)
-        #self.paramEdit.setNameOptions(['<None>', '<:id>', 'q'])
-        #self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
+        self.paramEdit.setNameOptions([{'name':''}])
+        self.paramEdit.setValueOptions([{'name':'',
+                                         'doc':"No Value"},
+                                         {'name':'<Object ID>',
+                                          'doc':"The value in the Object ID-column of the datatree."}])
         mainLayout.addRow("Parameters", self.paramEdit)
 
         #Extract option 

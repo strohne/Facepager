@@ -28,6 +28,11 @@ class QParamEdit(QTableWidget):
         self.resizeRowsToContents()
     
     def setNameOptions(self, options):
+        '''
+        Sets the items in the left comboboxes
+        options should be a list of dicts
+        dicts can contain the following keys: name, doc, required, default, options
+        '''
         self.isCalculating = True        
         self.nameoptions = options
       
@@ -47,8 +52,11 @@ class QParamEdit(QTableWidget):
         combo = self.cellWidget(row,col)
         if combo is None:
             combo=QComboBox(self)
-            combo.setEditable(True)    
+            combo.setEditable(True)
+            combo.row = row
+            combo.col = col    
             combo.editTextChanged.connect(self.calcRows)
+            combo.activated.connect(self.onItemSelected)
             self.setCellWidget(row,col,combo)
         
         return (combo)
@@ -58,12 +66,16 @@ class QParamEdit(QTableWidget):
         combo.clear()
         # edited: Insert each Item seperatly and set Tooltip
         for o in reversed(options):
-            combo.insertItem(0,o[0])
+            combo.insertItem(0,o.get("name",""))
             # this one sets the tooltip
-            combo.setItemData(0,o[1],Qt.ToolTipRole)
+            combo.setItemData(0,o.get("doc",None),Qt.ToolTipRole)
             #set color
-            if ((len(o) > 2) and (o[2])):
+            if (o.get("required",False)):
                 combo.setItemData(0,QColor(Qt.darkRed),Qt.TextColorRole)
+            #save options as suggestion for value box
+            if ('options' in o): 
+                combo.setItemData(0,o.get("options",[]),Qt.UserRole)
+            
 
         return (combo)    
         
@@ -101,6 +113,20 @@ class QParamEdit(QTableWidget):
         col1 = self.getValue(row,1)
         
         return (((col0 == '<None>') | (col0 == '')) & ((col1 == '<None>') | (col1 == '')))
+
+    @Slot()
+    def onItemSelected(self,index=0):
+        '''
+        If sender is in first column sets value suggestions
+        '''
+        sender = self.sender()
+        options = sender.itemData(index,Qt.UserRole)
+        if not options:
+            options = self.valueoptions
+        if hasattr(sender,'col') and hasattr(sender,'row') and (sender.col == 0):
+            self.setComboBox(sender.row, 1, options)
+            
+        
                         
     def calcRows(self):
         #self.cellChanged.disconnect(self.calcRows)
