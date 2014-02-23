@@ -237,7 +237,6 @@ class ApiTab(QWidget):
         self.paramEdit.setNameOptions(nameoptions)
 
         #Set value options
-        # todo:  (V.3.5) Are there default values inside the JSON? If yes, they should be suggested
         self.paramEdit.setValueOptions([{'name':'',
                                          'doc':"No Value"},
                                          {'name':'<Object ID>',
