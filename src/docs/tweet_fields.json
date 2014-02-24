@@ -1,0 +1,157 @@
+[
+    {
+        "Description": "Unused. Future/beta home for status annotations.",
+        "Field": "annotations",
+        "Type": "Object"
+    },
+    {
+        "Description": "Nullable. An collection of brief user objects (usually only one) indicating users who contributed to the authorship of the tweet, on behalf of the official tweet author. Discussion.  Example:'contributors': [  { 'id':819797, 'id_str':'819797', 'screen_name':'episod'  } ]",
+        "Field": "contributors",
+        "Type": "Collection of Contributors"
+    },
+    {
+        "Description": "Nullable. Represents the geographic location of this Tweet as reported by the user or client application. The inner coordinates array is formatted as geoJSON (longitude first, then latitude).  Example:'coordinates': { 'coordinates':  [  -75.14310264,  40.05701649  ], 'type':'Point' }",
+        "Field": "coordinates",
+        "Type": "Coordinates"
+    },
+    {
+        "Description": "UTC time when this Tweet was created.  Example:'created_at':'Wed Aug 27 13:08:45 +0000 2008'",
+        "Field": "created_at",
+        "Type": "String"
+    },
+    {
+        "Description": "Perspectival. Only surfaces on methods supporting the include_my_retweet parameter, when set to true. Details the Tweet ID of the user's own retweet (if existent) of this Tweet.  Example:'current_user_retweet': { 'id': 26815871309, 'id_str':'26815871309' }",
+        "Field": "current_user_retweet",
+        "Type": "Object"
+    },
+    {
+        "Description": "Entities which have been parsed out of the text of the Tweet. Additionally see Entities in Twitter Objects.  Example:'entities': { 'hashtags':[], 'urls':[], 'user_mentions':[] }",
+        "Field": "entities",
+        "Type": "Entities"
+    },
+    {
+        "Description": "Nullable. Indicates approximately how many times this Tweet has been'favorited' by Twitter users.  Example:'favorite_count':1138",
+        "Field": "favorite_count",
+        "Type": "Integer"
+    },
+    {
+        "Description": "Nullable. Perspectival. Indicates whether this Tweet has been favorited by the authenticating user.  Example:'favorited':true",
+        "Field": "favorited",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "Indicates the maximum value of the filter_level parameter which may be used and still stream this Tweet. So a value of medium will be streamed on none, low, and medium streams. See this announcement for more information.  Example:'filter_level':'medium'",
+        "Field": "filter_level",
+        "Type": "String"
+    },
+    {
+        "Description": "Deprecated. Nullable. Use the'coordinates' field instead. Discussion",
+        "Field": "geo",
+        "Type": "Object"
+    },
+    {
+        "Description": "The integer representation of the unique identifier for this Tweet. This number is greater than 53 bits and some programming languages may have difficulty/silent defects in interpreting it. Using a signed 64 bit integer for storing this identifier is safe. Use id_str for fetching the identifier to stay on the safe side. See Twitter IDs, JSON and Snowflake.  Example: 'id':114749583439036416",
+        "Field": "id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "The string representation of the unique identifier for this Tweet. Implementations should use this rather than the large integer in id. Discussion.  Example: 'id_str':'114749583439036416'",
+        "Field": "id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the screen name of the original Tweet's author.  Example: 'in_reply_to_screen_name':'twitterapi'",
+        "Field": "in_reply_to_screen_name",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the integer representation of the original Tweet's ID.  Example: 'in_reply_to_status_id':114749583439036416",
+        "Field": "in_reply_to_status_id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the string representation of the original Tweet's ID.  Example: 'in_reply_to_status_id_str':'114749583439036416'",
+        "Field": "in_reply_to_status_id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the integer representation of the original Tweet's author ID. This will not necessarily always be the user directly mentioned in the Tweet.  Example: 'in_reply_to_user_id':819797",
+        "Field": "in_reply_to_user_id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the string representation of the original Tweet's author ID. This will not necessarily always be the user directly mentioned in the Tweet.  Example: 'in_reply_to_user_id_str':'819797'",
+        "Field": "in_reply_to_user_id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. When present, indicates a BCP 47 language identifier corresponding to the machine-detected language of the Tweet text, or 'und' if no language could be detected.  Example:'lang':'en'  Note: As of March 15, 2013, this field is available on REST but not Streaming. Keep an eye on the Calendar of API changes for changes. This documentation will be updated once the parameter is generally available.",
+        "Field": "lang",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. When present, indicates that the tweet is associated (but not necessarily originating from) a Place.  Example: 'place': { 'attributes':{}, 'bounding_box':  { 'coordinates':  [[  [-77.119759,38.791645],  [-76.909393,38.791645],  [-76.909393,38.995548],  [-77.119759,38.995548]  ]], 'type':'Polygon'  }, 'country':'United States', 'country_code':'US', 'full_name':'Washington, DC', 'id':'01fbe706f872cb32', 'name':'Washington', 'place_type':'city', 'url':'http://api.twitter.com/1/geo/id/01fbe706f872cb32.json' }",
+        "Field": "place",
+        "Type": "Places"
+    },
+    {
+        "Description": "Nullable. This field only surfaces when a tweet contains a link. The meaning of the field doesn't pertain to the tweet content itself, but instead it is an indicator that the URL contained in the tweet may contain content or media identified as sensitive content.  Example:'possibly_sensitive':true",
+        "Field": "possibly_sensitive",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "A set of key-value pairs indicating the intended contextual delivery of the containing Tweet. Currently used by Twitter's Promoted Products.  Example:'scopes':{'followers':false}",
+        "Field": "scopes",
+        "Type": "Object"
+    },
+    {
+        "Description": "Number of times this Tweet has been retweeted. This field is no longer capped at 99 and will not turn into a String for'100+'  Example: 'retweet_count':1585",
+        "Field": "retweet_count",
+        "Type": "Int"
+    },
+    {
+        "Description": "Perspectival. Indicates whether this Tweet has been retweeted by the authenticating user.  Example: 'retweeted':false",
+        "Field": "retweeted",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "Users can amplify the broadcast of tweets authored by other users by retweeting. Retweets can be distinguished from typical Tweets by the existence of a retweeted_status attribute. This attribute contains a representation of the original Tweet that was retweeted. Note that retweets of retweets do not show representations of the intermediary retweet, but only the original tweet. (Users can also unretweet a retweet they created by deleting their retweet.)",
+        "Field": "retweeted_status",
+        "Type": "Tweet"
+    },
+    {
+        "Description": "Utility used to post the Tweet, as an HTML-formatted string. Tweets from the Twitter website have a source value of web.  Example: 'source':'\\u003Ca href=\\'http:\\/\\/itunes.apple.com\\/us\\/app\\/twitter\\/id409789998?mt=12\\' rel=\\'nofollow\\'\\u003ETwitter for Mac\\u003C\\/a\\u003E'",
+        "Field": "source",
+        "Type": "String"
+    },
+    {
+        "Description": "The actual UTF-8 text of the status update. See twitter-text for details on what is currently considered valid characters.  Example: 'text':'Tweet Button, Follow Button, and Web Intents javascript now support SSL http:\\/\\/t.co\\/9fbA0oYy ^TS'",
+        "Field": "text",
+        "Type": "String"
+    },
+    {
+        "Description": "Indicates whether the value of the text parameter was truncated, for example, as a result of a retweet exceeding the 140 character Tweet length. Truncated text will end in ellipsis, like this ... Since Twitter now rejects long Tweets vs truncating them, the large majority of Tweets will have this set to false. Note that while native retweets may have their toplevel text property shortened, the original text will be available under the retweeted_status object and the truncated parameter will be set to the value of the original status (in most cases, false).  Example: 'truncated':true",
+        "Field": "truncated",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The user who posted this Tweet. Perspectival attributes embedded within this object are unreliable. See Why are embedded objects stale or inaccurate?.  Example: 'user':{'statuses_count':3080,'favourites_count':22,'protected':false,'profile_text_color':'437792','profile_image_url':'...','name':'Twitter API','profile_sidebar_fill_color':'a9d9f1','listed_count':9252,'following':true,'profile_background_tile':false,'utc_offset':-28800,'description':'The Real Twitter API. I tweet about API changes, service issues and happily answer questions about Twitter and our API. Don't get an answer? It's on my website.','location':'San Francisco, CA','contributors_enabled':true,'verified':true,'profile_link_color':'0094C2','followers_count':665829,'url':'http:\\/\\/dev.twitter.com','default_profile':false,'profile_sidebar_border_color':'0094C2','screen_name':'twitterapi','default_profile_image':false,'notifications':false,'display_url':null,'show_all_inline_media':false,'geo_enabled':true,'profile_use_background_image':true,'friends_count':32,'id_str':'6253282','entities':{'hashtags':[],'urls':[],'user_mentions':[]},'expanded_url':null,'is_translator':false,'lang':'en','time_zone':'Pacific Time (US &amp; Canada)','created_at':'Wed May 23 06:01:13 +0000 2007','profile_background_color':'e8f2f7','id':6253282,'follow_request_sent':false,'profile_background_image_url_https':'...','profile_background_image_url':'...','profile_image_url_https':'...'}",
+        "Field": "user",
+        "Type": "Users"
+    },
+    {
+        "Description": "When present and set to'true', it indicates that this piece of content has been withheld due to a DMCA complaint.  Example:'withheld_copyright': true",
+        "Field": "withheld_copyright",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "When present, indicates a list of uppercase two-letter country codes this content is withheld from. See New Withheld Content Fields in API Responses. As announced in More changes to withheld content fields, Twitter supports the following non-country values for this field:'XX' - Content is withheld in all countries'XY' - Content is withheld due to a DMCA request.  Example:'withheld_in_countries': ['GR','HK','MY']",
+        "Field": "withheld_in_countries",
+        "Type": "Array of String"
+    },
+    {
+        "Description": "When present, indicates whether the content being withheld is the'status' or a'user.' See New Withheld Content Fields in API Responses.  Example:'withheld_scope':'status'",
+        "Field": "withheld_scope",
+        "Type": "String"
+    }
+]

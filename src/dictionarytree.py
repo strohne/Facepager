@@ -99,6 +99,8 @@ class DictionaryTreeModel(QAbstractItemModel):
     def data(self, index, role):
         if not index.isValid():
             return None
+        if role == Qt.ToolTipRole:
+            return "Tooltip example"
 
         if role != Qt.DisplayRole:
             return None
@@ -160,6 +162,7 @@ class DictionaryTreeItem(object):
         self.itemDataKey = key
         self.itemDataValue = value
         self.itemDataType = 'atom'
+
 
         if isinstance(value, dict):
             items = value.items()
