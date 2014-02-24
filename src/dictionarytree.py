@@ -20,6 +20,16 @@ class DictionaryTree(QTreeView):
         self.treemodel = DictionaryTreeModel(self)
         self.setModel(self.treemodel)
 
+        # enable righklick-context menu
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.on_context_menu)
+
+    def on_context_menu(self,event):
+        contextmenu = QMenu()
+        actionCopy = QAction(QIcon(":/icons/toclip.png"), "Copy to Clipboard", self.copyToClipboard())
+        contextmenu.addAction(actionCopy)
+        contextmenu.exec_(self.viewport().mapToGlobal(event))
+
     def showDict(self, data={}):
         self.treemodel.setdata(data)
 
