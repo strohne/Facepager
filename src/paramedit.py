@@ -71,7 +71,7 @@ class QParamEdit(QTableWidget):
             combo.setItemData(0,o.get("doc",None),Qt.ToolTipRole)
             #set color
             if (o.get("required",False)):
-                combo.setItemData(0,QColor(Qt.darkRed),Qt.TextColorRole)
+                combo.setItemData(0,QColor("#FF333D"),Qt.BackgroundColorRole)
             #save options as suggestion for value box
             if ('options' in o): 
                 combo.setItemData(0,o.get("options",[]),Qt.UserRole)
