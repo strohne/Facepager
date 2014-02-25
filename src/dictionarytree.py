@@ -99,13 +99,13 @@ class DictionaryTreeModel(QAbstractItemModel):
     def data(self, index, role):
         if not index.isValid():
             return None
+        item = index.internalPointer()
+
         if role == Qt.ToolTipRole:
-            return "Tooltip example"
+            return item.itemToolTip
 
         if role != Qt.DisplayRole:
             return None
-
-        item = index.internalPointer()
 
         if index.column() == 0:
             return item.itemDataKey
@@ -163,7 +163,12 @@ class DictionaryTreeItem(object):
         self.itemDataValue = value
         self.itemDataType = 'atom'
 
-
+        # very experimental check for item-description on Twitter-Doc
+        anydocs = [entity["Description"] for entity in json.load(open("docs/tweet_fields.json")) if entity["Field"]==self.itemDataKey]
+        if anydocs:
+            self.itemToolTip = "<p>"+anydocs.pop()+"</p>"
+        else:
+            self.itemToolTip = "No documentation found"
         if isinstance(value, dict):
             items = value.items()
             self.itemDataValue = '{' + str(len(items)) + '}'
