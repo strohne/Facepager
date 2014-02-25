@@ -165,7 +165,7 @@ class ApiTab(QWidget):
                             #Documentation of param
                             paramdoc = param.get("doc",{}).get("content","No description found").encode("utf8")
                             if paramreq:
-                                paramdoc = '<p style="color:#FF0000;">{0}</p><b>[Mandatory Parameter]</b>'.format(paramdoc)
+                                paramdoc = '<p style="color:#FF333D";">{0}</p><b>[Mandatory Parameter]</b>'.format(paramdoc)
                             else:
                                 paramdoc = '<p>{0}</p>'.format(paramdoc)
                                 
@@ -211,7 +211,8 @@ class ApiTab(QWidget):
         self.relationEdit.setEditable(True)
         if params:
             self.paramEdit = QParamEdit(self)
-            self.relationEdit.activated.connect(self.onchangedRelation)
+            # changed to currentIndexChanged for recognition of changes made by the tool itself
+            self.relationEdit.currentIndexChanged.connect(self.onchangedRelation)
             self.onchangedRelation()
 
     @Slot()
