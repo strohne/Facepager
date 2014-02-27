@@ -1,0 +1,622 @@
+[
+    {
+        "Description": "Contains a hash of variant information about the place. See About Geo Place Attributes.  Example: \"attributes\": {  \"street_address\": \"795 Folsom St\",  \"623:id\": \"210176\",  \"twitter\": \"twitter\" },",
+        "Field": "attributes",
+        "Type": "Object"
+    },
+    {
+        "Description": "A bounding box of coordinates which encloses this place.  Example: \"bounding_box\":{\"coordinates\":[ [ [2.2241006,48.8155414], [2.4699099,48.8155414], [2.4699099,48.9021461], [2.2241006,48.9021461] ] ], \"type\":\"Polygon\"}",
+        "Field": "bounding_box",
+        "Type": "Object"
+    },
+    {
+        "Description": "Name of the country containing this place.  Example: \"country\":\"France\"",
+        "Field": "country",
+        "Type": "String"
+    },
+    {
+        "Description": "Shortened country code representing the country containing this place.  Example: \"country_code\":\"FR\"",
+        "Field": "country_code",
+        "Type": "String"
+    },
+    {
+        "Description": "Full human-readable representation of the place's name.  Example: \"full_name\":\"Paris, Paris\"",
+        "Field": "full_name",
+        "Type": "String"
+    },
+    {
+        "Description": "ID representing this place. Note that this is represented as a string, not an integer.  Example: \"id\":\"7238f93a3e899af6\"",
+        "Field": "id",
+        "Type": "String"
+    },
+    {
+        "Description": "Short human-readable representation of the place's name.  Example: \"name\":\"Paris\"",
+        "Field": "name",
+        "Type": "String"
+    },
+    {
+        "Description": "The type of location represented by this place.  Example: \"place_type\":\"city\"",
+        "Field": "place_type",
+        "Type": "String"
+    },
+    {
+        "Description": "URL representing the location of additional place metadata for this place.  Example: \"url\":\"http://api.twitter.com/1/geo/id/7238f93a3e899af6.json\"",
+        "Field": "url",
+        "Type": "String"
+    },
+    {
+        "Description": "A series of longitude and latitude points, defining a box which will contain the Place entity this bounding box is related to. Each point is an array in the form of [longitude, latitude]. Points are grouped into an array per bounding box. Bounding box arrays are wrapped in one additional array to be compatible with the polygon notation.  Example: \"coordinates\":[ [ [2.2241006,48.8155414], [2.4699099,48.8155414], [2.4699099,48.9021461], [2.2241006,48.9021461] ] ]",
+        "Field": "bounding_box.coordinates",
+        "Type": "Array of Array of Array of Float"
+    },
+    {
+        "Description": "The type of data encoded in the coordinates property. This will be \"Polygon\" for bounding boxes.  Example: \"type\":\"Polygon\"",
+        "Field": "bounding_box.type",
+        "Type": "String"
+    },
+    {
+        "Description": "Indicates that the user has an account with \"contributor mode\" enabled, allowing for Tweets issued by the user to be co-authored by another account. Rarely true.  Example: \"contributors_enabled\": false",
+        "Field": "contributors_enabled",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The UTC datetime that the user account was created on Twitter.  Example: \"created_at\": \"Mon Nov 29 21:18:15 +0000 2010\"",
+        "Field": "created_at",
+        "Type": "String"
+    },
+    {
+        "Description": "When true, indicates that the user has not altered the theme or background of their user profile.  Example: \"default_profile\": false",
+        "Field": "default_profile",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "When true, indicates that the user has not uploaded their own avatar and a default egg avatar is used instead.  Example: \"default_profile_image\": false",
+        "Field": "default_profile_image",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "Nullable. The user-defined UTF-8 string describing their account.  Example: \"description\":\"The Real Twitter API.\"",
+        "Field": "description",
+        "Type": "String"
+    },
+    {
+        "Description": "Entities which have been parsed out of the url or description fields defined by the user. Read more about User Entities.  Example: \"entities\": {  \"url\": {  \"urls\": [  {  \"url\": \"http:\\/\\/dev.twitter.com\",  \"expanded_url\": null,  \"indices\": [0, 22]  }  ]  },  \"description\": {\"urls\":[] } }",
+        "Field": "entities",
+        "Type": "Entities"
+    },
+    {
+        "Description": "The number of tweets this user has favorited in the account's lifetime. British spelling used in the field name for historical reasons.  Example: \"favourites_count\": 13",
+        "Field": "favourites_count",
+        "Type": "Int"
+    },
+    {
+        "Description": "Nullable. Perspectival. When true, indicates that the authenticating user has issued a follow request to this protected user account.  Example: \"follow_request_sent\":false",
+        "Field": "follow_request_sent",
+        "Type": "Type"
+    },
+    {
+        "Description": "Nullable. Perspectival. Deprecated. When true, indicates that the authenticating user is following this user. Some false negatives are possible when set to \"false,\" but these false negatives are increasingly being represented as \"null\" instead. See Discussion.  Example: \"following\":true",
+        "Field": "following",
+        "Type": "Type"
+    },
+    {
+        "Description": "The number of followers this account currently has. Under certain conditions of duress, this field will temporarily indicate \"0.\"  Example: \"followers_count\": 21",
+        "Field": "followers_count",
+        "Type": "Int"
+    },
+    {
+        "Description": "The number of users this account is following (AKA their \"followings\"). Under certain conditions of duress, this field will temporarily indicate \"0.\"  Example: \"friends_count\": 32",
+        "Field": "friends_count",
+        "Type": "Int"
+    },
+    {
+        "Description": "When true, indicates that the user has enabled the possibility of geotagging their Tweets. This field must be true for the current user to attach geographic data when using POST statuses/update.  Example: \"geo_enabled\": true",
+        "Field": "geo_enabled",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The integer representation of the unique identifier for this User. This number is greater than 53 bits and some programming languages may have difficulty/silent defects in interpreting it. Using a signed 64 bit integer for storing this identifier is safe. Use id_str for fetching the identifier to stay on the safe side. See Twitter IDs, JSON and Snowflake.  Example: \"id\":6253282",
+        "Field": "id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "The string representation of the unique identifier for this User. Implementations should use this rather than the large, possibly un-consumable integer in id.  Example: \"id_str\":\"6253282\"",
+        "Field": "id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "When true, indicates that the user is a participant in Twitter's translator community.  Example: \"is_translator\": false",
+        "Field": "is_translator",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The BCP 47 code for the user's self-declared user interface language. May or may not have anything to do with the content of their Tweets. Examples: \"lang\": \"en\" \"lang\": \"msa\" \"lang\": \"zh-cn\"",
+        "Field": "lang",
+        "Type": "String"
+    },
+    {
+        "Description": "The number of public lists that this user is a member of.  Example: \"listed_count\":9274",
+        "Field": "listed_count",
+        "Type": "Int"
+    },
+    {
+        "Description": "Nullable. The user-defined location for this account's profile. Not necessarily a location nor parseable. This field will occasionally be fuzzily interpreted by the Search service.  Example: \"location\":\"San Francisco, CA\"",
+        "Field": "location",
+        "Type": "String"
+    },
+    {
+        "Description": "The name of the user, as they've defined it. Not necessarily a person's name. Typically capped at 20 characters, but subject to change.  Example: \"name\":\"Twitter API\"",
+        "Field": "name",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. Deprecated. May incorrectly report \"false\" at times. Indicates whether the authenticated user has chosen to receive this user's tweets by SMS. Discussion",
+        "Field": "notifications",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The hexadecimal color chosen by the user for their background.  Example: \"profile_background_color\":\"e8f2f7\"",
+        "Field": "profile_background_color",
+        "Type": "String"
+    },
+    {
+        "Description": "A HTTP-based URL pointing to the background image the user has uploaded for their profile.  Example: \"profile_background_image_url\": \"http:\\/\\/a2.twimg.com\\/profile_background_images\\ /229557229\\/twitterapi-bg.png\"",
+        "Field": "profile_background_image_url",
+        "Type": "String"
+    },
+    {
+        "Description": "A HTTPS-based URL pointing to the background image the user has uploaded for their profile.  Example: \"profile_background_image_url_https\": \"https:\\/\\/si0.twimg.com\\/profile_background_images\\ /229557229\\/twitterapi-bg.png\"",
+        "Field": "profile_background_image_url_https",
+        "Type": "String"
+    },
+    {
+        "Description": "When true, indicates that the user's profile_background_image_url should be tiled when displayed.  Example: \"profile_background_tile\":false",
+        "Field": "profile_background_tile",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The HTTPS-based URL pointing to the standard web representation of the user's uploaded profile banner. By adding a final path element of the URL, you can obtain different image sizes optimized for specific displays. In the future, an API method will be provided to serve these URLs so that you need not modify the original URL. For size variations, please see User Profile Images and Banners.  Example: \"profile_banner_url\": \"https://si0.twimg.com/profile_banners/819797/1348102824\"",
+        "Field": "profile_banner_url",
+        "Type": "String"
+    },
+    {
+        "Description": "A HTTP-based URL pointing to the user's avatar image. See User Profile Images and Banners.  Example: \"profile_image_url\": \"http:\\/\\/a2.twimg.com\\/profile_images\\/1438634086\\ /avatar_normal.png\"",
+        "Field": "profile_image_url",
+        "Type": "String"
+    },
+    {
+        "Description": "A HTTPS-based URL pointing to the user's avatar image.  Example: \"profile_image_url_https\": \"https:\\/\\/si0.twimg.com\\/profile_images\\/1438634086\\ /avatar_normal.png\"",
+        "Field": "profile_image_url_https",
+        "Type": "String"
+    },
+    {
+        "Description": "The hexadecimal color the user has chosen to display links with in their Twitter UI.  Example: \"profile_link_color\":\"0094C2\"",
+        "Field": "profile_link_color",
+        "Type": "String"
+    },
+    {
+        "Description": "The hexadecimal color the user has chosen to display sidebar borders with in their Twitter UI.  Example: \"profile_sidebar_border_color\":\"0094C2\"",
+        "Field": "profile_sidebar_border_color",
+        "Type": "String"
+    },
+    {
+        "Description": "The hexadecimal color the user has chosen to display sidebar backgrounds with in their Twitter UI.  Example: \"profile_sidebar_fill_color\":\"a9d9f1\"",
+        "Field": "profile_sidebar_fill_color",
+        "Type": "String"
+    },
+    {
+        "Description": "The hexadecimal color the user has chosen to display text with in their Twitter UI.  Example: \"profile_text_color\":\"437792\"",
+        "Field": "profile_text_color",
+        "Type": "String"
+    },
+    {
+        "Description": "When true, indicates the user wants their uploaded background image to be used.  Example: \"profile_use_background_image\":true",
+        "Field": "profile_use_background_image",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "When true, indicates that this user has chosen to protect their Tweets. See About Public and Protected Tweets.  Example: \"protected\": true",
+        "Field": "protected",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The screen name, handle, or alias that this user identifies themselves with. screen_names are unique but subject to change. Use id_str as a user identifier whenever possible. Typically a maximum of 15 characters long, but some historical accounts may exist with longer names.  Example: \"screen_name\":\"twitterapi\"",
+        "Field": "screen_name",
+        "Type": "String"
+    },
+    {
+        "Description": "Indicates that the user would like to see media inline. Somewhat disused.  Example: \"show_all_inline_media\": false",
+        "Field": "show_all_inline_media",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "Nullable. If possible, the user's most recent tweet or retweet. In some circumstances, this data cannot be provided and this field will be omitted, null, or empty. Perspectival attributes within tweets embedded within users cannot always be relied upon. See Why are embedded objects stale or inaccurate?.  Example: \"status\": {  \"coordinates\": null,  \"favorited\": false,  \"truncated\": false,  \"created_at\": \"Tue Apr 17 16:38:18 +0000 2012\",  \"id_str\": \"192290904646754304\",  \"entities\": {  \"urls\": [ \u00a0  ],  \"hashtags\": [ \u00a0  ],  \"user_mentions\": [  {  \"name\": \"Micah McVicker\",  \"id_str\": \"166661446\",  \"id\": 166661446,  \"indices\": [  0,  14  ],  \"screen_name\": \"MicahMcVicker\"  }  ]  },  \"in_reply_to_user_id_str\": \"166661446\",  \"contributors\": null,  \"text\": \"@MicahMcVicker make sure you're using include_rts=true and no other filters, then walking your timeline by since_id and max_id\",  \"retweet_count\": 0,  \"in_reply_to_status_id_str\": \"192290470427246594\",  \"id\": 192290904646754304,  \"geo\": null,  \"retweeted\": false,  \"in_reply_to_user_id\": 166661446,  \"place\": null,  \"in_reply_to_screen_name\": \"MicahMcVicker\",  \"source\": \"<a href=\\\"http://sites.google.com/site/yorufukurou/\\\" rel=\\\"nofollow\\\">YoruFukurou</a>\",  \"in_reply_to_status_id\": 192290470427246594  },",
+        "Field": "status",
+        "Type": "Tweets"
+    },
+    {
+        "Description": "The number of tweets (including retweets) issued by the user.  Example: \"statuses_count\": 42",
+        "Field": "statuses_count",
+        "Type": "Int"
+    },
+    {
+        "Description": "Nullable. A string describing the Time Zone this user declares themselves within.  Example: \"time_zone\":\"Pacific Time (US & Canada)\"",
+        "Field": "time_zone",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. A URL provided by the user in association with their profile.  Example: \"url\":\"http:\\/\\/dev.twitter.com\"",
+        "Field": "url",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. The offset from GMT/UTC in seconds.  Example: \"utc_offset\": -18000",
+        "Field": "utc_offset",
+        "Type": "Int"
+    },
+    {
+        "Description": "When true, indicates that the user has a verified account. See Verified Accounts.  Example: \"verified\": false",
+        "Field": "verified",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "When present, indicates a textual representation of the two-letter country codes this user is withheld from. See New Withheld Content Fields in API Responses.  Example:  \"withheld_in_countries\": \"GR, HK, MY\"",
+        "Field": "withheld_in_countries",
+        "Type": "String"
+    },
+    {
+        "Description": "When present, indicates whether the content being withheld is the \"status\" or a \"user.\" See New Withheld Content Fields in API Responses.  Example:  \"withheld_scope\": \"user\"",
+        "Field": "withheld_scope",
+        "Type": "String"
+    },
+    {
+        "Description": "Unused. Future/beta home for status annotations.",
+        "Field": "annotations",
+        "Type": "Object"
+    },
+    {
+        "Description": "Nullable. An collection of brief user objects (usually only one) indicating users who contributed to the authorship of the tweet, on behalf of the official tweet author. Discussion.  Example: \"contributors\": [  {  \"id\":819797,  \"id_str\":\"819797\",  \"screen_name\":\"episod\"  } ]",
+        "Field": "contributors",
+        "Type": "Collection of Contributors"
+    },
+    {
+        "Description": "Nullable. Represents the geographic location of this Tweet as reported by the user or client application. The inner coordinates array is formatted as geoJSON (longitude first, then latitude).  Example: \"coordinates\": {  \"coordinates\":  [  -75.14310264,  40.05701649  ],  \"type\":\"Point\" }",
+        "Field": "coordinates",
+        "Type": "Coordinates"
+    },
+    {
+        "Description": "UTC time when this Tweet was created.  Example: \"created_at\":\"Wed Aug 27 13:08:45 +0000 2008\"",
+        "Field": "created_at",
+        "Type": "String"
+    },
+    {
+        "Description": "Perspectival. Only surfaces on methods supporting the include_my_retweet parameter, when set to true. Details the Tweet ID of the user's own retweet (if existent) of this Tweet.  Example: \"current_user_retweet\": {  \"id\": 26815871309,  \"id_str\": \"26815871309\" }",
+        "Field": "current_user_retweet",
+        "Type": "Object"
+    },
+    {
+        "Description": "Entities which have been parsed out of the text of the Tweet. Additionally see Entities in Twitter Objects.  Example: \"entities\": {  \"hashtags\":[],  \"urls\":[],  \"user_mentions\":[] }",
+        "Field": "entities",
+        "Type": "Entities"
+    },
+    {
+        "Description": "Nullable. Indicates approximately how many times this Tweet has been \"favorited\" by Twitter users.  Example: \"favorite_count\":1138",
+        "Field": "favorite_count",
+        "Type": "Integer"
+    },
+    {
+        "Description": "Nullable. Perspectival. Indicates whether this Tweet has been favorited by the authenticating user.  Example: \"favorited\":true",
+        "Field": "favorited",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "Indicates the maximum value of the filter_level parameter which may be used and still stream this Tweet. So a value of medium will be streamed on none, low, and medium streams. See this announcement for more information.  Example: \"filter_level\": \"medium\"",
+        "Field": "filter_level",
+        "Type": "String"
+    },
+    {
+        "Description": "Deprecated. Nullable. Use the \"coordinates\" field instead. Discussion",
+        "Field": "geo",
+        "Type": "Object"
+    },
+    {
+        "Description": "The integer representation of the unique identifier for this Tweet. This number is greater than 53 bits and some programming languages may have difficulty/silent defects in interpreting it. Using a signed 64 bit integer for storing this identifier is safe. Use id_str for fetching the identifier to stay on the safe side. See Twitter IDs, JSON and Snowflake.  Example:  \"id\":114749583439036416",
+        "Field": "id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "The string representation of the unique identifier for this Tweet. Implementations should use this rather than the large integer in id. Discussion.  Example:  \"id_str\":\"114749583439036416\"",
+        "Field": "id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the screen name of the original Tweet's author.  Example:  \"in_reply_to_screen_name\":\"twitterapi\"",
+        "Field": "in_reply_to_screen_name",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the integer representation of the original Tweet's ID.  Example:  \"in_reply_to_status_id\":114749583439036416",
+        "Field": "in_reply_to_status_id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the string representation of the original Tweet's ID.  Example:  \"in_reply_to_status_id_str\":\"114749583439036416\"",
+        "Field": "in_reply_to_status_id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the integer representation of the original Tweet's author ID. This will not necessarily always be the user directly mentioned in the Tweet.  Example:  \"in_reply_to_user_id\":819797",
+        "Field": "in_reply_to_user_id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "Nullable. If the represented Tweet is a reply, this field will contain the string representation of the original Tweet's author ID. This will not necessarily always be the user directly mentioned in the Tweet.  Example:  \"in_reply_to_user_id_str\":\"819797\"",
+        "Field": "in_reply_to_user_id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. When present, indicates a BCP 47 language identifier corresponding to the machine-detected language of the Tweet text, or \"und\" if no language could be detected.  Example: \"lang\": \"en\"  Note: As of March 15, 2013, this field is available on REST but not Streaming. Keep an eye on the Calendar of API changes for changes. This documentation will be updated once the parameter is generally available.",
+        "Field": "lang",
+        "Type": "String"
+    },
+    {
+        "Description": "Nullable. When present, indicates that the tweet is associated (but not necessarily originating from) a Place.  Example:  \"place\": {  \"attributes\":{},  \"bounding_box\":  {  \"coordinates\":  [[  [-77.119759,38.791645],  [-76.909393,38.791645],  [-76.909393,38.995548],  [-77.119759,38.995548]  ]],  \"type\":\"Polygon\"  },  \"country\":\"United States\",  \"country_code\":\"US\",  \"full_name\":\"Washington, DC\",  \"id\":\"01fbe706f872cb32\",  \"name\":\"Washington\",  \"place_type\":\"city\",  \"url\": \"http://api.twitter.com/1/geo/id/01fbe706f872cb32.json\" }",
+        "Field": "place",
+        "Type": "Places"
+    },
+    {
+        "Description": "Nullable. This field only surfaces when a tweet contains a link. The meaning of the field doesn't pertain to the tweet content itself, but instead it is an indicator that the URL contained in the tweet may contain content or media identified as sensitive content.  Example: \"possibly_sensitive\":true",
+        "Field": "possibly_sensitive",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "A set of key-value pairs indicating the intended contextual delivery of the containing Tweet. Currently used by Twitter's Promoted Products.  Example: \"scopes\":{\"followers\":false}",
+        "Field": "scopes",
+        "Type": "Object"
+    },
+    {
+        "Description": "Number of times this Tweet has been retweeted. This field is no longer capped at 99 and will not turn into a String for \"100+\"  Example:  \"retweet_count\":1585",
+        "Field": "retweet_count",
+        "Type": "Int"
+    },
+    {
+        "Description": "Perspectival. Indicates whether this Tweet has been retweeted by the authenticating user.  Example:  \"retweeted\":false",
+        "Field": "retweeted",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "Users can amplify the broadcast of tweets authored by other users by retweeting. Retweets can be distinguished from typical Tweets by the existence of a retweeted_status attribute. This attribute contains a representation of the original Tweet that was retweeted. Note that retweets of retweets do not show representations of the intermediary retweet, but only the original tweet. (Users can also unretweet a retweet they created by deleting their retweet.)",
+        "Field": "retweeted_status",
+        "Type": "Tweet"
+    },
+    {
+        "Description": "Utility used to post the Tweet, as an HTML-formatted string. Tweets from the Twitter website have a source value of web.  Example:  \"source\":\"\\u003Ca href=\\\"http:\\/\\/itunes.apple.com\\/us\\/app\\/twitter\\/id409789998?mt=12\\\" rel=\\\"nofollow\\\"\\u003ETwitter for Mac\\u003C\\/a\\u003E\"",
+        "Field": "source",
+        "Type": "String"
+    },
+    {
+        "Description": "The actual UTF-8 text of the status update. See twitter-text for details on what is currently considered valid characters.  Example:  \"text\":\"Tweet Button, Follow Button, and Web Intents javascript now support SSL http:\\/\\/t.co\\/9fbA0oYy ^TS\"",
+        "Field": "text",
+        "Type": "String"
+    },
+    {
+        "Description": "Indicates whether the value of the text parameter was truncated, for example, as a result of a retweet exceeding the 140 character Tweet length. Truncated text will end in ellipsis, like this ... Since Twitter now rejects long Tweets vs truncating them, the large majority of Tweets will have this set to false. Note that while native retweets may have their toplevel text property shortened, the original text will be available under the retweeted_status object and the truncated parameter will be set to the value of the original status (in most cases, false).  Example:  \"truncated\":true",
+        "Field": "truncated",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "The user who posted this Tweet. Perspectival attributes embedded within this object are unreliable. See Why are embedded objects stale or inaccurate?.  Example:  \"user\":{\"statuses_count\":3080, \"favourites_count\":22, \"protected\":false, \"profile_text_color\":\"437792\", \"profile_image_url\":\"...\", \"name\":\"Twitter API\", \"profile_sidebar_fill_color\":\"a9d9f1\", \"listed_count\":9252, \"following\":true, \"profile_background_tile\":false, \"utc_offset\":-28800, \"description\":\"The Real Twitter API. I tweet about API changes, service issues and happily answer questions about Twitter and our API. Don't get an answer? It's on my website.\", \"location\":\"San Francisco, CA\", \"contributors_enabled\":true, \"verified\":true, \"profile_link_color\":\"0094C2\", \"followers_count\":665829, \"url\":\"http:\\/\\/dev.twitter.com\", \"default_profile\":false, \"profile_sidebar_border_color\":\"0094C2\", \"screen_name\":\"twitterapi\", \"default_profile_image\":false, \"notifications\":false, \"display_url\":null, \"show_all_inline_media\":false, \"geo_enabled\":true, \"profile_use_background_image\":true, \"friends_count\":32, \"id_str\":\"6253282\", \"entities\":{\"hashtags\":[], \"urls\":[], \"user_mentions\":[]}, \"expanded_url\":null, \"is_translator\":false, \"lang\":\"en\", \"time_zone\":\"Pacific Time (US &amp; Canada)\", \"created_at\":\"Wed May 23 06:01:13 +0000 2007\", \"profile_background_color\":\"e8f2f7\", \"id\":6253282, \"follow_request_sent\":false, \"profile_background_image_url_https\":\"...\", \"profile_background_image_url\":\"...\", \"profile_image_url_https\":\"...\"}",
+        "Field": "user",
+        "Type": "Users"
+    },
+    {
+        "Description": "When present and set to \"true\", it indicates that this piece of content has been withheld due to a DMCA complaint.  Example: \"withheld_copyright\": true",
+        "Field": "withheld_copyright",
+        "Type": "Boolean"
+    },
+    {
+        "Description": "When present, indicates a list of uppercase two-letter country codes this content is withheld from. See New Withheld Content Fields in API Responses. As announced in More changes to withheld content fields, Twitter supports the following non-country values for this field: \"XX\" - Content is withheld in all countries\"XY\" - Content is withheld due to a DMCA request.  Example: \"withheld_in_countries\": [\"GR\", \"HK\", \"MY\"]",
+        "Field": "withheld_in_countries",
+        "Type": "Array of String"
+    },
+    {
+        "Description": "When present, indicates whether the content being withheld is the \"status\" or a \"user.\" See New Withheld Content Fields in API Responses.  Example: \"withheld_scope\": \"status\"",
+        "Field": "withheld_scope",
+        "Type": "String"
+    },
+    {
+        "Description": "The integer representation of the ID of the user who contributed to this Tweet.  Example:  \"id\":819797",
+        "Field": "contributors.id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "The string representation of the ID of the user who contributed to this Tweet.  Example:  \"id_str\":\"819797\"",
+        "Field": "contributors.id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "The screen name of the user who contributed to this Tweet.  Example:  \"screen_name\":\"episod\"",
+        "Field": "contributors.screen_name",
+        "Type": "String"
+    },
+    {
+        "Description": "The longitude and latitude of the Tweet's location, as an collection in the form of [longitude, latitude].  Example: \"coordinates\":[-97.51087576,35.46500176]",
+        "Field": "coordinates.coordinates",
+        "Type": "Collection of Float"
+    },
+    {
+        "Description": "The type of data encoded in the coordinates property. This will be \"Point\" for Tweet coordinates fields.  Example:  \"type\":\"Point\"",
+        "Field": "coordinates.type",
+        "Type": "String"
+    },
+    {
+        "Description": "Represents hashtags which have been parsed out of the Tweet text.  Example: \"hashtags\":[{\"indices\":[32,36],\"text\":\"lol\"}]",
+        "Field": "hashtags",
+        "Type": "Array of Object"
+    },
+    {
+        "Description": "Represents media elements uploaded with the Tweet.  Example: \"media\":[{\"type\":\"photo\", \"sizes\":{\"thumb\":{\"h\":150, \"resize\":\"crop\", \"w\":150}, \"large\":{\"h\":238, \"resize\":\"fit\", \"w\":226}, \"medium\":{\"h\":238, \"resize\":\"fit\", \"w\":226}, \"small\":{\"h\":238, \"resize\":\"fit\", \"w\":226}}, \"indices\":[15,35], \"url\":\"http:\\/\\/t.co\\/rJC5Pxsu\", \"media_url\":\"http:\\/\\/p.twimg.com\\/AZVLmp-CIAAbkyy.jpg\", \"display_url\":\"pic.twitter.com\\/rJC5Pxsu\", \"id\":114080493040967680, \"id_str\":\"114080493040967680\", \"expanded_url\": \"http:\\/\\/twitter.com\\/yunorno\\/status\\/114080493036773378\\/photo\\/1\", \"media_url_https\":\"https:\\/\\/p.twimg.com\\/AZVLmp-CIAAbkyy.jpg\"}]",
+        "Field": "media",
+        "Type": "Array of Object"
+    },
+    {
+        "Description": "Represents URLs included in the text of a Tweet or within textual fields of a user object.  Tweet Example: \"urls\":[{\"indices\":[32,52], \"url\":\"http:\\/\\/t.co\\/IOwBrTZR\", \"display_url\":\"youtube.com\\/watch?v=oHg5SJ\\u2026\", \"expanded_url\":\"http:\\/\\/www.youtube.com\\/watch?v=oHg5SJYRHA0\"}]  User Example:  \"urls\":[{\"indices\":[32,52], \"url\":\"http:\\/\\/t.co\\/IOwBrTZR\", \"display_url\":\"youtube.com\\/watch?v=oHg5SJ\\u2026\", \"expanded_url\":\"http:\\/\\/www.youtube.com\\/watch?v=oHg5SJYRHA0\"}]",
+        "Field": "urls",
+        "Type": "Array of Object"
+    },
+    {
+        "Description": "Represents other Twitter users mentioned in the text of the Tweet.  Example: \"user_mentions\":[{\"name\":\"Twitter API\", \"indices\":[4,15], \"screen_name\":\"twitterapi\", \"id\":6253282, \"id_str\":\"6253282\"}]",
+        "Field": "user_mentions",
+        "Type": "Array of Object"
+    },
+    {
+        "Description": "An array of integers indicating the offsets within the Tweet text where the hashtag begins and ends. The first integer represents the location of the # character in the Tweet text string. The second integer represents the location of the first character after the hashtag. Therefore the difference between the two numbers will be the length of the hashtag name plus one (for the '#' character).  Example: \"indices\":[32,36]",
+        "Field": "hashtags.indices",
+        "Type": "Array of Int"
+    },
+    {
+        "Description": "Name of the hashtag, minus the leading '#' character.  Example: \"text\":\"lol\"",
+        "Field": "hashtags.text",
+        "Type": "String"
+    },
+    {
+        "Description": "URL of the media to display to clients.  Example: \"display_url\":\"pic.twitter.com\\/rJC5Pxsu\"",
+        "Field": "media.display_url",
+        "Type": "String"
+    },
+    {
+        "Description": "An expanded version of display_url. Links to the media display page.  Example: \"expanded_url\": \"http:\\/\\/twitter.com\\/yunorno\\/status\\/114080493036773378\\/photo\\/1\"",
+        "Field": "media.expanded_url",
+        "Type": "String"
+    },
+    {
+        "Description": "ID of the media expressed as a 64-bit integer.  Example: \"id\":114080493040967680",
+        "Field": "media.id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "ID of the media expressed as a string.  Example: \"id_str\":\"114080493040967680\"",
+        "Field": "media.id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "An array of integers indicating the offsets within the Tweet text where the URL begins and ends. The first integer represents the location of the first character of the URL in the Tweet text. The second integer represents the location of the first non-URL character occurring after the URL (or the end of the string if the URL is the last part of the Tweet text).  Example: \"indices\":[15,35]",
+        "Field": "media.indices",
+        "Type": "Array of Int"
+    },
+    {
+        "Description": "An http:// URL pointing directly to the uploaded media file.  Example: \"media_url\":\"http:\\/\\/p.twimg.com\\/AZVLmp-CIAAbkyy.jpg\" For media in direct messages, media_url is the same https URL as media_url_https and must be accessed via an authenticated twitter.com session or by signing a request with the user's access token using OAuth 1.0A. You can see more details on the entities in DMs description. It is not possible to directly embed these images in a web page.",
+        "Field": "media.media_url",
+        "Type": "String"
+    },
+    {
+        "Description": "An https:// URL pointing directly to the uploaded media file, for embedding on https pages.  Example: \"media_url_https\":\"https:\\/\\/p.twimg.com\\/AZVLmp-CIAAbkyy.jpg\" For media in direct messages, media_url_https must be accessed via an authenticated twitter.com session or by signing a request with the user's access token using OAuth 1.0A. You can see more details on the entities in DMs description. It is not possible to directly embed these images in a web page.",
+        "Field": "media.media_url_https",
+        "Type": "String"
+    },
+    {
+        "Description": "An object showing available sizes for the media file.  Example: \"sizes\":{\"thumb\":{\"h\":150, \"resize\":\"crop\", \"w\":150}, \"large\":{\"h\":238, \"resize\":\"fit\", \"w\":226}, \"medium\":{\"h\":238, \"resize\":\"fit\", \"w\":226}, \"small\":{\"h\":238, \"resize\":\"fit\", \"w\":226}}",
+        "Field": "media.sizes",
+        "Type": "Object"
+    },
+    {
+        "Description": "For Tweets containing media that was originally associated with a different tweet, this ID points to the original Tweet.  Example: \"source_status_id\": 205282515685081088",
+        "Field": "media.source_status_id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "For Tweets containing media that was originally associated with a different tweet, this string-based ID points to the original Tweet.  Example:  \"source_status_id_str\": \"205282515685081088\"",
+        "Field": "media.source_status_id_str",
+        "Type": "Int64"
+    },
+    {
+        "Description": "Type of uploaded media.  Example: \"type\":\"photo\"",
+        "Field": "media.type",
+        "Type": "String"
+    },
+    {
+        "Description": "Wrapped URL for the media link. This corresponds with the URL embedded directly into the raw Tweet text, and the values for the indices parameter.  Example: \"url\":\"http:\\/\\/t.co\\/rJC5Pxsu\"",
+        "Field": "media.url",
+        "Type": "String"
+    },
+    {
+        "Description": "Height in pixels of this size.  Example: \"h\":150",
+        "Field": "h",
+        "Type": "Int"
+    },
+    {
+        "Description": "Resizing method used to obtain this size. A value of fit means that the media was resized to fit one dimension, keeping its native aspect ratio. A value of crop means that the media was cropped in order to fit a specific resolution.  Example: \"resize\":\"crop\"",
+        "Field": "resize",
+        "Type": "String"
+    },
+    {
+        "Description": "Width in pixels of this size.  Example: \"w\":150",
+        "Field": "w",
+        "Type": "Int"
+    },
+    {
+        "Description": "Information for a thumbnail-sized version of the media.  Example: \"thumb\":{\"h\":150, \"resize\":\"crop\", \"w\":150}",
+        "Field": "sizes.thumb",
+        "Type": "Object"
+    },
+    {
+        "Description": "Information for a large-sized version of the media.  Example: \"large\":{\"h\":238, \"resize\":\"fit\", \"w\":226}",
+        "Field": "sizes.large",
+        "Type": "Object"
+    },
+    {
+        "Description": "Information for a medium-sized version of the media.  Example: \"medium\":{\"h\":238, \"resize\":\"fit\", \"w\":226}",
+        "Field": "sizes.medium",
+        "Type": "Object"
+    },
+    {
+        "Description": "Information for a small-sized version of the media.  Example: \"small\":{\"h\":238, \"resize\":\"fit\", \"w\":226}",
+        "Field": "sizes.small",
+        "Type": "Object"
+    },
+    {
+        "Description": "Version of the URL to display to clients.  Example: \"display_url\":\"youtube.com\\/watch?v=oHg5SJ\\u2026\"",
+        "Field": "urls.display_url",
+        "Type": "String"
+    },
+    {
+        "Description": "Expanded version of display_url.  Example: \"expanded_url\":\"http:\\/\\/www.youtube.com\\/watch?v=oHg5SJYRHA0\"",
+        "Field": "urls.expanded_url",
+        "Type": "String"
+    },
+    {
+        "Description": "An array of integers representing offsets within the Tweet text where the URL begins and ends. The first integer represents the location of the first character of the URL in the Tweet text. The second integer represents the location of the first non-URL character after the end of the URL.  Example: \"indices\":[32,52]",
+        "Field": "urls.indices",
+        "Type": "Array of Int"
+    },
+    {
+        "Description": "Wrapped URL, corresponding to the value embedded directly into the raw Tweet text, and the values for the indices  parameter.  Example: \"url\":\"http:\\/\\/t.co\\/IOwBrTZR\"",
+        "Field": "urls.url",
+        "Type": "String"
+    },
+    {
+        "Description": "ID of the mentioned user, as an integer.  Example: \"id\":6253282",
+        "Field": "user_mentions.id",
+        "Type": "Int64"
+    },
+    {
+        "Description": "If of the mentioned user, as a string.  Example: \"id_str\":\"6253282\"",
+        "Field": "user_mentions.id_str",
+        "Type": "String"
+    },
+    {
+        "Description": "An array of integers representing the offsets within the Tweet text where the user reference begins and ends. The first integer represents the location of the '@' character of the user mention. The second integer represents the location of the first non-screenname character following the user mention.  Example: \"indices\":[4,15]",
+        "Field": "user_mentions.indices",
+        "Type": "Array of Int"
+    },
+    {
+        "Description": "Display name of the referenced user.  Example: \"name\":\"Twitter API\"",
+        "Field": "user_mentions.name",
+        "Type": "String"
+    },
+    {
+        "Description": "Screen name of the referenced user.  Example: \"screen_name\":\"twitterapi\"",
+        "Field": "user_mentions.screen_name",
+        "Type": "String"
+    }
+]
