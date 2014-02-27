@@ -1,6 +1,7 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 import json
+import re
 
 
 class DictionaryTree(QTreeView):
@@ -164,11 +165,26 @@ class DictionaryTreeItem(object):
         self.itemDataType = 'atom'
 
         # very experimental check for item-description on Twitter-Doc
-        anydocs = [entity["Description"] for entity in json.load(open("docs/tweet_fields.json")) if entity["Field"]==self.itemDataKey]
+        anydocs = json.load(open("docs/Twitter_Fields.json"))
         if anydocs:
-            self.itemToolTip = "<p>"+anydocs.pop()+"</p>"
+            keysd = [entity["Field"] for entity in anydocs]
+            # replace ".*." or .9." in the kaypath
+            path = re.sub("\.[0-9,\*]\.",".",self.keyPath())
+            #if the full path is in the key-list
+            if  path in keysd:
+                bestmatch = path
+            # if the full path is not in the list, try with the last part of the path
+            elif path.split(".")[-1] in keysd:
+                bestmatch = path.split(".")[-1]
+            else:
+                bestmatch=None
+
+            if bestmatch:
+                self.itemToolTip="<p>"+[doc["Description"] for doc in anydocs if doc["Field"]==bestmatch].pop().replace("Example:","<font color=#FF333D>Example:</font>")+"</p>"
+            else:
+                self.itemToolTip = path
         else:
-            self.itemToolTip = "No documentation found"
+            self.itemToolTip = self.keyPath()
         if isinstance(value, dict):
             items = value.items()
             self.itemDataValue = '{' + str(len(items)) + '}'
