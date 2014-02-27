@@ -31,8 +31,8 @@ class DictionaryTree(QTreeView):
         contextmenu.addAction(actionCopy)
         contextmenu.exec_(self.viewport().mapToGlobal(event))
 
-    def showDict(self, data={}):
-        self.treemodel.setdata(data)
+    def showDict(self, data={},itemtype='generic'):
+        self.treemodel.setdata(data,itemtype)
 
     def clear(self):
         self.treemodel.reset()
@@ -65,27 +65,60 @@ class DictionaryTreeItemDelegate(QItemDelegate):
 class DictionaryTreeModel(QAbstractItemModel):
     def __init__(self, parent=None, dic={}):
         super(DictionaryTreeModel, self).__init__(parent)
-        self.rootItem = DictionaryTreeItem(('root', {}), None)
+        self.documentation = {}
+        self.itemtype = None
+        self.rootItem = DictionaryTreeItem(('root', {}), None,self)
         self.setdata(dic)
 
     def reset(self):
         self.rootItem.clear()
         super(DictionaryTreeModel, self).reset()
 
-    def setdata(self, data):
+    def setdata(self, data,itemtype="generic"):
         self.reset()
+        self.itemtype = itemtype
         if not isinstance(data, dict):
             data = {'': data}
         items = data.items()
         #items.sort()
         for item in items:
-            newparent = DictionaryTreeItem(item, self.rootItem)
+            newparent = DictionaryTreeItem(item, self.rootItem,self)
             self.rootItem.appendChild(newparent)
 
     def getdata(self):
         key, val = self.rootItem.getValue()
         return val
 
+    def getDocumentation(self,keypath):
+        # very experimental check for item-description on Twitter-Doc
+        try:
+            #Load documentation corresponding to itemtype
+            if not self.itemtype in self.documentation:
+                if (self.itemtype.split(':')[0] == 'Twitter'):
+                    self.documentation[self.itemtype] = json.load(open("docs/Twitter_Fields.json"))
+                    self.documentation[self.itemtype] = {entity["Field"]:entity  for entity in self.documentation[self.itemtype]}
+            
+            if self.itemtype in self.documentation:
+                itemdocumentation = self.documentation[self.itemtype]
+                # replace ".*." or .9." in the kaypath
+                path = re.sub("\.[0-9,\*]\.",".",keypath)
+                #if the full path is in the key-list
+                if  path in itemdocumentation:
+                    bestmatch = path
+                # if the full path is not in the list, try with the last part of the path
+                elif path.split(".")[-1] in itemdocumentation:
+                    bestmatch = path.split(".")[-1]
+                else:
+                    bestmatch=None
+    
+                if bestmatch:
+                    docstring = "<p>"+itemdocumentation[bestmatch]["Description"].replace("Example:","<font color=#FF333D>Example:</font>")+"</p>" 
+                    return(docstring)
+                
+            return(keypath)
+        except:
+            return(keypath)
+            
     def columnCount(self, parent):
         return 2
 
@@ -155,8 +188,9 @@ class DictionaryTreeModel(QAbstractItemModel):
 
 
 class DictionaryTreeItem(object):
-    def __init__(self, dicItem, parentItem):
+    def __init__(self, dicItem, parentItem,model):
         key, value = dicItem
+        self.model = model
         self.parentItem = parentItem
         self.childItems = []
 
@@ -164,40 +198,21 @@ class DictionaryTreeItem(object):
         self.itemDataValue = value
         self.itemDataType = 'atom'
 
-        # very experimental check for item-description on Twitter-Doc
-        anydocs = json.load(open("docs/Twitter_Fields.json"))
-        if anydocs:
-            keysd = [entity["Field"] for entity in anydocs]
-            # replace ".*." or .9." in the kaypath
-            path = re.sub("\.[0-9,\*]\.",".",self.keyPath())
-            #if the full path is in the key-list
-            if  path in keysd:
-                bestmatch = path
-            # if the full path is not in the list, try with the last part of the path
-            elif path.split(".")[-1] in keysd:
-                bestmatch = path.split(".")[-1]
-            else:
-                bestmatch=None
-
-            if bestmatch:
-                self.itemToolTip="<p>"+[doc["Description"] for doc in anydocs if doc["Field"]==bestmatch].pop().replace("Example:","<font color=#FF333D>Example:</font>")+"</p>"
-            else:
-                self.itemToolTip = path
-        else:
-            self.itemToolTip = self.keyPath()
+        self.itemToolTip = self.model.getDocumentation(self.keyPath())
+            
         if isinstance(value, dict):
             items = value.items()
             self.itemDataValue = '{' + str(len(items)) + '}'
             self.itemDataType = 'dict'
             #items.sort()
             for item in items:
-                self.appendChild(DictionaryTreeItem(item, self))
+                self.appendChild(DictionaryTreeItem(item, self,self.model))
 
         elif isinstance(value, list):
             self.itemDataValue = '[' + str(len(value)) + ']'
             self.itemDataType = 'list'
             for idx, item in enumerate(value):
-                self.appendChild(DictionaryTreeItem((idx, item), self))
+                self.appendChild(DictionaryTreeItem((idx, item), self,self.model))
 
         elif isinstance(value, (int, long)):
             self.itemDataType = 'atom'
