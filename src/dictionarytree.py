@@ -31,7 +31,7 @@ class DictionaryTree(QTreeView):
         contextmenu.addAction(actionCopy)
         contextmenu.exec_(self.viewport().mapToGlobal(event))
 
-    def showDict(self, data={},itemtype='generic'):
+    def showDict(self, data={},itemtype='Generic'):
         self.treemodel.setdata(data,itemtype)
 
     def clear(self):
@@ -74,7 +74,7 @@ class DictionaryTreeModel(QAbstractItemModel):
         self.rootItem.clear()
         super(DictionaryTreeModel, self).reset()
 
-    def setdata(self, data,itemtype="generic"):
+    def setdata(self, data,itemtype="Generic"):
         self.reset()
         self.itemtype = itemtype
         if not isinstance(data, dict):
@@ -93,26 +93,26 @@ class DictionaryTreeModel(QAbstractItemModel):
         # very experimental check for item-description on Twitter-Doc
         try:
             #Load documentation corresponding to itemtype
-            if not self.itemtype in self.documentation:
-                if (self.itemtype.split(':')[0] == 'Twitter'):
-                    self.documentation[self.itemtype] = json.load(open("docs/Twitter_Fields.json"))
-                    self.documentation[self.itemtype] = {entity["Field"]:entity  for entity in self.documentation[self.itemtype]}
+            docid = self.itemtype.split(':')[0]
+            if not docid in self.documentation:                    
+                self.documentation[docid] = json.load(open("docs/{}Fields.json".format(docid),"r"))
+                self.documentation[docid] = {entity["Field"]:entity  for entity in self.documentation[docid]}
             
-            if self.itemtype in self.documentation:
-                itemdocumentation = self.documentation[self.itemtype]
+            if docid in self.documentation:
+                doccontent = self.documentation[docid]
                 # replace ".*." or .9." in the kaypath
                 path = re.sub("\.[0-9,\*]\.",".",keypath)
                 #if the full path is in the key-list
-                if  path in itemdocumentation:
+                if  path in doccontent:
                     bestmatch = path
                 # if the full path is not in the list, try with the last part of the path
-                elif path.split(".")[-1] in itemdocumentation:
+                elif path.split(".")[-1] in doccontent:
                     bestmatch = path.split(".")[-1]
                 else:
                     bestmatch=None
     
                 if bestmatch:
-                    docstring = "<p>"+itemdocumentation[bestmatch]["Description"].replace("Example:","<font color=#FF333D>Example:</font>")+"</p>" 
+                    docstring = "<p>"+doccontent[bestmatch]["Description"].replace("Example:","<font color=#FF333D>Example:</font>")+"</p>" 
                     return(docstring)
                 
             return(keypath)
