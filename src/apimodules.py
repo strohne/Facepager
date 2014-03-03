@@ -135,7 +135,7 @@ class ApiTab(QWidget):
         Loads and prepares documentation
         '''
         try:
-            with open("docs/{0}_final.json".format(self.__class__.__name__),"r") as docfile:
+            with open("docs/{0}.json".format(self.__class__.__name__),"r") as docfile:
                 if docfile:
                     self.apidoc = json.load(docfile)
                 else:
