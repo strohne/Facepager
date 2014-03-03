@@ -3,23 +3,12 @@
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
 All data is stored in a SQLite database and may be exported to csv. 
 
-###Version 3.5 features
+### News
+See the [new features in Version 3.5](https://github.com/strohne/Facepager/releases/tag/v3.5) on the release page. 
 
-- Fetch data from the Twitter Streaming API
-- New presets for the Twitter Streaming API
-- Facebook & Twitter API documentation (Tooltips)
-    - complete list of available endpoints
-    - parameter suggestion for each endpoint (show available and mandatory params)
-    - (experimental) tool-tip based documentation for Twitter JSON-Fields (inside the JSON-Viewer)
-- Refurbished user-interface for the JSON-View and the Node/Data-View
-- Tooltips for buttons
-- Selective exports (via node-selection; see the tooltip for the "Export"-Button)
-- simple file-downloader (download pictures etc.)
-- New statusbar with more informations & runtime-estimation
-- Multi-Threaded data-collection (improves speed drastically)
-- [Binary/Installer](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html) Version for Windows/OS X
+### Installer
 
-(Notice: Database files may be incompatible between different versions)
+Installation packages for each versions are available [here](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html). Database files may be incompatible between versions.
                                                       
 
 ###Getting started
