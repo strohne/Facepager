@@ -1,0 +1,2438 @@
+[
+	{
+		"path": "search",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p style=\"color:#FF333D\";\">The search string</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "q",
+				"options": 
+				[
+					
+				]
+			},
+
+			{
+				"default": "",
+				"doc": "<p>Supports these types of objects: All public posts (post), people (user), pages (page), events (event), groups (group), check-ins (checkin)</p>",
+				"required": false,
+				"name": "type",
+				"options": 
+				[
+					{
+						"name": "post"
+					},
+
+					{
+						"name": "user"
+					},
+
+					{
+						"name": "page"
+					},
+
+					{
+						"name": "event"
+					},
+
+					{
+						"name": "group"
+					},
+
+					{
+						"name": "checkin"
+					}
+				]
+			}
+		],
+
+		"doc": "<p>Search over all public objects in the social graph</p>"
+	},
+
+	{
+		"path": "<album>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the album object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<album>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A photo album</p>"
+	},
+
+	{
+		"path": "<album>/photos",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the album object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<album>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photos contained in this album</p>"
+	},
+
+	{
+		"path": "<album>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the album object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<album>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The likes made on this album</p>"
+	},
+
+	{
+		"path": "<album>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the album object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<album>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The comments made on this album</p>"
+	},
+
+	{
+		"path": "<album>/picture",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>One of square (50x50), small (50 pixels wide, variable height), and large (about 200 pixels wide, variable height)</p>",
+				"required": false,
+				"name": "type",
+				"options": 
+				[
+					{
+						"name": "square"
+					},
+
+					{
+						"name": "small"
+					},
+
+					{
+						"name": "large"
+					}
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the album object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<album>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The album's cover photo; the first picture uploaded to an album becomes the cover photo for the album.</p>"
+	},
+
+	{
+		"path": "<application>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>An application's profile</p>"
+	},
+
+	{
+		"path": "<application>/accounts",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Test User accounts associated with the application.</p>"
+	},
+
+	{
+		"path": "<application>/albums",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photo albums this application has created.</p>"
+	},
+
+	{
+		"path": "<application>/feed",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The application's wall.</p>"
+	},
+
+	{
+		"path": "<application>/insights",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Usage metrics for this application</p>"
+	},
+
+	{
+		"path": "<application>/links",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The application's posted links.</p>"
+	},
+
+	{
+		"path": "<application>/picture",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>One of square (50x50), small (50 pixels wide, variable height), and large (about 200 pixels wide, variable height)</p>",
+				"required": false,
+				"name": "type",
+				"options": 
+				[
+					{
+						"name": "square"
+					},
+
+					{
+						"name": "small"
+					},
+
+					{
+						"name": "large"
+					}
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The application's logo</p>"
+	},
+
+	{
+		"path": "<application>/posts",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The application's own posts.</p>"
+	},
+
+	{
+		"path": "<application>/reviews",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Reviews of this application</p>"
+	},
+
+	{
+		"path": "<application>/staticresources",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Usage stats about the canvas application's static resources, such as javascript and CSS, and which ones are being flushed to browsers early.</p>"
+	},
+
+	{
+		"path": "<application>/statuses",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The application's status updates</p>"
+	},
+
+	{
+		"path": "<application>/subscriptions",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the subscriptions this application has for real-time notifications.</p>"
+	},
+
+	{
+		"path": "<application>/tagged",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photos, videos, and posts in which this application has been tagged.</p>"
+	},
+
+	{
+		"path": "<application>/translations",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The translated strings for this application.</p>"
+	},
+
+	{
+		"path": "<application>/scores",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the application object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<application>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Scores for the user and their friends.</p>"
+	},
+
+	{
+		"path": "<checkin>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the checkin object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<checkin>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Represents a single visit by a user to a location</p>"
+	},
+
+	{
+		"path": "<checkin>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the checkin object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<checkin>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the comments on this checkin.</p>"
+	},
+
+	{
+		"path": "<checkin>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the checkin object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<checkin>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Users who like this checkin.</p>"
+	},
+
+	{
+		"path": "<comment>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the comment object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<comment>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Returns a comment</p>"
+	},
+
+	{
+		"path": "<comment>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the comment object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<comment>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All the likes on this comment</p>"
+	},
+
+	{
+		"path": "<event>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Specifies information about an event, including the location, event name, and which invitees plan to attend.</p>"
+	},
+
+	{
+		"path": "<event>/feed",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>This event's wall</p>"
+	},
+
+	{
+		"path": "<event>/noreply",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the users who have been not yet responded to their invitation to this event</p>"
+	},
+
+	{
+		"path": "<event>/maybe",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the users who have been responded \"Maybe\" to their invitation to this event</p>"
+	},
+
+	{
+		"path": "<event>/invited",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the users who have been invited to this event</p>"
+	},
+
+	{
+		"path": "<event>/attending",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the users who are attending this event</p>"
+	},
+
+	{
+		"path": "<event>/declined",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the users who declined their invitation to this event</p>"
+	},
+
+	{
+		"path": "<event>/picture",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>One of square (50x50), small (50 pixels wide, variable height), and large (about 200 pixels wide, variable height)</p>",
+				"required": false,
+				"name": "type",
+				"options": 
+				[
+					{
+						"name": "square"
+					},
+
+					{
+						"name": "small"
+					},
+
+					{
+						"name": "large"
+					}
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the event object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<event>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The event's profile picture</p>"
+	},
+
+	{
+		"path": "<friendlist>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the FriendList object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<friendlist>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A Facebook friend list. This object represents the list itself and not the members of the list.</p>"
+	},
+
+	{
+		"path": "<friendlist>/members",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the FriendList object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<friendlist>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the users who are members of this list.</p>"
+	},
+
+	{
+		"path": "<group>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the group object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<group>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A Facebook group</p>"
+	},
+
+	{
+		"path": "<group>/feed",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the group object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<group>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>This group's wall</p>"
+	},
+
+	{
+		"path": "<group>/members",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the group object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<group>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the users who are members of this group</p>"
+	},
+
+	{
+		"path": "<group>/picture",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>One of square (50x50), small (50 pixels wide, variable height), and large (about 200 pixels wide, variable height)</p>",
+				"required": false,
+				"name": "type",
+				"options": 
+				[
+					{
+						"name": "square"
+					},
+
+					{
+						"name": "small"
+					},
+
+					{
+						"name": "large"
+					}
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the group object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<group>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The profile picture of this group</p>"
+	},
+
+	{
+		"path": "<group>/docs",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the group object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<group>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The docs in this group</p>"
+	},
+
+	{
+		"path": "<link>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the link object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<link>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A link shared on a user's wall</p>"
+	},
+
+	{
+		"path": "<link>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the link object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<link>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the comments on this link.</p>"
+	},
+
+	{
+		"path": "<link>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the link object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<link>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Users who like this link.</p>"
+	},
+
+	{
+		"path": "<note>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the note object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<note>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A Facebook note</p>"
+	},
+
+	{
+		"path": "<note>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the note object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<note>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the comments on this note.</p>"
+	},
+
+	{
+		"path": "<note>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the note object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<note>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Users who like this note.</p>"
+	},
+
+	{
+		"path": "<page>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Returns a Page</p>"
+	},
+
+	{
+		"path": "<page>/feed",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>This page's wall</p>"
+	},
+
+	{
+		"path": "<page>/picture",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>One of square (50x50), small (50 pixels wide, variable height), and large (about 200 pixels wide, variable height)</p>",
+				"required": false,
+				"name": "type",
+				"options": 
+				[
+					{
+						"name": "square"
+					},
+
+					{
+						"name": "small"
+					},
+
+					{
+						"name": "large"
+					}
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The page's profile picture</p>"
+	},
+
+	{
+		"path": "<page>/settings",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The page's post permission settings</p>"
+	},
+
+	{
+		"path": "<page>/tagged",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photos, videos, and posts in which this page has been tagged</p>"
+	},
+
+	{
+		"path": "<page>/links",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The page's posted links</p>"
+	},
+
+	{
+		"path": "<page>/photos",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photos contained on this page</p>"
+	},
+
+	{
+		"path": "<page>/groups",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The groups this page is a member of</p>"
+	},
+
+	{
+		"path": "<page>/albums",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photo albums this Page has uploaded</p>"
+	},
+
+	{
+		"path": "<page>/statuses",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The page's status updates</p>"
+	},
+
+	{
+		"path": "<page>/videos",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The videos contained on this page</p>"
+	},
+
+	{
+		"path": "<page>/notes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The notes contained on this page</p>"
+	},
+
+	{
+		"path": "<page>/posts",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The page's own posts</p>"
+	},
+
+	{
+		"path": "<page>/events",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The events the Page is attending</p>"
+	},
+
+	{
+		"path": "<page>/checkins",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Checkins made to this Place Page by the current user, and friends of the current user</p>"
+	},
+
+	{
+		"path": "<page>/tabs",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The page's profile tabs</p>"
+	},
+
+	{
+		"path": "<page>/admins",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A list of the Page's admins.</p>"
+	},
+
+	{
+		"path": "<page>/blocked",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A list of the users blocked from the page.</p>"
+	},
+
+	{
+		"path": "<page>/blocked/<user>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of a user.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Checks if a user is blocked from the page</p>"
+	},
+
+	{
+		"path": "<photo>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the photo object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<photo>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>An individual photo</p>"
+	},
+
+	{
+		"path": "<photo>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the photo object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<photo>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the comments on this photo.</p>"
+	},
+
+	{
+		"path": "<photo>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the photo object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<photo>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Users who like this photo.</p>"
+	},
+
+	{
+		"path": "<photo>/picture",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the photo object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<photo>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The album-sized view of the photo</p>"
+	},
+
+	{
+		"path": "<photo>/tags",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the photo object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<photo>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Tags for this photo.</p>"
+	},
+
+	{
+		"path": "<post>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the post object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<post>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A Facebook post</p>"
+	},
+
+	{
+		"path": "<post>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the post object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<post>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the comments on this post.</p>"
+	},
+
+	{
+		"path": "<post>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the post object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<post>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Users who like this post.</p>"
+	},
+
+	{
+		"path": "<status>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the status object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<status>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A Facebook status</p>"
+	},
+
+	{
+		"path": "<status>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the status object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<status>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the comments on this status.</p>"
+	},
+
+	{
+		"path": "<status>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the status object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<status>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Users who like this status.</p>"
+	},
+
+	{
+		"path": "<user>",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>The fields to return</p>",
+				"required": false,
+				"name": "fields",
+				"options": 
+				[
+					
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>A user profile.</p>"
+	},
+
+	{
+		"path": "<user>/accounts",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The Facebook apps and pages owned by the current user</p>"
+	},
+
+	{
+		"path": "<user>/activities",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The activities listed on the user's profile</p>"
+	},
+
+	{
+		"path": "<user>/albums",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photo albums this user has created</p>"
+	},
+
+	{
+		"path": "<user>/apprequests",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's outstanding requests from an app.</p>"
+	},
+
+	{
+		"path": "<user>/books",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The books listed on the user's profile.</p>"
+	},
+
+	{
+		"path": "<user>/checkins",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The places that the user has checked-into</p>"
+	},
+
+	{
+		"path": "<user>/events",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The events this user is attending.</p>"
+	},
+
+	{
+		"path": "<user>/feed",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>This user's wall</p>"
+	},
+
+	{
+		"path": "<user>/friends",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's friends</p>"
+	},
+
+	{
+		"path": "<user>/friends/<friend>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user's friend.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<friend>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Checks if the given user is a friend of the current user</p>"
+	},
+
+	{
+		"path": "<user>/games",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Games the user has added to the Arts and Entertainment section of their profile.</p>"
+	},
+
+	{
+		"path": "<user>/groups",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The Groups that the user belongs to.</p>"
+	},
+
+	{
+		"path": "<user>/home",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's news feed</p>"
+	},
+
+	{
+		"path": "<user>/inbox",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The threads in this user's inbox.</p>"
+	},
+
+	{
+		"path": "<user>/interests",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The interests listed on the user's profile</p>"
+	},
+
+	{
+		"path": "<user>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All the pages this user has liked.</p>"
+	},
+
+	{
+		"path": "<user>/likes/<page>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the page.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<page>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Checks if the user likes the given page.</p>"
+	},
+
+	{
+		"path": "<user>/links",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's posted links.</p>"
+	},
+
+	{
+		"path": "<user>/movies",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The movies listed on the user's profile</p>"
+	},
+
+	{
+		"path": "<user>/music",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The music listed on the user's profile</p>"
+	},
+
+	{
+		"path": "<user>/notes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's notes</p>"
+	},
+
+	{
+		"path": "<user>/notifications",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>Enables you to see notifications that the user has already read in addition to the ones which are unread</p>",
+				"required": false,
+				"name": "include_read",
+				"options": 
+				[
+					
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's notifications</p>"
+	},
+
+	{
+		"path": "<user>/outbox",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The messages in this user's outbox.</p>"
+	},
+
+	{
+		"path": "<user>/payments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The transactions the user placed with an application.</p>"
+	},
+
+	{
+		"path": "<user>/permissions",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The permissions that user has granted the application.</p>"
+	},
+
+	{
+		"path": "<user>/photos",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The photos the user is tagged in</p>"
+	},
+
+	{
+		"path": "<user>/picture",
+		"params": 
+		[
+			{
+				"default": "",
+				"doc": "<p>One of square (50x50), small (50 pixels wide, variable height), and large (about 200 pixels wide, variable height)</p>",
+				"required": false,
+				"name": "type",
+				"options": 
+				[
+					{
+						"name": "square"
+					},
+
+					{
+						"name": "small"
+					},
+
+					{
+						"name": "large"
+					}
+				]
+			},
+
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's profile picture</p>"
+	},
+
+	{
+		"path": "<user>/pokes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's pokes</p>"
+	},
+
+	{
+		"path": "<user>/posts",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's posts</p>"
+	},
+
+	{
+		"path": "<user>/scores",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The scores for the user</p>"
+	},
+
+	{
+		"path": "<user>/statuses",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The user's status updates</p>"
+	},
+
+	{
+		"path": "<user>/tagged",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Posts the user is tagged in</p>"
+	},
+
+	{
+		"path": "<user>/television",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The television listed on the user's profile</p>"
+	},
+
+	{
+		"path": "<user>/updates",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The updates in this user's inbox.</p>"
+	},
+
+	{
+		"path": "<user>/videos",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the user object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<user>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The videos this user has been tagged in</p>"
+	},
+
+	{
+		"path": "<video>",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the video object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<video>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>An individual video</p>"
+	},
+
+	{
+		"path": "<video>/comments",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the video object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<video>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>All of the comments on this video.</p>"
+	},
+
+	{
+		"path": "<video>/likes",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the video object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<video>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>Users who like this video.</p>"
+	},
+
+	{
+		"path": "<video>/picture",
+		"params": 
+		[
+			{
+				"default": "<Object ID>",
+				"doc": "<p style=\"color:#FF333D\";\">Represents the ID of the video object.</p><b>[Mandatory Parameter]</b>",
+				"required": true,
+				"name": "<video>",
+				"options": 
+				[
+					
+				]
+			}
+		],
+
+		"doc": "<p>The image which represents the content of the video</p>"
+	}
+]
