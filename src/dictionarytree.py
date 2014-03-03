@@ -2,7 +2,8 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import json
 import re
-
+import os
+import sys
 
 class DictionaryTree(QTreeView):
     def __init__(self, parent=None):
@@ -93,8 +94,15 @@ class DictionaryTreeModel(QAbstractItemModel):
         try:
             #Load documentation corresponding to itemtype
             docid = self.itemtype.split(':')[0]
-            if not docid in self.documentation:                    
-                self.documentation[docid] = json.load(open("docs/{}Fields.json".format(docid),"r"))
+            if not docid in self.documentation:            
+                if getattr(sys, 'frozen', False):
+                    folder = os.path.join(os.path.dirname(sys.executable),'docs')
+                elif __file__:
+                    folder = os.path.join(os.path.dirname(__file__),'docs')
+        
+                filename = "{}Fields.json".format(docid)
+                                    
+                self.documentation[docid] = json.load(open(os.path.join(folder, filename),"r"))
                 self.documentation[docid] = {entity["Field"]:entity  for entity in self.documentation[docid]}
             
             if docid in self.documentation:

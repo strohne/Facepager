@@ -4,6 +4,7 @@ from mimetypes import guess_all_extensions
 from datetime import datetime
 import re
 import os
+import sys
 import time
 from collections import OrderedDict
 import threading
@@ -134,8 +135,16 @@ class ApiTab(QWidget):
         '''
         Loads and prepares documentation
         '''
+       
         try:
-            with open("docs/{0}.json".format(self.__class__.__name__),"r") as docfile:
+            if getattr(sys, 'frozen', False):
+                folder = os.path.join(os.path.dirname(sys.executable),'docs')
+            elif __file__:
+                folder = os.path.join(os.path.dirname(__file__),'docs')
+    
+            filename = "{0}.json".format(self.__class__.__name__)
+            
+            with open(os.path.join(folder, filename),"r") as docfile:
                 if docfile:
                     self.apidoc = json.load(docfile)
                 else:
