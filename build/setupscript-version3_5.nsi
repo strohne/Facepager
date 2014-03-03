@@ -5,7 +5,7 @@ CRCCheck On
 
 ;General
 
-OutFile "Facepager_Setup_3_4.exe"
+OutFile "Facepager_Setup_3_5.exe"
 ShowInstDetails "nevershow"
 ShowUninstDetails "nevershow"
 
@@ -100,6 +100,11 @@ File "_sqlite3.pyd"
 File "_ssl.pyd"
 File "ssleay32.dll"
 File "libeay32.dll"
+
+SetOutPath "$INSTDIR\docs"
+File "docs\"
+
+CreateDirectory "$INSTDIR\docs"
 
 SetOutPath "$INSTDIR\presets"
 File "presets\"
