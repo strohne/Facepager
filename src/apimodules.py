@@ -24,7 +24,7 @@ class ApiTab(QWidget):
     """
     Generic API Tab Class
         - handles URL-Substitutions
-        - saves current Settings
+        - saves current Settings 
     """
 
     streamingData = Signal(list, list, list)
@@ -35,6 +35,7 @@ class ApiTab(QWidget):
         self.mainWindow = mainWindow
         self.name = name
         self.connected = False
+        self.loadDocs()
         self.lock_session = threading.Lock()
 
     def idtostr(self, val):
@@ -63,25 +64,16 @@ class ApiTab(QWidget):
         Replaces the Facepager placeholders ("<",">" of the inside the query-Parameter
         by the Object-ID or any other Facepager-Placeholder
         Example: http://www.facebook.com/<Object-ID>/friends
-        """
-
-        #Replace placeholders in urlpath
-        matches = re.findall("<([^>]*)>", urlpath)
-        for match in matches:
-            if match == 'Object ID':
-                value = self.idtostr(nodedata['objectid'])
-            else:
-                value = getDictValue(nodedata['response'], match)
-            urlpath = urlpath.replace('<' + match + '>', value)
-
-            #Replace placeholders in params
+        """        
         urlpath, urlparams = self.parseURL(urlpath)
+               
+        #Replace placeholders in params and collect template params
+        templateparams = {}
         for name in params:
-            if (name == '<None>') | (name == ''):
+            #Filter empty params
+            if (name == '<None>') or (params[name] == '<None>') or (name == '') or (params[name] == ''):
                 continue
-            if (params[name] == '<None>') | (params[name] == ''):
-                continue
-
+            
             # Set the value for the ObjectID or any other placeholder-param
             if params[name] == '<Object ID>':
                 value = self.idtostr(nodedata['objectid'])
@@ -92,8 +84,24 @@ class ApiTab(QWidget):
                 else:
                     value = params[name]
 
-            urlparams[name] = value
+            #check for template params
+            match = re.match("^<(.*)>$", str(name))
+            if match:
+                templateparams[match.group(1)] = value
+            else:
+                urlparams[name] = value
 
+        #Replace placeholders in urlpath
+        matches = re.findall("<([^>]*)>", urlpath)
+        for match in matches:
+            if match in templateparams:
+                value = templateparams[match]
+            elif match == 'Object ID':
+                value = self.idtostr(nodedata['objectid'])
+            else:
+                value = getDictValue(nodedata['response'], match)
+            urlpath = urlpath.replace('<' + match + '>', value)
+            
         return urlpath, urlparams
 
 
@@ -122,6 +130,78 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
         self.setOptions(options)
 
+    def loadDocs(self):
+        '''
+        Loads and prepares documentation
+        '''
+        try:
+            with open("docs/{0}.json".format(self.__class__.__name__),"r") as docfile:
+                if docfile:
+                    self.apidoc = json.load(docfile)
+                else:
+                    self.apidoc = None
+        except:
+            self.apidoc = None
+
+    def setRelations(self,params=True):
+        '''
+        Create relations box and paramedit
+        Set the relations according to the APIdocs, if any docs are available        
+        '''
+
+        self.relationEdit = QComboBox(self)
+        if self.apidoc:
+            #Insert one item for every endpoint
+            for endpoint in reversed(self.apidoc):
+                #store url as item text
+                self.relationEdit.insertItem(0, endpoint["path"])
+                #store doc as tooltip 
+                self.relationEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
+                #store params-dict for later use in onChangedRelation
+                self.relationEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
+                        
+        self.relationEdit.setEditable(True)
+        if params:
+            self.paramEdit = QParamEdit(self)
+            # changed to currentIndexChanged for recognition of changes made by the tool itself
+            self.relationEdit.currentIndexChanged.connect(self.onchangedRelation)
+            self.onchangedRelation()
+
+    @Slot()
+    def onchangedRelation(self,index=0):
+        '''
+        Handles the automated paramter suggestion for the current
+        selected API Relation/Endpoint
+        '''        
+        #retrieve param-dict stored in setRelations-method
+        params = self.relationEdit.itemData(index,Qt.UserRole)
+        
+        #Set name options and build value dict
+        values = {}
+        nameoptions = []
+        if params:
+            for param in params:
+                if param["required"]==True:
+                    nameoptions.append(param)
+                    values[param["name"]] = param["default"]
+                else:
+                    nameoptions.insert(0,param)        
+        nameoptions.insert(0,{})
+        self.paramEdit.setNameOptions(nameoptions)
+
+        #Set value options
+        self.paramEdit.setValueOptions([{'name':'',
+                                         'doc':"No Value"},
+                                         {'name':'<Object ID>',
+                                          'doc':"The value in the Object ID-column of the datatree."}])
+
+        #Set values
+        self.paramEdit.setParams(values) 
+
+    @Slot()
+    def onChangedParam(self,index=0):
+        pass
+                
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
@@ -205,28 +285,7 @@ class FacebookTab(ApiTab):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         # Query Box
-        self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['<Object ID>', 'search', '<Object ID>/feed', '<Object ID>/posts',
-                                          '<Object ID>/comments', '<Object ID>/likes',
-                                          '<Object ID>/global_brand_children', '<Object ID>/groups',
-                                          '<Object ID>/insights', '<Object ID>/members', '<Object ID>/picture',
-                                          '<Object ID>/docs', '<Object ID>/noreply', '<Object ID>/invited',
-                                          '<Object ID>/attending', '<Object ID>/maybe', '<Object ID>/declined',
-                                          '<Object ID>/videos', '<Object ID>/accounts', '<Object ID>/achievements',
-                                          '<Object ID>/activities', '<Object ID>/albums', '<Object ID>/books',
-                                          '<Object ID>/checkins', '<Object ID>/events', '<Object ID>/family',
-                                          '<Object ID>/friendlists', '<Object ID>/friends', '<Object ID>/games',
-                                          '<Object ID>/home', '<Object ID>/interests', '<Object ID>/links',
-                                          '<Object ID>/locations', '<Object ID>/movies', '<Object ID>/music',
-                                          '<Object ID>/notes', '<Object ID>/photos', '<Object ID>/questions',
-                                          '<Object ID>/scores', '<Object ID>/statuses', '<Object ID>/subscribedto',
-                                          '<Object ID>/tagged', '<Object ID>/television'])
-        self.relationEdit.setEditable(True)
-
-        # Param Box
-        self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>', 'since', 'until', 'offset', 'limit', 'type'])
-        self.paramEdit.setValueOptions(['<None>', '2013-07-17', 'page'])
+        self.setRelations()
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -295,7 +354,7 @@ class FacebookTab(ApiTab):
             since = dateutil.parser.parse(since, yearfirst=True, dayfirst=False)
             since = int((since - datetime(1970, 1, 1)).total_seconds())
 
-            # Abort condition: maximum page count
+        # Abort condition: maximum page count
         for page in range(0, options.get('pages', 1)):
         # build url
             if not ('url' in options):
@@ -372,20 +431,8 @@ class TwitterTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
-        # Query Box
-        self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['search/tweets'])
-        self.relationEdit.insertItems(0, ['users/show', 'users/search'])
-        self.relationEdit.insertItems(0, ['followers/list', 'friends/list'])
-        self.relationEdit.insertItems(0, ['statuses/show/<Object ID>', 'statuses/retweets/<Object ID>'])
-        self.relationEdit.insertItems(0, ['statuses/user_timeline'])
-        self.relationEdit.setEditable(True)
-
-        # Parameter-Box
-        self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(
-            ['<None>', 'q', 'screen_name', 'user_id', 'count', 'result_type'])  # 'count','until'
-        self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
+        # Query and Parameter Box
+        self.setRelations()
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -431,6 +478,7 @@ class TwitterTab(ApiTab):
             authorize_url='https://api.twitter.com/oauth/authorize',
             request_token_url='https://api.twitter.com/oauth/request_token',
             base_url='https://api.twitter.com/1.1/')
+
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams(),
@@ -558,13 +606,7 @@ class TwitterStreamingTab(ApiTab):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
         # Query Box
-        self.relationEdit = QComboBox(self)
-        self.relationEdit.insertItems(0, ['statuses/sample'])
-        self.relationEdit.insertItems(0, ['statuses/filter'])
-        self.relationEdit.setEditable(True)
-
-        # Construct Parameter-Edit
-        self.paramEdit = QParamEdit(self)
+        self.setRelations()
 
         # Construct Log-In elements
         self.tokenEdit = QLineEdit()
@@ -607,6 +649,7 @@ class TwitterStreamingTab(ApiTab):
             base_url='https://stream.twitter.com/1.1/')
         self.timeout = 60
         self.connected = False
+
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams()}
@@ -685,6 +728,7 @@ class TwitterStreamingTab(ApiTab):
                                     self.retry_counter+=1
                                     _send()
                             else:
+                                self.connected = False
                                 raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
                         print "good response"
                         return response
@@ -799,8 +843,11 @@ class GenericTab(ApiTab):
 
         #Parameter
         self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions(['<None>', '<:id>', 'q'])
-        self.paramEdit.setValueOptions(['<None>', '<Object ID>'])
+        self.paramEdit.setNameOptions([{'name':''}])
+        self.paramEdit.setValueOptions([{'name':'',
+                                         'doc':"No Value"},
+                                         {'name':'<Object ID>',
+                                          'doc':"The value in the Object ID-column of the datatree."}])
         mainLayout.addRow("Parameters", self.paramEdit)
 
         #Extract option 

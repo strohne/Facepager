@@ -484,7 +484,7 @@ class Actions(object):
         self.mainWindow.detailTree.clear()
         if current.isValid():
             item = current.internalPointer()
-            self.mainWindow.detailTree.showDict(item.data['response'])
+            self.mainWindow.detailTree.showDict(item.data['response'],item.data['querytype'])
 
         #select level
         level = 0

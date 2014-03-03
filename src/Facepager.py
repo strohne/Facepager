@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         self.presetWindow=PresetWindow(self)
         self.timerWindow=TimerWindow(self)
         #self.selectNodesWindow=SelectNodesWindow(self,self.tree)
-        
+
         self.timerWindow.timerstarted.connect(self.actions.timerStarted)
         self.timerWindow.timerstopped.connect(self.actions.timerStopped)
         self.timerWindow.timercountdown.connect(self.actions.timerCountdown)
@@ -63,11 +63,11 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.timerStatus)        
         self.toolbar=Toolbar(parent=self,mainWindow=self)
         self.addToolBar(Qt.TopToolBarArea,self.toolbar)    
-        
+
         self.selectionStatus = QLabel("0 node(s) selected ")
-        self.statusBar().addPermanentWidget(self.selectionStatus)        
+        self.statusBar().addPermanentWidget(self.selectionStatus)
         self.statusBar().showMessage('No database connection')
-        self.statusBar().setSizeGripEnabled(False)       
+        self.statusBar().setSizeGripEnabled(False)
         
         #dummy widget to contain the layout manager
         #self.mainWidget=QWidget(self) 
