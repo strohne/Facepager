@@ -1,5 +1,4 @@
 ![Logo](https://raw.github.com/strohne/Facepager/master/icons/icon_facepager.png)
-###Description
 
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
 All data is stored in a SQLite database and may be exported to csv. 
@@ -18,13 +17,10 @@ All data is stored in a SQLite database and may be exported to csv.
 - simple File-Downloader (download pictures etc.)
 - New Status-Bar with more informations, runtime-estimations
 - Multi-Threading for the data-collection (faster!)
-
 - [Binary/Installer](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html) Version for Windows/OS X
 
-    
-Notice: Database files may be incompatible between different versions.
+(Notice: Database files may be incompatible between different versions)
                                                       
-You should be aware of error sources when dealing with Facebook API. There are access restrictions for the amount of data and due to privacy. 
 
 ###Getting started
 
