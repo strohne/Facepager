@@ -25,4 +25,4 @@ Installation packages for each versions are available [here](http://www.ls1.ifkw
 
 ###Citation
 
-[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2013). Facepager 3.5. GUI-Toolkit for generic data retrieval on API.
+[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2013). Facepager. An application for generic data retrieval through APIs. Source code available at https://github.com/strohne/Facepager/.
