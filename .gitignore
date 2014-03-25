@@ -7,3 +7,4 @@ src/*.pyo
 src/credentials.py
 .project
 .pydevproject
+.settings/

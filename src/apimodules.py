@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import urlparse
 import urllib
 from mimetypes import guess_all_extensions

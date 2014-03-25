@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import csv
 from copy import deepcopy
 from progressbar import ProgressBar
@@ -5,6 +8,7 @@ from database import *
 from apimodules import *
 from apithread import ApiThreadPool
 import StringIO
+import codecs
 
 class Actions(object):
     def __init__(self, mainWindow):
@@ -241,6 +245,7 @@ class Actions(object):
 
             f = open(fldg.selectedFiles()[0], 'wb')
             try:
+                f.write(codecs.BOM_UTF8) #UTF8 BOM
                 writer = csv.writer(f, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                     lineterminator='\r\n')
 
