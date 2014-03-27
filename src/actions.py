@@ -61,6 +61,10 @@ class Actions(object):
         self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
         self.actionAddColumn.setToolTip("Add the current JSON-key as a column in the data view")
         self.actionAddColumn.triggered.connect(self.addColumn)
+        
+        self.actionAddAllolumns = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add All Columns")
+        self.actionAddAllolumns.setToolTip("Analyzes all selected nodes in the data view and adds all found keys as columns")
+        self.actionAddAllolumns.triggered.connect(self.addAllColumns)        
 
         self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
         self.actionUnpack.setToolTip("Unpacks a list in the JSON-data and creates a new node containing the list content")
@@ -331,6 +335,17 @@ class Actions(object):
             self.mainWindow.fieldList.append(key)
         self.mainWindow.tree.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
 
+    @Slot()
+    def addAllColumns(self):
+        columns = self.mainWindow.fieldList.toPlainText().splitlines()
+        
+        indexes = self.mainWindow.tree.selectedIndexesAndChildren()        
+        for no in range(len(indexes)):
+            item = indexes[no].internalPointer()
+            columns.extend([key for key in item.data['response'].iterkeys() if not key in columns])
+        
+        self.mainWindow.fieldList.setPlainText("\n".join(columns))
+        self.mainWindow.tree.treemodel.setCustomColumns(columns)
 
     @Slot()
     def loadPreset(self):
