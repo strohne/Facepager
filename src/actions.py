@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import csv
 from copy import deepcopy
 from progressbar import ProgressBar

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import urlparse
 import urllib
 from mimetypes import guess_all_extensions
@@ -63,6 +60,24 @@ class ApiTab(QWidget):
 
         return path, query
 
+    def parsePlaceholders(self,pattern,nodedata,paramdata={}):
+        if not pattern:
+            return pattern
+        
+        matches = re.findall("<([^>]*)>", pattern)
+        for match in matches:
+            if match in paramdata:
+                value = paramdata[match]
+            elif match == 'None':
+                value = ''
+            elif match == 'Object ID':
+                value = self.idtostr(nodedata['objectid'])
+            else:
+                value = getDictValue(nodedata['response'], match)
+            pattern = pattern.replace('<' + match + '>', value)
+            
+        return pattern        
+        
     def getURL(self, urlpath, params, nodedata):
         """
         Replaces the Facepager placeholders ("<",">" of the inside the query-Parameter
@@ -96,15 +111,7 @@ class ApiTab(QWidget):
                 urlparams[name] = value
 
         #Replace placeholders in urlpath
-        matches = re.findall("<([^>]*)>", urlpath)
-        for match in matches:
-            if match in templateparams:
-                value = templateparams[match]
-            elif match == 'Object ID':
-                value = self.idtostr(nodedata['objectid'])
-            else:
-                value = getDictValue(nodedata['response'], match)
-            urlpath = urlpath.replace('<' + match + '>', value)
+        urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
             
         return urlpath, urlparams
 
@@ -145,7 +152,7 @@ class ApiTab(QWidget):
             elif __file__:
                 folder = os.path.join(os.path.dirname(__file__),'docs')
     
-            filename = "{0}.json".format(self.__class__.__name__)
+            filename = u"{0}.json".format(self.__class__.__name__)
             
             with open(os.path.join(folder, filename),"r") as docfile:
                 if docfile:
@@ -235,7 +242,7 @@ class ApiTab(QWidget):
             else:
                 response = session.get(path, params=args, timeout=self.timeout, verify=False)
         except (HTTPError, ConnectionError), e:
-            raise Exception("Request Error: {0}".format(e.message))
+            raise Exception(u"Request Error: {0}".format(e.message))
         else:
             if jsonify == True:
                 if not response.json():
@@ -391,7 +398,7 @@ class FacebookTab(ApiTab):
                 urlpath = options['url']
                 urlparams = options['params']
 
-            self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+            self.mainWindow.logmessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
                                                                                urlpath + "?" + urllib.urlencode(
                                                                                    urlparams)))
 
@@ -547,7 +554,7 @@ class TwitterTab(ApiTab):
                 urlpath = options['url']
                 urlparams = options["params"]
 
-            self.mainWindow.logmessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+            self.mainWindow.logmessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
                                                                                urlpath + "?" + urllib.urlencode(
                                                                                    urlparams)))
 
@@ -786,7 +793,7 @@ class TwitterStreamingTab(ApiTab):
             urlparams = options["params"]
 
         self.mainWindow.logmessage(
-            "Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+            u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
         # data
         headers = None
         for data in self.request(path=urlpath, args=urlparams):
@@ -907,7 +914,7 @@ class GenericTab(ApiTab):
         self.connected = True
         urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         self.mainWindow.logmessage(
-            "Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+            u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
         #data
         data, headers, status = self.request(urlpath, urlparams)
@@ -947,22 +954,40 @@ class FilesTab(ApiTab):
 
         mainLayout.addRow("Folder", folderlayout)
 
+        #filename 
+        self.filenameEdit = QComboBox(self)
+        self.filenameEdit.insertItems(0, ['<None>'])
+        self.filenameEdit.setEditable(True)
+        mainLayout.addRow("Custom filename", self.filenameEdit)
+
+        #fileext 
+        self.fileextEdit = QComboBox(self)
+        self.fileextEdit.insertItems(0, ['<None>'])
+        self.fileextEdit.setEditable(True)
+        mainLayout.addRow("Custom file extension", self.fileextEdit)
+        
         self.setLayout(mainLayout)
         if loadSettings: self.loadSettings()
 
-    def download(self, path, args=None, headers=None, foldername=None):
+    def download(self, path, args=None, headers=None, foldername=None, filename=None, fileext=None):
         """
         Download files ...
         Uses the request-method without converting to json
         (argument jsonify==True)
         """
 
-        def makefilename(extbymime=None):  # Create file name
-            filename, fileext = os.path.splitext(os.path.basename(path))
+        def makefilename(foldername=None, filename=None, fileext=None):  # Create file name
+            url_filename, url_fileext = os.path.splitext(os.path.basename(path))
+            if not fileext:
+                fileext = url_fileext
+            if not filename:                
+                filename = url_filename
+                
+            filename = re.sub(ur'[^a-zA-Z0-9_.-]+', '', filename)    
+            fileext = re.sub(ur'[^a-zA-Z0-9_.-]+', '', fileext)
+
             filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
             filenumber = 1
-            if extbymime:
-                fileext = extbymime
 
             while True:
                 fullfilename = os.path.join(foldername,
@@ -977,14 +1002,15 @@ class FilesTab(ApiTab):
 
         # Handle the response of the generic, non-json-returning response
         if response.status_code == 200:
-            guessed_ext = guess_all_extensions(response.headers["content-type"])
-            guessed_ext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+            if not fileext:
+                guessed_ext = guess_all_extensions(response.headers["content-type"])
+                fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
 
-            fullfilename = makefilename(guessed_ext)
+            fullfilename = makefilename(foldername, filename, fileext)
             with open(fullfilename, 'wb') as f:
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
-            data = {'filename': os.path.basename(fullfilename), 'targetpath': fullfilename, 'sourcepath': path,
+            data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,
                     'sourcequery': args}
             status = 'downloaded' + ' (' + str(response.status_code) + ')'
         else:
@@ -1007,6 +1033,8 @@ class FilesTab(ApiTab):
 
         options['urlpath'] = self.urlpathEdit.currentText()
         options['folder'] = self.folderEdit.text()
+        options['filename'] = self.filenameEdit.currentText()
+        options['fileext'] = self.fileextEdit.currentText()
         options['nodedata'] = None
         options['objectid'] = 'filename'
 
@@ -1015,20 +1043,26 @@ class FilesTab(ApiTab):
     def setOptions(self, options):
         self.urlpathEdit.setEditText(options.get('urlpath', '<url>'))
         self.folderEdit.setText(options.get('folder', ''))
+        self.filenameEdit.setEditText(options.get('filename', '<None>'))
+        self.fileextEdit.setEditText(options.get('fileext', '<None>'))
 
     def fetchData(self, nodedata, options=None, callback=None):
         self.connected = True
         foldername = options.get('folder', None)
         if (foldername is None) or (not os.path.isdir(foldername)):
             raise Exception("Folder does not exists, select download folder, please!")
+        filename = options.get('filename', None)
+        fileext = options.get('fileext', None)
 
         urlpath, urlparams = self.getURL(options["urlpath"], {}, nodedata)
+        filename = self.parsePlaceholders(filename,nodedata)
+        fileext = self.parsePlaceholders(fileext,nodedata)
 
-        self.mainWindow.logmessage("Downloading file for {0} from {1}".format(nodedata['objectid'],
+        self.mainWindow.logmessage(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
                                                                               urlpath + "?" + urllib.urlencode(
                                                                                   urlparams)))
 
-        data, headers, status = self.download(urlpath, urlparams, None, foldername)
+        data, headers, status = self.download(urlpath, urlparams, None, foldername,filename,fileext)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
         if callback is None:
