@@ -225,7 +225,7 @@ class PresetWindow(QDialog):
             QMessageBox.information(self,"Facepager","Cannot delete default presets.")
             return False
         
-        reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(self, 'Delete Preset',u"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes: return
         
         os.remove(os.path.join(self.presetFolder, data.get('filename')))

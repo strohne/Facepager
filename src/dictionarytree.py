@@ -100,7 +100,7 @@ class DictionaryTreeModel(QAbstractItemModel):
                 elif __file__:
                     folder = os.path.join(os.path.dirname(__file__),'docs')
         
-                filename = "{}Fields.json".format(docid)
+                filename = u"{}Fields.json".format(docid)
                                     
                 self.documentation[docid] = json.load(open(os.path.join(folder, filename),"r"))
                 self.documentation[docid] = {entity["Field"]:entity  for entity in self.documentation[docid]}
