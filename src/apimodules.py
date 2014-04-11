@@ -44,7 +44,7 @@ class ApiTab(QWidget):
          Return the Node-ID as a Non-Unicode string
         """
         try:
-            return str(val)
+            return unicode(val)
         except UnicodeEncodeError:
             return val.encode('utf-8')
 
