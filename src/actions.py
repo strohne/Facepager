@@ -334,16 +334,24 @@ class Actions(object):
 
     @Slot()
     def addAllColumns(self):
+        progress = ProgressBar("Analyzing data...", self.mainWindow)
         columns = self.mainWindow.fieldList.toPlainText().splitlines()
-        
-        indexes = self.mainWindow.tree.selectedIndexesAndChildren()        
-        for no in range(len(indexes)):
-            item = indexes[no].internalPointer()
-            columns.extend([key for key in item.data['response'].iterkeys() if not key in columns])
-        
-        self.mainWindow.fieldList.setPlainText("\n".join(columns))
-        self.mainWindow.tree.treemodel.setCustomColumns(columns)
-
+        try:        
+            indexes = self.mainWindow.tree.selectedIndexesAndChildren()            
+            progress.setMaximum(len(indexes))   
+            
+            for no in range(len(indexes)):
+                progress.step()
+                item = indexes[no].internalPointer()
+                columns.extend([key for key in recursiveIterKeys(item.data['response']) if not key in columns])
+                if progress.wasCanceled:
+                    break
+        finally:
+            self.mainWindow.fieldList.setPlainText("\n".join(columns))
+            self.mainWindow.tree.treemodel.setCustomColumns(columns)
+            
+            progress.close()
+                            
     @Slot()
     def loadPreset(self):
         self.mainWindow.presetWindow.showPresets()

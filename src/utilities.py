@@ -98,3 +98,13 @@ def filterDictValue(data,multikey,dump=True):
     except Exception as e:
         return ""
 
+def recursiveIterKeys(value,prefix=None):
+    for key in value.iterkeys():
+        if type(value[key]) is dict:
+            for subkey in recursiveIterKeys(value[key],key):
+                fullkey = subkey if prefix is None else ".".join([prefix,subkey])                     
+                yield fullkey                
+        else:
+            fullkey = key if prefix is None else ".".join([prefix,key])                     
+            yield fullkey
+ 
