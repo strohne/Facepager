@@ -41,7 +41,7 @@ class ApiTab(QWidget):
 
     def idtostr(self, val):
         """
-         Return the Node-ID as a Non-Unicode string
+         Return the Node-ID as a string
         """
         try:
             return unicode(val)
