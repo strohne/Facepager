@@ -44,9 +44,9 @@ class ApiTab(QWidget):
          Return the Node-ID as a string
         """
         try:
-            return unicode(val)
+            return unicode(val).encode("utf-8")
         except UnicodeEncodeError:
-            return val.encode('utf-8')
+            return val
 
     def parseURL(self, url):
         """
