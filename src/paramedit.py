@@ -68,7 +68,7 @@ class QParamEdit(QTableWidget):
         combo.clear()
         # edited: Insert each Item seperatly and set Tooltip
         for o in reversed(options):
-            combo.insertItem(0,"<b>"+o.get("name","")+"</b>")
+            combo.insertItem(0,o.get("name",""))
             # this one sets the tooltip
             combo.setItemData(0,o.get("doc",None),Qt.ToolTipRole)
             #set color
