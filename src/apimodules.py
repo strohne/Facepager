@@ -43,10 +43,7 @@ class ApiTab(QWidget):
         """
          Return the Node-ID as a string
         """
-        try:
-            return unicode(val).encode("utf-8")
-        except UnicodeEncodeError:
-            return val
+        return unicode(val).encode("utf-8")
 
     def parseURL(self, url):
         """
@@ -64,17 +61,18 @@ class ApiTab(QWidget):
         if not pattern:
             return pattern
         
-        matches = re.findall("<([^>]*)>", pattern)
+        matches = re.findall(ur"<([^>]*)>", pattern)
         for match in matches:
             if match in paramdata:
                 value = paramdata[match]
             elif match == 'None':
                 value = ''
             elif match == 'Object ID':
-                value = self.idtostr(nodedata['objectid'])
+                value = unicode(nodedata['objectid'])
             else:
                 value = getDictValue(nodedata['response'], match)
-            pattern = pattern.replace('<' + match + '>', value)
+                
+            pattern = pattern.replace('<' + match + '>', value.encode("utf-8"))
             
         return pattern        
         
@@ -95,20 +93,20 @@ class ApiTab(QWidget):
             
             # Set the value for the ObjectID or any other placeholder-param
             if params[name] == '<Object ID>':
-                value = self.idtostr(nodedata['objectid'])
+                value = unicode(nodedata['objectid'])
             else:
-                match = re.match("^<(.*)>$", str(params[name]))
+                match = re.match(ur"^<(.*)>$", unicode(params[name]))
                 if match:
                     value = getDictValue(nodedata['response'], match.group(1))
                 else:
                     value = params[name]
-
+ 
             #check for template params
-            match = re.match("^<(.*)>$", str(name))
+            match = re.match(ur"^<(.*)>$", unicode(name))
             if match:
                 templateparams[match.group(1)] = value
             else:
-                urlparams[name] = value
+                urlparams[name] = value.encode("utf-8")
 
         #Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
