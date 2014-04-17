@@ -446,14 +446,7 @@ class Actions(object):
                     elif 'progress' in job:
                         #Update progress
                         progress.step()                        
-
-                    #-Finished one node...
-                    elif 'status' in job:
-                        status = job.get('status','empty')
-                        count = 1 if not status in statuscount else statuscount[status]+1
-                        statuscount[status] = count                             
-                        progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
-                                                                        
+                                                                      
                     #-Add data...
                     else:
                         if not job['nodeindex'].isValid():
@@ -462,6 +455,12 @@ class Actions(object):
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
                         progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                         progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
+                        
+                        status = job['options'].get('status','empty')
+                        count = 1 if not status in statuscount else statuscount[status]+1
+                        statuscount[status] = count                             
+                        progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
+                                                
 
                         #Abort
                     if progress.wasCanceled:
