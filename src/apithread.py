@@ -99,6 +99,10 @@ class ApiThread(threading.Thread):
             if streamingTab:
                 out["streamprogress"] = True
             self.output.put(out)
+            
+            if 'querystatus' in options:
+                self.output.put({'status': options.get('querystatus', '')})
+
 
         try:
             while not self.halt.isSet():
