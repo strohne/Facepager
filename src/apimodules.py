@@ -315,6 +315,11 @@ class FacebookTab(ApiTab):
         self.loginButton = QPushButton(" Login to Facebook ", self)
         self.loginButton.clicked.connect(self.doLogin)
 
+        # Thread Box
+        self.threadsEdit = QSpinBox(self)
+        self.threadsEdit.setMinimum(1)
+        self.threadsEdit.setMaximum(10)
+
         # Construct Login-Layout
         loginlayout = QHBoxLayout()
         loginlayout.addWidget(self.tokenEdit)
@@ -330,6 +335,7 @@ class FacebookTab(ApiTab):
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
         mainLayout.addRow("Access Token", loginlayout)
+        mainLayout.addRow("Parallel Threads", self.threadsEdit)
         self.setLayout(mainLayout)
 
         if loadSettings:
@@ -344,10 +350,11 @@ class FacebookTab(ApiTab):
         if purpose != 'preset':
             options['querytype'] = self.name + ':' + self.relationEdit.currentText()
             options['accesstoken'] = self.tokenEdit.text()
+            options['threads'] = self.threadsEdit.value()
 
         # options for data handling
         if purpose == 'fetch':
-            options['objectid'] = 'id'
+            options['objectid'] = 'id'            
             options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
 
         return options
@@ -355,6 +362,7 @@ class FacebookTab(ApiTab):
     def setOptions(self, options):
         self.relationEdit.setEditText(options.get('relation', 'object'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
+        self.threadsEdit.setValue(int(options.get('threads', 1)))
         self.paramEdit.setParams(options.get('params', {}))
         if options.has_key('accesstoken'):
             self.tokenEdit.setText(options.get('accesstoken',''))
