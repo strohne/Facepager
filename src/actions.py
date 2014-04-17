@@ -412,6 +412,9 @@ class Actions(object):
             #Spawn Threadpool
             threadpool = ApiThreadPool(apimodule,self.mainWindow.logmessage)
 
+            #Init status messages
+            statuscount = {}
+            
             #Fill Input Queue
             number = 0
             for index in indexes:
@@ -444,6 +447,13 @@ class Actions(object):
                         #Update progress
                         progress.step()                        
 
+                    #-Finished one node...
+                    elif 'status' in job:
+                        status = job.get('status','empty')
+                        count = 1 if not status in statuscount else statuscount[status]+1
+                        statuscount[status] = count                             
+                        progress.showInfo(status,u"{} responses with status: {}".format(count,status))
+                                                                        
                     #-Add data...
                     else:
                         if not job['nodeindex'].isValid():
