@@ -28,9 +28,11 @@ class ApiThreadPool():
         finally:
             return job
 
-    def processJobs(self):
+    def processJobs(self,threadcount=None):
         with self.pool_lock:
-            if self.input.qsize() > 50:
+            if threadcount is not None:
+                maxthreads = threadcount
+            elif self.input.qsize() > 50:
                 maxthreads = 5
             elif self.input.qsize() > 10:
                 maxthreads = 2
@@ -39,12 +41,19 @@ class ApiThreadPool():
 
             self.threads = []
             for x in range(maxthreads):
-                self.addJob(None)  # sentinel empty job
-                thread = ApiThread(self.input, self.output, self.module, self,self.logcallback)
-                self.threadcount += 1
-                self.threads.append(thread)
-                thread.start()
+                self.addThread()
 
+    def addThread(self):
+        self.addJob(None)  # sentinel empty job
+        thread = ApiThread(self.input, self.output, self.module, self,self.logcallback)
+        self.threadcount += 1
+        self.threads.append(thread)
+        thread.start()
+        
+    def removeThread(self):
+        if count(self.threads):
+            self.threads[0].halt.set()       
+        
     def stopJobs(self):
         for thread in self.threads:
             thread.halt.set()
@@ -57,6 +66,20 @@ class ApiThreadPool():
                 with self.input.mutex:
                     self.input.queue.clear()
                 self.output.put(None)  #sentinel
+                
+    def getThreadCount(self):
+        with self.pool_lock:
+            return self.threadcount
+
+    def setThreadCount(self,threadcount):
+        with self.pool_lock:
+            diff = threadcount - self.threadcount
+            if diff > 0:
+                for x in range(diff):                
+                    self.addThread()
+            elif diff < 0:          
+                for x in range(diff):                
+                    self.removeThread()
 
 
 class ApiThread(threading.Thread):
