@@ -145,6 +145,9 @@ class DictionaryTreeModel(QAbstractItemModel):
         if role == Qt.ToolTipRole:
             return item.itemToolTip
 
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignTop | Qt.AlignLeft
+
         if role != Qt.DisplayRole:
             return None
 

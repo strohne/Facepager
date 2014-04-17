@@ -36,6 +36,7 @@ class ApiTab(QWidget):
         self.mainWindow = mainWindow
         self.name = name
         self.connected = False
+        self.lastrequest = None
         self.loadDocs()
         self.lock_session = threading.Lock()
 
@@ -225,10 +226,19 @@ class ApiTab(QWidget):
                 self.session = requests.Session()
         return self.session
 
-    def request(self, path, args=None, headers=None, jsonify=True):
+    def request(self, path, args=None, headers=None, jsonify=True,speed=None):
         """
         Start a new threadsafe session and request
         """
+            
+        #Throttle speed
+        if (speed is not None) and (self.lastrequest is not None):            
+            pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+            while (self.connected) and (pause > 0):                  
+                time.sleep(0.1)
+                pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())        
+        
+        self.lastrequest = QDateTime.currentDateTime()
 
         session = self.initSession()
         if (not session):
@@ -320,6 +330,11 @@ class FacebookTab(ApiTab):
         self.threadsEdit.setMinimum(1)
         self.threadsEdit.setMaximum(10)
 
+        # Speed Box
+        self.speedEdit = QSpinBox(self)
+        self.speedEdit.setMinimum(1)
+        self.speedEdit.setMaximum(60000)
+        
         # Construct Login-Layout
         loginlayout = QHBoxLayout()
         loginlayout.addWidget(self.tokenEdit)
@@ -336,6 +351,7 @@ class FacebookTab(ApiTab):
         mainLayout.addRow("Maximum pages", self.pagesEdit)
         mainLayout.addRow("Access Token", loginlayout)
         mainLayout.addRow("Parallel Threads", self.threadsEdit)
+        mainLayout.addRow("Requests per minute", self.speedEdit)
         self.setLayout(mainLayout)
 
         if loadSettings:
@@ -350,19 +366,22 @@ class FacebookTab(ApiTab):
         if purpose != 'preset':
             options['querytype'] = self.name + ':' + self.relationEdit.currentText()
             options['accesstoken'] = self.tokenEdit.text()
-            options['threads'] = self.threadsEdit.value()
 
         # options for data handling
         if purpose == 'fetch':
             options['objectid'] = 'id'            
             options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
+            options['threads'] = self.threadsEdit.value()
+            options['speed'] = self.speedEdit.value()
+            
 
         return options
 
     def setOptions(self, options):
         self.relationEdit.setEditText(options.get('relation', 'object'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
-        self.threadsEdit.setValue(int(options.get('threads', 1)))
+        self.threadsEdit.setValue(int(options.get('threads', 1))) 
+        self.speedEdit.setValue(int(options.get('speed', 60000)))
         self.paramEdit.setParams(options.get('params', {}))
         if options.has_key('accesstoken'):
             self.tokenEdit.setText(options.get('accesstoken',''))
@@ -410,7 +429,7 @@ class FacebookTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams)
+            data, headers, status = self.request(urlpath, urlparams,None,True,options.get('speed',None) )
             options['querystatus'] = status
 
             if callback is None:
