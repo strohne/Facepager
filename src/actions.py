@@ -424,7 +424,7 @@ class Actions(object):
                        'options': deepcopy(options)}
                 threadpool.addJob(job)
 
-            threadpool.processJobs()
+            threadpool.processJobs(options.get("threads",None))
 
             #Process Output Queue
             while True:
