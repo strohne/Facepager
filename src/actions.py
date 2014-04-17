@@ -451,6 +451,7 @@ class Actions(object):
                         treenode = job['nodeindex'].internalPointer()
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
                         progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
+                        progress.showInfo('threads',u"{} active threads".format(threadpool.getThreadCount()))
 
                         #Abort
                     if progress.wasCanceled:
