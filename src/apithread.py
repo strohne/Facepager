@@ -49,15 +49,15 @@ class ApiThreadPool():
         self.threadcount += 1
         self.threads.append(thread)
         thread.start()
-        
+
     def removeThread(self):
         if count(self.threads):
-            self.threads[0].halt.set()       
-        
+            self.threads[0].halt.set()
+
     def stopJobs(self):
         for thread in self.threads:
             thread.halt.set()
-        self.module.disconnect()
+        self.module.stop()
 
     def threadFinished(self):
         with self.pool_lock:
@@ -66,7 +66,7 @@ class ApiThreadPool():
                 with self.input.mutex:
                     self.input.queue.clear()
                 self.output.put(None)  #sentinel
-                
+
     def getThreadCount(self):
         with self.pool_lock:
             return self.threadcount
@@ -75,10 +75,10 @@ class ApiThreadPool():
         with self.pool_lock:
             diff = threadcount - self.threadcount
             if diff > 0:
-                for x in range(diff):                
+                for x in range(diff):
                     self.addThread()
-            elif diff < 0:          
-                for x in range(diff):                
+            elif diff < 0:
+                for x in range(diff):
                     self.removeThread()
 
 
