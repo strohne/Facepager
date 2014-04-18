@@ -25,7 +25,7 @@ class ApiTab(QWidget):
     """
     Generic API Tab Class
         - handles URL-Substitutions
-        - saves current Settings 
+        - saves current Settings
     """
 
     streamingData = Signal(list, list, list)
@@ -61,7 +61,7 @@ class ApiTab(QWidget):
     def parsePlaceholders(self,pattern,nodedata,paramdata={}):
         if not pattern:
             return pattern
-        
+
         matches = re.findall(ur"<([^>]*)>", pattern)
         for match in matches:
             if match in paramdata:
@@ -72,26 +72,26 @@ class ApiTab(QWidget):
                 value = unicode(nodedata['objectid'])
             else:
                 value = getDictValue(nodedata['response'], match)
-                
+
             pattern = pattern.replace('<' + match + '>', value.encode("utf-8"))
-            
-        return pattern        
-        
+
+        return pattern
+
     def getURL(self, urlpath, params, nodedata):
         """
         Replaces the Facepager placeholders ("<",">" of the inside the query-Parameter
         by the Object-ID or any other Facepager-Placeholder
         Example: http://www.facebook.com/<Object-ID>/friends
-        """        
+        """
         urlpath, urlparams = self.parseURL(urlpath)
-               
+
         #Replace placeholders in params and collect template params
         templateparams = {}
         for name in params:
             #Filter empty params
             if (name == '<None>') or (params[name] == '<None>') or (name == '') or (params[name] == ''):
                 continue
-            
+
             # Set the value for the ObjectID or any other placeholder-param
             if params[name] == '<Object ID>':
                 value = unicode(nodedata['objectid'])
@@ -101,7 +101,7 @@ class ApiTab(QWidget):
                     value = getDictValue(nodedata['response'], match.group(1))
                 else:
                     value = params[name]
- 
+
             #check for template params
             match = re.match(ur"^<(.*)>$", unicode(name))
             if match:
@@ -111,7 +111,7 @@ class ApiTab(QWidget):
 
         #Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
-            
+
         return urlpath, urlparams
 
 
@@ -134,6 +134,7 @@ class ApiTab(QWidget):
 
     def loadSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_" + self.name)
+
         options = {}
         for key in self.mainWindow.settings.allKeys():
             options[key] = self.mainWindow.settings.value(key)
@@ -144,15 +145,15 @@ class ApiTab(QWidget):
         '''
         Loads and prepares documentation
         '''
-       
+
         try:
             if getattr(sys, 'frozen', False):
                 folder = os.path.join(os.path.dirname(sys.executable),'docs')
             elif __file__:
                 folder = os.path.join(os.path.dirname(__file__),'docs')
-    
+
             filename = u"{0}.json".format(self.__class__.__name__)
-            
+
             with open(os.path.join(folder, filename),"r") as docfile:
                 if docfile:
                     self.apidoc = json.load(docfile)
@@ -164,7 +165,7 @@ class ApiTab(QWidget):
     def setRelations(self,params=True):
         '''
         Create relations box and paramedit
-        Set the relations according to the APIdocs, if any docs are available        
+        Set the relations according to the APIdocs, if any docs are available
         '''
 
         self.relationEdit = QComboBox(self)
@@ -173,11 +174,11 @@ class ApiTab(QWidget):
             for endpoint in reversed(self.apidoc):
                 #store url as item text
                 self.relationEdit.insertItem(0, endpoint["path"])
-                #store doc as tooltip 
+                #store doc as tooltip
                 self.relationEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
                 #store params-dict for later use in onChangedRelation
                 self.relationEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
-                        
+
         self.relationEdit.setEditable(True)
         if params:
             self.paramEdit = QParamEdit(self)
@@ -190,10 +191,10 @@ class ApiTab(QWidget):
         '''
         Handles the automated paramter suggestion for the current
         selected API Relation/Endpoint
-        '''        
+        '''
         #retrieve param-dict stored in setRelations-method
         params = self.relationEdit.itemData(index,Qt.UserRole)
-        
+
         #Set name options and build value dict
         values = {}
         nameoptions = []
@@ -203,7 +204,7 @@ class ApiTab(QWidget):
                     nameoptions.append(param)
                     values[param["name"]] = param["default"]
                 else:
-                    nameoptions.insert(0,param)        
+                    nameoptions.insert(0,param)
         nameoptions.insert(0,{})
         self.paramEdit.setNameOptions(nameoptions)
 
@@ -214,12 +215,12 @@ class ApiTab(QWidget):
                                           'doc':"The value in the Object ID-column of the datatree."}])
 
         #Set values
-        self.paramEdit.setParams(values) 
+        self.paramEdit.setParams(values)
 
     @Slot()
     def onChangedParam(self,index=0):
         pass
-                
+
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
@@ -230,14 +231,14 @@ class ApiTab(QWidget):
         """
         Start a new threadsafe session and request
         """
-            
+
         #Throttle speed
-        if (speed is not None) and (self.lastrequest is not None):            
+        if (speed is not None) and (self.lastrequest is not None):
             pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
-            while (self.connected) and (pause > 0):                  
+            while (self.connected) and (pause > 0):
                 time.sleep(0.1)
-                pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())        
-        
+                pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+
         self.lastrequest = QDateTime.currentDateTime()
 
         session = self.initSession()
@@ -263,7 +264,8 @@ class ApiTab(QWidget):
             else:
                 return response
 
-    def disconnect(self):
+    @Slot()
+    def stop(self):
         """Used to disconnect when canceling requests"""
         self.connected = False
 
@@ -281,7 +283,7 @@ class ApiTab(QWidget):
         window.resize(1200, 800)
         window.setWindowTitle(caption)
 
-        #create WebView with Facebook log-Dialog, OpenSSL needed        
+        #create WebView with Facebook log-Dialog, OpenSSL needed
         self.login_webview = QWebView(window)
 
         # Use the custom- WebPage class
@@ -334,7 +336,7 @@ class FacebookTab(ApiTab):
         self.speedEdit = QSpinBox(self)
         self.speedEdit.setMinimum(1)
         self.speedEdit.setMaximum(60000)
-        
+
         # Construct Login-Layout
         loginlayout = QHBoxLayout()
         loginlayout.addWidget(self.tokenEdit)
@@ -369,18 +371,18 @@ class FacebookTab(ApiTab):
 
         # options for data handling
         if purpose == 'fetch':
-            options['objectid'] = 'id'            
+            options['objectid'] = 'id'
             options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
             options['threads'] = self.threadsEdit.value()
             options['speed'] = self.speedEdit.value()
-            
+
 
         return options
 
     def setOptions(self, options):
-        self.relationEdit.setEditText(options.get('relation', 'object'))
+        self.relationEdit.setEditText(options.get('relation', '<page>'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
-        self.threadsEdit.setValue(int(options.get('threads', 1))) 
+        self.threadsEdit.setValue(int(options.get('threads', 1)))
         self.speedEdit.setValue(int(options.get('speed', 60000)))
         self.paramEdit.setParams(options.get('params', {}))
         if options.has_key('accesstoken'):
@@ -803,7 +805,7 @@ class TwitterStreamingTab(ApiTab):
         finally:
             self.connected = False
 
-    def disconnect(self):
+    def stop(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
         self.response.raw._fp.close()
@@ -877,7 +879,7 @@ class GenericTab(ApiTab):
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
         mainLayout.setLabelAlignment(Qt.AlignLeft);
 
-        #URL prefix 
+        #URL prefix
         self.urlpathEdit = QComboBox(self)
         self.urlpathEdit.insertItems(0, ['https://api.twitter.com/1/statuses/user_timeline.json'])
         self.urlpathEdit.insertItems(0, ['https://gdata.youtube.com/feeds/api/videos'])
@@ -894,7 +896,7 @@ class GenericTab(ApiTab):
                                           'doc':"The value in the Object ID-column of the datatree."}])
         mainLayout.addRow("Parameters", self.paramEdit)
 
-        #Extract option 
+        #Extract option
         self.extractEdit = QComboBox(self)
         #self.extractEdit.insertItems(0,['data'])
         self.extractEdit.insertItems(0, ['matches'])
@@ -961,7 +963,7 @@ class FilesTab(ApiTab):
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         mainLayout.setLabelAlignment(Qt.AlignLeft)
 
-        #URL field 
+        #URL field
         self.urlpathEdit = QComboBox(self)
         self.urlpathEdit.insertItems(0, ['<url>'])
         self.urlpathEdit.setEditable(True)
@@ -979,18 +981,18 @@ class FilesTab(ApiTab):
 
         mainLayout.addRow("Folder", folderlayout)
 
-        #filename 
+        #filename
         self.filenameEdit = QComboBox(self)
         self.filenameEdit.insertItems(0, ['<None>'])
         self.filenameEdit.setEditable(True)
         mainLayout.addRow("Custom filename", self.filenameEdit)
 
-        #fileext 
+        #fileext
         self.fileextEdit = QComboBox(self)
         self.fileextEdit.insertItems(0, ['<None>'])
         self.fileextEdit.setEditable(True)
         mainLayout.addRow("Custom file extension", self.fileextEdit)
-        
+
         self.setLayout(mainLayout)
         if loadSettings: self.loadSettings()
 
@@ -1005,10 +1007,10 @@ class FilesTab(ApiTab):
             url_filename, url_fileext = os.path.splitext(os.path.basename(path))
             if not fileext:
                 fileext = url_fileext
-            if not filename:                
+            if not filename:
                 filename = url_filename
-                
-            filename = re.sub(ur'[^a-zA-Z0-9_.-]+', '', filename)    
+
+            filename = re.sub(ur'[^a-zA-Z0-9_.-]+', '', filename)
             fileext = re.sub(ur'[^a-zA-Z0-9_.-]+', '', fileext)
 
             filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
