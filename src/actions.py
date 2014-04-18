@@ -58,10 +58,10 @@ class Actions(object):
         self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
         self.actionAddColumn.setToolTip("Add the current JSON-key as a column in the data view")
         self.actionAddColumn.triggered.connect(self.addColumn)
-        
+
         self.actionAddAllolumns = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add All Columns")
         self.actionAddAllolumns.setToolTip("Analyzes all selected nodes in the data view and adds all found keys as columns")
-        self.actionAddAllolumns.triggered.connect(self.addAllColumns)        
+        self.actionAddAllolumns.triggered.connect(self.addAllColumns)
 
         self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
         self.actionUnpack.setToolTip("Unpacks a list in the JSON-data and creates a new node containing the list content")
@@ -147,7 +147,7 @@ class Actions(object):
     @Slot()
     def clipboardNodes(self):
         progress = ProgressBar("Copy to clipboard", self.mainWindow)
-        
+
         indexes = self.mainWindow.tree.selectionModel().selectedRows()
         progress.setMaximum(len(indexes))
 
@@ -156,7 +156,7 @@ class Actions(object):
             writer = csv.writer(output, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
-            #headers    
+            #headers
             row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
             writer.writerow(row)
 
@@ -169,7 +169,7 @@ class Actions(object):
                 writer.writerow(row)
 
                 progress.step()
-                
+
             clipboard = QApplication.clipboard()
             clipboard.setText(output.getvalue())
         finally:
@@ -181,11 +181,11 @@ class Actions(object):
         # if none or all are selected, export all
         # if one or more are selected, export selective
         if self.mainWindow.tree.noneOrAllSelected():
-            self.exportAllNodes()        
+            self.exportAllNodes()
         else:
             self.exportSelectedNodes()
-        
-        
+
+
     @Slot()
     def exportSelectedNodes(self):
         fldg = QFileDialog(caption="Export selected nodes to CSV", filter="CSV Files (*.csv)")
@@ -250,7 +250,7 @@ class Actions(object):
                 writer = csv.writer(f, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                     lineterminator='\r\n')
 
-                #headers    
+                #headers
                 row = ["level", "id", "parent_id", "object_id", "object_type", "query_status", "query_time",
                        "query_type"]
                 for key in self.mainWindow.tree.treemodel.customcolumns:
@@ -336,10 +336,10 @@ class Actions(object):
     def addAllColumns(self):
         progress = ProgressBar("Analyzing data...", self.mainWindow)
         columns = self.mainWindow.fieldList.toPlainText().splitlines()
-        try:        
-            indexes = self.mainWindow.tree.selectedIndexesAndChildren()            
-            progress.setMaximum(len(indexes))   
-            
+        try:
+            indexes = self.mainWindow.tree.selectedIndexesAndChildren()
+            progress.setMaximum(len(indexes))
+
             for no in range(len(indexes)):
                 progress.step()
                 item = indexes[no].internalPointer()
@@ -349,9 +349,9 @@ class Actions(object):
         finally:
             self.mainWindow.fieldList.setPlainText("\n".join(columns))
             self.mainWindow.tree.treemodel.setCustomColumns(columns)
-            
+
             progress.close()
-                            
+
     @Slot()
     def loadPreset(self):
         self.mainWindow.presetWindow.showPresets()
@@ -402,7 +402,7 @@ class Actions(object):
         #Update progress window
         progress.setMaximum(len(indexes))
         self.mainWindow.tree.treemodel.nodecounter = 0
-        
+
         if apimodule == False:
             apimodule = self.mainWindow.RequestTabs.currentWidget()
         if options == False:
@@ -414,7 +414,7 @@ class Actions(object):
 
             #Init status messages
             statuscount = {}
-            
+
             #Fill Input Queue
             number = 0
             for index in indexes:
@@ -445,8 +445,8 @@ class Actions(object):
                     #-Finished one node...
                     elif 'progress' in job:
                         #Update progress
-                        progress.step()                        
-                                                                      
+                        progress.step()
+
                     #-Add data...
                     else:
                         if not job['nodeindex'].isValid():
@@ -455,12 +455,12 @@ class Actions(object):
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
                         progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                         progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
-                        
-                        status = job['options'].get('status','empty')
+
+                        status = job['options'].get('querystatus','empty')
                         count = 1 if not status in statuscount else statuscount[status]+1
-                        statuscount[status] = count                             
+                        statuscount[status] = count
                         progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
-                                                
+
 
                         #Abort
                     if progress.wasCanceled:
@@ -471,7 +471,7 @@ class Actions(object):
                 finally:
                     QApplication.processEvents()
 
-        finally:            
+        finally:
             self.mainWindow.tree.treemodel.commitNewNodes()
             progress.close()
 
@@ -529,7 +529,7 @@ class Actions(object):
             c = c.parent()
 
         self.mainWindow.levelEdit.setValue(level)
-        
-        #show node count        
+
+        #show node count
         self.mainWindow.selectionStatus.setText(str(len(selected)) + ' node(s) selected ')
 
