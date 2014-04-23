@@ -326,16 +326,6 @@ class FacebookTab(ApiTab):
         self.loginButton = QPushButton(" Login to Facebook ", self)
         self.loginButton.clicked.connect(self.doLogin)
 
-        # Thread Box
-        self.threadsEdit = QSpinBox(self)
-        self.threadsEdit.setMinimum(1)
-        self.threadsEdit.setMaximum(10)
-
-        # Speed Box
-        self.speedEdit = QSpinBox(self)
-        self.speedEdit.setMinimum(1)
-        self.speedEdit.setMaximum(60000)
-
         # Construct Login-Layout
         loginlayout = QHBoxLayout()
         loginlayout.addWidget(self.tokenEdit)
@@ -351,8 +341,6 @@ class FacebookTab(ApiTab):
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
         mainLayout.addRow("Access Token", loginlayout)
-        mainLayout.addRow("Parallel Threads", self.threadsEdit)
-        mainLayout.addRow("Requests per minute", self.speedEdit)
         self.setLayout(mainLayout)
 
         if loadSettings:
@@ -372,17 +360,12 @@ class FacebookTab(ApiTab):
         if purpose == 'fetch':
             options['objectid'] = 'id'
             options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
-            options['threads'] = self.threadsEdit.value()
-            options['speed'] = self.speedEdit.value()
-
 
         return options
 
     def setOptions(self, options):
         self.relationEdit.setEditText(options.get('relation', '<page>'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
-        self.threadsEdit.setValue(int(options.get('threads', 1)))
-        self.speedEdit.setValue(int(options.get('speed', 60000)))
         self.paramEdit.setParams(options.get('params', {}))
         if options.has_key('accesstoken'):
             self.tokenEdit.setText(options.get('accesstoken',''))
@@ -606,7 +589,7 @@ class TwitterTab(ApiTab):
 
             # manual paging with max-id
             else:
-                if "statuses" in data:
+                if data.get("statuses",False):
                     # if there are still statuses in the response, use the last ID-1 for ruther pagination
                     paging = True
                     options['params']['max_id'] = int(data["statuses"][-1]["id"])-1

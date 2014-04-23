@@ -393,12 +393,17 @@ class Actions(object):
         #Show progress window
         progress = ProgressBar(u"Fetching Data",parent=self.mainWindow)
 
+        #Get global options
+        globaloptions = {}
+        globaloptions['threads'] = self.mainWindow.threadsEdit.value()
+        globaloptions['speed'] = self.mainWindow.speedEdit.value()
+        objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
+
         #Get selected nodes
         if indexes == False:
             level = self.mainWindow.levelEdit.value() - 1
             indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
-                                                                              'objecttype': ['seed', 'data',
-                                                                                             'unpacked']})
+                                                                              'objecttype':objecttypes})
         #Update progress window
         progress.setMaximum(len(indexes))
         self.mainWindow.tree.treemodel.nodecounter = 0
@@ -407,6 +412,8 @@ class Actions(object):
             apimodule = self.mainWindow.RequestTabs.currentWidget()
         if options == False:
             options = apimodule.getOptions()
+
+        options.update(globaloptions)
 
         try:
             #Spawn Threadpool
