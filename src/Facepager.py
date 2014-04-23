@@ -49,6 +49,9 @@ class MainWindow(QMainWindow):
 
 
     def createUI(self):
+        #
+        #  Windows
+        #
 
         self.helpwindow=HelpWindow(self)
         self.presetWindow=PresetWindow(self)
@@ -60,6 +63,11 @@ class MainWindow(QMainWindow):
         self.timerWindow.timercountdown.connect(self.actions.timerCountdown)
         self.timerWindow.timerfired.connect(self.actions.timerFired)
         self.timerStatus = QLabel("Timer stopped ")
+
+        #
+        #  Statusbar and toolbar
+        #
+
         self.statusBar().addPermanentWidget(self.timerStatus)
         self.toolbar=Toolbar(parent=self,mainWindow=self)
         self.addToolBar(Qt.TopToolBarArea,self.toolbar)
@@ -69,34 +77,24 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('No database connection')
         self.statusBar().setSizeGripEnabled(False)
 
+        #
+        #  Layout
+        #
+
         #dummy widget to contain the layout manager
-        #self.mainWidget=QWidget(self)
         self.mainWidget=QSplitter(self)
         self.mainWidget.setOrientation(Qt.Vertical)
         self.setCentralWidget(self.mainWidget)
 
-        #top widget
+        #top
         topWidget=QWidget(self)
         self.mainWidget.addWidget(topWidget)
-
-        bottomWidget=QWidget(self)
-        self.mainWidget.addWidget(bottomWidget)
-        self.mainWidget.setStretchFactor(0, 1);
-
-        #mainLayout=QVBoxLayout()
-        #self.mainWidget.setLayout(mainLayout)
-
-
         dataLayout=QHBoxLayout()
         topWidget.setLayout(dataLayout)
         dataSplitter = QSplitter(self)
         dataLayout.addWidget(dataSplitter)
 
-        requestLayout=QHBoxLayout()
-        bottomWidget.setLayout(requestLayout)
-
-
-        #tree
+        #top left
         dataWidget=QWidget()
         dataLayout=QVBoxLayout()
         dataLayout.setContentsMargins(0,0,0,0)
@@ -104,6 +102,54 @@ class MainWindow(QMainWindow):
         dataSplitter.addWidget(dataWidget)
         dataSplitter.setStretchFactor(0, 1);
 
+        #top right
+        detailWidget=QWidget()
+        detailLayout=QVBoxLayout()
+        detailLayout.setContentsMargins(11,0,0,0)
+        detailWidget.setLayout(detailLayout)
+        dataSplitter.addWidget(detailWidget)
+        dataSplitter.setStretchFactor(1, 0);
+
+        #bottom
+        bottomWidget=QWidget(self)
+        self.mainWidget.addWidget(bottomWidget)
+        self.mainWidget.setStretchFactor(0, 1);
+
+        requestLayout=QHBoxLayout()
+        bottomWidget.setLayout(requestLayout)
+
+        #bottom left
+        moduleslayout=QVBoxLayout()
+        requestLayout.addLayout(moduleslayout,1)
+
+        #bottom middle
+        fetchLayout=QVBoxLayout()
+        requestLayout.addLayout(fetchLayout,1)
+
+        settingsGroup=QGroupBox("Settings")
+        fetchLayout.addWidget(settingsGroup)
+
+        fetchsettings = QFormLayout()
+        fetchsettings.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        fetchsettings.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        fetchsettings.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
+        fetchsettings.setLabelAlignment(Qt.AlignLeft)
+        settingsGroup.setLayout(fetchsettings)
+        #fetchLayout.addLayout(fetchsettings)
+
+        fetchdata=QHBoxLayout()
+        fetchdata.setContentsMargins(10,0,10,0)
+        fetchLayout.addLayout(fetchdata)
+
+        #bottom right
+        statusLayout=QVBoxLayout()
+        requestLayout.addLayout(statusLayout,2)
+
+        #
+        #  Components
+        #
+
+        #main tree
         treetoolbar = QToolBar(self)
         treetoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         treetoolbar.setIconSize(QSize(16,16))
@@ -116,100 +162,20 @@ class MainWindow(QMainWindow):
         dataLayout.addWidget(self.tree)
 
 
-        #button=QToolButton(self.mainWidget)
-        #button.setIcon(QIcon(":/icons/timer.png"))
-
-
-        #right sidebar
-        detailWidget=QWidget()
-        detailLayout=QVBoxLayout()
-        detailLayout.setContentsMargins(11,0,0,0)
-        detailWidget.setLayout(detailLayout)
-        dataSplitter.addWidget(detailWidget)
-        dataSplitter.setStretchFactor(1, 0);
-
+        #right sidebar - toolbar
         detailtoolbar = QToolBar(self)
         detailtoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         detailtoolbar.setIconSize(QSize(16,16))
-
         detailtoolbar.addActions(self.actions.detailActions.actions())
         detailLayout.addWidget (detailtoolbar)
 
+        #right sidebar - json viewer
         self.detailTree=DictionaryTree(self.mainWidget)
-        detailLayout.addWidget(self.detailTree)
+        detailLayout.addWidget(self.detailTree,2)
 
-
-        #requests
-        actionlayout=QVBoxLayout()
-        requestLayout.addLayout(actionlayout,1)
-
-        self.RequestTabs=QTabWidget()
-        actionlayout.addWidget(self.RequestTabs)
-        self.RequestTabs.addTab(FacebookTab(self),"Facebook")
-        self.RequestTabs.addTab(TwitterTab(self),"Twitter")
-        self.RequestTabs.addTab(GenericTab(self),"Generic")
-        self.RequestTabs.addTab(FilesTab(self),"Files")
-        self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
-
-        #fetch data
-        f=QFont()
-        f.setPointSize(11)
-
-
-        fetchdata=QHBoxLayout()
-        fetchdata.setContentsMargins(10,0,10,0)
-        actionlayout.addLayout(fetchdata)
-        #fetchdata.addStretch(1)
-
-        #-Level
-        self.levelEdit=QSpinBox(self.mainWidget)
-        self.levelEdit.setMinimum(1)
-        self.levelEdit.setFont(f)
-        self.levelEdit.setMinimumHeight(35)
-        label=QLabel("For all selected nodes and \ntheir children of level")
-        #label.setFont(f)
-
-        #label.setWordWrap(True)
-        #label.setMaximumWidth(100)
-        fetchdata.addWidget(label,0)
-        fetchdata.addWidget(self.levelEdit,0)
-
-        #-button
-        button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
-        button.setToolTip("Fetch data from the API with the current settings")
-        button.setMinimumSize(QSize(120,40))
-        button.setIconSize(QSize(32,32))
-        button.clicked.connect(self.actions.actionQuery.trigger)
-        button.setFont(f)
-        fetchdata.addWidget(button,1)
-
-        #-timer button
-        button=QToolButton(self.mainWidget)
-        button.setIcon(QIcon(":/icons/timer.png"))
-        button.setMinimumSize(QSize(40,40))
-        button.setIconSize(QSize(25,25))
-        button.clicked.connect(self.actions.actionTimer.trigger)
-        fetchdata.addWidget(button,1)
-
-        #Status
-        statusLayout=QVBoxLayout()
-        requestLayout.addLayout(statusLayout,2)
-
-        detailGroup=QGroupBox("Status Log")
-        groupLayout=QVBoxLayout()
-        detailGroup.setLayout(groupLayout)
-        statusLayout.addWidget(detailGroup,1)
-
-        self.loglist=QTextEdit()
-        self.loglist.setLineWrapMode(QTextEdit.NoWrap)
-        self.loglist.setWordWrapMode(QTextOption.NoWrap)
-        self.loglist.acceptRichText=False
-        self.loglist.clear()
-        groupLayout.addWidget(self.loglist)
-
-        #fields
+        #right sidebar - column setup
         detailGroup=QGroupBox("Custom Table Columns (one key per line)")
-        requestLayout.addWidget(detailGroup)
+        detailLayout.addWidget(detailGroup,1)
         groupLayout=QVBoxLayout()
         detailGroup.setLayout(groupLayout)
 
@@ -238,6 +204,83 @@ class MainWindow(QMainWindow):
         button.setToolTip("Apply the columns to the cental data view. New columns may be hidden and are appended on the right side")
         button.clicked.connect(self.actions.actionShowColumns.trigger)
         groupLayout.addWidget(button)
+
+
+        #Requests/Apimodules
+        self.RequestTabs=QTabWidget()
+        moduleslayout.addWidget(self.RequestTabs)
+        self.RequestTabs.addTab(FacebookTab(self),"Facebook")
+        self.RequestTabs.addTab(TwitterTab(self),"Twitter")
+        self.RequestTabs.addTab(GenericTab(self),"Generic")
+        self.RequestTabs.addTab(FilesTab(self),"Files")
+        self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
+
+
+        #Fetch settings
+
+
+        #-Level
+        self.levelEdit=QSpinBox(self.mainWidget)
+        self.levelEdit.setMinimum(1)
+        #self.levelEdit.setFont(f)
+        #self.levelEdit.setMinimumHeight(35)
+        #label=QLabel("For all selected nodes and \ntheir children of level")
+        #fetchdata.addWidget(label,0)
+        #fetchdata.addWidget(self.levelEdit,0)
+        fetchsettings.addRow("Node level",self.levelEdit)
+
+        #Object types
+        self.typesEdit = QLineEdit('seed,data,unpacked')
+        fetchsettings.addRow("Object types",self.typesEdit)
+
+        # Thread Box
+        self.threadsEdit = QSpinBox(self)
+        self.threadsEdit.setMinimum(1)
+        self.threadsEdit.setMaximum(10)
+        fetchsettings.addRow("Parallel Threads", self.threadsEdit)
+
+        # Speed Box
+        self.speedEdit = QSpinBox(self)
+        self.speedEdit.setMinimum(1)
+        self.speedEdit.setMaximum(60000)
+        self.speedEdit.setValue(60000)
+        fetchsettings.addRow("Requests per minute", self.speedEdit)
+
+
+        #Fetch data
+
+        #-button
+        f=QFont()
+        f.setPointSize(11)
+        button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
+        button.setToolTip("Fetch data from the API with the current settings")
+        button.setMinimumSize(QSize(120,40))
+        button.setIconSize(QSize(32,32))
+        button.clicked.connect(self.actions.actionQuery.trigger)
+        button.setFont(f)
+        fetchdata.addWidget(button,1)
+
+        #-timer button
+        button=QToolButton(self.mainWidget)
+        button.setIcon(QIcon(":/icons/timer.png"))
+        button.setMinimumSize(QSize(40,40))
+        button.setIconSize(QSize(25,25))
+        button.clicked.connect(self.actions.actionTimer.trigger)
+        fetchdata.addWidget(button,1)
+
+        #Status
+        detailGroup=QGroupBox("Status Log")
+        groupLayout=QVBoxLayout()
+        detailGroup.setLayout(groupLayout)
+        statusLayout.addWidget(detailGroup,1)
+
+        self.loglist=QTextEdit()
+        self.loglist.setLineWrapMode(QTextEdit.NoWrap)
+        self.loglist.setWordWrapMode(QTextOption.NoWrap)
+        self.loglist.acceptRichText=False
+        self.loglist.clear()
+        groupLayout.addWidget(self.loglist)
+
 
     def updateUI(self):
         #disable buttons that do not work without an opened database
