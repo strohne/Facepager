@@ -414,6 +414,7 @@ class Actions(object):
 
             #Init status messages
             statuscount = {}
+            errorcount = 0
 
             #Fill Input Queue
             number = 0
@@ -451,18 +452,32 @@ class Actions(object):
                     else:
                         if not job['nodeindex'].isValid():
                             continue
+
+                        #add data
                         treenode = job['nodeindex'].internalPointer()
                         treenode.appendNodes(job['data'], job['options'], job['headers'], True)
-                        progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
-                        progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
 
+                        #show status
                         status = job['options'].get('querystatus','empty')
                         count = 1 if not status in statuscount else statuscount[status]+1
                         statuscount[status] = count
                         progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
+                        progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
+                        progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
+
+                        #auto cancel after three consecutive errors
+                        if status == 'fetched (200)':
+                            errorcount=0
+                        else:
+                            errorcount += 1
+
+                        if errorcount > 2:
+                            self.mainWindow.logmessage(u"Automatically canceled because of three consecutive errors.")
+                            progress.cancel()
 
 
-                        #Abort
+
+                    #Abort
                     if progress.wasCanceled:
                         progress.showInfo('cancel',u"Disconnecting from stream may take up to one minute.")
                         threadpool.stopJobs()

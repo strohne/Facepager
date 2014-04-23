@@ -264,8 +264,7 @@ class ApiTab(QWidget):
             else:
                 return response
 
-    @Slot()
-    def stop(self):
+    def disconnectSocket(self):
         """Used to disconnect when canceling requests"""
         self.connected = False
 
@@ -597,7 +596,7 @@ class TwitterTab(ApiTab):
 
 
 
-            # paging-search
+            # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
             paging = False
             if hasDictValue(data, "search_metadata.next_results"):
                 paging = True
@@ -605,12 +604,12 @@ class TwitterTab(ApiTab):
                 options['url'] = urlpath
                 options['params'] = params
 
-            # paging timeline
+            # manual paging with max-id
             else:
-                ids = [item['id'] for item in data if 'id' in item] if isinstance(data, list) else []
-                if ids:
+                if "statuses" in data:
+                    # if there are still statuses in the response, use the last ID-1 for ruther pagination
                     paging = True
-                    options['params']['max_id'] = min(ids) - 1
+                    options['params']['max_id'] = int(data["statuses"][-1]["id"])-1
 
             if not paging:
                 break
@@ -805,7 +804,7 @@ class TwitterStreamingTab(ApiTab):
         finally:
             self.connected = False
 
-    def stop(self):
+    def disconnectSocket(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
         self.response.raw._fp.close()
