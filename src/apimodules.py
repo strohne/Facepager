@@ -107,7 +107,7 @@ class ApiTab(QWidget):
             if match:
                 templateparams[match.group(1)] = value
             else:
-                urlparams[name] = value.encode("utf-8")
+                urlparams[name] = unicode(value).encode("utf-8")
 
         #Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
