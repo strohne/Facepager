@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
         groupLayout.addWidget(self.fieldList)
 
         button=QPushButton("Apply Column Setup")
-        button.setToolTip("Apply the columns to the cental data view. New columns may be hidden and are appended on the right side")
+        button.setToolTip("Apply the columns to the central data view. New columns may be hidden and are appended on the right side")
         button.clicked.connect(self.actions.actionShowColumns.trigger)
         groupLayout.addWidget(button)
 
@@ -222,12 +222,12 @@ class MainWindow(QMainWindow):
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
         self.levelEdit.setMinimum(1)
-        self.levelEdit.setToolTip("Apply requests for all selected nodes on the level (base level is 1)")
+        self.levelEdit.setToolTip("Based on the selected nodes, only fetch data for nodes and subnodes of the specified level (base level is 1)")
         fetchsettings.addRow("Node level",self.levelEdit)
 
         #Object types
         self.typesEdit = QLineEdit('seed,data,unpacked')
-        self.typesEdit.setToolTip("Description here")
+        self.typesEdit.setToolTip("Based on the selected nodes, only fetch data for nodes with one of the listed object types (normally should not be changed)")
         fetchsettings.addRow("Object types",self.typesEdit)
 
         # Thread Box
@@ -242,7 +242,7 @@ class MainWindow(QMainWindow):
         self.speedEdit.setMinimum(1)
         self.speedEdit.setMaximum(60000)
         self.speedEdit.setValue(60000)
-        self.speedEdit.setToolTip("Limit the total amount of requests")
+        self.speedEdit.setToolTip("Limit the total amount of requests per limit (calm down to avoid API blocking)")
         fetchsettings.addRow("Requests per minute", self.speedEdit)
 
 
