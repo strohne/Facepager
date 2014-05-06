@@ -222,21 +222,19 @@ class MainWindow(QMainWindow):
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
         self.levelEdit.setMinimum(1)
-        #self.levelEdit.setFont(f)
-        #self.levelEdit.setMinimumHeight(35)
-        #label=QLabel("For all selected nodes and \ntheir children of level")
-        #fetchdata.addWidget(label,0)
-        #fetchdata.addWidget(self.levelEdit,0)
+        self.levelEdit.setToolTip("Apply requests for all selected nodes on the level (base level is 1)")
         fetchsettings.addRow("Node level",self.levelEdit)
 
         #Object types
         self.typesEdit = QLineEdit('seed,data,unpacked')
+        self.typesEdit.setToolTip("Description here")
         fetchsettings.addRow("Object types",self.typesEdit)
 
         # Thread Box
         self.threadsEdit = QSpinBox(self)
         self.threadsEdit.setMinimum(1)
         self.threadsEdit.setMaximum(10)
+        self.threadsEdit.setToolTip("The number of concurrent threads performing the requests. Higher values increase the speed, but may result in API-Errors/blocks")
         fetchsettings.addRow("Parallel Threads", self.threadsEdit)
 
         # Speed Box
@@ -244,6 +242,7 @@ class MainWindow(QMainWindow):
         self.speedEdit.setMinimum(1)
         self.speedEdit.setMaximum(60000)
         self.speedEdit.setValue(60000)
+        self.speedEdit.setToolTip("Limit the total amount of requests")
         fetchsettings.addRow("Requests per minute", self.speedEdit)
 
 
