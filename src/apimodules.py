@@ -89,7 +89,7 @@ class ApiTab(QWidget):
         templateparams = {}
         for name in params:
             #Filter empty params
-            if (name == '<None>') or (params[name] == '<None>') or (name == '') or (params[name] == ''):
+            if (name == '<None>') or (params[name] == '<None>') or (name == ''):
                 continue
 
             # Set the value for the ObjectID or any other placeholder-param
