@@ -472,8 +472,8 @@ class Actions(object):
                         progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                         progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
 
-                        #auto cancel after three consecutive errors
-                        if status == 'fetched (200)':
+                        #auto cancel after three consecutive errors, ignore on streaming-tab
+                        if status == 'fetched (200)' or 'stream':
                             errorcount=0
                         else:
                             errorcount += 1
