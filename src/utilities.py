@@ -1,4 +1,6 @@
 import json
+from bs4 import BeautifulSoup,NavigableString,Tag
+from collections import OrderedDict
 
 def hasDictValue(data,multikey):
     try:
@@ -109,3 +111,32 @@ def recursiveIterKeys(value,prefix=None):
         else:
             fullkey = key if prefix is None else ".".join([prefix,key])
             yield fullkey
+
+def htmlToJson(data,csskey=None):
+    soup = BeautifulSoup(data)
+
+
+    def parseSoup(element):
+        out = []
+        for attr in element.attrs:
+            out.append({'_'+attr+'_':element[attr]})
+        for child in element.children:
+            if isinstance(child,NavigableString):
+                value = unicode(child).strip("\n\t ")
+                if value != '':
+                    out.append({'_text_':value})
+            elif isinstance(child,Tag):
+                id = str(child.get('id',''))
+                key = child.name+'#'+id if id != '' else child.name
+                out.append({key:parseSoup(child)})
+
+        return out
+
+    if csskey is not None:
+        output = []
+        for part in soup.select(csskey):
+            output.extend(parseSoup(part))
+    else:
+        output = parseSoup(soup)
+    return [output]
+
