@@ -67,9 +67,18 @@ class Actions(object):
         self.actionUnpack.setToolTip("Unpacks a list in the JSON-data and creates a new node containing the list content")
         self.actionUnpack.triggered.connect(self.unpackList)
 
+        self.actionHtml = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Html2Json")
+        self.actionHtml.setToolTip("Converts Html to Json")
+        self.actionHtml.triggered.connect(self.htmlToJson)
+
         self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
         self.actionJsonCopy.setToolTip("Copy the selected JSON-data to the clipboard")
         self.actionJsonCopy.triggered.connect(self.jsonCopy)
+
+        #Tree actions
+        self.actionExpandDetails = self.detailActions.addAction(QIcon(":/icons/expand.png"), "Expand nodes")
+        self.actionExpandDetails.triggered.connect(self.expandDetails)
+
 
         #Tree actions
         self.treeActions = QActionGroup(self.mainWindow)
@@ -375,6 +384,26 @@ class Actions(object):
                 treenode.unpackList(key)
         except Exception as e:
             self.mainWindow.logmessage(e)
+
+    @Slot()
+    def htmlToJson(self):
+        try:
+            key = self.mainWindow.detailTree.selectedKey()
+            if key == '':
+                return False
+            selected = self.mainWindow.tree.selectionModel().selectedRows()
+            for item in selected:
+                if not item.isValid():
+                    continue
+                treenode = item.internalPointer()
+                treenode.htmlToJson(key)
+        except Exception as e:
+            self.mainWindow.logmessage(e)
+
+
+    @Slot()
+    def expandDetails(self):
+        self.mainWindow.detailTree.expandAll()
 
     @Slot()
     def expandAll(self):
