@@ -214,7 +214,6 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(GenericTab(self),"Generic")
         self.RequestTabs.addTab(FilesTab(self),"Files")
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
-        self.RequestTabs.addTab(ScrapeTab(self),"Scrape")
 
 
         #Fetch settings

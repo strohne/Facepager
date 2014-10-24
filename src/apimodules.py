@@ -951,15 +951,6 @@ class FilesTab(ApiTab):
         self.urlpathEdit.setEditable(True)
         mainLayout.addRow("URL path", self.urlpathEdit)
 
-        #Parameter
-        self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions([{'name':''}])
-        self.paramEdit.setValueOptions([{'name':'',
-                                         'doc':"No Value"},
-                                         {'name':'<Object ID>',
-                                          'doc':"The value in the Object ID-column of the datatree."}])
-        mainLayout.addRow("Parameters", self.paramEdit)
-
         #Download folder
         folderlayout = QHBoxLayout()
 
@@ -1050,7 +1041,6 @@ class FilesTab(ApiTab):
             options['querytype'] = self.name
 
         options['urlpath'] = self.urlpathEdit.currentText()
-        options['params'] = self.paramEdit.getParams()
         options['folder'] = self.folderEdit.text()
         options['filename'] = self.filenameEdit.currentText()
         options['fileext'] = self.fileextEdit.currentText()
@@ -1061,7 +1051,6 @@ class FilesTab(ApiTab):
 
     def setOptions(self, options):
         self.urlpathEdit.setEditText(options.get('urlpath', '<url>'))
-        self.paramEdit.setParams(options.get('params',{} ))
         self.folderEdit.setText(options.get('folder', ''))
         self.filenameEdit.setEditText(options.get('filename', '<None>'))
         self.fileextEdit.setEditText(options.get('fileext', '<None>'))
@@ -1074,9 +1063,7 @@ class FilesTab(ApiTab):
         filename = options.get('filename', None)
         fileext = options.get('fileext', None)
 
-
-
-        urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
+        urlpath, urlparams = self.getURL(options["urlpath"], {}, nodedata)
         filename = self.parsePlaceholders(filename,nodedata)
         fileext = self.parsePlaceholders(fileext,nodedata)
 
@@ -1092,103 +1079,6 @@ class FilesTab(ApiTab):
         else:
             callback(data, options, headers)
 
-
-class ScrapeTab(ApiTab):
-    def __init__(self, mainWindow=None, loadSettings=True):
-        super(ScrapeTab, self).__init__(mainWindow, "Scrape")
-        mainLayout = QFormLayout()
-        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
-        mainLayout.setLabelAlignment(Qt.AlignLeft)
-
-        #URL field
-        self.urlpathEdit = QComboBox(self)
-        self.urlpathEdit.insertItems(0, ['<url>'])
-        self.urlpathEdit.setEditable(True)
-        mainLayout.addRow("URL path", self.urlpathEdit)
-
-        #Parameter
-        self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions([{'name':''}])
-        self.paramEdit.setValueOptions([{'name':'',
-                                         'doc':"No Value"},
-                                         {'name':'<Object ID>',
-                                          'doc':"The value in the Object ID-column of the datatree."}])
-        mainLayout.addRow("Parameters", self.paramEdit)
-
-        #Extract option
-        self.extractCssEdit = QComboBox(self)
-        self.extractCssEdit.setEditable(True)
-        mainLayout.addRow("CSS selector to extract", self.extractCssEdit)
-
-        self.extractEdit = QComboBox(self)
-        self.extractEdit.setEditable(True)
-        mainLayout.addRow("JSON key to extract", self.extractEdit)
-
-
-        self.setLayout(mainLayout)
-        if loadSettings: self.loadSettings()
-
-    def download(self, path, args=None, headers=None):
-        """
-        Download files ...
-        Uses the request-method without converting to json
-        (argument jsonify==True)
-        """
-
-        response = self.request(path, args, headers, jsonify=False)
-
-        # Handle the response of the generic, non-json-returning response
-        if response.status_code == 200:
-            data = ""
-            for chunk in response.iter_content(1024):
-                data += chunk
-            status = 'downloaded' + ' (' + str(response.status_code) + ')'
-        else:
-            data = ""
-            status = 'error' + ' (' + str(response.status_code) + ')'
-
-        return data, dict(response.headers), status
-
-
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {}
-
-        if purpose != 'preset':
-            options['querytype'] = self.name
-
-        options['urlpath'] = self.urlpathEdit.currentText()
-        options['params'] = self.paramEdit.getParams()
-        options['nodedata'] = self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
-        options['csskey'] = self.extractCssEdit.currentText() if self.extractCssEdit.currentText() != "" else None
-        options['objectid'] = 'filename'
-
-        return options
-
-    def setOptions(self, options):
-        self.urlpathEdit.setEditText(options.get('urlpath', '<url>'))
-        self.paramEdit.setParams(options.get('params',{} ))
-        self.extractCssEdit.setEditText(options.get('csskey', ''))
-        self.extractEdit.setEditText(options.get('nodedata', ''))
-
-    def fetchData(self, nodedata, options=None, callback=None):
-        self.connected = True
-
-        urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
-        self.mainWindow.logmessage(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
-                                                                              urlpath + "?" + urllib.urlencode(
-                                                                                  urlparams)))
-
-        data, headers, status = self.download(urlpath, urlparams, None)
-        data = htmlToJson(data,options.get('csskey',''))
-
-        options['querytime'] = str(datetime.now())
-        options['querystatus'] = status
-        if callback is None:
-            self.streamingData.emit(data, options, headers)
-        else:
-            callback(data, options, headers)
 
 class QWebPageCustom(QWebPage):
     logmessage = Signal(str)
