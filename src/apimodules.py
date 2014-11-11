@@ -589,10 +589,10 @@ class TwitterTab(ApiTab):
 
             # manual paging with max-id
             else:
-                if data.get("statuses",False):
-                    # if there are still statuses in the response, use the last ID-1 for ruther pagination
+                # if there are still statuses in the response, use the last ID-1 for ruther pagination
+                if len(data) > 0:
                     paging = True
-                    options['params']['max_id'] = int(data["statuses"][-1]["id"])-1
+                    options['params']['max_id'] = int(data[-1]["id"])-1
 
             if not paging:
                 break
