@@ -577,22 +577,19 @@ class TwitterTab(ApiTab):
             else:
                 callback(data, options, headers)
 
-
-
             # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
             paging = False
-            if hasDictValue(data, "search_metadata.next_results"):
+            if isinstance(data,dict) and hasDictValue(data, "search_metadata.next_results"):
                 paging = True
                 url, params = self.parseURL(getDictValue(data, "search_metadata.next_results", False))
                 options['url'] = urlpath
                 options['params'] = params
 
             # manual paging with max-id
-            else:
-                # if there are still statuses in the response, use the last ID-1 for ruther pagination
-                if len(data) > 0:
-                    paging = True
-                    options['params']['max_id'] = int(data[-1]["id"])-1
+            # if there are still statuses in the response, use the last ID-1 for further pagination
+            elif isinstance(data,list) and (len(data) > 0):
+                options['params']['max_id'] = int(data[-1]["id"])-1
+                paging = True
 
             if not paging:
                 break
