@@ -1,3 +1,5 @@
+Facepager is developed for Python 2.7
+
 Facepager depends on the following packages:
 
 PySide: Download from https://qt-project.org/wiki/Category:LanguageBindings::PySide::Downloads
