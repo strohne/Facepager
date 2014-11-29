@@ -60,6 +60,7 @@ class DictionaryTree(QTreeView):
 class DictionaryTreeItemDelegate(QItemDelegate):
     def sizeHint(self, option, index):
         return QSize(20, 17)
+        #return QSize(20, 27)
 
 
 class DictionaryTreeModel(QAbstractItemModel):
@@ -94,17 +95,17 @@ class DictionaryTreeModel(QAbstractItemModel):
         try:
             #Load documentation corresponding to itemtype
             docid = self.itemtype.split(':')[0]
-            if not docid in self.documentation:            
+            if not docid in self.documentation:
                 if getattr(sys, 'frozen', False):
                     folder = os.path.join(os.path.dirname(sys.executable),'docs')
                 elif __file__:
                     folder = os.path.join(os.path.dirname(__file__),'docs')
-        
+
                 filename = u"{}Fields.json".format(docid)
-                                    
+
                 self.documentation[docid] = json.load(open(os.path.join(folder, filename),"r"))
                 self.documentation[docid] = {entity["Field"]:entity  for entity in self.documentation[docid]}
-            
+
             if docid in self.documentation:
                 doccontent = self.documentation[docid]
                 # replace ".*." or .9." in the kaypath
@@ -117,15 +118,15 @@ class DictionaryTreeModel(QAbstractItemModel):
                     bestmatch = path.split(".")[-1]
                 else:
                     bestmatch=None
-    
+
                 if bestmatch:
-                    docstring = "<p>"+doccontent[bestmatch]["Description"].replace("Example:","<font color=#FF333D>Example:</font>")+"</p>" 
+                    docstring = "<p>"+doccontent[bestmatch]["Description"].replace("Example:","<font color=#FF333D>Example:</font>")+"</p>"
                     return(docstring)
-                
+
             return(keypath)
         except:
             return(keypath)
-            
+
     def columnCount(self, parent):
         return 2
 
@@ -209,7 +210,7 @@ class DictionaryTreeItem(object):
         self.itemDataType = 'atom'
 
         self.itemToolTip = self.model.getDocumentation(self.keyPath())
-            
+
         if isinstance(value, dict):
             items = value.items()
             self.itemDataValue = '{' + str(len(items)) + '}'
@@ -227,10 +228,10 @@ class DictionaryTreeItem(object):
         elif isinstance(value, (int, long)):
             self.itemDataType = 'atom'
             self.itemDataValue = str(value)
-            
+
         else:
             self.itemDataType = 'atom'
-            self.itemDataValue = value            
+            self.itemDataValue = value
 
 
     def clear(self):
