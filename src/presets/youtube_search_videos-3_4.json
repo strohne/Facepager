@@ -16,7 +16,7 @@
     "urlpath": "https://gdata.youtube.com/feeds/api/videos",
     "params": {
       "alt": "json",
-      "q=": "<Object ID>",
+      "q": "<Object ID>",
       "v": "2"
     },
     "nodedata": "feed.entry",
