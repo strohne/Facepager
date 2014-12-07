@@ -1,0 +1,252 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<base href="https://raw.github.com/strohne/Facepager/master/src/help/" />
+<title>Facepager Help</title>
+
+<style type="text/css">
+* {
+  font-size:11pt;
+  font-family:Arial,sans-serif;
+}
+
+h1 {
+  font-size:12pt;
+
+  font-weight:bold;
+  margin-bottom:1em;
+  margin-top:2em;
+  padding:0px;
+  border-bottom:1px solid #333;
+}
+
+h1.first {
+  margin-top:0px;
+}
+
+p {
+  margin-bottom:1em;
+}
+
+li {
+  margin-bottom:1em;
+}
+
+img {
+  margin:0.8em 0px 0.8em 0px;
+  padding:3px;
+  background-color:#eee;
+}
+
+table {
+  border:0px;
+}
+
+table td, table th {
+  text-align:left;
+}
+</style>
+</head>
+
+<body>
+<p>
+<b>Please notice that this help file may describe an older or even newer version of Facepager. Feel free to support us by correcting any errors.</b>
+</p>
+<h1 class="first">Getting started</h1>
+
+<ol>
+    <li>Click &quot;New Database&quot; in the toolbar to create a blank database</li>
+    <li>Add Facebook IDs by clicking &quot;Add Nodes&quot; in the toolbar. Enter the last part of a Facebook page, e.g. enter &quot;Tatort&quot; for the page &quot;http://www.Facebook.com/Tatort&quot;. Alternatively you can enter "me" as reference to yourself.</li>
+    <li>Select the Facebook tab and set Resource to "&lt;Object ID&gt;". Delete any parameters.</li>
+    <li>In the Facebook tab click "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.</li>
+    <li>Select one or more of the just added nodes in the view and click &quot;Fetch data&quot;.</li>
+    <li>Click "Expand nodes" in the toolbar and select one of the new child nodes. Detailed data is shown to the right.</li>
+    <li>Change the column setup according to your needs by selecting rows in the detailed data and clicking "Add Column". You can as well add and delete columns in the "Custom Table Columns" area. Don't forget to click "Apply Column Setup". </li>
+</ol>
+
+<h1>Overview of the Facepager-Layout</h1>
+<img src="facepager_overview_annotated.png" />
+
+
+
+	<ul>
+		<li><b>Object View:</b>
+			This view includes the objects of your data collection (Facebook
+			posts, statuses or Twitter tweets and
+			any other objects that an API is able to return).
+			<br>
+			These objects have different attributes, which are displayed in the columns of the
+			object view and may differ between different types or classes of
+			objects and usually one object is one row. Only the first five columns do not change, because they are crucial througout the whole data collection
+            process.
+			<br>
+			Objects may contain objects (they may be nested): A Facebook-post may have comments related to
+			that post. When you request the comments for a post and a result is
+			returned, these comments are automatically inserted under the post
+			as single rows.You'll notice - depending on your operating system - an arrow or
+			plus sign besides the objects. Clicking it, will unfold the object
+			showing related "child"-objects. Of course, objects may have
+			multiple levels or relationships.
+			</li>
+		<li><b>Query Window:</b> The starting point for fetching data from an
+			API.Preconfigured comes a tab for requesting data from Facebook, Twitter
+			and a "Generic"-Tab, which enables you to get data from most JSON-based
+			APIs (this is for advanced users only).
+			<br>
+			Crawling data from Facebook and Twitter requires a <b>Login</b>
+			with your user credentials. Before starting your data collection
+			process, you should complete the login via the corresponding
+			buttons. A login-windows will open and once the login is
+			successful, collecting the data is possible <i>(NOTE: Your user credentials
+			are stored locally, i.e. no personal data is submitted to the
+			developers or any other authority)</i>.
+		</li>
+		<li><b>Status View:</b> This window is for logging and debugging
+		purposes only. Messages issued here may inform you about the details of
+		the data collection process or any errors while fetching data.
+		</li>
+		<li><b>Data & Column View:</b> This viewport includes two components:
+		The <b>Data View</b> shows detailed data of the selected
+			object or row in the <b>Object View</b>. (Internally this view parses
+            raw JSON-data as returned by API requests and displays the result
+            in a tree).
+			<br>
+			Not all information in the data view is automatically displayed in the
+			<b>Object View</b>. One can control the column
+			layout of the Object View via the <b>Custom Table Column</b>-Field:<br>
+			Each line in this field controls the columns in the Object View (and
+			the csv-export as well) and corresponds to a key in the
+			data view. For example, if you do not want to display the message
+			of a Facebook-post, simply delete "message" from the Custom-Table
+			and click "Apply" (vice versa, add a key in the raw data to add a
+			column).
+			<br>
+			If there are nested key:value pairs in the data (f.e.
+		    {"user":{"name":"Facepager"}}, you can pass these nested keys
+			seperated by a dot (user.name) to the column setup, to display the
+			value ("Facepager").
+		</li>
+	</ul>
+
+<h1>Getting data from the Facebook-API</h1>
+<p>
+        The "Query" parameter denotes the object or entity you want to fetch
+		from Facebook. When you entered the name of a Facebook-Page via "Add
+		Node", the "Query"-field should contain  "&lt;self&gt;".
+        This means that the ID of this starting point (i.e. it`s name) is fetched from Facebook.
+        Enter your own Facebook-Name or simply a "me", and the tool fetches your own Facebook-Profile (you must gain access to your own via "Login to Facebook").
+        As you can see, the "Raw Data" window on the right side contains the raw information:
+</p>
+
+<img src="facebook_rawdata.png" alt="Raw Data View" />
+
+<p>
+        This data is formatted in the <a href="http://en.wikipedia.org/wiki/JavaScript_Object_Notation">JSON-Notation</a>, which follows a quite simple logic of key:value pair.
+        One could state that keys relate to columns in an Excel-Sheet, while values are the row-values in that column.
+        On Facebook <b>every</b> object has a fixed ID. This ID is shown in the column "Object ID" in the main window and is the starting point for all queries to the Facebook-API.
+        For example, if you want to get all of your friends on Facebook, select the "me" node, change the "Query"-parameter to "friends" and click on "Fetch Data".
+        As you can see from the Status-Log Window, a requests against the Facebook-API is done, containing both your own id and the queryparameter: <i>https://graph.Facebook.com/1346277685/friends </i>
+</p>
+
+
+    <table>
+    <thead>
+      <tr>
+        <th>Base URL</th>
+        <th>Object ID</th>
+        <th>Query Parameter</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td> https://graph.Facebook.com </td>
+        <td> 1346277685 </td>
+        <td> friends </td>
+      </tr>
+     </tbody>
+    </table>
+
+<br>
+
+<p>
+The results of this request are shown in the main window. As you can see, the friends are automatically nested under the row of the current user ("me").
+This is a central concept: Every request is issued against a specific object (User, post, comments and so on) and it's object id.
+The tool chooses the ID automatically, based an the currently clicked or activated row in the main view.If multiple rows/objects are selected (via SHIFT), requests for each row are issued.
+</p>
+
+<img src="facebook_idsystem.png" >
+
+
+<p>
+For more information on Facebook-Objects and the underlying system (and the
+interpretation of the raw-data), see the <a href="https://developers.facebook.com/docs/reference/api/">Facebook API documentation </a>.
+Information regarding the offset and limit parameter in detail, consider <a
+	href="https://developers.facebook.com/docs/reference/api/pagination/"> this </a> documentation.
+A quick explanation:
+
+    <ul>
+        <li><b>Offset: </b>
+            Imagine you want to fetch 500 comments for a Facebook-post and the limit is set to "50". Thus, there are 10 "pages" of information available, each containing 50 comments.
+            With the offset-parameter, you can cycle or paginate through these pages, i.e. an offset=51 would return the comments 51-100, offset=101 the comments 101-150 and so on
+            (Info: comments are usually ordered by their date). If you want to get all 500 comments, you habe to rreadjust the offse-parameter 10 times and do 10 requests in this case
+            (offset=[0,51,101,151,201,251,301,351,401,451])
+         </li>
+        <li><b>Limit: </b>
+		This is the number of individual objects that are returned on each page. This limit is API-specific (for Facebook, it�s usually 500 objects per page). Be aware			of the fact that the "limit" -field doesn�t referr to the total amount of available objects, but may be combined with the "offset" -parameter.
+        </li>
+        <li><b>Since: </b>
+            A date, f.e. denoting the objects creation time. In the above example, since="14.07.2013" would grab comments made after the 13.07.2013.
+            Not every Facebook-Object has a timestamp and therefore a limit, f.e. the users friends (in this case, the "since"-paramter has no effect)
+        </li>
+        <li><b>Until: </b>
+            A date, f.e. denoting the objects creation time. In the above example, until="17.07.2013" would grab comments made before the 17.07.2013.
+            Not every Facebook-Object has a timestamp and therefore a limit, f.e. the users friends (in this case, the "until"-paramter has no effect).
+            A combination of "since" and "until" is possible. Depending on the API the "until"-field must be incremented by one day to get the most recent objects.
+        </li>
+    </ul>
+</p>
+
+<h1>General remarks & hints</h1>
+<p>
+    <ul>
+        <li><b>Item/Object Selection:</b>
+			Multiple objects in the view can be selected at once by pressing down SHIFT while selecting the objects with the mouse. This makes bulk deleteions easier,
+			but also enables a request against the API for multiple objects at once.
+		</li>
+		<li><b>Custom Table Column Setup:</b>
+			 Use custom columns to control the columns in the export files (CSV-File). Using nested columns like "user.entities.url.urls" might be usefull and may be combined with an astrix *-Operator to unfold list of attributes like this: entities.urls.*.display_url (try the twitter-preset to see the results)
+		</li>
+		<li><b>Parameters:</b>
+			Parameter values in angle brackets (like &lt;Object ID&gt;) have special meanings.<br />
+			The string in brackets is taken as key to extract data from the selected node. This works in analogy to the custom table columns setup.<br />
+			There are two reserved keywords: a) The parameter value "&lt;Object ID&gt;" is replaced by the Object ID of the selected node; b) Parameters with name or value set to "&lt;None&gt;" are ignored.
+		</li>
+		<li><b>URL path:</b>
+			Expressions in angle brackets (like &lt;Object ID&gt;) have special meanings in URL paths, Query-field and Resource-field. <br />
+			The string in brackets is taken as a key to extract data from the selected node. This works in analogy to the custom table columns setup.<br />
+			There is one reserved keyword: The expression "&lt;Object ID&gt;" is replaced by the Object ID of the selected node.
+		</li>
+		<li><b>Presets:</b>
+		Use presets to store your settings for certain API calls. Presets in bold face are stored inside the application directory and are included by default. Your own presets are automatically stored in your user directory (f.e. C:\Users\username\Facepager\Presets) and may be copied, distributed and shared with other users. <b>We encourage you to share your presets with us - do so by mailing the .json-file to the authors of the Facepager and provide a short description of your preset </b>. As you might notice, presets store your custom-table column setup and the query-details in the Query-Tab, but no data or private access-token is shared! To edit presets, either load an existing one, make changes and store them as a new preset, or go to the presets file-location an edit the preset with a text-editor.
+		</li>
+    </ul>
+
+
+
+<h1>Citation</h1>
+<p>
+  Keyling, Till / J&uuml;nger, Jakob (2013). Facepager 3. Tool for Downloading API Data. Online at https://github.com/strohne/Facepager.
+</p>
+
+<h1>Copyright notices</h1>
+<p>
+Facepager uses icons from <a href="http://www.pyconic.com/pyconic-icons-free" target="_blank">Pyconic</a>, licenced under <a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC BY 3.0</a>. Thanks for sharing.
+</p
+
+</body>
+</html>
+
