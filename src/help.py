@@ -16,6 +16,7 @@ class HelpWindow(QMainWindow):
         self.setCentralWidget(central)
         vLayout = QVBoxLayout(central)
         browser = QWebView(central)
+        self.browser = browser
 
         if getattr(sys, 'frozen', False):
             application_path = os.path.dirname(sys.executable)
@@ -38,4 +39,8 @@ class HelpWindow(QMainWindow):
         #browser.setBackgroundRole(QPalette.Window)
 
     def linkClicked(self,url):
-        webbrowser.open(url.toString() )
+        url = url.toString()
+        if url.startswith("http://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"):
+            self.browser.load(url)
+        else:
+            webbrowser.open(url)
