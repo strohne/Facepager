@@ -246,10 +246,23 @@ class ApiTab(QWidget):
             raise Exception("No session available.")
 
         try:
-            if headers is not None:
-                response = session.post(path, params=args, headers=headers, timeout=self.timeout, verify=False)
-            else:
-                response = session.get(path, params=args, timeout=self.timeout, verify=False)
+            maxretries = 3
+            while True:
+                try:
+                    if headers is not None:
+                        response = session.post(path, params=args, headers=headers, timeout=self.timeout, verify=False)
+                    else:
+                        response = session.get(path, params=args, timeout=self.timeout, verify=False)
+                except (HTTPError, ConnectionError), e:
+                    maxretries -= 1
+                    if maxretries > 0:
+                        sleep(0.1)
+                        self.mainWindow.logmessage(u"Automatic retry: Request Error: {0}".format(e.message))
+                    else:
+                        raise e
+                else:
+                    break
+
         except (HTTPError, ConnectionError), e:
             raise Exception(u"Request Error: {0}".format(e.message))
         else:
