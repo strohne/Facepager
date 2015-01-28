@@ -371,6 +371,7 @@ class FacebookTab(ApiTab):
 
         # options for data handling
         if purpose == 'fetch':
+            options['basepath'] = "https://graph.facebook.com/v2.2/"
             options['objectid'] = 'id'
             options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
 
@@ -399,7 +400,7 @@ class FacebookTab(ApiTab):
         for page in range(0, options.get('pages', 1)):
         # build url
             if not ('url' in options):
-                urlpath = "https://graph.facebook.com/" + options['relation']
+                urlpath = options["basepath"] + options['relation']
                 urlparams = {}
 
                 if options['relation'] == 'search':
@@ -533,6 +534,7 @@ class TwitterTab(ApiTab):
 
         # options for data handling
         if purpose == 'fetch':
+            options['basepath'] =  "https://api.twitter.com/1.1/"
             options['objectid'] = 'id'
 
             if options["query"] == 'search/tweets':
@@ -570,7 +572,7 @@ class TwitterTab(ApiTab):
         self.connected = True
         for page in range(0, options.get('pages', 1)):
             if not ('url' in options):
-                urlpath = "https://api.twitter.com/1.1/" + options["query"] + ".json"
+                urlpath = options["basepath"] + options["query"] + ".json"
                 urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata)
             else:
                 urlpath = options['url']
@@ -698,8 +700,11 @@ class TwitterStreamingTab(ApiTab):
             options['access_token'] = self.tokenEdit.text()
             options['access_token_secret'] = self.tokensecretEdit.text()
 
+
         # options for data handling
         if purpose == 'fetch':
+            options['basepath'] =  "https://stream.twitter.com/1.1/"
+
             options['objectid'] = 'id'
 
             if options["query"] == 'search/tweets':
@@ -805,7 +810,7 @@ class TwitterStreamingTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None):
         if not ('url' in options):
-            urlpath = "https://stream.twitter.com/1.1/" + options["query"] + ".json"
+            urlpath = options["basepath"] + options["query"] + ".json"
             urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata)
         else:
             urlpath = options['url']
