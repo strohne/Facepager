@@ -7,3 +7,7 @@ SQLAlchemy: pip install SQLAlchemy
 dateutil: pip install python-dateutil
 requests: pip install requests
 rauth: pip install rauth
+
+
+Facepager needs some secret keys to connect to Facebook and Twitter.
+See credentials.py.readme for further details.
