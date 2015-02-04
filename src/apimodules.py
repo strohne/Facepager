@@ -346,13 +346,22 @@ class FacebookTab(ApiTab):
         self.tokenEdit.setEchoMode(QLineEdit.Password)
         self.loginButton = QPushButton(" Login to Facebook ", self)
         self.loginButton.clicked.connect(self.doLogin)
+
         self.clientIdEdit = QLineEdit()
         self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        self.scopeEdit = QLineEdit()
 
         # Construct Login-Layout
         loginlayout = QHBoxLayout()
         loginlayout.addWidget(self.tokenEdit)
         loginlayout.addWidget(self.loginButton)
+
+
+        applayout = QHBoxLayout()
+        applayout.addWidget(self.clientIdEdit)
+        applayout.addWidget(QLabel("Scope"))
+        applayout.addWidget(self.scopeEdit)
+
 
         # Construct main-Layout
         mainLayout = QFormLayout()
@@ -364,7 +373,7 @@ class FacebookTab(ApiTab):
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
         mainLayout.addRow("Access Token", loginlayout)
-        mainLayout.addRow("Client Id", self.clientIdEdit)
+        mainLayout.addRow("Client Id", applayout)
         self.setLayout(mainLayout)
 
         if loadSettings:
@@ -375,11 +384,14 @@ class FacebookTab(ApiTab):
         options = {'relation': self.relationEdit.currentText(), 'pages': self.pagesEdit.value(),
                    'params': self.paramEdit.getParams()}
 
+        options['scope'] = self.scopeEdit.text()
+
         # options for request
         if purpose != 'preset':
             options['querytype'] = self.name + ':' + self.relationEdit.currentText()
             options['access_token'] = self.tokenEdit.text()
             options['client_id'] = self.clientIdEdit.text()
+
 
         # options for data handling
         if purpose == 'fetch':
@@ -392,6 +404,7 @@ class FacebookTab(ApiTab):
     def setOptions(self, options):
         self.relationEdit.setEditText(options.get('relation', '<page>'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
+        self.scopeEdit.setText(options.get('scope','user_groups'))
         self.paramEdit.setParams(options.get('params', {}))
 
         # set Access-tokens,use generic method from APITab
@@ -470,7 +483,8 @@ class FacebookTab(ApiTab):
     def doLogin(self, query=False, caption="Facebook Login Page",url=""):
         #use credentials from input if provided
         facebookclientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['facebook_client_id']
-        url = "https://www.facebook.com/dialog/oauth?client_id=" + facebookclientid + "&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=user_groups&display=popup"
+        scope="user_groups"
+        url = "https://www.facebook.com/dialog/oauth?client_id=" + facebookclientid + "&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope="+scope+"&display=popup"
 
         # Facebook client id should be defined in credentials.py
         super(FacebookTab, self).doLogin(query, caption, url)
