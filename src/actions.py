@@ -473,7 +473,7 @@ class Actions(object):
                         progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
 
                         #auto cancel after three consecutive errors, ignore on streaming-tab
-                        if status == 'fetched (200)' or 'stream':
+                        if (status == 'fetched (200)') or (status == 'stream'):
                             errorcount=0
                         else:
                             errorcount += 1
