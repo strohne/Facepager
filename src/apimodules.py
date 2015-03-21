@@ -339,7 +339,7 @@ class FacebookTab(ApiTab):
         # Pages Box
         self.pagesEdit = QSpinBox(self)
         self.pagesEdit.setMinimum(1)
-        self.pagesEdit.setMaximum(500)
+        #self.pagesEdit.setMaximum(500)
 
         # Login-Boxes
         self.tokenEdit = QLineEdit()
@@ -509,7 +509,7 @@ class TwitterTab(ApiTab):
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
         self.pagesEdit.setMinimum(1)
-        self.pagesEdit.setMaximum(500)
+        #self.pagesEdit.setMaximum(500)
 
         # LogIn Box
         self.tokenEdit = QLineEdit()
