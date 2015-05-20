@@ -1074,7 +1074,7 @@ class FilesTab(ApiTab):
         (argument jsonify==True)
         """
 
-        def makefilename(foldername=None, filename=None, fileext=None):  # Create file name
+        def makefilename(foldername=None, filename=None, fileext=None,appendtime = False):  # Create file name
             url_filename, url_fileext = os.path.splitext(os.path.basename(path))
             if not fileext:
                 fileext = url_fileext
@@ -1088,8 +1088,13 @@ class FilesTab(ApiTab):
             filenumber = 1
 
             while True:
-                fullfilename = os.path.join(foldername,
-                                            filename + '-' + filetime + '-' + str(filenumber) + str(fileext))
+                if appendtime:
+                    fullfilename = os.path.join(foldername,
+                                                filename[:100] + '.' + filetime + '-' + str(filenumber) + str(fileext))
+                else:
+                    fullfilename = os.path.join(foldername,
+                                                filename[:100] + '.' + str(filenumber) + str(fileext))
+
                 if (os.path.isfile(fullfilename)):
                     filenumber = filenumber + 1
                 else:
