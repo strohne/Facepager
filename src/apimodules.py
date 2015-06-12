@@ -74,7 +74,7 @@ class ApiTab(QWidget):
             else:
                 value = getDictValue(nodedata['response'], match)
 
-            pattern = pattern.replace('<' + match + '>', value.encode("utf-8"))
+            pattern = pattern.replace('<' + match + '>', value)
 
         return pattern
 
