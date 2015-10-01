@@ -260,8 +260,8 @@ class Actions(object):
                 page = 0
 
                 while True:
-                    allnodes = Node.query.offset(page * 5000).limit(5000).all()
-                    if len(allnodes) == 0:
+                    allnodes = Node.query.offset(page * 5000).limit(5000)
+                    if allnodes.count() == 0:
                         break
                     for node in allnodes:
                         if progress.wasCanceled:
