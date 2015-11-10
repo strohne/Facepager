@@ -208,6 +208,7 @@ class Actions(object):
             output = open(fldg.selectedFiles()[0], 'wb')
 
             try:
+                output.write(codecs.BOM_UTF8)
                 writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                     lineterminator='\r\n')
 
