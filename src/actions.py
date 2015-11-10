@@ -208,7 +208,6 @@ class Actions(object):
             output = open(fldg.selectedFiles()[0], 'wb')
 
             try:
-                output.write(codecs.BOM_UTF8)  # or use utf-8-sig and UnicodeWriter
                 writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                     lineterminator='\r\n')
 
@@ -260,33 +259,25 @@ class Actions(object):
                 #rows
                 page = 0
 
-                #while True:
-                allnodes = Node.query.order_by("parent_id").offset(page * 5000).limit(5000).all()
-                from itertools import groupby,chain
-                griter = groupby(allnodes,lambda x: x.parent_id or 0)
-                for i,g in chain.from_iterable(griter):
-                    print g
+                while True:
+                    allnodes = Node.query.offset(page * 5000).limit(5000)
+                    if allnodes.count() == 0:
+                        break
+                    for node in allnodes:
+                        if progress.wasCanceled:
+                            break
+                        row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
+                               node.querystatus, node.querytime, node.querytype]
+                        for key in self.mainWindow.tree.treemodel.customcolumns:
+                            row.append(node.getResponseValue(key, "utf-8"))
+                        writer.writerow(row)
+                        # step the Bar
+                        progress.step()
+                    if progress.wasCanceled:
+                        break
+                    else:
+                        page += 1
 
-
-
-
-            #         if len(allnodes) == 0:
-            #             break
-            #         for node in allnodes:
-            #             if progress.wasCanceled:
-            #                 break
-            #             row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
-            #                    node.querystatus, node.querytime, node.querytype]
-            #             for key in self.mainWindow.tree.treemodel.customcolumns:
-            #                 row.append(node.getResponseValue(key, "utf-8"))
-            #             writer.writerow(row)
-            #             # step the Bar
-            #             progress.step()
-            #         if progress.wasCanceled:
-            #             break
-            #         else:
-            #             page += 1
-            #
             finally:
                 f.close()
                 progress.close()
