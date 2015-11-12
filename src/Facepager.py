@@ -376,6 +376,18 @@ class Toolbar(QToolBar):
         self.addAction(self.mainWindow.actions.actionHelp)
 
 
+class ExportFileDialog(QFileDialog):
+    """
+    Create a custom Export-File Dialog with options like BOM etc.
+    """
+
+    def __init__(self,*args,**kwargs):
+        super(ExportFileDialog,self).__init__(*args,**kwargs)
+        self.BOMcheck = QCheckBox("Use a BOM",self)
+        layout = self.layout()
+        layout.addWidget(self.BOMcheck)
+        self.setLayout(layout)
+
 
 def startMain():
     app = QApplication(sys.argv)
