@@ -6,6 +6,7 @@ from apimodules import *
 from apithread import ApiThreadPool
 import StringIO
 import codecs
+from Facepager import ExportFileDialog
 
 class Actions(object):
     def __init__(self, mainWindow):
@@ -188,7 +189,7 @@ class Actions(object):
 
     @Slot()
     def exportSelectedNodes(self):
-        fldg = QFileDialog(caption="Export selected nodes to CSV", filter="CSV Files (*.csv)")
+        fldg = ExportFileDialog(caption="Export selected nodes to CSV", filter="CSV Files (*.csv)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("csv")
 
