@@ -340,6 +340,9 @@ class FacebookTab(ApiTab):
         self.pagesEdit = QSpinBox(self)
         self.pagesEdit.setMinimum(1)
         self.pagesEdit.setMaximum(50000)
+        
+        #Base path
+        self.basepathEdit = QLineEdit()
 
         # Login-Boxes
         self.tokenEdit = QLineEdit()
@@ -372,8 +375,10 @@ class FacebookTab(ApiTab):
         mainLayout.addRow("Resource", self.relationEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
-        mainLayout.addRow("Access Token", loginlayout)
+        mainLayout.addRow("Base path", self.basepathEdit)
         mainLayout.addRow("Client Id", applayout)
+        mainLayout.addRow("Access Token", loginlayout)
+        
         self.setLayout(mainLayout)
 
         if loadSettings:
@@ -385,6 +390,7 @@ class FacebookTab(ApiTab):
                    'params': self.paramEdit.getParams()}
 
         options['scope'] = self.scopeEdit.text()
+        options['basepath'] = self.basepathEdit.text() 
 
         # options for request
         if purpose != 'preset':
@@ -394,8 +400,7 @@ class FacebookTab(ApiTab):
 
 
         # options for data handling
-        if purpose == 'fetch':
-            options['basepath'] = "https://graph.facebook.com/v2.2/"
+        if purpose == 'fetch':            
             options['objectid'] = 'id'
             options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
 
@@ -404,6 +409,9 @@ class FacebookTab(ApiTab):
     def setOptions(self, options):
         self.relationEdit.setEditText(options.get('relation', '<page>'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
+        if options.get('basepath','') == '':
+            options['basepath']= "https://graph.facebook.com/v2.2/"
+        self.basepathEdit.setText(options.get('basepath','https://graph.facebook.com/v2.2/'))
         self.scopeEdit.setText(options.get('scope','user_groups'))
         self.paramEdit.setParams(options.get('params', {}))
 
