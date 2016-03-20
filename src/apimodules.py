@@ -329,20 +329,103 @@ class ApiTab(QWidget):
             self.mainWindow.logmessage('Error loading web page')
 
 
+    def download(self, path, args=None, headers=None, foldername=None, filename=None, fileext=None):
+        """
+        Download files ...
+        Uses the request-method without converting to json
+        (argument jsonify==True)
+        """
+
+        def makefilename(foldername=None, filename=None, fileext=None,appendtime = False):  # Create file name
+            url_filename, url_fileext = os.path.splitext(os.path.basename(path))
+            if not fileext:
+                fileext = url_fileext
+            if not filename:
+                filename = url_filename
+
+            filename = re.sub(ur'[^a-zA-Z0-9_.-]+', '', filename)
+            fileext = re.sub(ur'[^a-zA-Z0-9_.-]+', '', fileext)
+
+            filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
+            filenumber = 1
+
+            while True:
+                if appendtime:
+                    fullfilename = os.path.join(foldername,
+                                                filename[:100] + '.' + filetime + '-' + str(filenumber) + str(fileext))
+                else:
+                    fullfilename = os.path.join(foldername,
+                                                filename[:100] + '.' + str(filenumber) + str(fileext))
+
+                if (os.path.isfile(fullfilename)):
+                    filenumber = filenumber + 1
+                else:
+                    break
+            return fullfilename
+
+        response = self.request(path, args, headers, jsonify=False)
+
+        # Handle the response of the generic, non-json-returning response
+        if response.status_code == 200:
+            if not fileext:
+                guessed_ext = guess_all_extensions(response.headers["content-type"])
+                fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+
+            fullfilename = makefilename(foldername, filename, fileext)
+            with open(fullfilename, 'wb') as f:
+                for chunk in response.iter_content(1024):
+                    f.write(chunk)
+            data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,
+                    'sourcequery': args}
+            status = 'downloaded' + ' (' + str(response.status_code) + ')'
+        else:
+            data = {'sourcepath': path, 'sourcequery': args}
+            status = 'error' + ' (' + str(response.status_code) + ')'
+
+        return data, dict(response.headers), status
+
+    def selectFolder(self):
+        datadir = self.mainWindow.settings.value('lastpath', os.path.expanduser('~'))
+        self.folderEdit.setText(
+            QFileDialog.getExistingDirectory(self, 'Select Download Folder', datadir, QFileDialog.ShowDirsOnly))
+
 class FacebookTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
+        #Base path
+        #URL prefix
+        self.basepathEdit = QComboBox(self)
+        self.basepathEdit.insertItems(0, ['https://graph.facebook.com/v2.2/'])
+        self.basepathEdit.setEditable(True)
+
+
+
         # Query Box
         self.setRelations()
+
+#         #Download folder
+#         folderlayout = QHBoxLayout()
+#
+#         self.folderEdit = QLineEdit()
+#         folderlayout.addWidget(self.folderEdit)
+#
+#         self.folderButton = QPushButton("...", self)
+#         self.folderButton.clicked.connect(self.selectFolder)
+#         folderlayout.addWidget(self.folderButton)
+
+
+
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
         self.pagesEdit.setMinimum(1)
         self.pagesEdit.setMaximum(50000)
 
-        #Base path
-        self.basepathEdit = QLineEdit()
+
+
+
+        #self.basepathEdit = QLineEdit()
 
         # Login-Boxes
         self.tokenEdit = QLineEdit()
@@ -372,10 +455,12 @@ class FacebookTab(ApiTab):
         mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         mainLayout.setLabelAlignment(Qt.AlignLeft)
+        mainLayout.addRow("Base path", self.basepathEdit)
         mainLayout.addRow("Resource", self.relationEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
+        #mainLayout.addRow("Download folder", folderlayout)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
-        mainLayout.addRow("Base path", self.basepathEdit)
+
         mainLayout.addRow("Client Id", applayout)
         mainLayout.addRow("Access Token", loginlayout)
 
@@ -390,7 +475,8 @@ class FacebookTab(ApiTab):
                    'params': self.paramEdit.getParams()}
 
         options['scope'] = self.scopeEdit.text()
-        options['basepath'] = self.basepathEdit.text()
+        options['basepath'] = self.basepathEdit.currentText()
+        #options['folder'] = self.folderEdit.text()
 
         # options for request
         if purpose != 'preset':
@@ -417,7 +503,7 @@ class FacebookTab(ApiTab):
         self.relationEdit.setEditText(options.get('relation', '<page>'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
 
-        self.basepathEdit.setText(options.get('basepath'))
+        self.basepathEdit.setEditText(options.get('basepath'))
         self.scopeEdit.setText(options.get('scope'))
         self.paramEdit.setParams(options.get('params', {}))
 
@@ -1081,65 +1167,6 @@ class FilesTab(ApiTab):
         self.setLayout(mainLayout)
         if loadSettings: self.loadSettings()
 
-    def download(self, path, args=None, headers=None, foldername=None, filename=None, fileext=None):
-        """
-        Download files ...
-        Uses the request-method without converting to json
-        (argument jsonify==True)
-        """
-
-        def makefilename(foldername=None, filename=None, fileext=None,appendtime = False):  # Create file name
-            url_filename, url_fileext = os.path.splitext(os.path.basename(path))
-            if not fileext:
-                fileext = url_fileext
-            if not filename:
-                filename = url_filename
-
-            filename = re.sub(ur'[^a-zA-Z0-9_.-]+', '', filename)
-            fileext = re.sub(ur'[^a-zA-Z0-9_.-]+', '', fileext)
-
-            filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            filenumber = 1
-
-            while True:
-                if appendtime:
-                    fullfilename = os.path.join(foldername,
-                                                filename[:100] + '.' + filetime + '-' + str(filenumber) + str(fileext))
-                else:
-                    fullfilename = os.path.join(foldername,
-                                                filename[:100] + '.' + str(filenumber) + str(fileext))
-
-                if (os.path.isfile(fullfilename)):
-                    filenumber = filenumber + 1
-                else:
-                    break
-            return fullfilename
-
-        response = self.request(path, args, headers, jsonify=False)
-
-        # Handle the response of the generic, non-json-returning response
-        if response.status_code == 200:
-            if not fileext:
-                guessed_ext = guess_all_extensions(response.headers["content-type"])
-                fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
-
-            fullfilename = makefilename(foldername, filename, fileext)
-            with open(fullfilename, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
-            data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,
-                    'sourcequery': args}
-            status = 'downloaded' + ' (' + str(response.status_code) + ')'
-        else:
-            data = {'sourcepath': path, 'sourcequery': args}
-            status = 'error' + ' (' + str(response.status_code) + ')'
-
-        return data, dict(response.headers), status
-
-    def selectFolder(self):
-        datadir = self.mainWindow.settings.value('lastpath', os.path.expanduser('~'))
-        self.folderEdit.setText(
-            QFileDialog.getExistingDirectory(self, 'Select Download Folder', datadir, QFileDialog.ShowDirsOnly))
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
