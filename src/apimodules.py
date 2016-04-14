@@ -603,6 +603,13 @@ class TwitterTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
+        #Base path
+        #URL prefix
+        self.basepathEdit = QComboBox(self)
+        self.basepathEdit.insertItems(0, ['https://api.twitter.com/1.1/'])
+        self.basepathEdit.setEditable(True)
+
+
         # Query and Parameter Box
         self.setRelations()
 
@@ -642,6 +649,7 @@ class TwitterTab(ApiTab):
         mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         mainLayout.setLabelAlignment(Qt.AlignLeft)
+        mainLayout.addRow("Base path", self.basepathEdit)
         mainLayout.addRow("Resource", self.relationEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
@@ -665,7 +673,7 @@ class TwitterTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams(),
+        options = {'basepath' : self.basepathEdit.currentText(),'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams(),
                    'pages': self.pagesEdit.value()}
 
         # options for request
@@ -678,7 +686,7 @@ class TwitterTab(ApiTab):
 
         # options for data handling
         if purpose == 'fetch':
-            options['basepath'] =  "https://api.twitter.com/1.1/"
+            #options['basepath'] =  "https://api.twitter.com/1.1/"
             options['objectid'] = 'id'
 
             if options["query"] == 'search/tweets':
@@ -695,6 +703,7 @@ class TwitterTab(ApiTab):
 
     def setOptions(self, options):
         self.relationEdit.setEditText(options.get('query', 'search/tweets'))
+        self.basepathEdit.setEditText(options.get('basepath', 'https://api.twitter.com/1.1/'))
         self.paramEdit.setParams(options.get('params', {'q': '<Object ID>'}))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
 
@@ -708,6 +717,7 @@ class TwitterTab(ApiTab):
         elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
             self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter_consumer_key']
             self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter_consumer_secret']
+            self.twitter.base_url = self.basepathEdit.currentText() if self.basepathEdit.currentText() != "" else 'https://api.twitter.com/1.1/'
 
             self.session = self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
             return self.session
