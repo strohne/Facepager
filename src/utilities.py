@@ -23,9 +23,27 @@ def getDictValue(data,multikey,dump=True):
         keys=multikey.split('.',1)
 
         if type(data) is dict and keys[0] != '':
-            value=data.get(keys[0],"")
-            if len(keys) > 1:
-                value = getDictValue(value,keys[1],dump)
+            #value=data.get(keys[0],"")
+
+            try:
+                value=data[keys[0]]
+                if len(keys) > 1:
+                    value = getDictValue(value,keys[1],dump)
+            except:
+                if keys[0] == '*' and len(keys) > 1:
+                    listkey = keys[1]
+                elif keys[0] == '*':
+                    listkey = ''
+                else:
+                    listkey = None
+
+                if listkey is not None:
+                    valuelist=[]
+                    for elem in data:
+                        valuelist.append(getDictValue(data[elem],listkey,dump))
+                    value = ";".join(valuelist)
+                else:
+                    value = ''
 
         elif type(data) is list and keys[0] != '':
             try:
