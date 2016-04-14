@@ -40,14 +40,14 @@ class HelpWindow(QMainWindow):
 
 
     def loadPage(self):
-        self.browser.load(QUrl("http://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"))
+        self.browser.load(QUrl("https://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"))
         self.browser.page().setLinkDelegationPolicy(QWebPage.DelegateExternalLinks)
         self.browser.page().linkClicked.connect(self.linkClicked)
 
 
     def linkClicked(self,url):
         url = url.toString()
-        if url.startswith("http://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"):
+        if url.startswith("https://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"):
             self.browser.load(url)
         else:
             webbrowser.open(url)
