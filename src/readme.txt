@@ -6,11 +6,11 @@ Facepager is developed for Python 2.7
 
 Facepager depends on the following packages:
 
-PySide: Download from https://qt-project.org/wiki/Category:LanguageBindings::PySide::Downloads
-SQLAlchemy: pip install SQLAlchemy
-dateutil: pip install python-dateutil
-requests: pip install requests
-rauth: pip install rauth
+PySide: Download from https://qt-project.org/wiki/Category:LanguageBindings::PySide::Downloads (Licence: LGPL)
+SQLAlchemy: pip install SQLAlchemy (Licence: MIT)
+dateutil: pip install python-dateutil (PSF License)
+requests: pip install requests (Apache2 License)
+rauth: pip install rauth (MIT licence)
 
 
 Facepager needs some secret keys to connect to Facebook and Twitter.
