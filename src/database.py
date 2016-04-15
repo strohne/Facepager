@@ -16,9 +16,9 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 
 Base = declarative_base()
-    
+
 class Database(object):
-    
+
     def __init__(self,parent):
         self.parent = parent
         self.connected=False
@@ -29,13 +29,12 @@ class Database(object):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
-        
-        
+
     def connect(self,filename):
-        try:   
+        try:
             if self.connected:
                 self.disconnect()
- 
+
             self.engine = create_engine('sqlite:///%s'%filename, convert_unicode=True)
             self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
             Base.query = self.session.query_property()
@@ -47,21 +46,21 @@ class Database(object):
             self.filename=""
             self.connected=False
             QMessageBox.critical(self.parent,"Facepager",str(e))
-                
+
     def disconnect(self):
         if self.connected:
             self.session.close()
-            
-        self.filename=""    
+
+        self.filename=""
         self.connected=False
-        
-    def createconnect(self,filename):    
+
+    def createconnect(self,filename):
         """ Creates a new file (overwrite existing?!) and connects the DB to that file"""
         self.disconnect()
         if os.path.isfile(filename):
             os.remove(filename)
-        self.connect(filename)     
-                    
+        self.connect(filename)
+
     def commit(self):
         if self.connected:
             try:
@@ -78,13 +77,13 @@ class Database(object):
             except Exception as e:
                 QMessageBox.critical(self.parent,"Facepager",str(e))
         else:
-            QMessageBox.information(self.parent,"Facepager","No database connection")            
-            
+            QMessageBox.information(self.parent,"Facepager","No database connection")
 
-            
+
+
 class Node(Base):
         """
-        This is the central class for all db-entries 
+        This is the central class for all db-entries
         relevant to the data-view. It creates an empty node on __init__
         """
         __tablename__='Nodes'
@@ -95,68 +94,70 @@ class Node(Base):
         querytype=Column(String)
         querytime=Column(String)
         queryparams_raw=Column("queryparams",Text)
-        response_raw=Column("response",Text)                                        
+        response_raw=Column("response",Text)
         id=Column(Integer,primary_key=True,index=True)
         parent_id = Column(Integer, ForeignKey('Nodes.id',ondelete='CASCADE'),index=True)
         children = relationship("Node",backref=backref('parent', remote_side='Node.id'))
-        level=Column(Integer)                             
+        level=Column(Integer)
         childcount=Column(Integer)
+        #sortkey=Column(String)
 
-        def __init__(self,objectid,parent_id=None):            
-            self.objectid=objectid            
+        def __init__(self,objectid,parent_id=None):
+            self.objectid=objectid
             self.parent_id=parent_id
             self.level=0
             self.childcount=0
             self.querystatus=''
-            self.objecttype = 'seed'            
-            
+            self.objecttype = 'seed'
+            self.sortkey = ''
+
         @property
         def response(self):
             """
             The response attribute holds the data (JSON) itself
             """
-            if (self.response_raw == None): 
+            if (self.response_raw == None):
                 return {}
             else:
                 return  json.loads(self.response_raw)
-    
+
         @response.setter
         def response(self, response_raw):
             """
             Tries to dump the data as JSON
             Note: Error Handling should be implemented here
             """
-            self.response_raw = json.dumps(response_raw)               
+            self.response_raw = json.dumps(response_raw)
 
         @property
         def queryparams(self):
             """
             The queryparams atrribute holds the Query-Parameters
-            spcified in the API-Tab
+            specified in the API-Tab
             """
-            if (self.queryparams_raw == None): 
+            if (self.queryparams_raw == None):
                 return {}
             else:
                 return  json.loads(self.queryparams_raw)
-    
+
         @queryparams.setter
         def queryparams(self, queryparams_raw):
-            self.queryparams_raw = json.dumps(queryparams_raw)     
-                        
+            self.queryparams_raw = json.dumps(queryparams_raw)
+
         def getResponseValue(self,key,encoding=None):
             value=getDictValue(self.response,key)
-            if encoding and isinstance(value, unicode):                
+            if encoding and isinstance(value, unicode):
                 return value.encode(encoding)
             else:
                 return value
-            
+
         @property
         def objectid_encoded(self):
             return self.objectid.encode('utf-8')
-                 
 
 
 
-                    
-    
+
+
+
 
