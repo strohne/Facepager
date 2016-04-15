@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
 
-        self.setWindowTitle("Facepager 3.6")
+        self.setWindowTitle("Facepager 3.7")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
         self.setMinimumSize(800,600)
         #self.setMinimumSize(1400,710)
@@ -402,17 +402,6 @@ class Toolbar(QToolBar):
         self.addAction(self.mainWindow.actions.actionHelp)
 
 
-class ExportFileDialog(QFileDialog):
-    """
-    Create a custom Export-File Dialog with options like BOM etc.
-    """
-
-    def __init__(self,*args,**kwargs):
-        super(ExportFileDialog,self).__init__(*args,**kwargs)
-        self.BOMcheck = QCheckBox("Use a BOM",self)
-        layout = self.layout()
-        layout.addWidget(self.BOMcheck)
-        self.setLayout(layout)
 
 
 def startMain():
