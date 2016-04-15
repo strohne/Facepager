@@ -18,12 +18,7 @@ includefiles = ['presets/','docs/']
 buildoptions = {
   'includes':includes,
   "packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil"],
-  'excludes' : ['boto.compat.sys',
-              'boto.compat._sre',
-              'boto.compat._json',
-              'boto.compat._locale',
-              'boto.compat._struct',
-              'boto.compat.array'],
+  'excludes' : ["collections.abc"],
   'include_files':includefiles
 }
 
