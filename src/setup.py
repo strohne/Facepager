@@ -11,13 +11,19 @@ exe = Executable(
         targetDir="build"
         )
 
-includes = ["sqlite3","dateutil","atexit","PySide.QtNetwork"]
+includes = ["sqlite3","dateutil","atexit","PySide.QtNetwork","numpy","pandas"]
 includefiles = ['presets/','docs/']
 
 
 buildoptions = {
   'includes':includes,
   "packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil"],
+  'excludes' : ['boto.compat.sys',
+              'boto.compat._sre',
+              'boto.compat._json',
+              'boto.compat._locale',
+              'boto.compat._struct',
+              'boto.compat.array'],
   'include_files':includefiles
 }
 

@@ -3,6 +3,7 @@ from PySide.QtGui import *
 import csv
 from progressbar import ProgressBar
 import codecs
+from pandas import merge,read_csv
 
 from database import *
 
@@ -20,8 +21,11 @@ class ExportFileDialog(QFileDialog):
         self.setFilter("CSV Files (*.csv)")
         self.setDefaultSuffix("csv")
 
-        self.BOMcheck = QCheckBox("Use a BOM",self)
-        self.BOMcheck.setCheckState(Qt.CheckState.Checked)
+        self.optionBOM = QCheckBox("Use a BOM",self)
+        self.optionBOM.setCheckState(Qt.CheckState.Checked)
+
+        self.optionWide = QCheckBox("Convert to wide format (experimental feature)",self)
+        self.optionWide.setCheckState(Qt.CheckState.Unchecked)
 
         # if none or all are selected, export all
         # if one or more are selected, export selective
@@ -35,9 +39,13 @@ class ExportFileDialog(QFileDialog):
         layout = self.layout()
         row = layout.rowCount()
         layout.addWidget(QLabel('Options'),row,0)
-        layout.addWidget(self.BOMcheck,row,1,1,2)
-        layout.addWidget(QLabel('Export mode'),row+1,0)
-        layout.addWidget(self.optionAll,row+1,1,1,2)
+        layout.addWidget(self.optionBOM,row,1,1,2)
+
+        layout.addWidget(QLabel('Post processing'),row+1,0)
+        layout.addWidget(self.optionWide,row+1,1,1,2)
+
+        layout.addWidget(QLabel('Export mode'),row+2,0)
+        layout.addWidget(self.optionAll,row+2,1,1,2)
         self.setLayout(layout)
 
         if self.exec_():
@@ -46,7 +54,7 @@ class ExportFileDialog(QFileDialog):
                 os.remove(self.selectedFiles()[0])
             output = open(self.selectedFiles()[0], 'wb')
             try:
-                if self.BOMcheck.isChecked():
+                if self.optionBOM.isChecked() and not self.optionWide.isChecked():
                     output.write(codecs.BOM_UTF8)
 
                 if self.optionAll.currentIndex() == 0:
@@ -55,6 +63,10 @@ class ExportFileDialog(QFileDialog):
                     self.exportSelectedNodes(output)
             finally:
                 output.close()
+
+            if self.optionWide.isChecked():
+                self.convertToWideFormat(self.selectedFiles()[0])
+
 
     def exportSelectedNodes(self,output):
         progress = ProgressBar("Exporting data...", self.mainWindow)
@@ -126,3 +138,61 @@ class ExportFileDialog(QFileDialog):
 
         finally:
             progress.close()
+
+    def convertToWideFormat(self,filename):
+        #from pandas import merge,read_csv
+
+        #Separate levels
+        def flattenTable(fulltable,levelcol,idcol,parentidcol,countchildren,removeempty):
+            fulltable[[levelcol]] = fulltable[[levelcol]].astype(int)
+
+            levels = dict(list(fulltable.groupby(levelcol)))
+            minlevel = fulltable.level.min()
+            for level, data in sorted(levels.iteritems()):
+                #First level is the starting point for the following merges
+                if level == minlevel:
+                    #data = data[[idcol,'object_id','object_type']]
+                    data = data.add_prefix('level_{}-'.format(level))
+                    flattable = data
+                else:
+                    #Aggregate object types and join them
+                    for col_countchildren in countchildren:
+                        children = data[parentidcol].groupby([data[parentidcol],data[col_countchildren]]).count()
+                        children = children.unstack(col_countchildren)
+                        children['total'] = children.sum(axis=1)
+                        children = children.add_prefix('level_{}-children-{}-'.format(level-1,col_countchildren))
+
+                        leftkey = 'level_{}-id'.format(level-1)
+                        flattable = merge(flattable,children,how='left',left_on=leftkey,right_index=True)
+                        flattable[children.columns.values.tolist()] = flattable[children.columns.values.tolist()].fillna(0).astype(int)
+
+                    #Join data
+                    data['childnumber'] = data.groupby(parentidcol).cumcount()
+                    leftkey = 'level_{}-{}'.format(level-1,idcol)
+                    rightkey = 'level_{}-{}'.format(level,parentidcol)
+                    data = data.drop([levelcol],axis=1)
+                    data = data.add_prefix('level_{}-'.format(level))
+                    flattable = merge(flattable,data,how="outer",left_on=leftkey,right_on=rightkey)
+
+            if removeempty:
+                flattable = flattable.dropna(axis=1,how='all')
+            return flattable
+
+        try:
+            #open
+            data = read_csv(filename, sep=";",encoding='utf-8',dtype=str)
+
+            #convert
+            newdata = flattenTable(data,'level','id','parent_id',['object_type','query_status','query_type'],False)
+
+
+            #save
+            outfile = open(filename, 'wb')
+            try:
+                if self.optionBOM.isChecked():
+                    outfile.write(codecs.BOM_UTF8) #UTF8 BOM
+                newdata.to_csv(outfile,sep=';',index=False,encoding="utf-8")
+            finally:
+                outfile.close()
+        except Exception as e:
+            self.mainWindow.logmessage(e)
