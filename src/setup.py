@@ -8,7 +8,10 @@ exe = Executable(
         base="Win32GUI",
         icon="../icons/icon_facepager.ico",
         copyDependentFiles = True,
-        targetDir="build"
+        targetDir="build",
+        compress=True,
+        appendScriptToExe=True,
+        appendScriptToLibrary=False
         )
 
 includes = ["sqlite3","dateutil","atexit","PySide.QtNetwork"]
@@ -18,6 +21,7 @@ includefiles = ['presets/','docs/']
 buildoptions = {
   'includes':includes,
   "packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil"],
+  'excludes' : ["collections.abc"],
   'include_files':includefiles
 }
 
