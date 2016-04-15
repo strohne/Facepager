@@ -100,16 +100,27 @@ File "_sqlite3.pyd"
 File "_ssl.pyd"
 File "ssleay32.dll"
 File "libeay32.dll"
+File "libgcc_s_dw2-1.dll"
+File "matplotlib*"
+File "numpy*"
+File "pandas*"
 
 SetOutPath "$INSTDIR\docs"
 File "docs\"
-
 CreateDirectory "$INSTDIR\docs"
 
 SetOutPath "$INSTDIR\presets"
 File "presets\"
-
 CreateDirectory "$INSTDIR\presets"
+
+SetOutPath "$INSTDIR\imageformats"
+File "imageformats\"
+CreateDirectory "$INSTDIR\imageformats"       
+
+SetOutPath "$INSTDIR\mpl-data"
+File "mpl-data\"
+CreateDirectory "$INSTDIR\mpl-data"
+
 ;CopyFiles "${NSISDIR}\Plugins\*.*" "C:\TEMP\test"
 
 ;create desktop shortcut
