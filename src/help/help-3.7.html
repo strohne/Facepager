@@ -188,7 +188,7 @@ table td:first-of-type p {
         <a name="_Toc405676327">2. Layout and Basic Concepts of Facepager</a>
     </h1>
 </div>
-<img src="facepager_layout.png" alt="facepager_layout.png, 355kB" title="facepager_layout">
+<img src="facepager_layout.png" alt="facepager_layout.png, 355kB" title="facepager_layout" />
 <ul>
     <li>
         <strong>Nodes View:</strong>
@@ -246,7 +246,7 @@ table td:first-of-type p {
     using these URLs. You can see the URLs in the status log. In the third step the downloaded data is sliced up and put into the database as new nodes – ready
     for export or as new starting points for fetching data.
 </p>
-<img src="processmodel.png" alt="processmodel.png, 37kB" title="processmodel">
+<img src="processmodel.png" alt="processmodel.png, 37kB" title="processmodel" />
 
 <div>
     <h1>
@@ -328,9 +328,7 @@ table td:first-of-type p {
     On Facebook every object has at least one ID. This identifier is shown in the column "Object ID" in the main window and is the starting point for all
     queries to the Facebook-API. You need to add some IDs as top nodes to get any data. Some examples for Object IDs are:
 </p>
-<p>
-    .
-</p>
+
 <table border="1" cellpadding="0" cellspacing="0">
     <tbody>
         <tr>
@@ -672,7 +670,7 @@ In addition there is a “Twitter Streaming” tab, which allows you to fetch da
     </tbody>
 </table>
 	<p>
-	Some interesting APIs may be found on <a href="http://www.programmableweb.com">www.programmableweb.com</a>.
+	Some interesting APIs may be found on <a href="http://www.programmableweb.com">www.programmableweb.com</a> or <a href="https://www.publicapis.com/">www.publicapis.com</a>.
 	</p>
 <h2>
     <a name="_Toc405676333">Files</a>
@@ -681,7 +679,7 @@ In addition there is a “Twitter Streaming” tab, which allows you to fetch da
     With the Files module you can download files and store them on your hard drive. This could be webpages, pictures from Facebook or any other web resource.
     For example, look at the data fetched for the Facebook page of Bob Marley. The data was fetched with the Facebook-module:
 </p>
-<img src="facepager_coversource.png" alt="facepager_coversource.png, 9,9kB" title="facepager_coversource" height="172" width="469">
+<img src="facepager_coversource.png" alt="facepager_coversource.png, 9,9kB" title="facepager_coversource" height="172" width="469" />
 
 <p>
     You will find the URL to the cover photo in the key “cover.source”. One option would be to copy the URL and paste it into the URL path-field of the Files
@@ -796,14 +794,14 @@ In addition there is a “Twitter Streaming” tab, which allows you to fetch da
     Imagine you just added a new node "BobMarley" and you want to fetch the last 10 posts before the 1st of July in 2014 from the corresponding Facebook page.
     There are different equivalent ways to achieve this. One option would be to just type the URL with all needed parameters into the Resource field:
 </p>
-<img src="facepager_placeholders1.png" alt="facepager_placeholders1.png, 5,5kB" title="facepager_placeholders1" height="118" width="417">
+<img src="facepager_placeholders1.png" alt="facepager_placeholders1.png, 5,5kB" title="facepager_placeholders1" height="118" width="417" />
 
 <p>
     While this works, it will always give you posts from the BobMarley page, even if you add other nodes to the Nodes View. The very same URL would be
     assembled with the following options, because the placeholder “&lt;Object ID&gt;” is replaced with the Object ID of the node under consideration:
 </p>
 
-<img src="facepager_placeholders2.png" alt="facepager_placeholders2.png, 3,5kB" title="facepager_placeholders2" height="108" width="403">
+<img src="facepager_placeholders2.png" alt="facepager_placeholders2.png, 3,5kB" title="facepager_placeholders2" height="108" width="403" />
 
 <table cellpadding="0" cellspacing="0">
     <tbody>
@@ -824,7 +822,7 @@ In addition there is a “Twitter Streaming” tab, which allows you to fetch da
     “&lt;user&gt;”. So if you select “&lt;page&gt;/feed” as resource, you have to choose a value, which replaces the placeholder “&lt;page&gt;”. Usually this
     will be “&lt;Object ID&gt;”:
 </p>
-<img src="facepager_placeholders3.png" alt="facepager_placeholders3.png, 4,2kB" title="facepager_placeholders3" height="126" width="402">
+<img src="facepager_placeholders3.png" alt="facepager_placeholders3.png, 4,2kB" title="facepager_placeholders3" height="126" width="402" />
 
 <table cellpadding="0" cellspacing="0">
     <tbody>
@@ -856,7 +854,7 @@ In addition there is a “Twitter Streaming” tab, which allows you to fetch da
     be concatenated by semicolons. For example “comments.data.0.message” will only address the first comment, while “comments.data.*.message” will give you the
     messages of all comments, separated by semicolons:
 </p>
-<img src="facepager_keys1.png" alt="facepager_keys1.png, 52kB" title="facepager_keys1">
+<img src="facepager_keys1.png" alt="facepager_keys1.png, 52kB" title="facepager_keys1" />
 
 <p>
     Remember, that only columns defined in the Column Setup are exported by Facepager. So keys relate to columns in the resulting Excel sheet, while values are
@@ -943,7 +941,7 @@ In addition there is a “Twitter Streaming” tab, which allows you to fetch da
     </h1>
 </div>
 <p>
-    Keyling, Till / Jünger, Jakob (2014). Facepager 3. Tool for Downloading API Data. Online at https://github.com/strohne/Facepager.
+    Keyling, Till / Jünger, Jakob (2016). Facepager 3.7. Tool for Downloading API Data. Online at https://github.com/strohne/Facepager.
 </p>
 <p>
 Facepager uses icons from <a href="http://www.pyconic.com/pyconic-icons-free" target="_blank">Pyconic</a>, licensed under    <a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC BY 3.0</a>. Thanks for sharing.
@@ -957,7 +955,7 @@ Facepager uses icons from <a href="http://www.pyconic.com/pyconic-icons-free" ta
 Facepager is licensed under the MIT license:
 </p>
 <p>
-Copyright (c) 2016 Till Keyling and Jakob Jünger
+<strong>Copyright (c) 2016 Till Keyling and Jakob Jünger</strong>
 </p>
 <p>
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
