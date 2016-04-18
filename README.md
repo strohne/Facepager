@@ -3,12 +3,9 @@
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
 All data is stored in a SQLite database and may be exported to csv. 
 
-### News
-See the [new features in Version 3.5](https://github.com/strohne/Facepager/releases/tag/v3.5) on the release page. 
-
 ### Installer
 
-Installation packages for each versions are available [here](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/software.html). Database files may be incompatible between versions.
+Installation packages for each versions are available on the [releases page](https://github.com/strohne/Facepager/releases). Database files may be incompatible between versions.
                                                       
 
 ###Getting started
@@ -25,7 +22,7 @@ Installation packages for each versions are available [here](http://www.ls1.ifkw
 
 ###Citation
 
-[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2013). Facepager. An application for generic data retrieval through APIs. Source code available at https://github.com/strohne/Facepager/.
+[Keyling, Till](http://www.ls1.ifkw.uni-muenchen.de/personen/wiss_ma/keyling_till/index.html) / [Jünger, Jakob](http://www.phil.uni-greifswald.de/sozial/ipk/mitarbeitende/lehrstuhl-fuer-kommunikationswissenschaft/jakob-juenger.html) (2016). Facepager. An application for generic data retrieval through APIs. Source code and releases available at https://github.com/strohne/Facepager/.
 
 ###Licence
 
