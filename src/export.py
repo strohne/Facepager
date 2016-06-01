@@ -82,7 +82,7 @@ class ExportFileDialog(QFileDialog):
 
 
             #headers
-            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [unicode(val).encode("utf-8").replace('\n', '') for val in self.mainWindow.tree.treemodel.getRowHeader()]
             writer.writerow(row)
 
             #rows
@@ -90,7 +90,7 @@ class ExportFileDialog(QFileDialog):
                 if progress.wasCanceled:
                     break
 
-                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [unicode(val).encode("utf-8").replace('\n', '') for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 writer.writerow(row)
 
                 progress.step()
@@ -127,7 +127,7 @@ class ExportFileDialog(QFileDialog):
                     row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
                            node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
-                        row.append(node.getResponseValue(key, "utf-8"))
+                        row.append(node.getResponseValue(key, "utf-8").replace('\n', ''))
                     writer.writerow(row)
                     # step the Bar
                     progress.step()
