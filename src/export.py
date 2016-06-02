@@ -42,7 +42,7 @@ class ExportFileDialog(QFileDialog):
         layout = self.layout()
         row = layout.rowCount()
         layout.addWidget(QLabel('Options'),row,0)
-        
+
         options = QHBoxLayout()
         options.addWidget(self.optionBOM)
         options.addWidget(self.optionLinebreaks)
@@ -91,7 +91,10 @@ class ExportFileDialog(QFileDialog):
 
 
             #headers
-            row = [unicode(val).encode("utf-8").replace('\n', '') for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            if self.optionLinebreaks.isChecked():
+                row = [val.replace('\n', ' ') for val in row]
+
             writer.writerow(row)
 
             #rows
@@ -99,7 +102,10 @@ class ExportFileDialog(QFileDialog):
                 if progress.wasCanceled:
                     break
 
-                row = [unicode(val).encode("utf-8").replace('\n', '') for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                if self.optionLinebreaks.isChecked():
+                    row = [val.replace('\n', ' ') for val in row]
+
                 writer.writerow(row)
 
                 progress.step()
@@ -122,7 +128,12 @@ class ExportFileDialog(QFileDialog):
                    "query_type"]
             for key in self.mainWindow.tree.treemodel.customcolumns:
                 row.append(key)
+            if self.optionLinebreaks.isChecked():
+                row = [val.replace('\n', ' ') for val in row]
+
+
             writer.writerow(row)
+
             #rows
             page = 0
 
@@ -136,7 +147,11 @@ class ExportFileDialog(QFileDialog):
                     row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
                            node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
-                        row.append(node.getResponseValue(key, "utf-8").replace('\n', ''))
+                        row.append(node.getResponseValue(key, "utf-8"))
+
+                    if self.optionLinebreaks.isChecked():
+                        row = [val.replace('\n', ' ') for val in row]
+
                     writer.writerow(row)
                     # step the Bar
                     progress.step()
