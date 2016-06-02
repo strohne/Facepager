@@ -24,6 +24,9 @@ class ExportFileDialog(QFileDialog):
         self.optionBOM = QCheckBox("Use a BOM",self)
         self.optionBOM.setCheckState(Qt.CheckState.Checked)
 
+        self.optionLinebreaks = QCheckBox("Remove line breaks",self)
+        self.optionLinebreaks.setCheckState(Qt.CheckState.Checked)
+
         self.optionWide = QCheckBox("Convert to wide format (experimental feature)",self)
         self.optionWide.setCheckState(Qt.CheckState.Unchecked)
 
@@ -39,7 +42,13 @@ class ExportFileDialog(QFileDialog):
         layout = self.layout()
         row = layout.rowCount()
         layout.addWidget(QLabel('Options'),row,0)
-        layout.addWidget(self.optionBOM,row,1,1,2)
+        
+        options = QHBoxLayout()
+        options.addWidget(self.optionBOM)
+        options.addWidget(self.optionLinebreaks)
+        options.addStretch(1)
+
+        layout.addLayout(options,row,1,1,2)
 
         layout.addWidget(QLabel('Post processing'),row+1,0)
         layout.addWidget(self.optionWide,row+1,1,1,2)
