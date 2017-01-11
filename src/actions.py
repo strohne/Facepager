@@ -308,6 +308,10 @@ class Actions(object):
         progress.setMaximum(len(indexes))
         self.mainWindow.tree.treemodel.nodecounter = 0
 
+        #Init status messages
+        statuscount = {}
+        errorcount = 0
+
         if apimodule == False:
             apimodule = self.mainWindow.RequestTabs.currentWidget()
         if options == False:
@@ -319,9 +323,7 @@ class Actions(object):
             #Spawn Threadpool
             threadpool = ApiThreadPool(apimodule,self.mainWindow.logmessage)
 
-            #Init status messages
-            statuscount = {}
-            errorcount = 0
+
 
             #Fill Input Queue
             number = 0
@@ -394,6 +396,9 @@ class Actions(object):
                     QApplication.processEvents()
 
         finally:
+            request_summary = str(statuscount)
+            self.mainWindow.logmessage(u"Fetching completed, {} new node(s) created. Summary of requests: {}".format(self.mainWindow.tree.treemodel.nodecounter,request_summary))
+
             self.mainWindow.tree.treemodel.commitNewNodes()
             progress.close()
 
