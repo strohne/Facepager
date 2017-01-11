@@ -263,7 +263,7 @@ class ApiTab(QWidget):
                 except (HTTPError, ConnectionError), e:
                     maxretries -= 1
                     if maxretries > 0:
-                        sleep(0.1)
+                        time.sleep(0.1)
                         self.mainWindow.logmessage(u"Automatic retry: Request Error: {0}".format(e.message))
                     else:
                         raise e
