@@ -5,9 +5,9 @@ import csv
 
 
 class DataTree(QTreeView):
-    
+
     nodeSelected = Signal(list, list)
-    
+
     def __init__(self, parent=None):
         super(DataTree, self).__init__(parent)
 
@@ -22,7 +22,7 @@ class DataTree(QTreeView):
         self.setModel(self.treemodel)
 
         #self.proxymodel =  QSortFilterProxyModel(self)
-        #self.proxymodel.setSourceModel(self.treemodel)        
+        #self.proxymodel.setSourceModel(self.treemodel)
         #self.setModel(self.proxymodel)
 
     #    def keyPressEvent(self, e):
@@ -33,26 +33,26 @@ class DataTree(QTreeView):
 
     @Slot()
     def currentChanged(self, current, previous):
-        super(DataTree, self).currentChanged(current, previous)        
+        super(DataTree, self).currentChanged(current, previous)
         self.nodeSelected.emit(current,self.selectionModel().selectedRows())
 
     @Slot()
     def selectionChanged(self, selected, deselected):
-        super(DataTree, self).selectionChanged(selected, deselected)        
+        super(DataTree, self).selectionChanged(selected, deselected)
         current = self.currentIndex()
         self.nodeSelected.emit(current,self.selectionModel().selectedRows())
 
     def noneOrAllSelected(self):
         indexes = self.selectionModel().selectedRows()
-        
+
         if len(indexes) == 0:
             return True
         else:
             model = self.model()
-            indexes = [idx for idx in indexes if idx.parent() == self.rootIndex()] 
+            indexes = [idx for idx in indexes if idx.parent() == self.rootIndex()]
             return len(indexes) == model.rootItem.childCount()
-        
-        
+
+
     def selectedIndexesAndChildren(self, persistent=False, filter={}):
 
         #emptyonly=filter.get('childcount',None)
@@ -157,6 +157,9 @@ class TreeItem(object):
 
             if persistent:
                 self._childcountall -= 1
+                dbnode = self.dbnode()
+                if dbnode:
+                    dbnode.childcount -= 1
 
     def childCount(self):
         return len(self.childItems)
@@ -177,6 +180,9 @@ class TreeItem(object):
 
     def parentid(self):
         return self.parentItem.id if self.parentItem else None
+
+    def dbnode(self):
+        return Node.query.get(self.id)
 
     def level(self):
         if self.data is None:
@@ -215,15 +221,15 @@ class TreeItem(object):
             new.querystatus = options.get("querystatus", "")
             new.querytime = str(options.get("querytime", ""))
             new.querytype = options.get('querytype', '')
-            #new.queryparams=options                                        
+            #new.queryparams=options
             newnodes.append(new)
 
 
-        #empty records                    
+        #empty records
         if len(nodes) == 0:
             appendNode('empty', '', {})
 
-        #extracted nodes                                
+        #extracted nodes
         for n in nodes:
             appendNode('data', getDictValue(n, options.get('objectid', "")), n)
 
@@ -303,7 +309,7 @@ class TreeModel(QAbstractItemModel):
 
         self.reset()
         self.endResetModel()
-        #self.reset()       
+        #self.reset()
         #self.endRemoveRows()
 
 
@@ -333,7 +339,7 @@ class TreeModel(QAbstractItemModel):
                 newnodes.append(new)
 
                 #self.database.session.flush()
-                #itemdata=self.getItemData(new)     
+                #itemdata=self.getItemData(new)
                 #self.rootItem.appendChild(TreeItem(self.rootItem,new.id,itemdata),True)
 
             self.database.session.add_all(newnodes)
