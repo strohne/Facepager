@@ -268,9 +268,18 @@ class MainWindow(QMainWindow):
         self.speedEdit = QSpinBox(self)
         self.speedEdit.setMinimum(1)
         self.speedEdit.setMaximum(60000)
-        self.speedEdit.setValue(60000)
-        self.speedEdit.setToolTip("Limit the total amount of requests per limit (calm down to avoid API blocking)")
+        self.speedEdit.setValue(200)
+        self.speedEdit.setToolTip("Limit the total amount of requests per minute (calm down to avoid API blocking)")
         fetchsettings.addRow("Requests per minute", self.speedEdit)
+
+
+        #Error Box
+        self.errorEdit = QSpinBox(self)
+        self.errorEdit.setMinimum(1)
+        self.errorEdit.setMaximum(10)
+        self.errorEdit.setValue(3)
+        self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
+        fetchsettings.addRow("Maximum errors", self.errorEdit)
 
 
         #Fetch data

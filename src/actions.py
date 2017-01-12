@@ -297,6 +297,7 @@ class Actions(object):
         globaloptions = {}
         globaloptions['threads'] = self.mainWindow.threadsEdit.value()
         globaloptions['speed'] = self.mainWindow.speedEdit.value()
+        globaloptions['errors'] = self.mainWindow.errorEdit.value()
         objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
 
         #Get selected nodes
@@ -380,8 +381,8 @@ class Actions(object):
                         else:
                             errorcount += 1
 
-                        if errorcount > 2:
-                            self.mainWindow.logmessage(u"Automatically canceled because of three consecutive errors.")
+                        if errorcount > (globaloptions['errors']-1):
+                            self.mainWindow.logmessage(u"Automatically canceled because of consecutive errors.")
                             progress.cancel()
 
 
@@ -396,8 +397,10 @@ class Actions(object):
                     QApplication.processEvents()
 
         finally:
-            request_summary = str(statuscount)
-            self.mainWindow.logmessage(u"Fetching completed, {} new node(s) created. Summary of requests: {}".format(self.mainWindow.tree.treemodel.nodecounter,request_summary))
+            request_summary = [str(val)+" x "+key for key,val in statuscount.iteritems()]
+            request_summary = ", ".join(request_summary)
+
+            self.mainWindow.logmessage(u"Fetching completed, {} new node(s) created. Summary of responses: {}.".format(self.mainWindow.tree.treemodel.nodecounter,request_summary))
 
             self.mainWindow.tree.treemodel.commitNewNodes()
             progress.close()
