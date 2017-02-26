@@ -150,7 +150,7 @@ class ExportFileDialog(QFileDialog):
                         row.append(node.getResponseValue(key, "utf-8"))
 
                     if self.optionLinebreaks.isChecked():
-                        row = [val.replace('\n', ' ') for val in row]
+                        row = [str(val).replace('\n', ' ') for val in row]
 
                     writer.writerow(row)
                     # step the Bar
@@ -164,59 +164,64 @@ class ExportFileDialog(QFileDialog):
             progress.close()
 
     def convertToWideFormat(self,filename):
-        #from pandas import merge,read_csv
-
-        #Separate levels
-        def flattenTable(fulltable,levelcol,idcol,parentidcol,countchildren,removeempty):
-            fulltable[[levelcol]] = fulltable[[levelcol]].astype(int)
-
-            levels = dict(list(fulltable.groupby(levelcol)))
-            minlevel = fulltable.level.min()
-            for level, data in sorted(levels.iteritems()):
-                #First level is the starting point for the following merges
-                if level == minlevel:
-                    #data = data[[idcol,'object_id','object_type']]
-                    data = data.add_prefix('level_{}-'.format(level))
-                    flattable = data
-                else:
-                    #Aggregate object types and join them
-                    for col_countchildren in countchildren:
-                        children = data[parentidcol].groupby([data[parentidcol],data[col_countchildren]]).count()
-                        children = children.unstack(col_countchildren)
-                        children['total'] = children.sum(axis=1)
-                        children = children.add_prefix('level_{}-children-{}-'.format(level-1,col_countchildren))
-
-                        leftkey = 'level_{}-id'.format(level-1)
-                        flattable = merge(flattable,children,how='left',left_on=leftkey,right_index=True)
-                        flattable[children.columns.values.tolist()] = flattable[children.columns.values.tolist()].fillna(0).astype(int)
-
-                    #Join data
-                    data['childnumber'] = data.groupby(parentidcol).cumcount()
-                    leftkey = 'level_{}-{}'.format(level-1,idcol)
-                    rightkey = 'level_{}-{}'.format(level,parentidcol)
-                    data = data.drop([levelcol],axis=1)
-                    data = data.add_prefix('level_{}-'.format(level))
-                    flattable = merge(flattable,data,how="outer",left_on=leftkey,right_on=rightkey)
-
-            if removeempty:
-                flattable = flattable.dropna(axis=1,how='all')
-            return flattable
-
+        progress = ProgressBar("Converting data...", self.mainWindow)
         try:
-            #open
-            data = read_csv(filename, sep=";",encoding='utf-8',dtype=str)
 
-            #convert
-            newdata = flattenTable(data,'level','id','parent_id',['object_type','query_status','query_type'],False)
+            #from pandas import merge,read_csv
 
+            #Separate levels
+            def flattenTable(fulltable,levelcol,idcol,parentidcol,countchildren,removeempty):
+                fulltable[[levelcol]] = fulltable[[levelcol]].astype(int)
 
-            #save
-            outfile = open(filename, 'wb')
+                levels = dict(list(fulltable.groupby(levelcol)))
+                minlevel = fulltable.level.min()
+                for level, data in sorted(levels.iteritems()):
+                    #First level is the starting point for the following merges
+                    if level == minlevel:
+                        #data = data[[idcol,'object_id','object_type']]
+                        data = data.add_prefix('level_{}-'.format(level))
+                        flattable = data
+                    else:
+                        #Aggregate object types and join them
+                        for col_countchildren in countchildren:
+                            children = data[parentidcol].groupby([data[parentidcol],data[col_countchildren]]).count()
+                            children = children.unstack(col_countchildren)
+                            children['total'] = children.sum(axis=1)
+                            children = children.add_prefix('level_{}-children-{}-'.format(level-1,col_countchildren))
+
+                            leftkey = 'level_{}-id'.format(level-1)
+                            flattable = merge(flattable,children,how='left',left_on=leftkey,right_index=True)
+                            flattable[children.columns.values.tolist()] = flattable[children.columns.values.tolist()].fillna(0).astype(int)
+
+                        #Join data
+                        data['childnumber'] = data.groupby(parentidcol).cumcount()
+                        leftkey = 'level_{}-{}'.format(level-1,idcol)
+                        rightkey = 'level_{}-{}'.format(level,parentidcol)
+                        data = data.drop([levelcol],axis=1)
+                        data = data.add_prefix('level_{}-'.format(level))
+                        flattable = merge(flattable,data,how="outer",left_on=leftkey,right_on=rightkey)
+
+                if removeempty:
+                    flattable = flattable.dropna(axis=1,how='all')
+                return flattable
+
             try:
-                if self.optionBOM.isChecked():
-                    outfile.write(codecs.BOM_UTF8) #UTF8 BOM
-                newdata.to_csv(outfile,sep=';',index=False,encoding="utf-8")
-            finally:
-                outfile.close()
-        except Exception as e:
-            self.mainWindow.logmessage(e)
+                #open
+                data = read_csv(filename, sep=";",encoding='utf-8',dtype=str)
+
+                #convert
+                newdata = flattenTable(data,'level','id','parent_id',['object_type','query_status','query_type'],False)
+
+
+                #save
+                outfile = open(filename, 'wb')
+                try:
+                    if self.optionBOM.isChecked():
+                        outfile.write(codecs.BOM_UTF8) #UTF8 BOM
+                    newdata.to_csv(outfile,sep=';',index=False,encoding="utf-8")
+                finally:
+                    outfile.close()
+            except Exception as e:
+                self.mainWindow.logmessage(e)
+        finally:
+            progress.close()
