@@ -148,6 +148,10 @@ class ApiTab(QWidget):
         self.mainWindow.settings.endGroup()
         self.setOptions(options)
 
+    @Slot(str)
+    def logMessage(self,message):
+        self.mainWindow.logmessage(message)
+
     def loadDocs(self):
         '''
         Loads and prepares documentation
@@ -264,7 +268,7 @@ class ApiTab(QWidget):
                     maxretries -= 1
                     if maxretries > 0:
                         time.sleep(0.1)
-                        self.mainWindow.logmessage(u"Automatic retry: Request Error: {0}".format(e.message))
+                        self.logMessage(u"Automatic retry: Request Error: {0}".format(e.message))
                     else:
                         raise e
                 else:
@@ -308,7 +312,7 @@ class ApiTab(QWidget):
 
         # Use the custom- WebPage class
         webpage = QWebPageCustom(self)
-        webpage.logmessage.connect(self.mainWindow.logmessage)
+        webpage.logmessage.connect(self.logMessage)
         self.login_webview.setPage(webpage);
 
         #Connect to the getToken-method
@@ -326,7 +330,7 @@ class ApiTab(QWidget):
     @Slot()
     def loadFinished(self, success):
         if (not success):
-            self.mainWindow.logmessage('Error loading web page')
+            self.logMessage('Error loading web page')
 
 
     def download(self, path, args=None, headers=None, foldername=None, filename=None, fileext=None):
@@ -547,7 +551,7 @@ class FacebookTab(ApiTab):
                 urlpath = options['url']
                 urlparams = options['params']
 
-            self.mainWindow.logmessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
+            self.logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
                                                                                urlpath + "?" + urllib.urlencode(
                                                                                    urlparams)))
 
@@ -736,7 +740,7 @@ class TwitterTab(ApiTab):
                 urlpath = options['url']
                 urlparams = options["params"]
 
-            self.mainWindow.logmessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
+            self.logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
                                                                                urlpath + "?" + urllib.urlencode(
                                                                                    urlparams)))
 
@@ -944,7 +948,7 @@ class TwitterStreamingTab(ApiTab):
                     else:
                         if response.status_code != 200:
                             if self.retry_counter<=5:
-                                self.mainWindow.logmessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+response.content)
+                                self.logMessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+response.content)
                                 time.sleep(3)
                                 if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
                                     self.retry_counter = 0
@@ -998,7 +1002,7 @@ class TwitterStreamingTab(ApiTab):
             urlpath = options['url']
             urlparams = options["params"]
 
-        self.mainWindow.logmessage(
+        self.logMessage(
             u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
         # data
         headers = None
@@ -1121,7 +1125,7 @@ class GenericTab(ApiTab):
     def fetchData(self, nodedata, options=None, callback=None):
         self.connected = True
         urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
-        self.mainWindow.logmessage(
+        self.logMessage(
             u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
         #data
@@ -1212,7 +1216,7 @@ class FilesTab(ApiTab):
         filename = self.parsePlaceholders(filename,nodedata)
         fileext = self.parsePlaceholders(fileext,nodedata)
 
-        self.mainWindow.logmessage(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
+        self.logMessage(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
                                                                               urlpath + "?" + urllib.urlencode(
                                                                                   urlparams)))
 
