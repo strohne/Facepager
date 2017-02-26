@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
 
             else:
                 self.loglist.append(str(datetime.now())+" "+message)
-
+            time.sleep(0)
 
 class Toolbar(QToolBar):
     """
