@@ -551,9 +551,10 @@ class FacebookTab(ApiTab):
                 urlpath = options['url']
                 urlparams = options['params']
 
-            self.logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                               urlpath + "?" + urllib.urlencode(
-                                                                                   urlparams)))
+            if options['logrequests']:
+                self.logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                                   urlpath + "?" + urllib.urlencode(
+                                                                                       urlparams)))
 
             # data
             options['querytime'] = str(datetime.now())

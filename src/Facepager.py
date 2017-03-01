@@ -281,6 +281,12 @@ class MainWindow(QMainWindow):
         self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
         fetchsettings.addRow("Maximum errors", self.errorEdit)
 
+        #Log Setttings
+        self.logCheckbox = QCheckBox(self)
+        self.logCheckbox.setCheckState(Qt.Checked)
+        self.logCheckbox.setToolTip("Check to see every request in status window; uncheck to hide request messages.")
+        fetchsettings.addRow("Log all requests", self.logCheckbox)
+
 
         #Fetch data
 
