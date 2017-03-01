@@ -298,6 +298,7 @@ class Actions(object):
         globaloptions['threads'] = self.mainWindow.threadsEdit.value()
         globaloptions['speed'] = self.mainWindow.speedEdit.value()
         globaloptions['errors'] = self.mainWindow.errorEdit.value()
+        globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
 
         #Get selected nodes
@@ -306,6 +307,7 @@ class Actions(object):
             indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
                                                                               'objecttype':objecttypes})
         #Update progress window
+        self.mainWindow.logmessage(u"Start fetching data for {} node(s).".format(len(indexes)))
         progress.setMaximum(len(indexes))
         self.mainWindow.tree.treemodel.nodecounter = 0
 
@@ -382,7 +384,7 @@ class Actions(object):
                             errorcount += 1
 
                         if errorcount > (globaloptions['errors']-1):
-                            self.mainWindow.logmessage(u"Automatically canceled because of consecutive errors.")
+                            self.mainWindow.logmessage(u"Automatically canceled because of {} consecutive errors.".format(errorcount))
                             progress.cancel()
 
 
