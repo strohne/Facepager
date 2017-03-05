@@ -4,14 +4,26 @@ import time
 
 
 class ApiThreadPool():
-    def __init__(self, module,logcallback):
+    def __init__(self, module):
         self.input = Queue.Queue()
         self.output = Queue.Queue(100)
+        self.logs= Queue.Queue()
         self.module = module
-        self.logcallback = logcallback
         self.threads = []
         self.pool_lock = threading.Lock()
         self.threadcount = 0
+
+    def getLogMessage(self):
+        try:
+            if self.logs.empty():
+                msg = None
+            else:
+                msg = self.logs.get(True, 1)
+                self.logs.task_done()
+        except Queue.Empty as e:
+            msg = None
+        finally:
+            return msg
 
     def addJob(self, job):
         self.input.put(job)
@@ -45,7 +57,7 @@ class ApiThreadPool():
 
     def addThread(self):
         self.addJob(None)  # sentinel empty job
-        thread = ApiThread(self.input, self.output, self.module, self,self.logcallback)
+        thread = ApiThread(self.input, self.output, self.module, self,self.logs)
         self.threadcount += 1
         self.threads.append(thread)
         thread.start()
@@ -83,14 +95,14 @@ class ApiThreadPool():
 
 
 class ApiThread(threading.Thread):
-    def __init__(self, input, output, module, pool,logcallback):
+    def __init__(self, input, output, module, pool,logs):
         threading.Thread.__init__(self)
         #self.daemon = True
         self.pool = pool
         self.input = input
         self.output = output
         self.module = module
-        self.logcallback = logcallback
+        self.logs = logs
         self.halt = threading.Event()
 
     def run(self):
@@ -99,6 +111,9 @@ class ApiThread(threading.Thread):
             if streamingTab:
                 out["streamprogress"] = True
             self.output.put(out)
+
+        def logMessage(msg):
+            self.logs.put(msg)
 
         try:
             while not self.halt.isSet():
@@ -109,12 +124,12 @@ class ApiThread(threading.Thread):
                         if job is None:
                             self.halt.set()
                         else:
-                            self.module.fetchData(job['data'], job['options'], streamingData)
+                            self.module.fetchData(job['data'], job['options'], streamingData,logMessage)
                     finally:
                         self.input.task_done()
                         if job is not None:
                             self.output.put({'progress': job.get('number', 0)})
                 except Exception as e:
-                    self.logcallback(e)
+                    logmessage(e)
         finally:
             self.pool.threadFinished()

@@ -514,7 +514,7 @@ class FacebookTab(ApiTab):
         # set Access-tokens,use generic method from APITab
         super(FacebookTab, self).setOptions(options)
 
-    def fetchData(self, nodedata, options=None, callback=None):
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
     # Preconditions
         if options['access_token'] == '':
             raise Exception('Access token is missing, login please!')
@@ -552,7 +552,7 @@ class FacebookTab(ApiTab):
                 urlparams = options['params']
 
             if options['logrequests']:
-                self.logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
+                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
                                                                                    urlpath + "?" + urllib.urlencode(
                                                                                        urlparams)))
 
@@ -561,10 +561,7 @@ class FacebookTab(ApiTab):
             data, headers, status = self.request(urlpath, urlparams,None,True,options.get('speed',None) )
             options['querystatus'] = status
 
-            if callback is None:
-                self.streamingData.emit(data, options, headers)
-            else:
-                callback(data, options, headers)
+            callback(data, options, headers)
 
             # paging
             if hasDictValue(data, 'paging.next'):
@@ -731,7 +728,7 @@ class TwitterTab(ApiTab):
             raise Exception("No access, login please!")
 
 
-    def fetchData(self, nodedata, options=None, callback=None):
+    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
         for page in range(0, options.get('pages', 1)):
             if not ('url' in options):
@@ -741,7 +738,8 @@ class TwitterTab(ApiTab):
                 urlpath = options['url']
                 urlparams = options["params"]
 
-            self.logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
+            if options['logrequests']:
+                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
                                                                                urlpath + "?" + urllib.urlencode(
                                                                                    urlparams)))
 
@@ -750,10 +748,7 @@ class TwitterTab(ApiTab):
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 
-            if callback is None:
-                self.streamingData.emit(data, options, headers)
-            else:
-                callback(data, options, headers)
+            callback(data, options, headers)
 
             # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
             paging = False
@@ -995,7 +990,7 @@ class TwitterStreamingTab(ApiTab):
         self.response.raw._fp.close()
         #self.response.close()
 
-    def fetchData(self, nodedata, options=None, callback=None):
+    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         if not ('url' in options):
             urlpath = options["basepath"] + options["query"] + ".json"
             urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata)
@@ -1003,8 +998,9 @@ class TwitterStreamingTab(ApiTab):
             urlpath = options['url']
             urlparams = options["params"]
 
-        self.logMessage(
-            u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+        if options['logrequests']:
+            logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+
         # data
         headers = None
         for data in self.request(path=urlpath, args=urlparams):
@@ -1012,10 +1008,7 @@ class TwitterStreamingTab(ApiTab):
             options['querytime'] = str(datetime.now())
             options['querystatus'] = 'stream'
 
-            if callback is None:
-                self.streamingData.emit(data, options, headers)
-            else:
-                callback(data, options, headers, streamingTab=True)
+            callback(data, options, headers, streamingTab=True)
 
 
     @Slot()
@@ -1123,21 +1116,18 @@ class GenericTab(ApiTab):
         self.objectidEdit.setEditText(options.get('objectid', 'media$group.yt$videoid.$t'))
 
 
-    def fetchData(self, nodedata, options=None, callback=None):
+    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
         urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
-        self.logMessage(
-            u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+        if options['logrequests']:
+                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
         #data
         data, headers, status = self.request(urlpath, urlparams)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
 
-        if callback is None:
-            self.streamingData.emit(data, options, headers)
-        else:
-            callback(data, options, headers)
+        callback(data, options, headers)
 
 
 class FilesTab(ApiTab):
@@ -1205,7 +1195,7 @@ class FilesTab(ApiTab):
         self.filenameEdit.setEditText(options.get('filename', '<None>'))
         self.fileextEdit.setEditText(options.get('fileext', '<None>'))
 
-    def fetchData(self, nodedata, options=None, callback=None):
+    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
         foldername = options.get('folder', None)
         if (foldername is None) or (not os.path.isdir(foldername)):
@@ -1217,17 +1207,16 @@ class FilesTab(ApiTab):
         filename = self.parsePlaceholders(filename,nodedata)
         fileext = self.parsePlaceholders(fileext,nodedata)
 
-        self.logMessage(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
+        if options['logrequests']:
+            logCallback(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
                                                                               urlpath + "?" + urllib.urlencode(
                                                                                   urlparams)))
 
         data, headers, status = self.download(urlpath, urlparams, None, foldername,filename,fileext)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
-        if callback is None:
-            self.streamingData.emit(data, options, headers)
-        else:
-            callback(data, options, headers)
+
+        callback(data, options, headers)
 
 
 class QWebPageCustom(QWebPage):

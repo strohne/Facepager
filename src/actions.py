@@ -324,8 +324,7 @@ class Actions(object):
 
         try:
             #Spawn Threadpool
-            threadpool = ApiThreadPool(apimodule,self.mainWindow.logmessage)
-
+            threadpool = ApiThreadPool(apimodule)
 
 
             #Fill Input Queue
@@ -345,6 +344,11 @@ class Actions(object):
             #Process Output Queue
             while True:
                 try:
+                    #Logging (sync logs in threads with main thread)
+                    msg = threadpool.getLogMessage()
+                    if msg is not None:
+                        self.mainWindow.logmessage(msg)
+
                     job = threadpool.getJob()
 
                     #-Finished all nodes...
