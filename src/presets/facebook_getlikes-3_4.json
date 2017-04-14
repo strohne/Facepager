@@ -1,0 +1,18 @@
+{
+  "columns": [
+    "id",
+    "fan_count"
+  ],
+  "options": {
+    "basepath": "https://graph.facebook.com/v2.6/",
+    "params": {
+      "<page>": "<Object ID>",
+	  "fields": "fan_count"
+    },
+    "relation": "<page>",
+    "pages": 1
+  },
+  "name": "Get Page Fan Count",
+  "module": "Facebook",
+  "description": "Extract the number of fans/likes a Facebook page has (fan_count). This depends on version 2.6 of FAcebook Graph API."
+}
