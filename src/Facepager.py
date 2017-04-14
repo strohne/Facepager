@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
 
-        self.setWindowTitle("Facepager 3.7")
+        self.setWindowTitle("Facepager 3.8")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
         self.setMinimumSize(800,600)
         #self.setMinimumSize(1400,710)
