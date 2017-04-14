@@ -11,6 +11,7 @@ SQLAlchemy: pip install SQLAlchemy (Licence: MIT)
 dateutil: pip install python-dateutil (PSF License)
 requests: pip install requests (Apache2 License)
 rauth: pip install rauth (MIT licence)
+pandas and numpy:   pip install numpy,  pip install pandas
 
 
 Facepager needs some secret keys to connect to Facebook and Twitter.
