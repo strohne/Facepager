@@ -27,6 +27,12 @@ class ExportFileDialog(QFileDialog):
         self.optionLinebreaks = QCheckBox("Remove line breaks",self)
         self.optionLinebreaks.setCheckState(Qt.CheckState.Checked)
 
+        self.optionSeparator = QComboBox(self)
+        self.optionSeparator.insertItems(0, [";","\\t",","])
+        self.optionSeparator.setEditable(True)
+
+        #self.optionLinebreaks.setCheckState(Qt.CheckState.Checked)
+
         self.optionWide = QCheckBox("Convert to wide format (experimental feature)",self)
         self.optionWide.setCheckState(Qt.CheckState.Unchecked)
 
@@ -46,6 +52,8 @@ class ExportFileDialog(QFileDialog):
         options = QHBoxLayout()
         options.addWidget(self.optionBOM)
         options.addWidget(self.optionLinebreaks)
+        options.addWidget(QLabel('Separator'))
+        options.addWidget(self.optionSeparator)
         options.addStretch(1)
 
         layout.addLayout(options,row,1,1,2)
@@ -86,14 +94,16 @@ class ExportFileDialog(QFileDialog):
         progress.setMaximum(len(indexes))
 
         try:
-            writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+            delimiter = self.optionSeparator.currentText()
+            delimiter = str(delimiter.decode('string-escape'))
+            writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
 
             #headers
             row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
             if self.optionLinebreaks.isChecked():
-                row = [val.replace('\n', ' ') for val in row]
+                row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
             writer.writerow(row)
 
@@ -104,7 +114,7 @@ class ExportFileDialog(QFileDialog):
 
                 row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 if self.optionLinebreaks.isChecked():
-                    row = [val.replace('\n', ' ') for val in row]
+                    row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
                 writer.writerow(row)
 
@@ -120,7 +130,9 @@ class ExportFileDialog(QFileDialog):
 
 
         try:
-            writer = csv.writer(output, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+            delimiter = self.optionSeparator.currentText()
+            delimiter = str(delimiter.decode('string-escape'))
+            writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
             #headers
@@ -129,7 +141,7 @@ class ExportFileDialog(QFileDialog):
             for key in self.mainWindow.tree.treemodel.customcolumns:
                 row.append(key)
             if self.optionLinebreaks.isChecked():
-                row = [val.replace('\n', ' ') for val in row]
+                row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
 
             writer.writerow(row)
@@ -150,7 +162,7 @@ class ExportFileDialog(QFileDialog):
                         row.append(node.getResponseValue(key, "utf-8"))
 
                     if self.optionLinebreaks.isChecked():
-                        row = [str(val).replace('\n', ' ') for val in row]
+                        row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]
 
                     writer.writerow(row)
                     # step the Bar
