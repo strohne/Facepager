@@ -182,7 +182,10 @@ class TreeItem(object):
         return self.parentItem.id if self.parentItem else None
 
     def dbnode(self):
-        return Node.query.get(self.id)
+        if self.id:
+            return Node.query.get(self.id)
+        else:
+            return None
 
     def level(self):
         if self.data is None:
