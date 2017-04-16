@@ -11,16 +11,18 @@ SQLAlchemy: pip install SQLAlchemy (Licence: MIT)
 dateutil: pip install python-dateutil (PSF License)
 requests: pip install requests (Apache2 License)
 rauth: pip install rauth (MIT licence)
-
+numpy and pandas: pip install numpy pandas
 
 Facepager needs some secret keys to connect to Facebook and Twitter.
 See credentials.py.readme for further details.
 
 
+########
 #
 #  Steps to run under linux
 #  (tested under ubuntu vivid x64, thx to crsqq / Christoph Martin) 
 #
+########
 
 
 git clone https://github.com/strohne/Facepager
@@ -49,12 +51,68 @@ cp credentials.py.readme credentials.py
 python Facepager.py 
 
 
+#######
+#
+#  Steps to run under Windows Subsystem for Linux (Windows 10)
+#
+#  Commands to run in bash are marked with $ sign 
+#
+########
+
+#
+# 1. Prepare bash
+#
+
+	# Install WSL, see https://msdn.microsoft.com/de-de/commandline/wsl/install_guide
+	# Install Xming X Server to run graphical apps, see https://askubuntu.com/questions/823352/windows-10-bash-cannot-connect-to-display and  http://www.pcworld.com/article/3055403/windows/windows-10s-bash-shell-can-run-graphical-linux-applications-with-this-trick.html
+	# Start bash: windows key, type "bash"
+	# Enable QuickEdit-Mode, this way you can copy&paste commands from this file to the terminal by mouse right click: click on Ubunutu icon in topleft corner of terminal window, click "Properties", "Options", "QuickEdit-Mode"; for further information see http://stackoverflow.com/questions/38832230/copy-paste-in-bash-on-ubuntu-on-windows
+	# Create a directory to work in, directories under /mnt/ will be shared between windows and linux, e.g.
+
+	$ mkdir /mnt/c/FacepagerLinux
+	$ cd /mnt/c/FacepagerLinux
+
+#
+# 2. Install dependencies and setup Python environment
+#
+
+	$ sudo apt-get install build-essential git cmake libqt4-dev libphonon-dev python2.7-dev libxml2-dev libxslt1-dev qtmobility-dev python-virtualenv
+
+	$ virtualenv facepager_env
+	$ . facepager_env/bin/activate
+	$ pip install SQLAlchemy python-dateutil requests rauth wheel
+
+	# The following commands take a long time, press return if terminal seems to hang
+	$ pip install pyside
+	$ pip install numpy pandas
+
+#
+# 3. Install and run Facepager
+#
+
+	$ cd /mnt/c/FacepagerLinux
+	$ git clone https://github.com/strohne/Facepager
+	$ cd Facepager/src
+	$ cp credentials.py.readme credentials.py
+
+	# Don't forget to manually add your credentials in credentials.py
+
+	#Activate x server
+	$ export DISPLAY=:0
+
+	#Run Facepager
+	$ python Facepager.py 
+
+
+
+#######
 #
 #   Steps to run under OSX El Capitan
 #
 #	tested in virtual machine under windows 10, see 
 #	http://techsviewer.com/how-to-install-mac-os-x-el-capitan-on-vmware-on-pc/
 #
+#######
 
 
 
