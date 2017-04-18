@@ -22,6 +22,7 @@ Installation packages for each versions are available on the [releases page](htt
 
 ### Citation
 
+[Keyling, Till](http://tillkeyling.com/) / [Jünger, Jakob](https://ipk.uni-greifswald.de/kommunikationswissenschaft/jakob-juenger/) (2017). Facepager. An application for generic data retrieval through APIs. Source code and releases available at https://github.com/strohne/Facepager/.
 
 ### Licence
 
