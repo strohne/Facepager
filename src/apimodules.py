@@ -14,6 +14,8 @@ from PySide.QtGui import QMessageBox
 import requests
 from requests.exceptions import *
 from rauth import OAuth1Service
+from requests_oauthlib import OAuth2Session
+
 import dateutil.parser
 
 from paramedit import *
@@ -634,17 +636,16 @@ class TwitterTab(ApiTab):
 
 
         # Construct login layout
-        loginlayout = QHBoxLayout()
-        loginlayout.addWidget(self.tokenEdit)
-        loginlayout.addWidget(QLabel("Access Token Secret"))
-        loginlayout.addWidget(self.tokensecretEdit)
-        loginlayout.addWidget(self.loginButton)
-
         credentialslayout = QHBoxLayout()
         credentialslayout.addWidget(self.consumerKeyEdit)
         credentialslayout.addWidget(QLabel("Consumer Secret"))
         credentialslayout.addWidget(self.consumerSecretEdit)
 
+        loginlayout = QHBoxLayout()
+        loginlayout.addWidget(self.tokenEdit)
+        loginlayout.addWidget(QLabel("Access Token Secret"))
+        loginlayout.addWidget(self.tokensecretEdit)
+        loginlayout.addWidget(self.loginButton)
 
         # Construct main-Layout
         mainLayout = QFormLayout()
@@ -1039,6 +1040,175 @@ class TwitterStreamingTab(ApiTab):
                 self.tokenEdit.setText(self.session.access_token)
                 self.tokensecretEdit.setText(self.session.access_token_secret)
 
+                self.login_webview.parent().close()
+
+class YoutubeTab(ApiTab):
+    def __init__(self, mainWindow=None, loadSettings=True):
+        super(YoutubeTab, self).__init__(mainWindow, "YouTube")
+
+        #Base path
+        #URL prefix
+        self.basepathEdit = QComboBox(self)
+        self.basepathEdit.insertItems(0, ['https://www.googleapis.com/youtube/v3/'])
+        self.basepathEdit.setEditable(True)
+
+        # Query Box
+        self.setRelations()
+
+        # Pages Box
+        self.pagesEdit = QSpinBox(self)
+        self.pagesEdit.setMinimum(1)
+        self.pagesEdit.setMaximum(50000)
+
+        # Login-Boxes
+        self.tokenEdit = QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        self.loginButton = QPushButton(" Login to Google ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+
+        self.clientIdEdit = QLineEdit()
+        self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        self.scopeEdit = QLineEdit()
+
+        # Construct Login-Layout
+        loginlayout = QHBoxLayout()
+        loginlayout.addWidget(self.tokenEdit)
+        loginlayout.addWidget(self.loginButton)
+
+
+        applayout = QHBoxLayout()
+        applayout.addWidget(self.clientIdEdit)
+        applayout.addWidget(QLabel("Scope"))
+        applayout.addWidget(self.scopeEdit)
+
+
+        # Construct main-Layout
+        mainLayout = QFormLayout()
+        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
+        mainLayout.setLabelAlignment(Qt.AlignLeft)
+        mainLayout.addRow("Base path", self.basepathEdit)
+        mainLayout.addRow("Resource", self.relationEdit)
+        mainLayout.addRow("Parameters", self.paramEdit)
+        mainLayout.addRow("Maximum pages", self.pagesEdit)
+
+        mainLayout.addRow("Client Id", applayout)
+        mainLayout.addRow("Access Token", loginlayout)
+
+        self.setLayout(mainLayout)
+
+        if loadSettings:
+            self.loadSettings()
+
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = {'relation': self.relationEdit.currentText(), 'pages': self.pagesEdit.value(),
+                   'params': self.paramEdit.getParams()}
+
+        options['scope'] = self.scopeEdit.text()
+        options['basepath'] = self.basepathEdit.currentText()
+
+        # options for request
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':' + self.relationEdit.currentText()
+            options['access_token'] = self.tokenEdit.text()
+            options['client_id'] = self.clientIdEdit.text()
+
+
+        # options for data handling
+        if purpose == 'fetch':
+            options['objectid'] = 'id'
+            options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
+
+        return options
+
+    def setOptions(self, options):
+        #define default values
+        if options.get('basepath','') == '':
+            options['basepath']= "https://www.googleapis.com/youtube/v3/"
+        if options.get('scope','') == '':
+            options['scope']= "https://www.googleapis.com/auth/youtube.readonly"
+
+        #set values
+        self.relationEdit.setEditText(options.get('relation', 'videos'))
+        self.pagesEdit.setValue(int(options.get('pages', 1)))
+
+        self.basepathEdit.setEditText(options.get('basepath'))
+        self.scopeEdit.setText(options.get('scope'))
+        self.paramEdit.setParams(options.get('params', {}))
+
+        # set Access-tokens,use generic method from APITab
+        super(YoutubeTab, self).setOptions(options)
+
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
+    # Preconditions
+        if options['access_token'] == '':
+            raise Exception('Access token is missing, login please!')
+        self.connected = True
+
+        # Abort condition: maximum page count
+        for page in range(0, options.get('pages', 1)):
+        # build url
+            if not ('url' in options):
+                urlpath = options["basepath"] + options['relation']
+                urlparams = {}
+                urlparams.update(options['params'])
+
+                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
+                urlparams["access_token"] = options['access_token']
+            else:
+                urlpath = options['url']
+                urlparams = options['params']
+
+            if options['logrequests']:
+                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                                   urlpath + "?" + urllib.urlencode(
+                                                                                       urlparams)))
+
+            # data
+            options['querytime'] = str(datetime.now())
+            data, headers, status = self.request(urlpath, urlparams,None,True,options.get('speed',None) )
+            options['querystatus'] = status
+
+            callback(data, options, headers)
+
+            break
+
+#             # paging
+#             if hasDictValue(data, 'paging.next'):
+#                 url, params = self.parseURL(getDictValue(data, 'paging.next', False))
+#
+#                 # abort time based pagination
+#                 until = params.get('until', False)
+#                 if (since != False) and (until != False) and (int(until) < int(since)):
+#                     break
+#
+#                 options['params'] = params
+#                 options['url'] = url
+#             else:
+#                 break
+#
+#             if not self.connected:
+#                 break
+
+
+    @Slot()
+    def doLogin(self, query=False, caption="YouTube Login Page",url=""):
+        #use credentials from input if provided
+        clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['youtube_client_id']
+        scope= self.scopeEdit.text()
+        url = "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + clientid + "&redirect_uri=https://www.example.com&response_type=token&scope="+scope+"&display=popup"
+
+        super(YoutubeTab, self).doLogin(query, caption, url)
+
+    @Slot()
+    def getToken(self):
+        url = urlparse.parse_qs(self.login_webview.url().toString())
+        if "https://www.example.com#access_token" in url:
+            token = url["https://www.example.com#access_token"]
+            if token:
+                self.tokenEdit.setText(token[0])
                 self.login_webview.parent().close()
 
 
