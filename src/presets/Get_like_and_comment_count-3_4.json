@@ -8,8 +8,9 @@
     "updated_time"
   ],
   "options": {
+    "basepath": "https://graph.facebook.com/v2.6/",
     "params": {
-      "fields": "message,from.name,created_time,updated_time,comments.limit(1).summary(true),likes.limit(1).summary(true)",
+      "fields": "message,from{name},created_time,updated_time,comments.limit(1).summary(true),likes.limit(1).summary(true)",
       "limit": "10"
     },
     "relation": "<Object ID>/posts",
