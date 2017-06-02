@@ -6,7 +6,10 @@ All data is stored in a SQLite database and may be exported to csv.
 ### Installer
 
 Installation packages for each versions are available on the [releases page](https://github.com/strohne/Facepager/releases). Database files may be incompatible between versions.
-                                                      
+
+- Instructions for Windows: Download and execute the lates installer from the releases page.
+- Instructions for Mac OS X: Unzipp the file from the releases page, drag & drop the App to your "Applications" folder. When a warning about the the source pop's up you should allow the installation of non-app-store applications (go to "System Preferrences>Security & Privacy" and check "Anywhere"). If you do not want to change your security settings permanently, you may open the Facepager by CTRL+Click on the icon (each time on startup).
+- Instructions for Linux: There is no binary release, see src/readme.txt for steps to run under linux.
 
 ### Getting started
 
