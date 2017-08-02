@@ -12,6 +12,7 @@ class ApiThreadPool():
         self.threads = []
         self.pool_lock = threading.Lock()
         self.threadcount = 0
+        self.jobcount = 0
 
     def getLogMessage(self):
         try:
@@ -26,6 +27,9 @@ class ApiThreadPool():
             return msg
 
     def addJob(self, job):
+        if job is not None:
+            job['number'] = self.jobcount
+            self.jobcount += 1
         self.input.put(job)
 
     def getJob(self):
@@ -39,6 +43,11 @@ class ApiThreadPool():
             job = {'waiting': True}
         finally:
             return job
+
+    def closeJobs(self):
+        with self.pool_lock:
+            for x in range(0,self.threadcount):
+                self.addJob(None)  # sentinel empty job
 
     def processJobs(self,threadcount=None):
         with self.pool_lock:
@@ -56,7 +65,7 @@ class ApiThreadPool():
                 self.addThread()
 
     def addThread(self):
-        self.addJob(None)  # sentinel empty job
+        #self.addJob(None)  # sentinel empty job
         thread = ApiThread(self.input, self.output, self.module, self,self.logs)
         self.threadcount += 1
         self.threads.append(thread)
@@ -78,6 +87,9 @@ class ApiThreadPool():
                 with self.input.mutex:
                     self.input.queue.clear()
                 self.output.put(None)  #sentinel
+
+    def getJobCount(self):
+        return len(self.input)
 
     def getThreadCount(self):
         with self.pool_lock:

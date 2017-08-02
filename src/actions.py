@@ -4,6 +4,7 @@ from progressbar import ProgressBar
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
+from collections import deque
 import StringIO
 import codecs
 
@@ -300,12 +301,13 @@ class Actions(object):
         globaloptions['errors'] = self.mainWindow.errorEdit.value()
         globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
+        level = self.mainWindow.levelEdit.value() - 1
 
         #Get selected nodes
         if indexes == False:
-            level = self.mainWindow.levelEdit.value() - 1
             indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
                                                                               'objecttype':objecttypes})
+
         #Update progress window
         self.mainWindow.logmessage(u"Start fetching data for {} node(s).".format(len(indexes)))
         progress.setMaximum(len(indexes))
@@ -314,6 +316,10 @@ class Actions(object):
         #Init status messages
         statuscount = {}
         errorcount = 0
+        laststatus = None
+        laststatuscount = 0
+        allowedstatus = ['fetched (200)','downloaded (200)','stream'] #,'error (400)'
+
 
         if apimodule == False:
             apimodule = self.mainWindow.RequestTabs.currentWidget()
@@ -328,20 +334,20 @@ class Actions(object):
 
 
             #Fill Input Queue
-            number = 0
-            for index in indexes:
-                number += 1
-                if not index.isValid():
-                    continue
-
-                treenode = index.internalPointer()
-                job = {'number': number, 'nodeindex': index, 'data': deepcopy(treenode.data),
-                       'options': deepcopy(options)}
-                threadpool.addJob(job)
+            indexes = deque(indexes)
+#             for index in indexes:
+#                 number += 1
+#                 if not index.isValid():
+#                     continue
+#
+#                 treenode = index.internalPointer()
+#                 job = {'number': number, 'nodeindex': index, 'data': deepcopy(treenode.data),
+#                        'options': deepcopy(options)}
+#                 threadpool.addJob(job)
 
             threadpool.processJobs(options.get("threads",None))
 
-            #Process Output Queue
+            #Process Input/Output Queue
             while True:
                 try:
                     #Logging (sync logs in threads with main thread)
@@ -349,6 +355,21 @@ class Actions(object):
                     if msg is not None:
                         self.mainWindow.logmessage(msg)
 
+                    #Jobs in
+                    if (len(indexes) > 0):
+                        index = indexes.popleft()
+                        if index.isValid():
+                            treenode = index.internalPointer()
+                            job = {'nodeindex': index, 'data': deepcopy(treenode.data),
+                                   'options': deepcopy(options)}
+                            threadpool.addJob(job)
+
+                        if len(indexes) == 0:
+                            threadpool.closeJobs()
+                            progress.showInfo('remaining',u"{} node(s) remaining.".format(threadpool.getJobCount() )
+
+
+                    #Jobs out
                     job = threadpool.getJob()
 
                     #-Finished all nodes...
@@ -380,16 +401,30 @@ class Actions(object):
                         progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
                         progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                         progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
+                        progress.showInfo('remaining',u"{} node(s) remaining.".format(threadpool.getJobCount() )
 
                         #auto cancel after three consecutive errors, ignore on streaming-tab
-                        if (status == 'fetched (200)') or (status == 'stream') or (status == 'downloaded (200)'):
-                            errorcount=0
+                        if (status != laststatus):
+                            laststatus=status
+                            laststatuscount = 0
                         else:
-                            errorcount += 1
+                            laststatuscount += 1
 
-                        if errorcount > (globaloptions['errors']-1):
-                            self.mainWindow.logmessage(u"Automatically canceled because of {} consecutive errors.".format(errorcount))
+
+
+                        if (laststatuscount > (globaloptions['errors']-1)) and not (laststatus in allowedstatus):
+                            self.mainWindow.logmessage(u"Automatically canceled because of {} consecutive errors.".format(laststatuscount))
                             progress.cancel()
+
+#                         #auto cancel after three consecutive errors, ignore on streaming-tab
+#                         if (status == 'fetched (200)') or (status == 'stream') or (status == 'downloaded (200)'):
+#                             errorcount=0
+#                         else:
+#                             errorcount += 1
+#
+#                         if errorcount > (globaloptions['errors']-1):
+#                             self.mainWindow.logmessage(u"Automatically canceled because of {} consecutive errors.".format(errorcount))
+#                             progress.cancel()
 
 
 
