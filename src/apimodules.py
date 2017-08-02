@@ -400,7 +400,7 @@ class FacebookTab(ApiTab):
         #Base path
         #URL prefix
         self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, ['https://graph.facebook.com/v2.2/'])
+        self.basepathEdit.insertItems(0, ['https://graph.facebook.com/v2.3/'])
         self.basepathEdit.setEditable(True)
 
 
@@ -562,6 +562,9 @@ class FacebookTab(ApiTab):
             options['querystatus'] = status
 
             callback(data, options, headers)
+
+            if (status != "fetched (200)"):
+                logCallback(u"Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'],getDictValue(data,"error.message")) )
 
             # paging
             if hasDictValue(data, 'paging.next'):
