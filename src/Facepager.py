@@ -50,6 +50,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Facepager 3.8")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
 
+        # This is needed to display the app icon on the taskbar on Windows 7
+        if os.name == 'nt':
+            import ctypes
+            myappid = 'Facepager.3.8' # arbitrary string
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
         self.setMinimumSize(800,600)
         #self.setMinimumSize(1400,710)
         #self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
