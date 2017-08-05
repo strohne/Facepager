@@ -69,16 +69,30 @@ class ApiThreadPool():
         thread = ApiThread(self.input, self.output, self.module, self,self.logs)
         self.threadcount += 1
         self.threads.append(thread)
+
         thread.start()
+        thread.process.set()
+
 
     def removeThread(self):
         if count(self.threads):
             self.threads[0].halt.set()
+            self.threads[0].process.set()
 
     def stopJobs(self):
         for thread in self.threads:
             thread.halt.set()
+            thread.process.set()
+
         self.module.disconnectSocket()
+
+    def suspendJobs(self):
+        for thread in self.threads:
+            thread.process.clear()
+
+    def resumeJobs(self):
+        for thread in self.threads:
+            thread.process.set()
 
     def threadFinished(self):
         with self.pool_lock:
@@ -89,7 +103,7 @@ class ApiThreadPool():
                 self.output.put(None)  #sentinel
 
     def getJobCount(self):
-        return len(self.input)
+        return self.input.qsize()
 
     def getThreadCount(self):
         with self.pool_lock:
@@ -116,6 +130,7 @@ class ApiThread(threading.Thread):
         self.module = module
         self.logs = logs
         self.halt = threading.Event()
+        self.process = threading.Event()
 
     def run(self):
         def streamingData(data, options, headers, streamingTab=False):
@@ -143,5 +158,7 @@ class ApiThread(threading.Thread):
                             self.output.put({'progress': job.get('number', 0)})
                 except Exception as e:
                     logmessage(e)
+
+                self.process.wait()
         finally:
             self.pool.threadFinished()

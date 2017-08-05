@@ -1,12 +1,16 @@
 import csv
 from copy import deepcopy
 from progressbar import ProgressBar
+from retrydialog import RetryDialog
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
 from collections import deque
 import StringIO
 import codecs
+import os
+import platform
+import subprocess
 
 from export import ExportFileDialog
 
@@ -107,6 +111,16 @@ class Actions(object):
             self.mainWindow.updateUI()
             self.mainWindow.tree.treemodel.reset()
 
+    @Slot()
+    def openDBFolder(self):
+        path = self.mainWindow.settings.value("lastpath",None)
+        if path is not None:
+            if platform.system() == "Windows":
+                os.startfile(path)
+            elif platform.system() == "Darwin":
+                subprocess.Popen(["open", path])
+            else:
+                subprocess.Popen(["xdg-open", path])
 
     @Slot()
     def makeDB(self):
@@ -366,7 +380,7 @@ class Actions(object):
 
                         if len(indexes) == 0:
                             threadpool.closeJobs()
-                            progress.showInfo('remaining',u"{} node(s) remaining.".format(threadpool.getJobCount() )
+                            progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
 
 
                     #Jobs out
@@ -386,7 +400,7 @@ class Actions(object):
                         progress.step()
 
                     #-Add data...
-                    else:
+                    elif not progress.wasCanceled:
                         if not job['nodeindex'].isValid():
                             continue
 
@@ -401,32 +415,31 @@ class Actions(object):
                         progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
                         progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                         progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
-                        progress.showInfo('remaining',u"{} node(s) remaining.".format(threadpool.getJobCount() )
+                        progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
 
-                        #auto cancel after three consecutive errors, ignore on streaming-tab
+                        #auto cancel after three consecutive errors
                         if (status != laststatus):
                             laststatus=status
-                            laststatuscount = 0
+                            laststatuscount = 1
                         else:
                             laststatuscount += 1
 
+                        if not (laststatus in allowedstatus) and ((laststatuscount > (globaloptions['errors']-1)) or (laststatus == "rate limit (400)")):
+                            threadpool.suspendJobs()
 
+                            if laststatus == "rate limit (400)":
+                                msg = "You reached the rate limit of the API. You are strongly advised to calm down and retry later."
+                                timeout = 60 * 10 #10 minutes
+                            else:
+                                msg = "Something is wrong. {} consecutive errors occurred. You are strongly advised to check your settings.".format(laststatuscount)
+                                timeout = 60 #1 minute
 
-                        if (laststatuscount > (globaloptions['errors']-1)) and not (laststatus in allowedstatus):
-                            self.mainWindow.logmessage(u"Automatically canceled because of {} consecutive errors.".format(laststatuscount))
-                            progress.cancel()
-
-#                         #auto cancel after three consecutive errors, ignore on streaming-tab
-#                         if (status == 'fetched (200)') or (status == 'stream') or (status == 'downloaded (200)'):
-#                             errorcount=0
-#                         else:
-#                             errorcount += 1
-#
-#                         if errorcount > (globaloptions['errors']-1):
-#                             self.mainWindow.logmessage(u"Automatically canceled because of {} consecutive errors.".format(errorcount))
-#                             progress.cancel()
-
-
+                            if RetryDialog.doContinue(msg,timeout,self.mainWindow) == QDialog.Accepted:
+                                laststatuscount = 1
+                                threadpool.resumeJobs()
+                            else:
+                                self.mainWindow.logmessage(u"Canceled because of {} consecutive errors or rate limit.".format(laststatuscount))
+                                progress.cancel()
 
                     #Abort
                     if progress.wasCanceled:

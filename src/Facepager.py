@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Facepager 3.8")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
+
         self.setMinimumSize(800,600)
         #self.setMinimumSize(1400,710)
         #self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
@@ -89,20 +90,26 @@ class MainWindow(QMainWindow):
         self.timerWindow.timerstopped.connect(self.actions.timerStopped)
         self.timerWindow.timercountdown.connect(self.actions.timerCountdown)
         self.timerWindow.timerfired.connect(self.actions.timerFired)
-        self.timerStatus = QLabel("Timer stopped ")
 
         #
         #  Statusbar and toolbar
         #
 
-        self.statusBar().addPermanentWidget(self.timerStatus)
+        self.statusbar = self.statusBar()
         self.toolbar=Toolbar(parent=self,mainWindow=self)
         self.addToolBar(Qt.TopToolBarArea,self.toolbar)
 
+        self.timerStatus = QLabel("Timer stopped ")
+        self.statusbar.addPermanentWidget(self.timerStatus)
+
+        self.databaseLabel = QLabel("No database connection ")
+        #self.databaseLabel.clicked.connect(self.actions.openDBFolder)
+        self.statusbar.addWidget(self.databaseLabel)
+
         self.selectionStatus = QLabel("0 node(s) selected ")
-        self.statusBar().addPermanentWidget(self.selectionStatus)
-        self.statusBar().showMessage('No database connection')
-        self.statusBar().setSizeGripEnabled(False)
+        self.statusbar.addPermanentWidget(self.selectionStatus)
+        #self.statusBar.showMessage('No database connection')
+        self.statusbar.setSizeGripEnabled(False)
 
         #
         #  Layout
@@ -276,7 +283,7 @@ class MainWindow(QMainWindow):
         #Error Box
         self.errorEdit = QSpinBox(self)
         self.errorEdit.setMinimum(1)
-        self.errorEdit.setMaximum(10)
+        self.errorEdit.setMaximum(200)
         self.errorEdit.setValue(3)
         self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
         fetchsettings.addRow("Maximum errors", self.errorEdit)
@@ -328,9 +335,11 @@ class MainWindow(QMainWindow):
         self.actions.databaseActions.setEnabled(self.database.connected)
 
         if self.database.connected:
-            self.statusBar().showMessage(self.database.filename)
+            #self.statusBar().showMessage(self.database.filename)
+            self.databaseLabel.setText(self.database.filename)
         else:
-            self.statusBar().showMessage('No database connection')
+            #self.statusBar().showMessage('No database connection')
+            self.databaseLabel.setText('No database connection')
 
 
     def writeSettings(self):

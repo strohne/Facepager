@@ -533,15 +533,14 @@ class FacebookTab(ApiTab):
                 urlpath = options["basepath"] + options['relation']
                 urlparams = {}
 
-                if options['relation'] == 'search':
-                    urlparams['q'] = self.idtostr(nodedata['objectid'])
-                    urlparams['type'] = 'page'
-
-                elif options['relation'] == '<Object ID>':
-                    urlparams['metadata'] = '1'
-
-                elif '<Object ID>/' in options['relation']:
-                    urlparams['limit'] = '100'
+#                 if options['relation'] == 'search':
+#                     urlparams['q'] = self.idtostr(nodedata['objectid'])
+#                     urlparams['type'] = 'page'
+#                 elif options['relation'] == '<Object ID>':
+#                     urlparams['metadata'] = '1'
+#
+#                 elif '<Object ID>/' in options['relation']:
+#                     urlparams['limit'] = '100'
 
                 urlparams.update(options['params'])
 
@@ -559,12 +558,18 @@ class FacebookTab(ApiTab):
             # data
             options['querytime'] = str(datetime.now())
             data, headers, status = self.request(urlpath, urlparams,None,True,options.get('speed',None) )
-            options['querystatus'] = status
-
-            callback(data, options, headers)
 
             if (status != "fetched (200)"):
-                logCallback(u"Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'],getDictValue(data,"error.message")) )
+                msg = getDictValue(data,"error.message")
+                code = getDictValue(data,"error.code")
+                logCallback(u"Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'],msg))
+
+                #see https://developers.facebook.com/docs/graph-api/using-graph-api
+                if (code in [4,17,341]) and (status == "error (400)"):
+                    status = "rate limit (400)"
+
+            options['querystatus'] = status
+            callback(data, options, headers)
 
             # paging
             if hasDictValue(data, 'paging.next'):
