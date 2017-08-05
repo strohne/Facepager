@@ -77,33 +77,50 @@ class PresetWindow(QDialog):
         self.detailForm.addRow('<b>Columns</b>',self.detailColumns)
 
 
-
         #buttons
-        buttons=QDialogButtonBox()
+        buttons= QHBoxLayout() #QDialogButtonBox()
         self.saveButton = QPushButton('New preset')
         self.saveButton.clicked.connect(self.newPreset)
         self.saveButton.setToolTip("Create a new preset using the current tab and parameters")
-        buttons.addButton(self.saveButton,QDialogButtonBox.ActionRole)
+        #buttons.addButton(self.saveButton,QDialogButtonBox.ActionRole)
+        buttons.addWidget(self.saveButton)
+
+        self.overwriteButton = QPushButton('Overwrite preset')
+        self.overwriteButton.clicked.connect(self.overwritePreset)
+        self.overwriteButton.setToolTip("Overwrite the selected presets with the current tab and parameters")
+        #buttons.addButton(self.overwriteButton,QDialogButtonBox.ActionRole)
+        buttons.addWidget(self.overwriteButton)
 
         self.deleteButton = QPushButton('Delete preset')
         self.deleteButton.clicked.connect(self.deletePreset)
         self.deleteButton.setToolTip("Delete the selected preset. Default presets can not be deleted.")
-        buttons.addButton(self.deleteButton,QDialogButtonBox.ActionRole)
+        #buttons.addButton(self.deleteButton,QDialogButtonBox.ActionRole)
+        buttons.addWidget(self.deleteButton)
 
         #layout.addWidget(buttons,1)
 
 
+        buttons.addStretch()
 
         #buttons=QDialogButtonBox()
+        self.rejectButton=QPushButton('Cancel')
+        self.rejectButton.clicked.connect(self.close)
+        self.rejectButton.setToolTip("Close the preset dialog.")
+        buttons.addWidget(self.rejectButton)
+
         self.applyButton=QPushButton('Apply')
         self.applyButton.setDefault(True)
         self.applyButton.clicked.connect(self.loadPreset)
         self.applyButton.setToolTip("Load the selected preset.")
-        buttons.addButton(self.applyButton,QDialogButtonBox.AcceptRole)
+        #buttons.addButton(self.applyButton,QDialogButtonBox.AcceptRole)
+        buttons.addWidget(self.applyButton)
 
-        buttons.addButton(QDialogButtonBox.Cancel)
-        buttons.rejected.connect(self.close)
-        layout.addWidget(buttons,0)
+        #buttons.addButton(QDialogButtonBox.Cancel)
+        #buttons.rejected.connect(self.close)
+
+
+        #layout.addWidget(buttons,0)
+        layout.addLayout(buttons)
 
         #self.presetFolder = os.path.join(os.path.dirname(self.mainWindow.settings.fileName()),'presets')
         self.presetFolder = os.path.join(os.path.expanduser("~"),'Facepager','Presets')
@@ -136,6 +153,7 @@ class PresetWindow(QDialog):
 
             self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': '))[2:-2].replace('\"',''))
             self.detailColumns.setText("\n".join(data.get('columns',[])))
+
             self.detailWidget.show()
 
     def showPresets(self):
@@ -236,10 +254,6 @@ class PresetWindow(QDialog):
             raise Exception('Could not find unique filename')
         return filename
 
-
-
-
-
     def deletePreset(self):
         if not self.presetList.currentItem(): return False
         data = self.presetList.currentItem().data(Qt.UserRole)
@@ -279,6 +293,8 @@ class PresetWindow(QDialog):
         dialog.setLayout(layout)
 
         def save():
+            filename= self.uniqueFilename(name.text())
+
             data = {
                     'name':name.text(),
                     'description':description.toPlainText(),
@@ -287,8 +303,6 @@ class PresetWindow(QDialog):
                     'columns':self.mainWindow.fieldList.toPlainText().splitlines()
             }
 
-            filename= self.uniqueFilename(name.text())
-
             if not os.path.exists(os.path.dirname(filename)):
                 os.makedirs(os.path.dirname(filename))
 
@@ -296,6 +310,73 @@ class PresetWindow(QDialog):
                 json.dump(data, outfile,indent=2, separators=(',', ': '))
 
             self.initPresets()
+            dialog.close()
+
+
+
+        def close():
+            dialog.close()
+
+        #connect the nested functions above to the dialog-buttons
+        buttons.accepted.connect(save)
+        buttons.rejected.connect(close)
+        dialog.exec_()
+
+    def overwritePreset(self):
+        if not self.presetList.currentItem():
+            return False
+        data = self.presetList.currentItem().data(Qt.UserRole)
+
+        if data.get('default',False):
+            QMessageBox.information(self,"Facepager","Cannot overwrite default presets.")
+            return False
+
+        dialog=QDialog(self.mainWindow)
+        dialog.setWindowTitle("Overwrite selected preset")
+        layout=QVBoxLayout()
+
+        label=QLabel("<b>Name</b>")
+        layout.addWidget(label)
+        name=QLineEdit()
+        name.setText(data.get('name'))
+        layout.addWidget(name,0)
+
+        label=QLabel("<b>Description</b>")
+        layout.addWidget(label)
+
+        description=QTextEdit()
+        description.setMinimumWidth(500)
+        description.acceptRichText=False
+        description.setPlainText(data.get('description'))
+        description.setFocus()
+        layout.addWidget(description,1)
+
+        buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
+        layout.addWidget(buttons,0)
+        dialog.setLayout(layout)
+
+        def save():
+            filename = os.path.join(self.presetFolder,data.get('filename'))
+            #filename= self.uniqueFilename(name.text())
+
+            data.update ({
+                    'name':name.text(),
+                    'description':description.toPlainText(),
+                    'module':self.mainWindow.RequestTabs.currentWidget().name,
+                    'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
+                    'columns':self.mainWindow.fieldList.toPlainText().splitlines()
+            })
+
+            if not os.path.exists(os.path.dirname(filename)):
+                os.makedirs(os.path.dirname(filename))
+
+            reply = QMessageBox.question(self, 'Overwrite Preset',u"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                with open(filename, 'w') as outfile:
+                    json.dump(data, outfile,indent=2, separators=(',', ': '))
+
+                self.initPresets()
+
             dialog.close()
 
 
