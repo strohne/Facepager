@@ -703,6 +703,8 @@ class TwitterTab(ApiTab):
                 options['nodedata'] = 'statuses'
             elif options["query"] == 'followers/list':
                 options['nodedata'] = 'users'
+            elif options["query"] == 'followers/ids':
+                options['nodedata'] = 'ids'
             elif options["query"] == 'friends/list':
                 options['nodedata'] = 'users'
             else:
@@ -758,9 +760,13 @@ class TwitterTab(ApiTab):
 
             callback(data, options, headers)
 
-            # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
             paging = False
-            if isinstance(data,dict) and hasDictValue(data, "search_metadata.next_results"):
+            if isinstance(data,dict) and hasDictValue(data, "next_cursor_str") and (data["next_cursor_str"] != "0"):
+                paging = True
+                options['params']['cursor'] = data["next_cursor_str"]
+
+            # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
+            elif isinstance(data,dict) and hasDictValue(data, "search_metadata.next_results"):
                 paging = True
                 url, params = self.parseURL(getDictValue(data, "search_metadata.next_results", False))
                 options['url'] = urlpath
@@ -771,6 +777,12 @@ class TwitterTab(ApiTab):
             elif isinstance(data,list) and (len(data) > 0):
                 options['params']['max_id'] = int(data[-1]["id"])-1
                 paging = True
+
+#             elif isinstance(data,dict) and hasDictValue(data, options['nodedata']+".*.id"):
+#                 newnodes = getDictValue(data,options['nodedata'],False)
+#                 if (type(newnodes) is list) and (len(newnodes) > 0):
+#                     options['params']['max_id'] = int(newnodes[-1]['id'])-1
+#                     paging = True
 
             if not paging:
                 break
