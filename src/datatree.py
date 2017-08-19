@@ -205,9 +205,11 @@ class TreeItem(object):
 
         #filter response
         if options['nodedata'] is not None:
+            subkey = options['nodedata'].rsplit('.', 1)[0]
             nodes = getDictValue(data, options['nodedata'], False)
             offcut = filterDictValue(data, options['nodedata'], False)
         else:
+            subkey = 0
             nodes = data
             offcut = None
 
@@ -219,7 +221,7 @@ class TreeItem(object):
         def appendNode(objecttype, objectid, response):
             new = Node(objectid, dbnode.id)
             new.objecttype = objecttype
-            new.response = response
+            new.response = response if isinstance(response,dict) else {subkey : response}
             new.level = dbnode.level + 1
             new.querystatus = options.get("querystatus", "")
             new.querytime = str(options.get("querytime", ""))
@@ -263,11 +265,12 @@ class TreeItem(object):
             return False
 
         # extract nodes
+        subkey = key.rsplit('.', 1)[0]
         newnodes = []
         for n in nodes:
             new = Node(dbnode.objectid, dbnode.id)
             new.objecttype = 'unpacked'
-            new.response = n
+            new.response = n if isinstance(n,dict) else {subkey : n}
             new.level = dbnode.level + 1
             new.querystatus = dbnode.querystatus
             new.querytime = dbnode.querytime

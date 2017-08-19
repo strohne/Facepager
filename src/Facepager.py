@@ -289,7 +289,7 @@ class MainWindow(QMainWindow):
         #Error Box
         self.errorEdit = QSpinBox(self)
         self.errorEdit.setMinimum(1)
-        self.errorEdit.setMaximum(200)
+        self.errorEdit.setMaximum(10)
         self.errorEdit.setValue(3)
         self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
         fetchsettings.addRow("Maximum errors", self.errorEdit)

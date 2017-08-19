@@ -10,6 +10,12 @@ def hasDictValue(data,multikey):
                 value = hasDictValue(value,keys[1])
             else:
                 value = keys[0] in data
+        elif type(data) is list and keys[0] == '*':
+            if len(keys) > 1 and len(data) > 0:
+                value = data[0]
+                value = hasDictValue(value,keys[1])
+            else:
+                value = len(data) > 0
 
         else:
             value = False
