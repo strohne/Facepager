@@ -126,13 +126,13 @@ class PresetWindow(QDialog):
         self.presetFolder = os.path.join(os.path.expanduser("~"),'Facepager','Presets')
 
 
-        self.presetVersion = '3_8'
+        self.presetVersion = '3_9'
         self.presetSuffix = '-'+self.presetVersion+'.json'
 
-        if getattr(sys, 'frozen', False):
-            self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
-        elif __file__:
-            self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
+#         if getattr(sys, 'frozen', False):
+#             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
+#         elif __file__:
+#             self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
 
 
     def currentChanged(self):
@@ -209,10 +209,10 @@ class PresetWindow(QDialog):
         except Exception as e:
              QMessageBox.information(self,"Facepager","Error loading online presets:"+str(e))
 
-        if os.path.exists(self.defaultPresetFolder):
-            files = [f for f in os.listdir(self.defaultPresetFolder) if f.endswith(self.presetSuffix)]
-            for filename in files:
-                self.addPresetItem(self.defaultPresetFolder,filename,True)
+#         if os.path.exists(self.defaultPresetFolder):
+#             files = [f for f in os.listdir(self.defaultPresetFolder) if f.endswith(self.presetSuffix)]
+#             for filename in files:
+#                 self.addPresetItem(self.defaultPresetFolder,filename,True)
 
         if os.path.exists(self.presetFolder):
             files = [f for f in os.listdir(self.presetFolder) if f.endswith(self.presetSuffix)]
@@ -293,7 +293,7 @@ class PresetWindow(QDialog):
         dialog.setLayout(layout)
 
         def save():
-            filename= self.uniqueFilename(name.text())
+            filename= self.uniqueFilename(self.mainWindow.RequestTabs.currentWidget().name+"-"+name.text())
 
             data = {
                     'name':name.text(),
