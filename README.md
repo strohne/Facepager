@@ -3,6 +3,10 @@
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
 All data is stored in a SQLite database and may be exported to csv. 
 
+### Current status
+
+Please be aware of API upgrades by Facebook. API version 2.3 is no longer supported and automatically redirected to some higher version. Facebook now only provides limited fields by default. Change the version in the base path to `v2.10` and use the `fields`-parameter (left side) to specify the data you want (right side, comma delimited). The available fields are listed in the Facebook Graph API reference, e.g. https://developers.facebook.com/docs/graph-api/reference/page/
+
 ### Installer
 
 Installation packages for each versions are available on the [releases page](https://github.com/strohne/Facepager/releases). Database files may be incompatible between versions.
