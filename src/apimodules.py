@@ -38,6 +38,7 @@ class ApiTab(QWidget):
         self.name = name
         self.connected = False
         self.lastrequest = None
+        self.speed = None
         self.loadDocs()
         self.lock_session = threading.Lock()
 
@@ -238,17 +239,17 @@ class ApiTab(QWidget):
                 self.session = requests.Session()
         return self.session
 
-    def request(self, path, args=None, headers=None, jsonify=True,speed=None):
+    def request(self, path, args=None, headers=None, jsonify=True):
         """
         Start a new threadsafe session and request
         """
 
         #Throttle speed
-        if (speed is not None) and (self.lastrequest is not None):
-            pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+        if (self.speed is not None) and (self.lastrequest is not None):
+            pause = ((60 * 1000) / float(self.speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
             while (self.connected) and (pause > 0):
                 time.sleep(0.1)
-                pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+                pause = ((60 * 1000) / float(self.speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
 
         self.lastrequest = QDateTime.currentDateTime()
 
@@ -365,8 +366,8 @@ class ApiTab(QWidget):
                     filenumber = filenumber + 1
                 else:
                     break
-            return fullfilename
-
+            return fullfilename        
+        
         response = self.request(path, args, headers, jsonify=False)
 
         # Handle the response of the generic, non-json-returning response
@@ -519,6 +520,7 @@ class FacebookTab(ApiTab):
         if options['access_token'] == '':
             raise Exception('Access token is missing, login please!')
         self.connected = True
+        self.speed = options.get('speed',None) 
 
         # Abort condition for time based pagination
         since = options['params'].get('since', False)
@@ -557,7 +559,7 @@ class FacebookTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,None,True,options.get('speed',None) )
+            data, headers, status = self.request(urlpath, urlparams,None,True)
 
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
@@ -740,6 +742,8 @@ class TwitterTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
+        self.speed = options.get('speed',None)
+        
         for page in range(0, options.get('pages', 1)):
             if not ('url' in options):
                 urlpath = options["basepath"] + options["query"] + ".json"
@@ -754,7 +758,7 @@ class TwitterTab(ApiTab):
                                                                                    urlparams)))
 
             # data
-            data, headers, status = self.request(urlpath, urlparams)
+            data, headers, status = self.request(urlpath, urlparams,None,True)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 
@@ -1138,12 +1142,13 @@ class GenericTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
+        self.speed = options.get('speed',None)
         urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         if options['logrequests']:
                 logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
         #data
-        data, headers, status = self.request(urlpath, urlparams)
+        data, headers, status = self.request(urlpath, urlparams,None,True)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
 
@@ -1217,6 +1222,8 @@ class FilesTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
+        self.speed = options.get('speed',None)
+        
         foldername = options.get('folder', None)
         if (foldername is None) or (not os.path.isdir(foldername)):
             raise Exception("Folder does not exists, select download folder, please!")
