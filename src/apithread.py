@@ -157,7 +157,7 @@ class ApiThread(threading.Thread):
                         if job is not None:
                             self.output.put({'progress': job.get('number', 0)})
                 except Exception as e:
-                    logmessage(e)
+                    logMessage(e)
 
                 self.process.wait()
         finally:
