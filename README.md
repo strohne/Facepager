@@ -26,6 +26,10 @@ Installation packages for each versions are available on the [releases page](htt
 7. Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
 8. For further information, click the "help" button and try the default presets
 
+### Getting help
+
+Try the help button built into Facepager. You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/groups/136224396995428/).
+
 
 ### Citation
 
