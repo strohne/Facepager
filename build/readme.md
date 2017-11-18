@@ -11,3 +11,13 @@ Adjust paths and version numbers in
 - build.bat
 
 Run build.bat
+
+## OS X El Capitan
+
+Setup Facepager to run in your environment, see src/readme.txt
+
+Adjust paths and version numbers in
+- src/setup_osx.py
+- build.command
+
+Run build.command
