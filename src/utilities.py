@@ -1,4 +1,13 @@
 import json
+import os,sys,platform
+
+def getResourceFolder():
+    if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
+        folder = os.path.dirname(sys.executable)
+    else:
+        folder = os.getcwd()
+
+    return folder
 
 def hasDictValue(data,multikey):
     try:

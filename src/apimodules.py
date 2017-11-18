@@ -159,11 +159,7 @@ class ApiTab(QWidget):
         '''
 
         try:
-            if getattr(sys, 'frozen', False):
-                folder = os.path.join(os.path.dirname(sys.executable),'docs')
-            elif __file__:
-                folder = os.path.join(os.path.dirname(__file__),'docs')
-
+            folder = os.path.join(getResourceFolder(),'docs')
             filename = u"{0}.json".format(self.__class__.__name__)
 
             with open(os.path.join(folder, filename),"r") as docfile:
@@ -366,8 +362,8 @@ class ApiTab(QWidget):
                     filenumber = filenumber + 1
                 else:
                     break
-            return fullfilename        
-        
+            return fullfilename
+
         response = self.request(path, args, headers, jsonify=False)
 
         # Handle the response of the generic, non-json-returning response
@@ -520,7 +516,7 @@ class FacebookTab(ApiTab):
         if options['access_token'] == '':
             raise Exception('Access token is missing, login please!')
         self.connected = True
-        self.speed = options.get('speed',None) 
+        self.speed = options.get('speed',None)
 
         # Abort condition for time based pagination
         since = options['params'].get('since', False)
@@ -743,7 +739,7 @@ class TwitterTab(ApiTab):
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
         self.speed = options.get('speed',None)
-        
+
         for page in range(0, options.get('pages', 1)):
             if not ('url' in options):
                 urlpath = options["basepath"] + options["query"] + ".json"
@@ -1223,7 +1219,7 @@ class FilesTab(ApiTab):
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
         self.speed = options.get('speed',None)
-        
+
         foldername = options.get('folder', None)
         if (foldername is None) or (not os.path.isdir(foldername)):
             raise Exception("Folder does not exists, select download folder, please!")

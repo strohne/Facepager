@@ -451,10 +451,14 @@ if __name__ == "__main__":
         logging.basicConfig(filename=os.path.join(logfolder,'facepager.log'),level=logging.ERROR,format='%(asctime)s %(levelname)s:%(message)s')
     except Exception as e:
         print u"Error intitializing log file: {}".format(e.message)
-    finally:
-        #cProfile.run('startMain()')
-        #yappi.start()
-        startMain()
-        #yappi.print_stats()
+
+
+    # Locate the SSL certificate for requests
+    os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(getResourceFolder() , 'ssl', 'cacert.pem')
+
+    #cProfile.run('startMain()')
+    #yappi.start()
+    startMain()
+    #yappi.print_stats()
 
 

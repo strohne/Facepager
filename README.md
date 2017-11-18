@@ -28,19 +28,21 @@ Installation packages for each versions are available on the [releases page](htt
 
 ### Getting help
 
-Try the help button built into Facepager. You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/groups/136224396995428/).
+Try the [help button](https://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html) built into Facepager.
+
+You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/groups/136224396995428/).
 
 
 ### Citation
 
-[Keyling, Till](http://tillkeyling.com/) / [Jünger, Jakob](https://ipk.uni-greifswald.de/kommunikationswissenschaft/jakob-juenger/) (2017). Facepager. An application for generic data retrieval through APIs. Source code and releases available at https://github.com/strohne/Facepager/.
+[Jünger, Jakob](https://ipk.uni-greifswald.de/kommunikationswissenschaft/dr-jakob-juenger/) / [Keyling, Till](http://tillkeyling.com/) (2017). Facepager. An application for generic data retrieval through APIs. Source code and releases available at https://github.com/strohne/Facepager/.
 
 ### Licence
 
 
 MIT License
 
-Copyright (c) 2016 Till Keyling and Jakob Jünger
+Copyright (c) 2017 Jakob Jünger and Till Keyling
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -18,6 +18,8 @@ class PresetWindow(QDialog):
         self.setMinimumWidth(700);
         self.setMinimumHeight(600);
 
+
+
         #layout
         layout = QVBoxLayout(self)
         central = QHBoxLayout()
@@ -122,8 +124,16 @@ class PresetWindow(QDialog):
         #layout.addWidget(buttons,0)
         layout.addLayout(buttons)
 
+        #status bar
+        self.statusbar = QStatusBar()
+        #self.folderLabel = QLabel("")
+        #self.statusbar.addWidget(self.folderLabel)
+        layout.addWidget(self.statusbar)
+
+
         #self.presetFolder = os.path.join(os.path.dirname(self.mainWindow.settings.fileName()),'presets')
         self.presetFolder = os.path.join(os.path.expanduser("~"),'Facepager','Presets')
+        self.statusbar.showMessage(self.presetFolder)
 
 
         self.presetVersion = '3_9'
@@ -202,7 +212,7 @@ class PresetWindow(QDialog):
         self.detailWidget.hide()
 
         try:
-            files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/src/presets").json()
+            files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
             files = [f['path'] for f in files if f['path'].endswith(self.presetSuffix)]
             for filename in files:
                 self.addPresetItem("https://raw.githubusercontent.com/strohne/Facepager/master/",filename,True,True)

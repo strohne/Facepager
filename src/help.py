@@ -17,13 +17,6 @@ class HelpWindow(QMainWindow):
         vLayout = QVBoxLayout(central)
         self.browser = QWebView(central)
 
-        if getattr(sys, 'frozen', False):
-            application_path = os.path.dirname(sys.executable)
-        elif __file__:
-            application_path = os.path.dirname(__file__)
-
-        #self.loadPage()
-
         vLayout.addWidget(self.browser)
         hLayout = QHBoxLayout()
         vLayout.addLayout(hLayout)
