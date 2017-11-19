@@ -22,9 +22,19 @@ class PresetWindow(QDialog):
 
         #layout
         layout = QVBoxLayout(self)
+        self.setLayout(layout)
+
+
+        #loading indicator
+        self.loadingIndicator = QLabel('Loading...please wait a second.')
+        self.loadingIndicator.hide()
+        layout.addWidget(self.loadingIndicator)
+
+
+        #Middle
         central = QHBoxLayout()
         layout.addLayout(central,1)
-        self.setLayout(layout)
+
 
         #list view
         self.presetList = QListWidget(self)
@@ -167,6 +177,10 @@ class PresetWindow(QDialog):
             self.detailWidget.show()
 
     def showPresets(self):
+        self.clear()
+        self.show()
+        QApplication.processEvents()
+
         self.initPresets()
         self.exec_()
 
@@ -206,7 +220,14 @@ class PresetWindow(QDialog):
 
 
 
+    def clear(self):
+        self.presetList.clear()
+        self.detailWidget.hide()
+        self.loadingIndicator.show()
+
     def initPresets(self):
+        self.loadingIndicator.show()
+
         #self.defaultPresetFolder
         self.presetList.clear()
         self.detailWidget.hide()
@@ -233,6 +254,8 @@ class PresetWindow(QDialog):
         self.presetList.setCurrentRow(0)
         self.presetList.sortItems()
         self.applyButton.setDefault(True)
+
+        self.loadingIndicator.hide()
 
         #self.currentChanged()
 
@@ -385,9 +408,10 @@ class PresetWindow(QDialog):
                 with open(filename, 'w') as outfile:
                     json.dump(data, outfile,indent=2, separators=(',', ': '))
 
+                dialog.close()
                 self.initPresets()
-
-            dialog.close()
+            else:
+                dialog.close()
 
 
 
