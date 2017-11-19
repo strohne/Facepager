@@ -11,6 +11,8 @@ import threading
 
 from PySide.QtWebKit import QWebView, QWebPage
 from PySide.QtGui import QMessageBox
+from PySide.QtCore import QUrl
+
 import requests
 from requests.exceptions import *
 from rauth import OAuth1Service
@@ -319,6 +321,7 @@ class ApiTab(QWidget):
 
         #Connect to the getToken-method
         self.login_webview.urlChanged.connect(self.getToken)
+        webpage.urlNotFound.connect(self.getToken) #catch redirects to localhost or nonexistent uris
 
         # Connect to the loadFinished-Slot for an error message
         self.login_webview.loadFinished.connect(self.loadFinished)
@@ -1068,6 +1071,9 @@ class YoutubeTab(ApiTab):
 
         self.clientIdEdit = QLineEdit()
         self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        self.clientSecretEdit = QLineEdit()
+        self.clientSecretEdit.setEchoMode(QLineEdit.Password)
+
         self.scopeEdit = QLineEdit()
 
         # Construct Login-Layout
@@ -1078,6 +1084,8 @@ class YoutubeTab(ApiTab):
 
         applayout = QHBoxLayout()
         applayout.addWidget(self.clientIdEdit)
+        applayout.addWidget(QLabel("Client Secret"))
+        applayout.addWidget(self.clientSecretEdit)
         applayout.addWidget(QLabel("Scope"))
         applayout.addWidget(self.scopeEdit)
 
@@ -1114,21 +1122,20 @@ class YoutubeTab(ApiTab):
             options['querytype'] = self.name + ':' + self.relationEdit.currentText()
             options['access_token'] = self.tokenEdit.text()
             options['client_id'] = self.clientIdEdit.text()
+            options['client_secret'] = self.clientSecretEdit.text()
 
 
         # options for data handling
         if purpose == 'fetch':
-            options['objectid'] = 'id'
-            options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
+            options['objectid'] = 'id.videoId'
+            options['nodedata'] = 'items'
 
         return options
 
     def setOptions(self, options):
         #define default values
         if options.get('basepath','') == '':
-            options['basepath']= "https://www.googleapis.com/youtube/v3/"
-        if options.get('scope','') == '':
-            options['scope']= "https://www.googleapis.com/auth/youtube.readonly"
+            options['basepath'] = credentials['youtube']['basepath']
 
         #set values
         self.relationEdit.setEditText(options.get('relation', 'videos'))
@@ -1196,20 +1203,26 @@ class YoutubeTab(ApiTab):
     @Slot()
     def doLogin(self, query=False, caption="YouTube Login Page",url=""):
         #use credentials from input if provided
-        clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['youtube_client_id']
-        scope= self.scopeEdit.text()
-        url = "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + clientid + "&redirect_uri=https://www.example.com&response_type=token&scope="+scope+"&display=popup"
+        client_id = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['youtube']['client_id']
+        scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else credentials['youtube']['scope']
+        redirect_uri = credentials['youtube']['redirect_uri']
+
+        self.session = OAuth2Session(client_id, redirect_uri=redirect_uri,scope=[scope])
+        url = credentials['youtube']['auth_uri'] + "?client_id=" + client_id + "&redirect_uri="+redirect_uri+"&response_type=code" + "&scope="+scope
 
         super(YoutubeTab, self).doLogin(query, caption, url)
 
-    @Slot()
-    def getToken(self):
-        url = urlparse.parse_qs(self.login_webview.url().toString())
-        if "https://www.example.com#access_token" in url:
-            token = url["https://www.example.com#access_token"]
-            if token:
-                self.tokenEdit.setText(token[0])
-                self.login_webview.parent().close()
+    @Slot(QUrl)
+    def getToken(self,url):
+        if url.toString().startswith(credentials['youtube']['redirect_uri']):
+            client_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else credentials['youtube']['client_secret']
+            token = self.session.fetch_token(credentials['youtube']['token_uri'],
+                    authorization_response=str(url.toString()),
+                    client_secret=client_secret)
+
+            self.tokenEdit.setText(token['access_token'])
+
+            self.login_webview.parent().close()
 
 
 class GenericTab(ApiTab):
@@ -1391,6 +1404,7 @@ class FilesTab(ApiTab):
 
 class QWebPageCustom(QWebPage):
     logmessage = Signal(str)
+    urlNotFound = Signal(QUrl)
 
     def __init__(self, *args, **kwargs):
         super(QWebPageCustom, self).__init__(*args, **kwargs)
@@ -1406,17 +1420,20 @@ class QWebPageCustom(QWebPage):
         if extension != QWebPage.ErrorPageExtension: return False
 
         if option.domain == QWebPage.QtNetwork:
-            msg = "Network error (" + str(option.error) + "): " + option.errorString
+            #msg = "Network error (" + str(option.error) + "): " + option.errorString
+            #self.logmessage.emit(msg)
+            self.urlNotFound.emit(option.url)
 
         elif option.domain == QWebPage.Http:
             msg = "HTTP error (" + str(option.error) + "): " + option.errorString
+            self.logmessage.emit(msg)
 
         elif option.domain == QWebPage.WebKit:
             msg = "WebKit error (" + str(option.error) + "): " + option.errorString
+            self.logmessage.emit(msg)
         else:
             msg = option.errorString
-
-        self.logmessage.emit(msg)
+            self.logmessage.emit(msg)
 
         return True
 
