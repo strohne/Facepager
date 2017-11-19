@@ -107,13 +107,15 @@ python Facepager.py
 
 #######
 #
-#   Steps to run under OSX El Capitan
+#   Steps to run under OSX El Capitan in VMWare
 #
-#	tested in virtual machine under windows 10, see 
-#	http://techsviewer.com/how-to-install-mac-os-x-el-capitan-on-vmware-on-pc/
+#	tested in virtual machine with VMware Workstation 12 Player under windows 10
+#   see http://techsviewer.com/how-to-install-mac-os-x-el-capitan-on-vmware-on-pc/
 #
 #######
 
+
+0. Install OSX in virtual machine
 
 
 1.Prepare system
@@ -144,9 +146,19 @@ python Facepager.py
 	pip install rauth
 	pip install pandas
 	
-	
-3. Create credentials.py (see above)
+
+3. Install Facepager
+
+    - Download from github or clone (https://github.com/strohne/Facepager.git)
+    
+	- To clone via https open terminal and run the following commands:
+	  (could fail in virtual machine, workaround is to install GitHub Desktop?)
+	  (adjust folder name if neccessary)
+	  
+	    $ cd Documents
+	    $ git clone https://github.com/strohne/Facepager.git
+  	  
+	  
+    - Create credentials.py (see above)
 
 4. Launch Facepager.py (with python launcher, not in terminal)
-
-	

@@ -96,11 +96,7 @@ class DictionaryTreeModel(QAbstractItemModel):
             #Load documentation corresponding to itemtype
             docid = self.itemtype.split(':')[0]
             if not docid in self.documentation:
-                if getattr(sys, 'frozen', False):
-                    folder = os.path.join(os.path.dirname(sys.executable),'docs')
-                elif __file__:
-                    folder = os.path.join(os.path.dirname(__file__),'docs')
-
+                folder = os.path.join(getResourceFolder(),'docs')
                 filename = u"{}Fields.json".format(docid)
 
                 self.documentation[docid] = json.load(open(os.path.join(folder, filename),"r"))

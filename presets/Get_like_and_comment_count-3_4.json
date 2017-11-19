@@ -1,0 +1,22 @@
+{
+  "columns": [
+    "from.name",
+    "message",
+    "likes.summary.total_count",
+    "comments.summary.total_count",
+    "created_time",
+    "updated_time"
+  ],
+  "options": {
+    "basepath": "https://graph.facebook.com/v2.6/",
+    "params": {
+      "fields": "message,from{name},created_time,updated_time,comments.limit(1).summary(true),likes.limit(1).summary(true)",
+      "limit": "10"
+    },
+    "relation": "<Object ID>/posts",
+    "pages": 1
+  },
+  "name": "Get like and comment count",
+  "module": "Facebook",
+  "description": "Add Facebook IDs as nodes (e.g. \"Tatort\"), login to Facebook and then fetch data.\n\nPay attention: the fields parameter limits the data fields returned by Facebook. But it enables getting like and comment count in a single request.\n\nSee https://developers.facebook.com/docs/reference/api/field_expansion/"
+}

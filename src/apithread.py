@@ -12,6 +12,7 @@ class ApiThreadPool():
         self.threads = []
         self.pool_lock = threading.Lock()
         self.threadcount = 0
+        self.jobcount = 0
 
     def getLogMessage(self):
         try:
@@ -26,6 +27,9 @@ class ApiThreadPool():
             return msg
 
     def addJob(self, job):
+        if job is not None:
+            job['number'] = self.jobcount
+            self.jobcount += 1
         self.input.put(job)
 
     def getJob(self):
@@ -39,6 +43,11 @@ class ApiThreadPool():
             job = {'waiting': True}
         finally:
             return job
+
+    def closeJobs(self):
+        with self.pool_lock:
+            for x in range(0,self.threadcount):
+                self.addJob(None)  # sentinel empty job
 
     def processJobs(self,threadcount=None):
         with self.pool_lock:
@@ -56,20 +65,34 @@ class ApiThreadPool():
                 self.addThread()
 
     def addThread(self):
-        self.addJob(None)  # sentinel empty job
+        #self.addJob(None)  # sentinel empty job
         thread = ApiThread(self.input, self.output, self.module, self,self.logs)
         self.threadcount += 1
         self.threads.append(thread)
+
         thread.start()
+        thread.process.set()
+
 
     def removeThread(self):
         if count(self.threads):
             self.threads[0].halt.set()
+            self.threads[0].process.set()
 
     def stopJobs(self):
         for thread in self.threads:
             thread.halt.set()
+            thread.process.set()
+
         self.module.disconnectSocket()
+
+    def suspendJobs(self):
+        for thread in self.threads:
+            thread.process.clear()
+
+    def resumeJobs(self):
+        for thread in self.threads:
+            thread.process.set()
 
     def threadFinished(self):
         with self.pool_lock:
@@ -78,6 +101,9 @@ class ApiThreadPool():
                 with self.input.mutex:
                     self.input.queue.clear()
                 self.output.put(None)  #sentinel
+
+    def getJobCount(self):
+        return self.input.qsize()
 
     def getThreadCount(self):
         with self.pool_lock:
@@ -104,6 +130,7 @@ class ApiThread(threading.Thread):
         self.module = module
         self.logs = logs
         self.halt = threading.Event()
+        self.process = threading.Event()
 
     def run(self):
         def streamingData(data, options, headers, streamingTab=False):
@@ -130,6 +157,8 @@ class ApiThread(threading.Thread):
                         if job is not None:
                             self.output.put({'progress': job.get('number', 0)})
                 except Exception as e:
-                    logmessage(e)
+                    logMessage(e)
+
+                self.process.wait()
         finally:
             self.pool.threadFinished()

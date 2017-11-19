@@ -42,6 +42,7 @@ class ApiTab(QWidget):
         self.name = name
         self.connected = False
         self.lastrequest = None
+        self.speed = None
         self.loadDocs()
         self.lock_session = threading.Lock()
 
@@ -162,11 +163,7 @@ class ApiTab(QWidget):
         '''
 
         try:
-            if getattr(sys, 'frozen', False):
-                folder = os.path.join(os.path.dirname(sys.executable),'docs')
-            elif __file__:
-                folder = os.path.join(os.path.dirname(__file__),'docs')
-
+            folder = os.path.join(getResourceFolder(),'docs')
             filename = u"{0}.json".format(self.__class__.__name__)
 
             with open(os.path.join(folder, filename),"r") as docfile:
@@ -242,17 +239,17 @@ class ApiTab(QWidget):
                 self.session = requests.Session()
         return self.session
 
-    def request(self, path, args=None, headers=None, jsonify=True,speed=None):
+    def request(self, path, args=None, headers=None, jsonify=True):
         """
         Start a new threadsafe session and request
         """
 
         #Throttle speed
-        if (speed is not None) and (self.lastrequest is not None):
-            pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+        if (self.speed is not None) and (self.lastrequest is not None):
+            pause = ((60 * 1000) / float(self.speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
             while (self.connected) and (pause > 0):
                 time.sleep(0.1)
-                pause = ((60 * 1000) / float(speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+                pause = ((60 * 1000) / float(self.speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
 
         self.lastrequest = QDateTime.currentDateTime()
 
@@ -405,7 +402,7 @@ class FacebookTab(ApiTab):
         #Base path
         #URL prefix
         self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, ['https://graph.facebook.com/v2.2/'])
+        self.basepathEdit.insertItems(0, ['https://graph.facebook.com/v2.3/'])
         self.basepathEdit.setEditable(True)
 
 
@@ -524,6 +521,7 @@ class FacebookTab(ApiTab):
         if options['access_token'] == '':
             raise Exception('Access token is missing, login please!')
         self.connected = True
+        self.speed = options.get('speed',None)
 
         # Abort condition for time based pagination
         since = options['params'].get('since', False)
@@ -538,15 +536,14 @@ class FacebookTab(ApiTab):
                 urlpath = options["basepath"] + options['relation']
                 urlparams = {}
 
-                if options['relation'] == 'search':
-                    urlparams['q'] = self.idtostr(nodedata['objectid'])
-                    urlparams['type'] = 'page'
-
-                elif options['relation'] == '<Object ID>':
-                    urlparams['metadata'] = '1'
-
-                elif '<Object ID>/' in options['relation']:
-                    urlparams['limit'] = '100'
+#                 if options['relation'] == 'search':
+#                     urlparams['q'] = self.idtostr(nodedata['objectid'])
+#                     urlparams['type'] = 'page'
+#                 elif options['relation'] == '<Object ID>':
+#                     urlparams['metadata'] = '1'
+#
+#                 elif '<Object ID>/' in options['relation']:
+#                     urlparams['limit'] = '100'
 
                 urlparams.update(options['params'])
 
@@ -563,9 +560,18 @@ class FacebookTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,None,True,options.get('speed',None) )
-            options['querystatus'] = status
+            data, headers, status = self.request(urlpath, urlparams,None,True)
 
+            if (status != "fetched (200)"):
+                msg = getDictValue(data,"error.message")
+                code = getDictValue(data,"error.code")
+                logCallback(u"Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'],msg))
+
+                #see https://developers.facebook.com/docs/graph-api/using-graph-api
+                if (code in [4,17,341]) and (status == "error (400)"):
+                    status = "rate limit (400)"
+
+            options['querystatus'] = status
             callback(data, options, headers)
 
             # paging
@@ -699,6 +705,8 @@ class TwitterTab(ApiTab):
                 options['nodedata'] = 'statuses'
             elif options["query"] == 'followers/list':
                 options['nodedata'] = 'users'
+            elif options["query"] == 'followers/ids':
+                options['nodedata'] = 'ids'
             elif options["query"] == 'friends/list':
                 options['nodedata'] = 'users'
             else:
@@ -734,6 +742,8 @@ class TwitterTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
+        self.speed = options.get('speed',None)
+
         for page in range(0, options.get('pages', 1)):
             if not ('url' in options):
                 urlpath = options["basepath"] + options["query"] + ".json"
@@ -748,15 +758,19 @@ class TwitterTab(ApiTab):
                                                                                    urlparams)))
 
             # data
-            data, headers, status = self.request(urlpath, urlparams)
+            data, headers, status = self.request(urlpath, urlparams,None,True)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 
             callback(data, options, headers)
 
-            # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
             paging = False
-            if isinstance(data,dict) and hasDictValue(data, "search_metadata.next_results"):
+            if isinstance(data,dict) and hasDictValue(data, "next_cursor_str") and (data["next_cursor_str"] != "0"):
+                paging = True
+                options['params']['cursor'] = data["next_cursor_str"]
+
+            # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
+            elif isinstance(data,dict) and hasDictValue(data, "search_metadata.next_results"):
                 paging = True
                 url, params = self.parseURL(getDictValue(data, "search_metadata.next_results", False))
                 options['url'] = urlpath
@@ -767,6 +781,12 @@ class TwitterTab(ApiTab):
             elif isinstance(data,list) and (len(data) > 0):
                 options['params']['max_id'] = int(data[-1]["id"])-1
                 paging = True
+
+#             elif isinstance(data,dict) and hasDictValue(data, options['nodedata']+".*.id"):
+#                 newnodes = getDictValue(data,options['nodedata'],False)
+#                 if (type(newnodes) is list) and (len(newnodes) > 0):
+#                     options['params']['max_id'] = int(newnodes[-1]['id'])-1
+#                     paging = True
 
             if not paging:
                 break
@@ -1301,12 +1321,13 @@ class GenericTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
+        self.speed = options.get('speed',None)
         urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
         if options['logrequests']:
                 logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
         #data
-        data, headers, status = self.request(urlpath, urlparams)
+        data, headers, status = self.request(urlpath, urlparams,None,True)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
 
@@ -1380,6 +1401,8 @@ class FilesTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
+        self.speed = options.get('speed',None)
+
         foldername = options.get('folder', None)
         if (foldername is None) or (not os.path.isdir(foldername)):
             raise Exception("Folder does not exists, select download folder, please!")

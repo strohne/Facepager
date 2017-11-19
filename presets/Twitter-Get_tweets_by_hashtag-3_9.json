@@ -1,0 +1,21 @@
+{
+  "description": "Add the hashtags (including the hash) as nodes, then fetch data.",
+  "default": false,
+  "module": "Twitter",
+  "filename": "Get_tweets_by_hashtag-3_8.json",
+  "caption": "Twitter: Get tweets by hashtag",
+  "online": false,
+  "options": {
+    "query": "search/tweets",
+    "basepath": "https://api.twitter.com/1.1/",
+    "params": {
+      "q": "<Object ID>"
+    },
+    "pages": 10
+  },
+  "columns": [
+    "ids",
+    "created_at"
+  ],
+  "name": "Get tweets by hashtag"
+}

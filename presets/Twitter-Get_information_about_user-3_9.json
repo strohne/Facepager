@@ -1,0 +1,17 @@
+{
+  "columns": [
+    "type",
+    "error.message"
+  ],
+  "options": {
+    "query": "users/show",
+    "basepath": "https://api.twitter.com/1.1/",
+    "params": {
+      "screen_name": "<Object ID>"
+    },
+    "pages": 10
+  },
+  "name": "Get information about user",
+  "module": "Twitter",
+  "description": "Add user name as node, then fetch data"
+}

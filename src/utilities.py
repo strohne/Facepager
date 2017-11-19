@@ -1,4 +1,13 @@
 import json
+import os,sys,platform
+
+def getResourceFolder():
+    if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
+        folder = os.path.dirname(sys.executable)
+    else:
+        folder = os.getcwd()
+
+    return folder
 
 def hasDictValue(data,multikey):
     try:
@@ -10,6 +19,12 @@ def hasDictValue(data,multikey):
                 value = hasDictValue(value,keys[1])
             else:
                 value = keys[0] in data
+        elif type(data) is list and keys[0] == '*':
+            if len(keys) > 1 and len(data) > 0:
+                value = data[0]
+                value = hasDictValue(value,keys[1])
+            else:
+                value = len(data) > 0
 
         else:
             value = False
