@@ -115,6 +115,8 @@ python Facepager.py
 #######
 
 
+0. Install OSX in virtual machine
+
 
 1.Prepare system
 1.1 Install python 2.7 from python.org. This gives you a Python folder under Applications, containing the Python Launcher
@@ -147,11 +149,16 @@ python Facepager.py
 
 3. Install Facepager
 
-    - Create new folder, e.g. Documents/Facepager 
-    - Open terminal and run the following commands (adjust folder name if neccessary)
-	    $ cd Documents/Facepager		
-	    $ git clone https://github.com/strohne/Facepager
-		
+    - Download from github or clone (https://github.com/strohne/Facepager.git)
+    
+	- To clone via https open terminal and run the following commands:
+	  (could fail in virtual machine, workaround is to install GitHub Desktop?)
+	  (adjust folder name if neccessary)
+	  
+	    $ cd Documents
+	    $ git clone https://github.com/strohne/Facepager.git
+  	  
+	  
     - Create credentials.py (see above)
 
 4. Launch Facepager.py (with python launcher, not in terminal)
