@@ -133,7 +133,7 @@ class ApiTab(QWidget):
             self.tokensecretEdit.setText(options.get('access_token_secret', ''))
         if options.has_key('consumer_key'):
             self.consumerKeyEdit.setText(options.get('consumer_key',''))
-        if options.has_key('twitter_consumer_secret'):
+        if options.has_key('consumer_secret'):
             self.consumerSecretEdit.setText(options.get('consumer_secret',''))
 
     def saveSettings(self):
@@ -402,36 +402,16 @@ class FacebookTab(ApiTab):
         #Base path
         #URL prefix
         self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, ['https://graph.facebook.com/v2.3/'])
+        self.basepathEdit.insertItems(0, [credentials['facebook']['basepath']])
         self.basepathEdit.setEditable(True)
-
-
 
         # Query Box
         self.setRelations()
-
-#         #Download folder
-#         folderlayout = QHBoxLayout()
-#
-#         self.folderEdit = QLineEdit()
-#         folderlayout.addWidget(self.folderEdit)
-#
-#         self.folderButton = QPushButton("...", self)
-#         self.folderButton.clicked.connect(self.selectFolder)
-#         folderlayout.addWidget(self.folderButton)
-
-
-
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
         self.pagesEdit.setMinimum(1)
         self.pagesEdit.setMaximum(50000)
-
-
-
-
-        #self.basepathEdit = QLineEdit()
 
         # Login-Boxes
         self.tokenEdit = QLineEdit()
@@ -501,9 +481,7 @@ class FacebookTab(ApiTab):
     def setOptions(self, options):
         #define default values
         if options.get('basepath','') == '':
-            options['basepath']= "https://graph.facebook.com/v2.2/"
-        if options.get('scope','') == '':
-            options['scope']= "user_groups"
+            options['basepath'] = credentials['facebook']['basepath']
 
         #set values
         self.relationEdit.setEditText(options.get('relation', '<page>'))
@@ -595,21 +573,20 @@ class FacebookTab(ApiTab):
     @Slot()
     def doLogin(self, query=False, caption="Facebook Login Page",url=""):
         #use credentials from input if provided
-        facebookclientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['facebook_client_id']
-        scope= self.scopeEdit.text()
-        url = "https://www.facebook.com/dialog/oauth?client_id=" + facebookclientid + "&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope="+scope+"&display=popup"
+        facebookclientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['facebook']['client_id']
+        scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else credentials['facebook']['scope']
+        url = credentials['facebook']['auth_uri'] +"?client_id=" + facebookclientid + "&redirect_uri="+credentials['facebook']['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
 
-        # Facebook client id should be defined in credentials.py
         super(FacebookTab, self).doLogin(query, caption, url)
 
-    @Slot()
-    def getToken(self):
-        url = urlparse.parse_qs(self.login_webview.url().toString())
-        if "https://www.facebook.com/connect/login_success.html#access_token" in url:
-            token = url["https://www.facebook.com/connect/login_success.html#access_token"]
-            if token:
-                self.tokenEdit.setText(token[0])
-                self.login_webview.parent().close()
+    @Slot(QUrl)
+    def getToken(self,url):
+        if url.toString().startswith(credentials['facebook']['redirect_uri']):
+            url = urlparse.parse_qs(url.toString())
+            token = url.get(credentials['facebook']['redirect_uri']+"#access_token",[''])
+
+            self.tokenEdit.setText(token[0])
+            self.login_webview.parent().close()
 
 
 class TwitterTab(ApiTab):
@@ -619,7 +596,7 @@ class TwitterTab(ApiTab):
         #Base path
         #URL prefix
         self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, ['https://api.twitter.com/1.1/'])
+        self.basepathEdit.insertItems(0, [credentials['twitter']['basepath']])
         self.basepathEdit.setEditable(True)
 
 
@@ -666,8 +643,9 @@ class TwitterTab(ApiTab):
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
         mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        mainLayout.addRow("Access Token", loginlayout)
         mainLayout.addRow("Consumer Key", credentialslayout)
+        mainLayout.addRow("Access Token", loginlayout)
+
         self.setLayout(mainLayout)
         if loadSettings:
             self.loadSettings()
@@ -675,13 +653,13 @@ class TwitterTab(ApiTab):
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
         self.oauthdata = {}
         self.twitter = OAuth1Service(
-            consumer_key=credentials['twitter_consumer_key'],
-            consumer_secret=credentials['twitter_consumer_secret'],
+            consumer_key=credentials['twitter']['consumer_key'],
+            consumer_secret=credentials['twitter']['consumer_secret'],
             name='twitter',
-            access_token_url='https://api.twitter.com/oauth/access_token',
-            authorize_url='https://api.twitter.com/oauth/authorize',
-            request_token_url='https://api.twitter.com/oauth/request_token',
-            base_url='https://api.twitter.com/1.1/')
+            access_token_url=credentials['twitter']['access_token_url'],
+            authorize_url=credentials['twitter']['authorize_url'],
+            request_token_url=credentials['twitter']['request_token_url'],
+            base_url=credentials['twitter']['basepath'])
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -717,7 +695,7 @@ class TwitterTab(ApiTab):
 
     def setOptions(self, options):
         self.relationEdit.setEditText(options.get('query', 'search/tweets'))
-        self.basepathEdit.setEditText(options.get('basepath', 'https://api.twitter.com/1.1/'))
+        self.basepathEdit.setEditText(options.get('basepath', credentials['twitter']['basepath']))
         self.paramEdit.setParams(options.get('params', {'q': '<Object ID>'}))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
 
@@ -729,9 +707,9 @@ class TwitterTab(ApiTab):
             return self.session
 
         elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
-            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter_consumer_key']
-            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter_consumer_secret']
-            self.twitter.base_url = self.basepathEdit.currentText() if self.basepathEdit.currentText() != "" else 'https://api.twitter.com/1.1/'
+            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter']['consumer_key']
+            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter']['consumer_secret']
+            self.twitter.base_url = self.basepathEdit.currentText() if self.basepathEdit.currentText() != "" else credentials['twitter']['basepath']
 
             self.session = self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
             return self.session
@@ -797,8 +775,8 @@ class TwitterTab(ApiTab):
     @Slot()
     def doLogin(self, query=False, caption="Twitter Login Page", url=""):
         try:
-            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter_consumer_key']
-            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter_consumer_secret']
+            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter']['consumer_key']
+            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter']['consumer_secret']
 
             self.oauthdata.pop('oauth_verifier', None)
             self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
@@ -873,8 +851,9 @@ class TwitterStreamingTab(ApiTab):
         mainLayout.setLabelAlignment(Qt.AlignLeft)
         mainLayout.addRow("Resource", self.relationEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
-        mainLayout.addRow("Access Token", loginlayout)
         mainLayout.addRow("Consumer Key", credentialslayout)
+        mainLayout.addRow("Access Token", loginlayout)
+
         if loadSettings:
             self.loadSettings()
         self.setLayout(mainLayout)
@@ -882,12 +861,12 @@ class TwitterStreamingTab(ApiTab):
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
         self.oauthdata = {}
         self.twitter = OAuth1Service(
-            consumer_key=credentials['twitter_consumer_key'],
-            consumer_secret=credentials['twitter_consumer_secret'],
+            consumer_key=credentials['twitter']['consumer_key'],
+            consumer_secret=credentials['twitter']['consumer_secret'],
             name='twitterstreaming',
-            access_token_url='https://api.twitter.com/oauth/access_token',
-            authorize_url='https://api.twitter.com/oauth/authorize',
-            request_token_url='https://api.twitter.com/oauth/request_token',
+            access_token_url=credentials['twitter']['access_token_url'],
+            authorize_url=credentials['twitter']['authorize_url'],
+            request_token_url=credentials['twitter']['request_token_url'],
             base_url='https://stream.twitter.com/1.1/')
         self.timeout = 60
         self.connected = False
@@ -934,8 +913,8 @@ class TwitterStreamingTab(ApiTab):
             return self.session
 
         elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
-            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter_consumer_key']
-            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter_consumer_secret']
+            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter']['consumer_key']
+            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter']['consumer_secret']
             self.session = self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
             return self.session
 
@@ -1037,8 +1016,8 @@ class TwitterStreamingTab(ApiTab):
 
     @Slot()
     def doLogin(self, query=False, caption="Twitter Login Page", url=""):
-        self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter_consumer_key']
-        self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter_consumer_secret']
+        self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter']['consumer_key']
+        self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter']['consumer_secret']
 
         self.oauthdata.pop('oauth_verifier', None)
         self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
@@ -1072,7 +1051,7 @@ class YoutubeTab(ApiTab):
         #Base path
         #URL prefix
         self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, ['https://www.googleapis.com/youtube/v3/'])
+        self.basepathEdit.insertItems(0, [credentials['youtube']['basepath']])
         self.basepathEdit.setEditable(True)
 
         # Query Box
@@ -1173,6 +1152,7 @@ class YoutubeTab(ApiTab):
         if options['access_token'] == '':
             raise Exception('Access token is missing, login please!')
         self.connected = True
+        self.speed = options.get('speed',None)
 
         # Abort condition: maximum page count
         for page in range(0, options.get('pages', 1)):
@@ -1195,29 +1175,19 @@ class YoutubeTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,None,True,options.get('speed',None) )
+            data, headers, status = self.request(urlpath, urlparams,None,True)
             options['querystatus'] = status
 
             callback(data, options, headers)
 
-            break
+            # paging
+            if isinstance(data,dict) and hasDictValue(data, "nextPageToken"):
+                options['params']['pageToken'] = data["nextPageToken"]
+            else:
+                break
 
-#             # paging
-#             if hasDictValue(data, 'paging.next'):
-#                 url, params = self.parseURL(getDictValue(data, 'paging.next', False))
-#
-#                 # abort time based pagination
-#                 until = params.get('until', False)
-#                 if (since != False) and (until != False) and (int(until) < int(since)):
-#                     break
-#
-#                 options['params'] = params
-#                 options['url'] = url
-#             else:
-#                 break
-#
-#             if not self.connected:
-#                 break
+            if not self.connected:
+                break
 
 
     @Slot()
@@ -1263,8 +1233,8 @@ class GenericTab(ApiTab):
 
         #URL prefix
         self.urlpathEdit = QComboBox(self)
-        self.urlpathEdit.insertItems(0, ['https://api.twitter.com/1/statuses/user_timeline.json'])
-        self.urlpathEdit.insertItems(0, ['https://gdata.youtube.com/feeds/api/videos'])
+        #self.urlpathEdit.insertItems(0, ['https://api.twitter.com/1/statuses/user_timeline.json'])
+        #self.urlpathEdit.insertItems(0, ['https://gdata.youtube.com/feeds/api/videos'])
 
         self.urlpathEdit.setEditable(True)
         mainLayout.addRow("URL path", self.urlpathEdit)
@@ -1281,14 +1251,14 @@ class GenericTab(ApiTab):
         #Extract option
         self.extractEdit = QComboBox(self)
         #self.extractEdit.insertItems(0,['data'])
-        self.extractEdit.insertItems(0, ['matches'])
-        self.extractEdit.insertItems(0, ['feed.entry'])
+        #self.extractEdit.insertItems(0, ['matches'])
+        #self.extractEdit.insertItems(0, ['feed.entry'])
 
         self.extractEdit.setEditable(True)
         mainLayout.addRow("Key to extract", self.extractEdit)
 
         self.objectidEdit = QComboBox(self)
-        self.objectidEdit.insertItems(0, ['id.$t'])
+        #self.objectidEdit.insertItems(0, ['id.$t'])
         self.objectidEdit.setEditable(True)
         mainLayout.addRow("Key for ObjectID", self.objectidEdit)
 
@@ -1313,10 +1283,10 @@ class GenericTab(ApiTab):
         return options
 
     def setOptions(self, options):
-        self.urlpathEdit.setEditText(options.get('urlpath', 'https://gdata.youtube.com/feeds/api/videos'))
-        self.paramEdit.setParams(options.get('params', {'q': '<Object ID>', 'alt': 'json', 'v': '2'}))
-        self.extractEdit.setEditText(options.get('nodedata', 'feed.entry'))
-        self.objectidEdit.setEditText(options.get('objectid', 'media$group.yt$videoid.$t'))
+        self.urlpathEdit.setEditText(options.get('urlpath', ''))
+        self.paramEdit.setParams(options.get('params', {}))
+        self.extractEdit.setEditText(options.get('nodedata', ''))
+        self.objectidEdit.setEditText(options.get('objectid', ''))
 
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
