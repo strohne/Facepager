@@ -8,6 +8,8 @@ import json
 from textviewer import *
 from urlparse import urlparse
 import requests
+import webbrowser
+import platform
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
@@ -137,14 +139,16 @@ class PresetWindow(QDialog):
         #status bar
         self.statusbar = QStatusBar()
         #self.folderLabel = QLabel("")
-        #self.statusbar.addWidget(self.folderLabel)
+        self.folderButton = QPushButton("")
+        self.folderButton.setFlat(True)
+        self.folderButton.clicked.connect(self.statusBarClicked)
+        self.statusbar.insertWidget(0,self.folderButton)
         layout.addWidget(self.statusbar)
 
 
         #self.presetFolder = os.path.join(os.path.dirname(self.mainWindow.settings.fileName()),'presets')
         self.presetFolder = os.path.join(os.path.expanduser("~"),'Facepager','Presets')
-        self.statusbar.showMessage(self.presetFolder)
-
+        self.folderButton.setText(self.presetFolder)
 
         self.presetVersion = '3_9'
         self.presetSuffix = '-'+self.presetVersion+'.json'
@@ -153,6 +157,16 @@ class PresetWindow(QDialog):
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
 #         elif __file__:
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
+
+    def statusBarClicked(self):
+        if platform.system() == "Windows":
+            webbrowser.open(self.presetFolder)
+        elif platform.system() == "Darwin":
+            webbrowser.open('file:///'+self.presetFolder)
+        else:
+            webbrowser.open('file:///'+self.presetFolder)
+
+
 
 
     def currentChanged(self):
