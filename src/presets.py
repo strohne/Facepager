@@ -289,6 +289,10 @@ class PresetWindow(QDialog):
         #Set columns
         self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
         self.mainWindow.actions.showColumns()
+
+        #Set global settings
+        self.mainWindow.speedEdit.setValue(data.get('speed',200))
+
         self.close()
 
     def uniqueFilename(self,name):
@@ -347,6 +351,7 @@ class PresetWindow(QDialog):
                     'description':description.toPlainText(),
                     'module':self.mainWindow.RequestTabs.currentWidget().name,
                     'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
+                    'speed':self.mainWindow.speedEdit.value(),
                     'columns':self.mainWindow.fieldList.toPlainText().splitlines()
             }
 
@@ -411,6 +416,7 @@ class PresetWindow(QDialog):
                     'description':description.toPlainText(),
                     'module':self.mainWindow.RequestTabs.currentWidget().name,
                     'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
+                    'speed':self.mainWindow.speedEdit.value(),
                     'columns':self.mainWindow.fieldList.toPlainText().splitlines()
             })
 

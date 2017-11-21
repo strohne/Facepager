@@ -457,7 +457,8 @@ class FacebookTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'relation': self.relationEdit.currentText(), 'pages': self.pagesEdit.value(),
+        options = {'relation': self.relationEdit.currentText(),
+                   'pages': self.pagesEdit.value(),
                    'params': self.paramEdit.getParams()}
 
         options['scope'] = self.scopeEdit.text()
