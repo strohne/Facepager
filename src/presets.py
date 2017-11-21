@@ -211,7 +211,7 @@ class PresetWindow(QDialog):
             data['online'] = online
 
             if (data.get('module') == 'Generic'):
-                try: data['caption'] = data.get('module')  + ' ('+urlparse(data['options']['urlpath']).netloc + "): "+data.get('name')
+                try: data['caption'] = data.get('module')  + ' ('+urlparse(data['options']['basepath']).netloc + "): "+data.get('name')
                 except: data['caption'] = data.get('module') + ": "+data.get('name')
             else: data['caption'] = data.get('module') + ": "+data.get('name')
             if default: data['caption'] = data['caption'] +"*"

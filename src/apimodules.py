@@ -174,28 +174,28 @@ class ApiTab(QWidget):
         except:
             self.apidoc = None
 
-    def setRelations(self,params=True):
+    def setResource(self,params=True):
         '''
-        Create relations box and paramedit
-        Set the relations according to the APIdocs, if any docs are available
+        Create resource box and paramedit
+        Set the resource according to the APIdocs, if any docs are available
         '''
 
-        self.relationEdit = QComboBox(self)
+        self.resourceEdit = QComboBox(self)
         if self.apidoc:
             #Insert one item for every endpoint
             for endpoint in reversed(self.apidoc):
                 #store url as item text
-                self.relationEdit.insertItem(0, endpoint["path"])
+                self.resourceEdit.insertItem(0, endpoint["path"])
                 #store doc as tooltip
-                self.relationEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
+                self.resourceEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
                 #store params-dict for later use in onChangedRelation
-                self.relationEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
+                self.resourceEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
 
-        self.relationEdit.setEditable(True)
+        self.resourceEdit.setEditable(True)
         if params:
             self.paramEdit = QParamEdit(self)
             # changed to currentIndexChanged for recognition of changes made by the tool itself
-            self.relationEdit.currentIndexChanged.connect(self.onchangedRelation)
+            self.resourceEdit.currentIndexChanged.connect(self.onchangedRelation)
             self.onchangedRelation()
 
     @Slot()
@@ -204,8 +204,8 @@ class ApiTab(QWidget):
         Handles the automated paramter suggestion for the current
         selected API Relation/Endpoint
         '''
-        #retrieve param-dict stored in setRelations-method
-        params = self.relationEdit.itemData(index,Qt.UserRole)
+        #retrieve param-dict stored in setResource-method
+        params = self.resourceEdit.itemData(index,Qt.UserRole)
 
         #Set name options and build value dict
         values = {}
@@ -406,7 +406,7 @@ class FacebookTab(ApiTab):
         self.basepathEdit.setEditable(True)
 
         # Query Box
-        self.setRelations()
+        self.setResource()
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -442,7 +442,7 @@ class FacebookTab(ApiTab):
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         mainLayout.setLabelAlignment(Qt.AlignLeft)
         mainLayout.addRow("Base path", self.basepathEdit)
-        mainLayout.addRow("Resource", self.relationEdit)
+        mainLayout.addRow("Resource", self.resourceEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         #mainLayout.addRow("Download folder", folderlayout)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
@@ -457,7 +457,7 @@ class FacebookTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'relation': self.relationEdit.currentText(),
+        options = {'resource': self.resourceEdit.currentText(),
                    'pages': self.pagesEdit.value(),
                    'params': self.paramEdit.getParams()}
 
@@ -467,7 +467,7 @@ class FacebookTab(ApiTab):
 
         # options for request
         if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.relationEdit.currentText()
+            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
             options['access_token'] = self.tokenEdit.text()
             options['client_id'] = self.clientIdEdit.text()
 
@@ -475,7 +475,7 @@ class FacebookTab(ApiTab):
         # options for data handling
         if purpose == 'fetch':
             options['objectid'] = 'id'
-            options['nodedata'] = 'data' if ('/' in options['relation']) or (options['relation'] == 'search') else None
+            options['nodedata'] = 'data' if ('/' in options['resource']) or (options['resource'] == 'search') else None
 
         return options
 
@@ -485,7 +485,7 @@ class FacebookTab(ApiTab):
             options['basepath'] = credentials['facebook']['basepath']
 
         #set values
-        self.relationEdit.setEditText(options.get('relation', '<Object ID>'))
+        self.resourceEdit.setEditText(options.get('resource', '<Object ID>'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
 
         self.basepathEdit.setEditText(options.get('basepath'))
@@ -512,16 +512,16 @@ class FacebookTab(ApiTab):
         for page in range(0, options.get('pages', 1)):
         # build url
             if not ('url' in options):
-                urlpath = options["basepath"] + options['relation']
+                urlpath = options["basepath"] + options['resource']
                 urlparams = {}
 
-#                 if options['relation'] == 'search':
+#                 if options['resource'] == 'search':
 #                     urlparams['q'] = self.idtostr(nodedata['objectid'])
 #                     urlparams['type'] = 'page'
-#                 elif options['relation'] == '<Object ID>':
+#                 elif options['resource'] == '<Object ID>':
 #                     urlparams['metadata'] = '1'
 #
-#                 elif '<Object ID>/' in options['relation']:
+#                 elif '<Object ID>/' in options['resource']:
 #                     urlparams['limit'] = '100'
 
                 urlparams.update(options['params'])
@@ -595,14 +595,12 @@ class TwitterTab(ApiTab):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
         #Base path
-        #URL prefix
         self.basepathEdit = QComboBox(self)
         self.basepathEdit.insertItems(0, [credentials['twitter']['basepath']])
         self.basepathEdit.setEditable(True)
 
-
         # Query and Parameter Box
-        self.setRelations()
+        self.setResource()
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -640,7 +638,7 @@ class TwitterTab(ApiTab):
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         mainLayout.setLabelAlignment(Qt.AlignLeft)
         mainLayout.addRow("Base path", self.basepathEdit)
-        mainLayout.addRow("Resource", self.relationEdit)
+        mainLayout.addRow("Resource", self.resourceEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
         mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
@@ -664,12 +662,14 @@ class TwitterTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'basepath' : self.basepathEdit.currentText(),'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams(),
+        options = {'basepath' : self.basepathEdit.currentText(),
+                   'resource': self.resourceEdit.currentText(),
+                   'params': self.paramEdit.getParams(),
                    'pages': self.pagesEdit.value()}
 
         # options for request
         if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.relationEdit.currentText()
+            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
             options['access_token'] = self.tokenEdit.text()
             options['access_token_secret'] = self.tokensecretEdit.text()
             options['consumer_key'] = self.consumerKeyEdit.text()
@@ -695,7 +695,7 @@ class TwitterTab(ApiTab):
 
 
     def setOptions(self, options):
-        self.relationEdit.setEditText(options.get('query', 'search/tweets'))
+        self.resourceEdit.setEditText(options.get('resource', 'search/tweets'))
         self.basepathEdit.setEditText(options.get('basepath', credentials['twitter']['basepath']))
         self.paramEdit.setParams(options.get('params', {'q': '<Object ID>'}))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
@@ -815,8 +815,12 @@ class TwitterStreamingTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
+        self.basepathEdit = QComboBox(self)
+        self.basepathEdit.insertItems(0, [credentials['twitter_streaming']['basepath']])
+        self.basepathEdit.setEditable(True)
+
         # Query Box
-        self.setRelations()
+        self.setResource()
 
         # Construct Log-In elements
         self.tokenEdit = QLineEdit()
@@ -850,7 +854,8 @@ class TwitterStreamingTab(ApiTab):
         mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         mainLayout.setLabelAlignment(Qt.AlignLeft)
-        mainLayout.addRow("Resource", self.relationEdit)
+        mainLayout.addRow("Base path", self.basepathEdit)
+        mainLayout.addRow("Resource", self.resourceEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Consumer Key", credentialslayout)
         mainLayout.addRow("Access Token", loginlayout)
@@ -874,11 +879,13 @@ class TwitterStreamingTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'query': self.relationEdit.currentText(), 'params': self.paramEdit.getParams()}
+        options = {'basepath': self.basepathEdit.currentText(),
+                   'resource': self.resourceEdit.currentText(),
+                   'params': self.paramEdit.getParams()}
         # options for request
 
         if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.relationEdit.currentText()
+            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
             options['access_token'] = self.tokenEdit.text()
             options['access_token_secret'] = self.tokensecretEdit.text()
             options['consumer_key'] = self.consumerKeyEdit.text()
@@ -887,10 +894,7 @@ class TwitterStreamingTab(ApiTab):
 
         # options for data handling
         if purpose == 'fetch':
-            options['basepath'] =  "https://stream.twitter.com/1.1/"
-
             options['objectid'] = 'id'
-
             if options["query"] == 'search/tweets':
                 options['nodedata'] = 'statuses'
             elif options["query"] == 'followers/list':
@@ -903,7 +907,8 @@ class TwitterStreamingTab(ApiTab):
         return options
 
     def setOptions(self, options):
-        self.relationEdit.setEditText(options.get('query', 'statuses/filter'))
+        self.basepathEdit.setEditText(options.get('basepath', credentials['twitter_streaming']['basepath']))
+        self.resourceEdit.setEditText(options.get('resource', 'statuses/filter'))
         self.paramEdit.setParams(options.get('params', {'track': '<Object ID>'}))
 
         # set Access-tokens,use generic method from APITab
@@ -1056,7 +1061,7 @@ class YoutubeTab(ApiTab):
         self.basepathEdit.setEditable(True)
 
         # Query Box
-        self.setRelations()
+        self.setResource()
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -1097,7 +1102,7 @@ class YoutubeTab(ApiTab):
         mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         mainLayout.setLabelAlignment(Qt.AlignLeft)
         mainLayout.addRow("Base path", self.basepathEdit)
-        mainLayout.addRow("Resource", self.relationEdit)
+        mainLayout.addRow("Resource", self.resourceEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
         mainLayout.addRow("Maximum pages", self.pagesEdit)
 
@@ -1111,7 +1116,8 @@ class YoutubeTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'relation': self.relationEdit.currentText(), 'pages': self.pagesEdit.value(),
+        options = {'resource': self.resourceEdit.currentText(),
+                   'pages': self.pagesEdit.value(),
                    'params': self.paramEdit.getParams()}
 
         options['scope'] = self.scopeEdit.text()
@@ -1119,7 +1125,7 @@ class YoutubeTab(ApiTab):
 
         # options for request
         if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.relationEdit.currentText()
+            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
             options['access_token'] = self.tokenEdit.text()
             options['client_id'] = self.clientIdEdit.text()
             options['client_secret'] = self.clientSecretEdit.text()
@@ -1138,7 +1144,7 @@ class YoutubeTab(ApiTab):
             options['basepath'] = credentials['youtube']['basepath']
 
         #set values
-        self.relationEdit.setEditText(options.get('relation', 'videos'))
+        self.resourceEdit.setEditText(options.get('resource', 'videos'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
 
         self.basepathEdit.setEditText(options.get('basepath'))
@@ -1159,7 +1165,7 @@ class YoutubeTab(ApiTab):
         for page in range(0, options.get('pages', 1)):
         # build url
             if not ('url' in options):
-                urlpath = options["basepath"] + options['relation']
+                urlpath = options["basepath"] + options['resource']
                 urlparams = {}
                 urlparams.update(options['params'])
 
@@ -1234,35 +1240,31 @@ class GenericTab(ApiTab):
         mainLayout.setLabelAlignment(Qt.AlignLeft);
 
         #URL prefix
-        self.urlpathEdit = QComboBox(self)
-        #self.urlpathEdit.insertItems(0, ['https://api.twitter.com/1/statuses/user_timeline.json'])
-        #self.urlpathEdit.insertItems(0, ['https://gdata.youtube.com/feeds/api/videos'])
+        self.basepathEdit = QComboBox(self)
+        self.basepathEdit.setEditable(True)
+        mainLayout.addRow("Base path", self.basepathEdit)
 
-        self.urlpathEdit.setEditable(True)
-        mainLayout.addRow("URL path", self.urlpathEdit)
-
-        #Parameter
-        self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptions([{'name':''}])
-        self.paramEdit.setValueOptions([{'name':'',
-                                         'doc':"No Value"},
-                                         {'name':'<Object ID>',
-                                          'doc':"The value in the Object ID-column of the datatree."}])
+        # Query Box
+        self.setResource()
+        mainLayout.addRow("Resource", self.resourceEdit)
         mainLayout.addRow("Parameters", self.paramEdit)
+#         #Parameter
+#         self.paramEdit = QParamEdit(self)
+#         self.paramEdit.setNameOptions([{'name':''}])
+#         self.paramEdit.setValueOptions([{'name':'',
+#                                          'doc':"No Value"},
+#                                          {'name':'<Object ID>',
+#                                           'doc':"The value in the Object ID-column of the datatree."}])
+#         mainLayout.addRow("Parameters", self.paramEdit)
 
         #Extract option
         self.extractEdit = QComboBox(self)
-        #self.extractEdit.insertItems(0,['data'])
-        #self.extractEdit.insertItems(0, ['matches'])
-        #self.extractEdit.insertItems(0, ['feed.entry'])
-
         self.extractEdit.setEditable(True)
         mainLayout.addRow("Key to extract", self.extractEdit)
 
         self.objectidEdit = QComboBox(self)
-        #self.objectidEdit.insertItems(0, ['id.$t'])
         self.objectidEdit.setEditable(True)
-        mainLayout.addRow("Key for ObjectID", self.objectidEdit)
+        mainLayout.addRow("Key for Object ID", self.objectidEdit)
 
         self.setLayout(mainLayout)
         if loadSettings:
@@ -1275,7 +1277,8 @@ class GenericTab(ApiTab):
         if purpose != 'preset':
             options['querytype'] = self.name
 
-        options['urlpath'] = self.urlpathEdit.currentText()
+        options['basepath'] = self.basepathEdit.currentText()
+        options['resource'] = self.resourceEdit.currentText()
         options['params'] = self.paramEdit.getParams()
 
         #options for data handling
@@ -1285,16 +1288,22 @@ class GenericTab(ApiTab):
         return options
 
     def setOptions(self, options):
-        self.urlpathEdit.setEditText(options.get('urlpath', ''))
+        self.basepathEdit.setEditText(options.get('basepath', ''))
+        self.resourceEdit.setEditText(options.get('resource', ''))
         self.paramEdit.setParams(options.get('params', {}))
+
         self.extractEdit.setEditText(options.get('nodedata', ''))
         self.objectidEdit.setEditText(options.get('objectid', ''))
-
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
         self.speed = options.get('speed',None)
-        urlpath, urlparams = self.getURL(options["urlpath"], options["params"], nodedata)
+
+        urlpath = options["basepath"] + options['resource']
+        urlparams = {}
+        urlparams.update(options['params'])
+
+        urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
         if options['logrequests']:
                 logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
@@ -1316,10 +1325,15 @@ class FilesTab(ApiTab):
         mainLayout.setLabelAlignment(Qt.AlignLeft)
 
         #URL field
-        self.urlpathEdit = QComboBox(self)
-        self.urlpathEdit.insertItems(0, ['<url>'])
-        self.urlpathEdit.setEditable(True)
-        mainLayout.addRow("URL path", self.urlpathEdit)
+        self.basepathEdit = QComboBox(self)
+        self.basepathEdit.insertItems(0, ['<url>'])
+        self.basepathEdit.setEditable(True)
+        mainLayout.addRow("Base path", self.basepathEdit)
+
+        # Query Box
+        self.setResource()
+        mainLayout.addRow("Resource", self.resourceEdit)
+        mainLayout.addRow("Parameters", self.paramEdit)
 
         #Download folder
         folderlayout = QHBoxLayout()
@@ -1356,7 +1370,10 @@ class FilesTab(ApiTab):
         if purpose != 'preset':
             options['querytype'] = self.name
 
-        options['urlpath'] = self.urlpathEdit.currentText()
+        options['basepath'] = self.basepathEdit.currentText()
+        options['resource'] = self.resourceEdit.currentText()
+        options['params'] = self.paramEdit.getParams()
+
         options['folder'] = self.folderEdit.text()
         options['filename'] = self.filenameEdit.currentText()
         options['fileext'] = self.fileextEdit.currentText()
@@ -1366,7 +1383,10 @@ class FilesTab(ApiTab):
         return options
 
     def setOptions(self, options):
-        self.urlpathEdit.setEditText(options.get('urlpath', '<url>'))
+        self.basepathEdit.setEditText(options.get('basepath', '<url>'))
+        self.resourceEdit.setEditText(options.get('resource', ''))
+        self.paramEdit.setParams(options.get('params', {}))
+
         self.folderEdit.setText(options.get('folder', ''))
         self.filenameEdit.setEditText(options.get('filename', '<None>'))
         self.fileextEdit.setEditText(options.get('fileext', '<None>'))
@@ -1381,7 +1401,11 @@ class FilesTab(ApiTab):
         filename = options.get('filename', None)
         fileext = options.get('fileext', None)
 
-        urlpath, urlparams = self.getURL(options["urlpath"], {}, nodedata)
+        urlpath = options["basepath"] + options['resource']
+        urlparams = {}
+        urlparams.update(options['params'])
+
+        urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
         filename = self.parsePlaceholders(filename,nodedata)
         fileext = self.parsePlaceholders(fileext,nodedata)
 
