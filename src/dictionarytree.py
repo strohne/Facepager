@@ -59,9 +59,9 @@ class DictionaryTree(QTreeView):
 
 
 class DictionaryTreeItemDelegate(QItemDelegate):
-    def sizeHint(self, option, index):
-        return QSize(20, 17)
-        #return QSize(20, 27)
+    pass
+    #def sizeHint(self, option, index):
+    #    return QSize(20, 17)
 
 
 class DictionaryTreeModel(QAbstractItemModel):
