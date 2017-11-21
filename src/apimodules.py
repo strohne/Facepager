@@ -484,7 +484,7 @@ class FacebookTab(ApiTab):
             options['basepath'] = credentials['facebook']['basepath']
 
         #set values
-        self.relationEdit.setEditText(options.get('relation', '<page>'))
+        self.relationEdit.setEditText(options.get('relation', '<Object ID>'))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
 
         self.basepathEdit.setEditText(options.get('basepath'))
@@ -1205,14 +1205,15 @@ class YoutubeTab(ApiTab):
     @Slot(QUrl)
     def getToken(self,url):
         if url.toString().startswith(credentials['youtube']['redirect_uri']):
-            client_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else credentials['youtube']['client_secret']
-            token = self.session.fetch_token(credentials['youtube']['token_uri'],
-                    authorization_response=str(url.toString()),
-                    client_secret=client_secret)
+            try:
+                client_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else credentials['youtube']['client_secret']
+                token = self.session.fetch_token(credentials['youtube']['token_uri'],
+                        authorization_response=str(url.toString()),
+                        client_secret=client_secret)
 
-            self.tokenEdit.setText(token['access_token'])
-
-            self.login_webview.parent().close()
+                self.tokenEdit.setText(token['access_token'])
+            finally:
+                self.login_webview.parent().close()
 
 
 class GenericTab(ApiTab):
