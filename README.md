@@ -28,7 +28,7 @@ Installation packages for each versions are available on the [releases page](htt
 
 ### Getting help
 
-Try the [help button](https://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html) built into Facepager.
+Try the [help button](http://strohne.github.io/Facepager/) built into Facepager.
 
 You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/groups/136224396995428/).
 
