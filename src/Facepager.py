@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
         self.timerStatus = QLabel("Timer stopped ")
         self.statusbar.addPermanentWidget(self.timerStatus)
 
-        self.databaseLabel = QLabel("No database connection ")
+        self.databaseLabel = QPushButton("No database connection ")
         #self.databaseLabel.clicked.connect(self.actions.openDBFolder)
         self.statusbar.addWidget(self.databaseLabel)
 
@@ -116,6 +116,10 @@ class MainWindow(QMainWindow):
         self.statusbar.addPermanentWidget(self.selectionStatus)
         #self.statusBar.showMessage('No database connection')
         self.statusbar.setSizeGripEnabled(False)
+
+        self.databaseLabel.setFlat(True)
+        self.databaseLabel.clicked.connect(self.databaseLabelClicked)
+
 
         #
         #  Layout
@@ -226,15 +230,15 @@ class MainWindow(QMainWindow):
         self.fieldList.clear()
         self.fieldList.append('name')
         self.fieldList.append('message')
-        self.fieldList.append('type')
-        self.fieldList.append('metadata.type')
-        self.fieldList.append('talking_about_count')
-        self.fieldList.append('likes')
-        self.fieldList.append('likes.count')
-        self.fieldList.append('shares.count')
-        self.fieldList.append('comments.count')
-        self.fieldList.append('created_time')
-        self.fieldList.append('updated_time')
+#         self.fieldList.append('type')
+#         self.fieldList.append('metadata.type')
+#         self.fieldList.append('talking_about_count')
+#         self.fieldList.append('likes')
+#         self.fieldList.append('likes.count')
+#         self.fieldList.append('shares.count')
+#         self.fieldList.append('comments.count')
+#         self.fieldList.append('created_time')
+#         self.fieldList.append('updated_time')
 
         self.fieldList.setPlainText(self.settings.value('columns',self.fieldList.toPlainText()))
 
@@ -300,6 +304,15 @@ class MainWindow(QMainWindow):
         self.logCheckbox.setToolTip("Check to see every request in status window; uncheck to hide request messages.")
         fetchsettings.addRow("Log all requests", self.logCheckbox)
 
+        #Clear setttings
+        self.clearCheckbox = QCheckBox(self)
+        self.settings.beginGroup("GlobalSettings")
+        clear = self.settings.value('clearsettings',True)
+        self.clearCheckbox.setChecked(str(clear)=="True")
+        self.settings.endGroup()
+
+        self.clearCheckbox.setToolTip("Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials.")
+        fetchsettings.addRow("Clear settings when closing", self.clearCheckbox)
 
         #Fetch data
 
@@ -328,12 +341,22 @@ class MainWindow(QMainWindow):
         detailGroup.setLayout(groupLayout)
         statusLayout.addWidget(detailGroup,1)
 
+
         self.loglist=QTextEdit()
         self.loglist.setLineWrapMode(QTextEdit.NoWrap)
         self.loglist.setWordWrapMode(QTextOption.NoWrap)
         self.loglist.acceptRichText=False
         self.loglist.clear()
         groupLayout.addWidget(self.loglist)
+
+    def databaseLabelClicked(self):
+        if self.database.connected:
+            if platform.system() == "Windows":
+                webbrowser.open(os.path.dirname(self.database.filename))
+            elif platform.system() == "Darwin":
+                webbrowser.open('file:///'+os.path.dirname(self.database.filename))
+            else:
+                webbrowser.open('file:///'+os.path.dirname(self.database.filename))
 
 
     def updateUI(self):
@@ -359,7 +382,12 @@ class MainWindow(QMainWindow):
         self.settings.setValue("version","3.0")
         self.settings.endGroup()
 
+
         self.settings.setValue('columns',self.fieldList.toPlainText())
+
+        self.settings.beginGroup("GlobalSettings")
+        self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
+        self.settings.endGroup()
 
         for i in range(self.RequestTabs.count()):
             self.RequestTabs.widget(i).saveSettings()
@@ -369,11 +397,6 @@ class MainWindow(QMainWindow):
         QCoreApplication.setOrganizationName("Keyling")
         QCoreApplication.setApplicationName("Facepager")
         self.settings = QSettings()
-        self.settings.beginGroup("MainWindow")
-
-        #self.resize(self.settings.value("size", QSize(800, 800)))
-        #self.move(self.settings.value("pos", QPoint(200, 10)))
-        self.settings.endGroup()
 
     def deleteSettings(self):
         QSettings.setDefaultFormat(QSettings.IniFormat)
@@ -384,17 +407,13 @@ class MainWindow(QMainWindow):
         self.settings.clear()
         self.settings.sync()
 
-        #self.settings.beginGroup("ApiModule_Facebook")
-        #print self.settings.allKeys()
-
-#         self.settings.beginGroup("MainWindow")
-#         self.settings.remove("")
-#         self.settings.endGroup()
-#         self.settings.remove("lastpath")
 
     def closeEvent(self, event=QCloseEvent()):
         if self.close():
-            self.writeSettings()
+            if self.clearCheckbox.isChecked():
+                self.deleteSettings()
+            else:
+                self.writeSettings()
             event.accept()
         else:
             event.ignore()
