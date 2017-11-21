@@ -1,0 +1,973 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<base href="http://strohne.github.io/Facepager/" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<title>Facepager Help</title>
+
+<style type="text/css">
+* {
+  font-size:11pt;
+  font-family:Arial,sans-serif;
+}
+
+body {
+  max-width:800px;
+}
+
+#toc {
+  border: 1px solid rgb(102, 0, 51);
+  padding: 1em;
+}
+
+h1 {
+  font-size:12pt;
+
+  font-weight:bold;
+  margin-bottom:1em;
+  margin-top:2em;
+  padding:0px;
+  border-bottom:1px solid #333;
+}
+
+h1 a {
+  font-size:12pt;
+}
+
+h1.first {
+  margin-top:0px;
+}
+
+h2 {
+  color:rgb(0,0,153);
+  font-size:12pt;
+  border-bottom:1px dotted rgb(0,0,153); 
+}
+
+p {
+  margin-bottom:1em;
+  text-align:justify;
+}
+
+li {
+  margin-bottom:1em;
+}
+
+#toc li {
+  margin-bottom:0.3em;
+}
+
+li ul {
+  padding-left:1em;
+}
+
+
+img {
+  margin:0.8em 0px 0.8em 0px;
+  padding:3px;
+  background-color:#eee;
+  max-width:99%;
+}
+
+table {
+  border:0px;
+  margin-left:2em;
+  margin-right:2em;
+}
+
+table td, table th {
+  border:0px;
+  text-align:left;
+  vertical-align:top;
+  padding:0.4em;
+}
+
+table p {
+  margin-top:0px;
+}
+
+table td:first-of-type {
+  color: rgb(102,0,51);
+}
+
+table td:first-of-type p {
+  text-align:left;
+}
+ 
+</style>
+</head>
+
+<body>
+<p>
+    <em>Please notice that this help file may describe an older or even newer version of Facepager. Feel free to support us by correcting any errors.</em>
+</p>
+
+<div id="toc">
+<p>
+    <strong>Table of Contents</strong>
+</p>
+
+
+<ol>
+<li>
+    <a href="#_Toc405676326">Getting Started</a>
+</li>
+<li>
+    <a href="#_Toc405676327">Layout and Basic Concepts of Facepager</a>
+</li>
+<li>
+    <a href="#_Toc405676328">Query Setup Options</a>
+    <ul>
+<li>
+    <a href="#_Toc405676329">General Settings</a>
+</li>
+<li>
+    <a href="#_Toc405676330">Facebook</a>
+</li>
+<li>
+    <a href="#_Toc405676331">Twitter</a>
+</li>
+<li>
+    <a href="#_Toc405676332">Generic</a>
+</li>
+<li>
+    <a href="#_Toc405676333">Files</a>
+</li>
+</ul>
+</li>
+<li>
+    <a href="#_Toc405676334">About Placeholders and Keys</a>
+</li>
+<li>
+    <a href="#_Toc405676335">Using Presets</a>
+</li>
+<li>
+    <a href="#_Toc405676336">Citation and Copyright Notices</a>
+</li>
+</ol>
+</div>
+<div>
+    <h1>
+        <a name="_Toc405676326">1. Getting Started</a>
+    </h1>
+</div>
+<ol>
+<li>
+    Click "New Database" in the toolbar to create a blank database
+</li>
+<li>
+    Add Facebook IDs by clicking "Add Nodes" in the toolbar. Enter the last part of a Facebook page, e.g. enter "BobMarley" for the page
+    "http://www.facebook.com/BobMarley".
+</li>
+<li>
+    Select the Facebook tab and type "&lt;Object ID&gt;" into the Resource field. Delete any parameters.
+</li>
+<li>
+    In the Facebook tab click "Login to Facebook" and login to get a valid access token. Your password is not shared with Facepager. But notice: the access
+    token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to
+    your computer or to the status log.
+</li>
+<li>
+    Select one or more of the just added nodes in the view and click "Fetch data".
+</li>
+<li>
+    Click "Expand nodes" in the toolbar and select one of the new child nodes. Detailed data is shown to the right.
+</li>
+<li>
+    Change the column setup according to your needs by selecting rows in the detailed data and clicking "Add Column". You can as well add and delete columns
+    in the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
+</li>
+</ol>
+<div>
+    <h1>
+        <a name="_Toc405676327">2. Layout and Basic Concepts of Facepager</a>
+    </h1>
+</div>
+<img src="facepager_layout.png" alt="facepager_layout.png, 355kB" title="facepager_layout">
+<ul>
+    <li>
+        <strong>Nodes View:</strong>
+        This view includes the objects of your data collection: Facebook posts, statuses or Twitter tweets and any other objects that an API is able to return.
+        Usually one object corresponds to one row. Here the terms row, object and node all refer to the same concept. We apologize for being somewhat unclear.
+        <br/>
+        <br/>
+        Objects may contain other objects (they may be nested). For example, a Facebook post may have comments related to that post. When you request the
+        comments for a post and a result is returned, these comments are automatically inserted under the post as single rows. You'll notice - depending on
+        your operating system - an arrow or plus sign besides the objects. Clicking it, will unfold the object showing related "child"-objects. Of course,
+        objects may have multiple levels or relationships.
+        <br/>
+        These objects have different attributes, which are displayed in the columns of the nodes view and may differ between different types or classes of
+        objects. The first five columns do not change, because they are crucial throughout the whole data collection process. Other columns are shown as
+        defined in the Column Setup. Multiple objects in the view can be selected at once by pressing down SHIFT or CONTROL while selecting the objects with
+        the mouse. This makes bulk deletions easier and also enables a request against the API for multiple objects at once.
+        <br/>
+        <br/>
+        Nodes and their Object IDs are central concepts for the Facepager: Every request is issued against a specific node. If multiple nodes are selected (via
+        SHIFT), one request for each node is issued. Usually every single of these requests depends on the Object ID of the specific node.
+    </li>
+    <li>
+        <strong>Data View:</strong>
+        This view shows all data of the selected object or row in the Nodes View. You can unfold nested data. Internally this view parses raw JSON-data as
+        returned by API requests and displays the result in a tree.
+        <br/>
+        <br/>
+    </li>
+    <li>
+        <strong>Column Setup:</strong>
+        One can control which data is shown in the Nodes View with the column setup. Furthermore, only these columns will be exported. Each line in this field
+        defines one column. The lines correspond to a key in the Data View. For example, if you do not want to display the message of a Facebook post, simply
+        delete "message" from the setup and click "Apply". Vice versa, add a key in the raw data to add a column. Instead of manually writing down keys, you
+        may select a row in the Data View and click “Add Column”. Clicking “Add All Columns” will analyze all data of the selected nodes and add as many
+        columns as possible. See below for more information about formulating keys.
+        <br/>
+        <br/>
+    </li>
+    <li>
+        <strong>Query Setup:</strong>
+        The starting point for fetching data from an API. To the left side you find modules for different APIs. The settings to the right side give you control
+        about which nodes in the Nodes View are considered and how fast or slow fetching data will proceed.
+        <br/>
+        <br/>
+    </li>
+    <li>
+        <strong>Status View:</strong>
+        This window is for logging and debugging purposes. Messages issued here may inform you about the details of the data collection process or any errors
+        while fetching data. Inspect these messages to get a deeper understanding of how URLs are assembled based on the Query Setup.
+    </li>
+</ul>
+<p>
+    The main work Facepager is doing for you consists of three steps for every node (see the process model below). Firstly it assembles URLs from node data and
+    the query setup. Read the help section about placeholders and keys to get an understanding of the mechanism. Secondly data is requested from the web by
+    using these URLs. You can see the URLs in the status log. In the third step the downloaded data is sliced up and put into the database as new nodes – ready
+    for export or as new starting points for fetching data.
+</p>
+<img src="processmodel.png" alt="processmodel.png, 37kB" title="processmodel">
+
+<div>
+    <h1>
+        <a name="_Toc405676328">3. Query Setup Options</a>
+    </h1>
+</div>
+<h2>
+    <a name="_Toc405676329">General Settings</a>
+</h2>
+<p>
+    The settings on the right side of the Query Setup apply to all the different modules for fetching data.
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    Node level
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    This setting works like a filter. If you select a parent node and increase node level by one, data is fetched for all child nodes. When
+                    selecting multiple nodes, always check the level.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Object types
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Every node has an object type. For example, manually added nodes are called seeds and downloaded nodes are called data. Here you control
+                    the types of nodes considered when fetching data. Node types are separated by comma.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Parallel Threads
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    If you increase the thread count, data is fetched in parallel. This results in faster speed when dealing with thousands of nodes. Be aware
+                    that API providers may ban you if you are going too fast. You should use this option very carefully.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Requests per minute
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Some providers limit the amount of data you are allowed to fetch in a certain time. In this case it might be useful to decrease the
+                    requests per minute and slow down fetching.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h2>
+    <a name="_Toc405676330">Facebook</a>
+</h2>
+<p>
+    With the Facebook module you can get data via the so called <a href="https://developers.facebook.com/docs/graph-api">Graph API</a>. You can access public
+    available data or any data you are allowed to see with your account – that is at least data about you and your friends. See the documentation provided by
+    Facebook for further details. Some basic options are explained below. Look out for tooltips in the user interface, they sometimes provide some details
+    about selected options.
+</p>
+<p>
+    On Facebook every object has at least one ID. This identifier is shown in the column "Object ID" in the main window and is the starting point for all
+    queries to the Facebook-API. You need to add some IDs as top nodes to get any data. Some examples for Object IDs are:
+</p>
+<p>
+    .
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    me
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Refers to yourself.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    BobMarley
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Refers to the page http://www.facebook.com/BobMarley. As you can see identifiers are included as the last part of URLs.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    117533210756
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Also refers to the page http://www.facebook.com/BobMarley. Every object has such a numerical id. When fetching data for BobMarley you will
+                    find this numerical id in the detail data.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    With the Facebook Graph API you can get data about the referred objects themselves, as well as data about related objects. The relations between different
+    objects are called edges. Different types of objects have different edges. For example, a page has posts, albums, likes, events and some other edges.
+    Whether you fetch data about the object or about related objects depends on the resource setting explained below.
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    Resource
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Select the object or entity you want to fetch from Facebook. The given options are suggestions, which may help you to know what is
+                    possible. For example, if you are interested in the feed of a page, choose “&lt;page&gt;/feed”. You then have to define the
+                    &lt;page&gt;-parameter, because text in angle brackets is considered as a placeholder. Usually the &lt;page&gt;-parameter will be set to
+                    &lt;Object ID&gt;, referring to the Object ID of the currently selected node.
+                    <br/>
+                    <br/>
+                    Choose “search” as resource to search for objects by a certain search term.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Parameters
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    You type the parameter names into the fields of the left column and put the belonging parameter values into the right ones. Placeholders
+                    used in the resource field have to be defined here and will be replaced by the given value. See “About Placeholders and Keys” for further
+                    explanations.
+                </p>
+                <p>
+                    If your resource is set to “search”, the parameter “q” denotes the search term. You should set it to “&lt;Object ID&gt;”, if you added your
+                    terms as nodes. Another way would be to type the term right into the parameter field on the right side. To further specify the type of
+                    objects you want to find, choose the parameter “type” and select one of the given options.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Maximum pages
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    With this setting you set the number of “pages” Facepager tries to download for the selected node. Imagine you want to fetch 900 comments
+                    for a Facebook post. Facebook won’t let you get all these comments at once. While the limit of the Facebook API lies at about 500,
+                    Facepager automatically sets the limit to 100 if not specified otherwise in the parameters (see below). Thus, for 900 comments there are 9
+"pages" of information available, each containing 100 comments. See the                    <a href="https://developers.facebook.com/docs/graph-api/using-graph-api/v2.2?locale=de_DE#paging">documentation</a> of the Facebook Graph
+                    API for more information about pagination.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Access Token
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Crawling data from Facebook requires a login with your user credentials. Before starting your data collection process, you have to complete
+                    the login via the corresponding button. A login page directly served by Facebook will open and once the login is successful, Facepager gets
+                    an access token. With this access token Facepager acts on behalf of the logged in user.
+                    <em>
+                        Note: The access token is stored locally on your computer. No personal data is submitted to the developers or any other authority.
+                    </em>
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    Some useful parameters are listed below.
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    limit
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Specifies the number of individual objects that should be returned on each page. Because every request is limited, there may be more
+objects available than actually collected. More information regarding the pagination is found in the                    <a href="https://developers.facebook.com/docs/graph-api/using-graph-api/v2.2?locale=de_DE#paging">documentation</a> of the Facebook Graph
+                    API.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    since
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    A date in the form YYYY-MM-DD denoting the objects creation time. For example, since="2013-07-13" would grab comments made after the
+                    13.07.2013. Not every Facebook object has a timestamp, e.g. for the user’s friends this parameter has no effect.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    until
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    A date of the same form like above. For example, until="2013-07-17" would grab comments made <u>before</u> the 17.07.2013. Notice that the
+                    "until"-parameter must be incremented by one day, because the date is associated with the start of the day at midnight. A combination of
+                    "since" and "until" is possible.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h2>
+    <a name="_Toc405676331">Twitter</a>
+</h2>
+<p>
+    The concepts of fetching data from Twitter are very similar to the Facebook module described above, especially regarding pagination and login. For detailed
+    information on specific options have a look at the <a href="https://dev.twitter.com/rest/public">documentation</a> of the REST API provided by Twitter. A
+    lot of information from the documentation also shows up in tooltips when hovering with the mouse cursor over options in the query settings or even over
+    keys in the data view.
+</p>
+<p>
+In addition there is a “Twitter Streaming” tab, which allows you to fetch data from Twitter in real-time. See the    <a href="https://dev.twitter.com/streaming/overview">documentation</a> provided by Twitter for further information.
+</p>
+<p>
+    Starting nodes for fetching data from Twitter usually are search terms, user ids or user names. For example, if you want to get the most recent tweets of
+    someone, you would add his or her username as a node. Once you fetched some tweets, take a look at the detail data. Every tweet has a unique numerical id,
+    which subsequently may serve as starting point or otherwise be used in the parameters.
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    Resource
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    The most basic resources are “statuses/user_timeline” to get the tweets of a specific user and “search/tweets” for searching tweets by
+                    terms, hashtags or mentioned users. Tooltips with detailed explanations are showing up when you hover an item in the drop down list.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Parameters
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    When selecting a resource, the drop down lists are filled automatically with possible parameters. Look out for tooltips. Some parameters
+                    are mandatory, depending on the selected resource. For example, you have to provide the parameter “q” when searching tweets. Simply add
+                    search terms or hashtags as nodes and set the parameter to &lt;Object ID&gt;. For getting tweets from a specific user, you either have to
+                    specify the user_id or the screen_name.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Maximum pages
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    You can’t get all tweets of all times in a single request. But you may get bunches of tweets one after another, which is called pagination.
+                    Increase the maximum pages to get more results. Twitter provides different kinds of pagination and Facepager tries to automatically detect
+                    the best way. See the documentation of Twitter for <a href="https://dev.twitter.com/rest/public/timelines">further information</a>.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    Useful parameters:
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    max_id
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Twitter normally gives you the most recent tweets. To access older tweets you need to know, that IDs for tweets are counted up in the order
+                    of the time posted. With the max_id parameter you can then restrict the results to contain only tweets posted before a given ID (plus the
+                    tweet with the given ID).
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    since_id
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    In analogy to max_id you may restrict the result by specifying a since_id. Notice that there are limits to the number of tweets accessible
+                    by the API. You can’t always go back in time as far as you want.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<h2>
+    <a name="_Toc405676332">Generic</a>
+</h2>
+<p>
+    With the Generic module you can fetch data from a lot of different APIs. For this an API needs to fulfill two preconditions: it has to deliver JSON encoded
+    data and access should be possible without sophisticated authorization procedures. Examples for APIs meeting these criteria include Youtube and Google+,
+    see the presets coming with Facepager and the providers documentation. Authorization is sometimes done by access tokens, which you get from the provider
+    and set as parameters in the Query Setup.
+</p>
+<table border="0" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    URL path
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    You enter the URL to the API into this field. The specific formulation of URLs has to be looked up in the documentation of the API
+                    provider. You can use placeholders to refer to node data, see the help section about placeholders and keys.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Parameters
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Every URL consists of different parts. One of these parts is called the query string, which consists of name-value pairs concatenated with
+                    ampersands. The query string starts with a question mark. For example, the query string of the URL “https://gdata.youtube.com/feeds/
+                    api/videos?q=Facepager&amp;alt=json&amp;v=2” is “?q=Facepager&amp;alt=json&amp; v=2”. By using parameters you define the name-value pairs
+                    in the query string.
+                    <br/>
+                    <br/>
+                    You don’t need to use the parameter fields, the full URL may be entered into the URL path field as well. The parameter field is just a
+                    convenient way to assemble query strings and to define placeholders.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Key to extract
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Use this setting to specify which objects you are interested in. If you are fetching data from Youtube, e.g. “feed.entry” is the key to the
+                    videos. Just try it out with a blank value and look at the Data View where you find possible keys. Facepager will extract the data
+                    addressed by the key and create a childnode. If the addressed data consists of a list, one childnode for every list item is created. The
+                    not addressed, remaining data will be put into an additional childnode of the type “offcut”.
+                    <br/>
+                    <br/>
+                    Alternatively you can create childnodes from a list manually after fetching data with the “Unpack List” button found above the Data View.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Key for ObjectID
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    With this setting you choose the key, which’s value (after extraction) should denote the Object ID of the node.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+	<p>
+	Some interesting APIs may be found on <a href="http://www.programmableweb.com">www.programmableweb.com</a>.
+	</p>
+<h2>
+    <a name="_Toc405676333">Files</a>
+</h2>
+<p>
+    With the Files module you can download files and store them on your hard drive. This could be webpages, pictures from Facebook or any other web resource.
+    For example, look at the data fetched for the Facebook page of Bob Marley. The data was fetched with the Facebook-module:
+</p>
+<img src="facepager_coversource.png" alt="facepager_coversource.png, 9,9kB" title="facepager_coversource" height="172" width="469">
+
+<p>
+    You will find the URL to the cover photo in the key “cover.source”. One option would be to copy the URL and paste it into the URL path-field of the Files
+    module. After specifying a folder and clicking Fetch Data you will find the picture on your hard drive in the selected folder. Additionally a child node is
+    created containing information about the file location.
+</p>
+<p>
+    Another option would be to use a placeholder in the URL path. In this example the placeholder would be “&lt;cover.source&gt;”. Please read the section
+    about placeholders and keys for more information.
+</p>
+<p>
+    With the Files module you have the following options:
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    URL path
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    The web address of the file you want to download. You can use placeholders to use node data in the URL, see the help section about
+                    placeholders and keys.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Parameters
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    You may specify key-value pairs in the query string of the URL or define placeholders. Look at the help for the Generic module to get an
+                    understanding of query strings.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Folder
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    The folder on your hard drive where the file should be stored.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Custom filename
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Normally, the filename would be derived from the URL path. Alternatively, you can specify the filename here. Using placeholders like
+                    “&lt;Object ID&gt;” is possible. Files never get overwritten, because the current date and time is always appended by Facepager. If that is
+                    not enough, a running number is added to the file name.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Custom file extension
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Normally, Facepager tries to guess the file extension by the content type of the file. If you know better, specify the file extension,
+                    including the leading dot, e.g. “.jpg”.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div>
+    <h1>
+        <a name="_Toc405676334">4. About Placeholders and Keys</a>
+    </h1>
+</div>
+<p>
+    One of the main features of Facepager is, that it helps you with assembling URLs for an API. Placeholders are very useful for this, because they allow you
+    to use data of your nodes. Thus, you don’t need to manually formulate URLs for every single node. In the query setup, every text in angle brackets (like
+    “&lt;Object ID&gt;”) is handled as a placeholder.
+</p>
+<p>
+    You may use these placeholders in the URL path field (or the resource field respectively) as well as in the parameter values. There are three types of
+    placeholders:
+</p>
+<ol>
+<li>
+    The placeholder “&lt;Object ID&gt;” is always replaced by the Object ID of the node Facepager is currently fetching data for.
+</li>
+<li>
+    Placeholders may contain keys addressing specific values in the data of a node. For example, the placeholder “&lt;cover.source&gt;” is replaced by the
+    corresponding value. You can look up the value in the Data View.
+</li>
+<li>
+    Furthermore, placeholders used in the URL path may be defined in the parameters. The name of the placeholder is given on the left side, the value it
+    should be replaced with on the right side. For example, if the URL path is set to “&lt;page&gt;/feed” you should define the placeholder “&lt;page&gt;”, so
+    that it is replaced with the Object ID. See the example below.
+</li>
+</ol>
+<p>
+    Imagine you just added a new node "BobMarley" and you want to fetch the last 10 posts before the 1st of July in 2014 from the corresponding Facebook page.
+    There are different equivalent ways to achieve this. One option would be to just type the URL with all needed parameters into the Resource field:
+</p>
+<img src="facepager_placeholders1.png" alt="facepager_placeholders1.png, 5,5kB" title="facepager_placeholders1" height="118" width="417">
+
+<p>
+    While this works, it will always give you posts from the BobMarley page, even if you add other nodes to the Nodes View. The very same URL would be
+    assembled with the following options, because the placeholder “&lt;Object ID&gt;” is replaced with the Object ID of the node under consideration:
+</p>
+
+<img src="facepager_placeholders2.png" alt="facepager_placeholders2.png, 3,5kB" title="facepager_placeholders2" height="108" width="403">
+
+<table cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+        
+            <td>
+                <div>
+                    <p>
+                        &lt;Object ID&gt; is replaced by BobMarley
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    In contrast to this way, the suggestions in the dropdown list of the resource field do contain completely different placeholders like “&lt;page&gt;” or
+    “&lt;user&gt;”. So if you select “&lt;page&gt;/feed” as resource, you have to choose a value, which replaces the placeholder “&lt;page&gt;”. Usually this
+    will be “&lt;Object ID&gt;”:
+</p>
+<img src="facepager_placeholders3.png" alt="facepager_placeholders3.png, 4,2kB" title="facepager_placeholders3" height="126" width="402">
+
+<table cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td>
+                <div>
+                    <p>
+                        &lt;Object ID&gt;  is replaced by BobMarley.<br />
+                        &lt;page&gt; is replaced by &lt;Object ID&gt;.<br />
+                        So &lt;page&gt; is replaced by BobMarley.
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    The URL path generated to fetch the data for the three example settings is always "BobMarley/feed?until=2014-07-01&amp;limit=10".
+</p>
+<p>
+    Another useful concept of Facepager is addressing node data by keys. You can use this concept in placeholders or to define the columns of the Nodes View.
+    The data underlying the Data View is formatted as <a href="http://en.wikipedia.org/wiki/JSON">JSON</a>, which follows a quite simple logic of key-value
+    pairs. Furthermore, data may be arranged as a nested hierarchy. Nested key-value pairs are addressed by chaining the keys separated by a dot, e.g.
+    “user.name”. To quickly get a specific key you can select it in the Data View and click “Add Column”. This will add the corresponding key to the Custom
+    Table Columns field right below the Data View.
+</p>
+<p>
+    For addressing multiple values, you may use the asterisk*-Operator. Replace a key with the asterisk to address all keys on the same level. All values will
+    be concatenated by semicolons. For example “comments.data.0.message” will only address the first comment, while “comments.data.*.message” will give you the
+    messages of all comments, separated by semicolons:
+</p>
+<img src="facepager_keys1.png" alt="facepager_keys1.png, 52kB" title="facepager_keys1">
+
+<p>
+    Remember, that only columns defined in the Column Setup are exported by Facepager. So keys relate to columns in the resulting Excel sheet, while values are
+    the row-values in a single column.
+</p>
+<div>
+    <h1>
+        <a name="_Toc405676335">5. Using Presets</a>
+    </h1>
+</div>
+<p>
+    Use presets to store and load your settings for certain API calls. These presets store your custom table column setup, the selected query module and its
+    settings. No data or private access tokens are stored! To edit presets, either load an existing one, make changes and store them as a new preset, or go to
+    the presets folder and edit the preset with a text-editor.
+</p>
+<p>
+    Presets marked with an asterisk are stored inside the application directory and are included by default. Your own presets are automatically stored in your
+    user directory (e.g. C:\Users\username\Facepager\Presets) and may be copied, distributed and shared with other users.
+</p>
+<p>
+    <strong>
+        We encourage you to share your presets with us - do so by mailing the .json-file to the authors of the Facepager and provide a short description of
+        your preset!
+    </strong>
+</p>
+<p>
+    The buttons in the preset window have the following meanings:
+</p>
+<table border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr>
+            <td valign="top">
+                <p>
+                    Apply
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Load the selected preset.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    New Preset
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Creates a new preset and stores the current column setup and query settings. Adjust these settings before creating the new preset.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Delete Preset
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Deletes the currently selected preset from the list. Presets marked with an asterisk are default presets and cannot be deleted.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <p>
+                    Cancel
+                </p>
+            </td>
+            <td valign="top">
+                <p>
+                    Close the Preset Window
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div>
+    <h1>
+        <a name="_Toc405676336">6. Citation and Copyright Notices</a>
+    </h1>
+</div>
+<p>
+    Jünger, Jakob / Keyling, Till (2017). Facepager 3. A Tool for Downloading API Data. Online at https://github.com/strohne/Facepager.
+</p>
+<p>
+Facepager uses icons from <a href="http://www.pyconic.com/pyconic-icons-free" target="_blank">Pyconic</a>, licensed under    <a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC BY 3.0</a>. Thanks for sharing.
+</p>
+<p>
+    Facepager was developed unter Python 2.7. It depends on the following libraries: PySide (licensed under the LGPL), SQLAlchemy (licensed under MIT License),
+    dateutil (licensed under the PSF license), requests (licensed under the Apache License, Version 2.0), rauth (licensed under MIT License), pandas (licensed under 3-clause BSD license) and numpy (licensed under the BSD license)  Thank you all for
+    your great work!
+</p>
+<p>
+Facepager is licensed under the MIT license:
+</p>
+<p>
+Copyright (c) 2017 Jakob Jünger and Till Keyling
+</p>
+<p>
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+</p>
+<p>
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+</p>
+<p>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</p>
+</body>
+</html>
+
