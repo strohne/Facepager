@@ -33,6 +33,7 @@ class DictionaryTree(QTreeView):
 
     def showDict(self, data={},itemtype='Generic'):
         self.treemodel.setdata(data,itemtype)
+        self.expandAll()
 
     def clear(self):
         self.treemodel.reset()
