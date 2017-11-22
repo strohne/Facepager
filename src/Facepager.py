@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
 
         #bottom left
         moduleslayout=QVBoxLayout()
-        requestLayout.addLayout(moduleslayout,1)
+        requestLayout.addLayout(moduleslayout,2)
 
         #bottom middle
         fetchLayout=QVBoxLayout()
@@ -244,10 +244,18 @@ class MainWindow(QMainWindow):
 
         groupLayout.addWidget(self.fieldList)
 
+        columnlayout=QHBoxLayout()
+        groupLayout.addLayout(columnlayout)
+        
         button=QPushButton("Apply Column Setup")
         button.setToolTip("Apply the columns to the central data view. New columns may be hidden and are appended on the right side")
         button.clicked.connect(self.actions.actionShowColumns.trigger)
-        groupLayout.addWidget(button)
+        columnlayout.addWidget(button)
+
+        button=QPushButton("Clear Column Setup")
+        button.setToolTip("Remove all columns to get space for a new setup.")
+        button.clicked.connect(self.actions.actionClearColumns.trigger)
+        columnlayout.addWidget(button)
 
 
         #Requests/Apimodules
