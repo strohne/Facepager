@@ -60,6 +60,9 @@ class Actions(object):
         self.actionShowColumns = self.dataActions.addAction("Show Columns")
         self.actionShowColumns.triggered.connect(self.showColumns)
 
+        self.actionClearColumns = self.dataActions.addAction("Clear Columns")
+        self.actionClearColumns.triggered.connect(self.clearColumns)
+
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
         self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
@@ -241,6 +244,12 @@ class Actions(object):
         self.mainWindow.tree.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
 
     @Slot()
+    def clearColumns(self):
+        self.mainWindow.fieldList.clear()
+        self.mainWindow.tree.treemodel.setCustomColumns([])
+
+
+    @Slot()
     def addColumn(self):
         key = self.mainWindow.detailTree.selectedKey()
         if key != '':
@@ -266,6 +275,8 @@ class Actions(object):
             self.mainWindow.tree.treemodel.setCustomColumns(columns)
 
             progress.close()
+
+
 
     @Slot()
     def loadPreset(self):
