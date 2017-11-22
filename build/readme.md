@@ -22,5 +22,9 @@ Adjust paths and version numbers in
 
 Grant execute permissions to build.command by typing in terminal:
   $chmod a+rwx build.command
-  
+
+To show hidden files execute in terminal, then Alt+RightClick Finder and choose "Relaunch"
+    $defaults write com.apple.finder AppleShowAllFiles YES
+
+To edit files install text editor, e.g. sublime text	
 Run build.command by double clicking in Finder or in terminal
