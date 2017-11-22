@@ -3,6 +3,7 @@ data/
 private/
 misc/
 src/build
+src/dist
 src/*.pyc
 src/*.pyo
 src/credentials.py
@@ -11,3 +12,4 @@ src/credentials.py
 .settings/
 .settings/org.eclipse.core.resources.prefs
 *.DS_Store
+src/.eggs

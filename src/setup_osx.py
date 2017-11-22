@@ -16,7 +16,7 @@ APP = ['Facepager.py']
 DATA_FILES = [('',['docs']),('',['ssl'])]
 OPTIONS = {'argv_emulation': False,
  'iconfile':'icon.icns',
- 'includes': 'PySide,sqlite3,atexit,PySide.QtNetwork,PySide.QtWebKit,credentials,requests',
+ 'includes': 'PySide,sqlite3,atexit,PySide.QtNetwork,PySide.QtWebKit,credentials,requests,requests_oauthlib',
  'packages': 'sqlalchemy,dateutil'}
 
 setup(
