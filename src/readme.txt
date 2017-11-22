@@ -116,6 +116,8 @@ python Facepager.py
 
 
 0. Install OSX in virtual machine
+Follow the steps in http://techsviewer.com/how-to-install-mac-os-x-el-capitan-on-vmware-on-pc/
+Edit virtual machine, in Network Adapter section set network connection to "Bridged" instead of "NAT"
 
 
 1.Prepare system
@@ -152,7 +154,7 @@ python Facepager.py
     - Download from github or clone (https://github.com/strohne/Facepager.git)
     
 	- To clone via https open terminal and run the following commands:
-	  (could fail in virtual machine, workaround is to install GitHub Desktop?)
+	  (could fail in virtual machine, workaround is to install GitHub Desktop? better way: bridge network in vwware player instead of nat)
 	  (adjust folder name if neccessary)
 	  
 	    $ cd Documents
