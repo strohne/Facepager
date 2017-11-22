@@ -145,6 +145,7 @@ Edit virtual machine, in Network Adapter section set network connection to "Brid
 	pip install SQLAlchemy
 	pip install python-dateutil
 	pip install requests
+	pip install requests_oauthlib
 	pip install rauth
 	pip install pandas
 	

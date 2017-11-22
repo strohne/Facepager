@@ -20,4 +20,7 @@ Adjust paths and version numbers in
 - src/setup_osx.py
 - build.command
 
-Run build.command
+Grant execute permissions to build.command by typing in terminal:
+  $chmod a+rwx build.command
+  
+Run build.command by double clicking in Finder or in terminal
