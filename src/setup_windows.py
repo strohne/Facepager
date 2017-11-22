@@ -20,7 +20,7 @@ includefiles = ['docs/','ssl/']
 
 buildoptions = {
   'includes':includes,
-  "packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil","requests"],
+  "packages":["sqlalchemy","sqlalchemy.dialects.sqlite","zlib","dateutil","requests","requests_oauthlib"],
   'excludes' : ["collections.abc"],
   'include_files':includefiles
 }
