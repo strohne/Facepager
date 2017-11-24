@@ -39,7 +39,10 @@ class PresetWindow(QDialog):
 
 
         #list view
-        self.presetList = QListWidget(self)
+        self.presetList = QTreeWidget(self)
+        self.presetList.setHeaderHidden(True)
+        self.presetList.setColumnCount(1)
+        self.presetList.setIndentation(15)
         self.presetList.itemSelectionChanged.connect(self.currentChanged)
         central.addWidget(self.presetList,2)
 
@@ -183,15 +186,17 @@ class PresetWindow(QDialog):
 
         current = self.presetList.currentItem()
         if current and current.isSelected():
-            data = current.data(Qt.UserRole)
-            self.detailName.setText(data.get('name'))
-            self.detailModule.setText(data.get('module'))
-            self.detailDescription.setText(data.get('description')+"\n")
+            data = current.data(0,Qt.UserRole)
 
-            self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': '))[2:-2].replace('\"',''))
-            self.detailColumns.setText("\n".join(data.get('columns',[])))
+            if not data.get('iscategory',False):
+                self.detailName.setText(data.get('name'))
+                self.detailModule.setText(data.get('module'))
+                self.detailDescription.setText(data.get('description')+"\n")
 
-            self.detailWidget.show()
+                self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': '))[2:-2].replace('\"',''))
+                self.detailColumns.setText("\n".join(data.get('columns',[])))
+
+                self.detailWidget.show()
 
     def showPresets(self):
         self.clear()
@@ -213,27 +218,50 @@ class PresetWindow(QDialog):
             data['default'] = default
             data['online'] = online
 
-            if (data.get('module') == 'Generic'):
-                try: data['caption'] = data.get('module')  + ' ('+urlparse(data['options']['basepath']).netloc + "): "+data.get('name')
-                except: data['caption'] = data.get('module') + ": "+data.get('name')
-            else: data['caption'] = data.get('module') + ": "+data.get('name')
-            if default: data['caption'] = data['caption'] +"*"
+            if (data.get('module') in ['Generic','Files']):
+                try:
+                    data['caption'] = data.get('name')
+                    data['category'] = data.get('module') + " ("+urlparse(data['options']['basepath']).netloc+")"
+                except:
+                    data['caption'] = data.get('name')
+                    data['category'] = data.get('module')
+            else:
+                data['caption'] = data.get('name')
+                data['category'] = data.get('module')
 
-            newItem = QListWidgetItem()
-            newItem.setText(data['caption'])
-            newItem.setData(Qt.UserRole,data)
+            if default:
+                data['caption'] = data['caption'] +"*"
+
+            if not data['category'] in self.categoryNodes:
+                categoryItem = QTreeWidgetItem()
+                categoryItem.setText(0,data['category'])
+
+                ft = categoryItem.font(0)
+                ft.setWeight(QFont.Bold)
+                categoryItem.setFont(0,ft)
+
+                categoryItem.setData(0,Qt.UserRole,{'iscategory':True})
 
 
-#            if default:
-#                ft = newItem.font()
-#                ft.setWeight(QFont.Bold)
-#                newItem.setFont(ft)
+                self.presetList.addTopLevelItem(categoryItem)
+                self.categoryNodes[data['category']] = categoryItem
 
+            else:
+                categoryItem = self.categoryNodes[data['category']]
 
+            newItem = QTreeWidgetItem()
+            newItem.setText(0,data['caption'])
+            newItem.setData(0,Qt.UserRole,data)
+            categoryItem.addChild(newItem)
 
-            self.presetList.addItem(newItem)
+            #self.presetList.setCurrentItem(newItem,0)
+            QApplication.processEvents()
+
+            return newItem
+
         except Exception as e:
              QMessageBox.information(self,"Facepager","Error loading preset:"+str(e))
+             return None
 
 
 
@@ -246,6 +274,7 @@ class PresetWindow(QDialog):
         self.loadingIndicator.show()
 
         #self.defaultPresetFolder
+        self.categoryNodes = {}
         self.presetList.clear()
         self.detailWidget.hide()
 
@@ -267,34 +296,38 @@ class PresetWindow(QDialog):
             for filename in files:
                 self.addPresetItem(self.presetFolder,filename)
 
+        self.presetList.expandAll()
         self.presetList.setFocus()
-        self.presetList.setCurrentRow(0)
-        self.presetList.sortItems()
-        self.applyButton.setDefault(True)
+        self.presetList.sortItems(0,Qt.AscendingOrder)
 
+        self.presetList.setCurrentItem(self.presetList.topLevelItem(0))
+
+        self.applyButton.setDefault(True)
         self.loadingIndicator.hide()
 
         #self.currentChanged()
 
     def loadPreset(self):
-        if not self.presetList.currentItem(): return False
+        if not self.presetList.currentItem():
+            return False
 
-        data = self.presetList.currentItem().data(Qt.UserRole)
+        data = self.presetList.currentItem().data(0,Qt.UserRole)
+        if not data.get('iscategory',False):
 
-        #Find API module
-        for i in range(0, self.mainWindow.RequestTabs.count()):
-            if self.mainWindow.RequestTabs.widget(i).name == data.get('module',''):
-                tab = self.mainWindow.RequestTabs.widget(i)
-                tab.setOptions(data.get('options',{}))
-                self.mainWindow.RequestTabs.setCurrentWidget(tab)
-                break
+            #Find API module
+            for i in range(0, self.mainWindow.RequestTabs.count()):
+                if self.mainWindow.RequestTabs.widget(i).name == data.get('module',''):
+                    tab = self.mainWindow.RequestTabs.widget(i)
+                    tab.setOptions(data.get('options',{}))
+                    self.mainWindow.RequestTabs.setCurrentWidget(tab)
+                    break
 
-        #Set columns
-        self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
-        self.mainWindow.actions.showColumns()
+            #Set columns
+            self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
+            self.mainWindow.actions.showColumns()
 
-        #Set global settings
-        self.mainWindow.speedEdit.setValue(data.get('speed',200))
+            #Set global settings
+            self.mainWindow.speedEdit.setValue(data.get('speed',200))
 
         self.close()
 
@@ -309,10 +342,14 @@ class PresetWindow(QDialog):
         return filename
 
     def deletePreset(self):
-        if not self.presetList.currentItem(): return False
-        data = self.presetList.currentItem().data(Qt.UserRole)
+        if not self.presetList.currentItem():
+            return False
+        data = self.presetList.currentItem().data(0,Qt.UserRole)
         if data.get('default',False):
             QMessageBox.information(self,"Facepager","Cannot delete default presets.")
+            return False
+
+        if data.get('iscategory',False):
             return False
 
         reply = QMessageBox.question(self, 'Delete Preset',u"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -380,10 +417,13 @@ class PresetWindow(QDialog):
     def overwritePreset(self):
         if not self.presetList.currentItem():
             return False
-        data = self.presetList.currentItem().data(Qt.UserRole)
+        data = self.presetList.currentItem().data(0,Qt.UserRole)
 
         if data.get('default',False):
             QMessageBox.information(self,"Facepager","Cannot overwrite default presets.")
+            return False
+
+        if data.get('iscategory',False):
             return False
 
         dialog=QDialog(self.mainWindow)
