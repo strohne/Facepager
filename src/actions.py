@@ -117,7 +117,8 @@ class Actions(object):
     @Slot()
     def openDBFolder(self):
         path = self.mainWindow.settings.value("lastpath",None)
-        if path is not None:
+
+        if (path is not None) and (os.path.exists(path)):
             if platform.system() == "Windows":
                 os.startfile(path)
             elif platform.system() == "Darwin":

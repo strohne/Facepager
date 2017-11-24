@@ -159,6 +159,9 @@ class PresetWindow(QDialog):
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
 
     def statusBarClicked(self):
+        if not os.path.exists(self.presetFolder):
+            os.makedirs(self.presetFolder)
+
         if platform.system() == "Windows":
             webbrowser.open(self.presetFolder)
         elif platform.system() == "Darwin":
