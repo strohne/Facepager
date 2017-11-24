@@ -5,9 +5,9 @@
   "filename": "Get_tweets_by_hashtag-3_8.json",
   "caption": "Twitter: Get tweets by hashtag",
   "online": false,
-  "options": {
-    "query": "search/tweets",
+  "options": {    
     "basepath": "https://api.twitter.com/1.1/",
+	"resource": "search/tweets",
     "params": {
       "q": "<Object ID>"
     },

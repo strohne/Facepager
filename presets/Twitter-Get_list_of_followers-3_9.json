@@ -5,9 +5,9 @@
   "filename": "Get_list_of_followers-3_8.json",
   "caption": "Twitter: Get list of followers",
   "online": false,
-  "options": {
-    "query": "followers/ids",
+  "options": {    
     "basepath": "https://api.twitter.com/1.1/",
+	"resource": "followers/ids",
     "params": {
       "user_id": "<Object ID>"
     },

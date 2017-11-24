@@ -1,0 +1,25 @@
+{
+  "description": "Add search terms as nodes.\n\nSee https://developers.google.com/youtube/v3/docs/search/list for information about parameters.\n\nOberview about YouTube Data API reference: https://developers.google.com/youtube/v3/docs/",
+  "default": false,
+  "module": "YouTube",
+  "filename": "YouTube-Search_YouTube_videos-3_9.json",
+  "caption": "YouTube: Search YouTube videos",
+  "online": false,
+  "speed": 200,
+  "options": {
+    "params": {
+      "q": "<Object ID>",
+      "part": "snippet",
+      "maxResults": "10"
+    },
+    "basepath": "https://www.googleapis.com/youtube/v3/",
+    "resource": "search",
+    "pages": 1,
+    "scope": ""
+  },
+  "columns": [
+    "id.videoId",
+    "snippet.title"
+  ],
+  "name": "Search YouTube videos"
+}
