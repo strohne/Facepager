@@ -1201,11 +1201,11 @@ class YoutubeTab(ApiTab):
     def doLogin(self, query=False, caption="YouTube Login Page",url=""):
         #use credentials from input if provided
         client_id = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['youtube']['client_id']
-        scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else credentials['youtube']['scope']
+        scope = [self.scopeEdit.text()] if self.scopeEdit.text() != "" else credentials['youtube']['scope']
         redirect_uri = credentials['youtube']['redirect_uri']
 
-        self.session = OAuth2Session(client_id, redirect_uri=redirect_uri,scope=[scope])
-        url = credentials['youtube']['auth_uri'] + "?client_id=" + client_id + "&redirect_uri="+redirect_uri+"&response_type=code" + "&scope="+scope
+        self.session = OAuth2Session(client_id, redirect_uri=redirect_uri,scope=scope)
+        url = credentials['youtube']['auth_uri'] + "?client_id=" + client_id + "&redirect_uri="+redirect_uri+"&response_type=code" + "&scope="+" ".join(scope)
 
         super(YoutubeTab, self).doLogin(query, caption, url)
 
