@@ -10,6 +10,7 @@ from urlparse import urlparse
 import requests
 import webbrowser
 import platform
+from dictionarytree import *
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
@@ -77,21 +78,28 @@ class PresetWindow(QDialog):
         self.detailForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
         self.detailForm.setLabelAlignment(Qt.AlignLeft);
 
+        self.detailOptions = DictionaryTree()
+        self.detailOptions.setFrameShape(QFrame.NoFrame)
+        #self.detailLayout.addWidget(self.detailViewer)
+
         self.detailLayout.addLayout(self.detailForm,1)
 
         self.detailModule = QLabel('')
         self.detailForm.addRow('<b>Module</b>',self.detailModule)
 
-        self.detailOptions = QLabel()
-        self.detailOptions.setWordWrap(True)
+        #self.detailOptions = QLabel()
+        #self.detailOptions.setWordWrap(True)
         #self.detailOptions.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
         self.detailForm.addRow('<b>Options</b>',self.detailOptions)
-
 
         self.detailColumns = QLabel()
         self.detailColumns.setWordWrap(True)
         #self.detailColumns.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
-        self.detailForm.addRow('<b>Columns</b>',self.detailColumns)
+        detailColumnsLabel = QLabel('<b>Columns</b>')
+        #detailColumnsLabel.setStyleSheet("QLabel { background-color : red;margin-top:0px;padding-top:0px;line-height:1em;vertical-align:top;border-top:0px;}")
+        self.detailColumns.setStyleSheet("QLabel {margin-top:5px;}")
+        detailColumnsLabel.setStyleSheet("QLabel {height:25px;}")
+        self.detailForm.addRow(detailColumnsLabel,self.detailColumns)
 
 
         #buttons
@@ -180,7 +188,7 @@ class PresetWindow(QDialog):
         self.detailName.setText("")
         self.detailModule.setText("")
         self.detailDescription.setText("")
-        self.detailOptions.setText("")
+        self.detailOptions.clear()
         self.detailColumns.setText("")
         self.detailWidget.hide()
 
@@ -193,8 +201,10 @@ class PresetWindow(QDialog):
                 self.detailModule.setText(data.get('module'))
                 self.detailDescription.setText(data.get('description')+"\n")
 
-                self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': '))[2:-2].replace('\"',''))
-                self.detailColumns.setText("\n".join(data.get('columns',[])))
+                self.detailOptions.showDict(data.get('options',[]))
+
+                #self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': '))[2:-2].replace('\"',''))
+                self.detailColumns.setText("\r\n".join(data.get('columns',[])))
 
                 self.detailWidget.show()
 
@@ -332,12 +342,13 @@ class PresetWindow(QDialog):
         self.close()
 
     def uniqueFilename(self,name):
-        filename = os.path.join(self.presetFolder,re.sub('[^a-zA-Z0-9_-]+', '_', name )+self.presetSuffix)
+        filename = re.sub('[^a-zA-Z0-9_-]+', '_', name )+self.presetSuffix
         i = 1
-        while os.path.exists(filename) and i < 10000:
-            filename = os.path.join(self.presetFolder,re.sub('[^a-zA-Z0-9_-]+', '_', name )+"-"+str(i)+self.presetSuffix)
+        while os.path.exists(os.path.join(self.presetFolder, filename)) and i < 10000:
+            filename = re.sub('[^a-zA-Z0-9_-]+', '_', name )+"-"+str(i)+self.presetSuffix
             i+=1
-        if os.path.exists(filename):
+
+        if os.path.exists(os.path.join(self.presetFolder, filename)):
             raise Exception('Could not find unique filename')
         return filename
 
@@ -358,16 +369,22 @@ class PresetWindow(QDialog):
         os.remove(os.path.join(self.presetFolder, data.get('filename')))
         self.initPresets()
 
-    def newPreset(self):
+    def editPreset(self,data = None):
         dialog=QDialog(self.mainWindow)
-        dialog.setWindowTitle("New Preset")
-        layout=QVBoxLayout()
+        if data is None:
+            dialog.setWindowTitle("New Preset")
+            data = {}
+        else:
+            dialog.setWindowTitle("Overwrite selected preset")
 
+        self.currentFilename = data.get('filename',None)
+
+        layout=QVBoxLayout()
         label=QLabel("<b>Name</b>")
         layout.addWidget(label)
         name=QLineEdit()
+        name.setText(data.get('name',''))
         layout.addWidget(name,0)
-
 
         label=QLabel("<b>Description</b>")
         layout.addWidget(label)
@@ -375,16 +392,17 @@ class PresetWindow(QDialog):
         description=QTextEdit()
         description.setMinimumWidth(500)
         description.acceptRichText=False
+        description.setPlainText(data.get('description',''))
         description.setFocus()
         layout.addWidget(description,1)
-
 
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         layout.addWidget(buttons,0)
         dialog.setLayout(layout)
 
         def save():
-            filename= self.uniqueFilename(self.mainWindow.RequestTabs.currentWidget().name+"-"+name.text())
+            if self.currentFilename == None:
+                self.currentFilename = self.uniqueFilename(self.mainWindow.RequestTabs.currentWidget().name+"-"+name.text())
 
             data = {
                     'name':name.text(),
@@ -395,29 +413,51 @@ class PresetWindow(QDialog):
                     'columns':self.mainWindow.fieldList.toPlainText().splitlines()
             }
 
-            if not os.path.exists(os.path.dirname(filename)):
-                os.makedirs(os.path.dirname(filename))
+            if not os.path.exists(self.presetFolder):
+                os.makedirs(self.presetFolder)
 
-            with open(filename, 'w') as outfile:
+            if os.path.exists(os.path.join(self.presetFolder,self.currentFilename)):
+                reply = QMessageBox.question(self, 'Overwrite Preset',u"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply != QMessageBox.Yes:
+                    dialog.close()
+                    self.currentFilename = None
+                    return False
+
+
+            with open(os.path.join(self.presetFolder,self.currentFilename), 'w') as outfile:
                 json.dump(data, outfile,indent=2, separators=(',', ': '))
 
-            self.initPresets()
             dialog.close()
+            return True
 
 
 
         def close():
             dialog.close()
+            self.currentFilename = None
+            return False
 
         #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(save)
         buttons.rejected.connect(close)
         dialog.exec_()
+        return self.currentFilename
+
+
+    def newPreset(self):
+        filename = self.editPreset()
+        if filename is not None:
+            newitem = self.addPresetItem(self.presetFolder,filename)
+            self.presetList.sortItems(0,Qt.AscendingOrder)
+            self.presetList.setCurrentItem(newitem,0)
+
 
     def overwritePreset(self):
         if not self.presetList.currentItem():
             return False
-        data = self.presetList.currentItem().data(0,Qt.UserRole)
+
+        item = self.presetList.currentItem()
+        data = item.data(0,Qt.UserRole)
 
         if data.get('default',False):
             QMessageBox.information(self,"Facepager","Cannot overwrite default presets.")
@@ -426,62 +466,13 @@ class PresetWindow(QDialog):
         if data.get('iscategory',False):
             return False
 
-        dialog=QDialog(self.mainWindow)
-        dialog.setWindowTitle("Overwrite selected preset")
-        layout=QVBoxLayout()
+        filename = self.editPreset(data)
 
-        label=QLabel("<b>Name</b>")
-        layout.addWidget(label)
-        name=QLineEdit()
-        name.setText(data.get('name'))
-        layout.addWidget(name,0)
+        if filename is not None:
+            item.parent().removeChild(item)
+            item = self.addPresetItem(self.presetFolder,filename)
 
-        label=QLabel("<b>Description</b>")
-        layout.addWidget(label)
-
-        description=QTextEdit()
-        description.setMinimumWidth(500)
-        description.acceptRichText=False
-        description.setPlainText(data.get('description'))
-        description.setFocus()
-        layout.addWidget(description,1)
-
-        buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
-        layout.addWidget(buttons,0)
-        dialog.setLayout(layout)
-
-        def save():
-            filename = os.path.join(self.presetFolder,data.get('filename'))
-            #filename= self.uniqueFilename(name.text())
-
-            data.update ({
-                    'name':name.text(),
-                    'description':description.toPlainText(),
-                    'module':self.mainWindow.RequestTabs.currentWidget().name,
-                    'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
-                    'speed':self.mainWindow.speedEdit.value(),
-                    'columns':self.mainWindow.fieldList.toPlainText().splitlines()
-            })
-
-            if not os.path.exists(os.path.dirname(filename)):
-                os.makedirs(os.path.dirname(filename))
-
-            reply = QMessageBox.question(self, 'Overwrite Preset',u"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                with open(filename, 'w') as outfile:
-                    json.dump(data, outfile,indent=2, separators=(',', ': '))
-
-                dialog.close()
-                self.initPresets()
-            else:
-                dialog.close()
+            self.presetList.sortItems(0,Qt.AscendingOrder)
+            self.presetList.setCurrentItem(item,0)
 
 
-
-        def close():
-            dialog.close()
-
-        #connect the nested functions above to the dialog-buttons
-        buttons.accepted.connect(save)
-        buttons.rejected.connect(close)
-        dialog.exec_()
