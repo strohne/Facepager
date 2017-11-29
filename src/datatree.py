@@ -416,7 +416,7 @@ class TreeModel(QAbstractItemModel):
         return self.createIndex(parentItem.row(), 0, parentItem)
 
     def getRowHeader(self):
-        row = ["id", "parent_id", "level", "objectid", "objecttype", "querystatus", "querytime", "querytype"]
+        row = ["id", "parent_id", "level", "object_id", "object_type", "query_status", "query_time", "query_type"]
         for key in self.customcolumns:
             row.append(str(key))
         return row
