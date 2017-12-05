@@ -152,7 +152,11 @@ class DictionaryTreeModel(QAbstractItemModel):
         if index.column() == 0:
             return item.itemDataKey
         elif index.column() == 1:
-            return item.itemDataValue
+            value = item.itemDataValue
+            if isinstance(value, basestring):
+                value = value.replace('\n', ' ').replace('\r', '')
+
+            return value
 
         return None
 
