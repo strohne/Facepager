@@ -42,6 +42,10 @@ class DataTree(QTreeView):
         current = self.currentIndex()
         self.nodeSelected.emit(current,self.selectionModel().selectedRows())
 
+    def selectedCount(self):
+        indexes = self.selectionModel().selectedRows()
+        return(len(indexes))
+
     def noneOrAllSelected(self):
         indexes = self.selectionModel().selectedRows()
 

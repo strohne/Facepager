@@ -246,7 +246,7 @@ class MainWindow(QMainWindow):
 
         columnlayout=QHBoxLayout()
         groupLayout.addLayout(columnlayout)
-        
+
         button=QPushButton("Apply Column Setup")
         button.setToolTip("Apply the columns to the central data view. New columns may be hidden and are appended on the right side")
         button.clicked.connect(self.actions.actionShowColumns.trigger)
@@ -370,6 +370,7 @@ class MainWindow(QMainWindow):
     def updateUI(self):
         #disable buttons that do not work without an opened database
         self.actions.databaseActions.setEnabled(self.database.connected)
+        self.actions.actionQuery.setEnabled(self.tree.selectedCount() > 0)
 
         if self.database.connected:
             #self.statusBar().showMessage(self.database.filename)
