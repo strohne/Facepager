@@ -317,6 +317,9 @@ class Actions(object):
 
 
     def queryNodes(self, indexes=False, apimodule=False, options=False):
+        if not self.actionQuery.isEnabled() or not ((self.mainWindow.tree.selectedCount > 0) or (indexes != False)):
+            return (False)
+
         #Show progress window
         progress = ProgressBar(u"Fetching Data",parent=self.mainWindow)
 
@@ -393,7 +396,6 @@ class Actions(object):
                         if len(indexes) == 0:
                             threadpool.closeJobs()
                             progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
-
 
                     #Jobs out
                     job = threadpool.getJob()
@@ -528,4 +530,6 @@ class Actions(object):
 
         #show node count
         self.mainWindow.selectionStatus.setText(str(len(selected)) + ' node(s) selected ')
+
+        self.actionQuery.setDisabled(len(selected) == 0)
 
