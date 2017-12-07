@@ -390,30 +390,32 @@ class ApiTab(QWidget):
 
             return fullfilename
 
-        response = self.request(path, args, headers, jsonify=False)
+        try:
+            response = self.request(path, args, headers, jsonify=False)
 
-        # Handle the response of the generic, non-json-returning response
-        if response.status_code == 200:
-            if fileext is None:
-                guessed_ext = guess_all_extensions(response.headers["content-type"])
-                fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+            # Handle the response of the generic, non-json-returning response
+            if response.status_code == 200:
+                if fileext is None:
+                    guessed_ext = guess_all_extensions(response.headers["content-type"])
+                    fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
 
-            fullfilename = makefilename(foldername, filename, fileext)
-            with open(fullfilename, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
-            data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,'sourcequery': args}
-            status = 'downloaded' + ' (' + str(response.status_code) + ')'
+                fullfilename = makefilename(foldername, filename, fileext)
+                with open(fullfilename, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,'sourcequery': args}
+                status = 'downloaded' + ' (' + str(response.status_code) + ')'
+            else:
+                try:
+                    data = {'sourcepath': path, 'sourcequery': args,'response':response.json()}
+                except:
+                    data = {'sourcepath': path, 'sourcequery': args,'response':response.text}
+
+                status = 'error' + ' (' + str(response.status_code) + ')'
+        except Exception, e:
+            raise Exception(u"Download Error: {0}".format(e.message))
         else:
-            try:
-                data = {'sourcepath': path, 'sourcequery': args,'response':response.json()}
-            except:
-                data = {'sourcepath': path, 'sourcequery': args,'response':response.text}
-
-            status = 'error' + ' (' + str(response.status_code) + ')'
-
-
-        return data, dict(response.headers), status
+            return data, dict(response.headers), status
 
     def selectFolder(self):
         datadir = self.mainWindow.settings.value('lastpath', os.path.expanduser('~'))
@@ -1344,7 +1346,7 @@ class FilesTab(ApiTab):
         filename = self.parsePlaceholders(filename,nodedata)
 
         fileext = options.get('fileext', None)
-        
+
         if fileext is not None and fileext == '<None>':
             fileext = None
         elif fileext is not None and fileext != '':
