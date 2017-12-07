@@ -40,7 +40,7 @@ class HelpWindow(QMainWindow):
 
     def linkClicked(self,url):
         url = url.toString()
-        if url.startswith("https://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"):
+        if url.startswith("http://strohne.github.io/Facepager/"):
             self.browser.load(url)
         else:
             webbrowser.open(url)
