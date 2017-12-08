@@ -1219,6 +1219,8 @@ class GenericTab(ApiTab):
         if loadSettings:
             self.loadSettings()
 
+        self.timeout = 30
+
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
 
@@ -1306,6 +1308,8 @@ class FilesTab(ApiTab):
 
         if loadSettings:
             self.loadSettings()
+
+        self.timeout = 30
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
