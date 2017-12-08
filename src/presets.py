@@ -159,8 +159,10 @@ class PresetWindow(QDialog):
 
         #self.presetFolder = os.path.join(os.path.dirname(self.mainWindow.settings.fileName()),'presets')
         self.presetFolder = os.path.join(os.path.expanduser("~"),'Facepager','Presets')
+        self.presetFolderDefault = os.path.join(os.path.expanduser("~"),'Facepager','DefaultPresets')
         self.folderButton.setText(self.presetFolder)
 
+        self.presetsDownloaded = False
         self.presetVersion = '3_9'
         self.presetSuffix = '-'+self.presetVersion+'.json'
 
@@ -280,6 +282,33 @@ class PresetWindow(QDialog):
         self.detailWidget.hide()
         self.loadingIndicator.show()
 
+    def downloadDefaultPresets(self):
+        if self.presetsDownloaded:
+            return False
+
+        try:
+            #Create folder
+            if not os.path.exists(self.presetFolderDefault):
+                os.makedirs(self.presetFolderDefault)
+
+            #Clear folder
+            for filename in os.listdir(self.presetFolderDefault):
+                os.remove(os.path.join(self.presetFolderDefault,filename))
+
+            #Download
+            files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
+            files = [f['path'] for f in files if f['path'].endswith(self.presetSuffix)]
+            for filename in files:
+                response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
+                with open(os.path.join(self.presetFolderDefault, os.path.basename(filename)), 'wb') as f:
+                    f.write(response.content)
+        except Exception as e:
+             QMessageBox.information(self,"Facepager","Error downloading default presets:"+str(e))
+             return False
+        else:
+            self.presetsDownloaded = True
+            return True
+
     def initPresets(self):
         self.loadingIndicator.show()
 
@@ -288,18 +317,11 @@ class PresetWindow(QDialog):
         self.presetList.clear()
         self.detailWidget.hide()
 
-        try:
-            files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
-            files = [f['path'] for f in files if f['path'].endswith(self.presetSuffix)]
+        self.downloadDefaultPresets()
+        if os.path.exists(self.presetFolderDefault):
+            files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(self.presetSuffix)]
             for filename in files:
-                self.addPresetItem("https://raw.githubusercontent.com/strohne/Facepager/master/",filename,True,True)
-        except Exception as e:
-             QMessageBox.information(self,"Facepager","Error loading online presets:"+str(e))
-
-#         if os.path.exists(self.defaultPresetFolder):
-#             files = [f for f in os.listdir(self.defaultPresetFolder) if f.endswith(self.presetSuffix)]
-#             for filename in files:
-#                 self.addPresetItem(self.defaultPresetFolder,filename,True)
+                self.addPresetItem(self.presetFolderDefault,filename,True)
 
         if os.path.exists(self.presetFolder):
             files = [f for f in os.listdir(self.presetFolder) if f.endswith(self.presetSuffix)]
