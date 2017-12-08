@@ -174,13 +174,29 @@ class ApiTab(QWidget):
         except:
             self.apidoc = None
 
-    def setResource(self,params=True):
+    def initInputs(self,basepath = None):
         '''
-        Create resource box and paramedit
-        Set the resource according to the APIdocs, if any docs are available
+        Create base path edit, resource edit and param edit
+        Set resource according to the APIdocs, if any docs are available
         '''
 
+        self.mainLayout = QFormLayout()
+        self.mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        self.mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.mainLayout.setLabelAlignment(Qt.AlignLeft)
+        self.setLayout(self.mainLayout)
+
+        #Base path
+        self.basepathEdit = QComboBox(self)
+        if not basepath is None:
+            self.basepathEdit.insertItems(0, [basepath])
+        self.basepathEdit.setEditable(True)
+        self.mainLayout.addRow("Base path", self.basepathEdit)
+
+        #Resource
         self.resourceEdit = QComboBox(self)
+        self.mainLayout.addRow("Resource", self.resourceEdit)
+
         if self.apidoc:
             #Insert one item for every endpoint
             for endpoint in reversed(self.apidoc):
@@ -192,19 +208,21 @@ class ApiTab(QWidget):
                 self.resourceEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
 
         self.resourceEdit.setEditable(True)
-        if params:
-            self.paramEdit = QParamEdit(self)
-            # changed to currentIndexChanged for recognition of changes made by the tool itself
-            self.resourceEdit.currentIndexChanged.connect(self.onchangedRelation)
-            self.onchangedRelation()
+
+        #Parameters
+        self.paramEdit = QParamEdit(self)
+        self.mainLayout.addRow("Parameters", self.paramEdit)
+        self.resourceEdit.currentIndexChanged.connect(self.onchangedRelation)
+        self.onchangedRelation()
+
 
     @Slot()
     def onchangedRelation(self,index=0):
         '''
-        Handles the automated paramter suggestion for the current
-        selected API Relation/Endpoint
+        Handles the automated parameter suggestion for the current
+        selected API relation/endpoint
         '''
-        #retrieve param-dict stored in setResource-method
+        #retrieve param-dict stored in initInputs-method
         params = self.resourceEdit.itemData(index,Qt.UserRole)
 
         #Set name options and build value dict
@@ -239,7 +257,7 @@ class ApiTab(QWidget):
                 self.session = requests.Session()
         return self.session
 
-    def request(self, path, args=None, headers=None, jsonify=True):
+    def request(self, path, args=None, headers=None, method="get", jsonify=True):
         """
         Start a new threadsafe session and request
         """
@@ -261,10 +279,10 @@ class ApiTab(QWidget):
             maxretries = 3
             while True:
                 try:
-                    if headers is not None:
+                    if method == "post":  #headers is not None
                         response = session.post(path, params=args, headers=headers, timeout=self.timeout, verify=False)
                     else:
-                        response = session.get(path, params=args, timeout=self.timeout, verify=False)
+                        response = session.get(path, params=args,headers=headers, timeout=self.timeout, verify=False)
                 except (HTTPError, ConnectionError), e:
                     maxretries -= 1
                     if maxretries > 0:
@@ -344,7 +362,7 @@ class ApiTab(QWidget):
 
         def makefilename(foldername=None, filename=None, fileext=None,appendtime = False):  # Create file name
             url_filename, url_fileext = os.path.splitext(os.path.basename(path))
-            if not fileext:
+            if fileext is None:
                 fileext = url_fileext
             if not filename:
                 filename = url_filename
@@ -353,42 +371,51 @@ class ApiTab(QWidget):
             fileext = re.sub(ur'[^a-zA-Z0-9_.-]+', '', fileext)
 
             filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            filenumber = 1
+            filenumber = 0
 
             while True:
+                newfilename = filename[:100]
                 if appendtime:
-                    fullfilename = os.path.join(foldername,
-                                                filename[:100] + '.' + filetime + '-' + str(filenumber) + str(fileext))
-                else:
-                    fullfilename = os.path.join(foldername,
-                                                filename[:100] + '.' + str(filenumber) + str(fileext))
+                    newfilename += '.' + filetime
+                if filenumber > 0:
+                    newfilename += '-' + str(filenumber)
+
+                newfilename += str(fileext)
+                fullfilename = os.path.join(foldername,newfilename)
 
                 if (os.path.isfile(fullfilename)):
                     filenumber = filenumber + 1
                 else:
                     break
+
             return fullfilename
 
-        response = self.request(path, args, headers, jsonify=False)
+        try:
+            response = self.request(path, args, headers, jsonify=False)
 
-        # Handle the response of the generic, non-json-returning response
-        if response.status_code == 200:
-            if not fileext:
-                guessed_ext = guess_all_extensions(response.headers["content-type"])
-                fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+            # Handle the response of the generic, non-json-returning response
+            if response.status_code == 200:
+                if fileext is None:
+                    guessed_ext = guess_all_extensions(response.headers["content-type"])
+                    fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
 
-            fullfilename = makefilename(foldername, filename, fileext)
-            with open(fullfilename, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
-            data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,
-                    'sourcequery': args}
-            status = 'downloaded' + ' (' + str(response.status_code) + ')'
+                fullfilename = makefilename(foldername, filename, fileext)
+                with open(fullfilename, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,'sourcequery': args}
+                status = 'downloaded' + ' (' + str(response.status_code) + ')'
+            else:
+                try:
+                    data = {'sourcepath': path, 'sourcequery': args,'response':response.json()}
+                except:
+                    data = {'sourcepath': path, 'sourcequery': args,'response':response.text}
+
+                status = 'error' + ' (' + str(response.status_code) + ')'
+        except Exception, e:
+            raise Exception(u"Download Error: {0}".format(e.message))
         else:
-            data = {'sourcepath': path, 'sourcequery': args}
-            status = 'error' + ' (' + str(response.status_code) + ')'
-
-        return data, dict(response.headers), status
+            return data, dict(response.headers), status
 
     def selectFolder(self):
         datadir = self.mainWindow.settings.value('lastpath', os.path.expanduser('~'))
@@ -399,14 +426,8 @@ class FacebookTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
-        #Base path
-        #URL prefix
-        self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, [credentials['facebook']['basepath']])
-        self.basepathEdit.setEditable(True)
-
         # Query Box
-        self.setResource()
+        self.initInputs(credentials['facebook']['basepath'])
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -435,22 +456,10 @@ class FacebookTab(ApiTab):
         applayout.addWidget(self.scopeEdit)
 
 
-        # Construct main-Layout
-        mainLayout = QFormLayout()
-        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
-        mainLayout.setLabelAlignment(Qt.AlignLeft)
-        mainLayout.addRow("Base path", self.basepathEdit)
-        mainLayout.addRow("Resource", self.resourceEdit)
-        mainLayout.addRow("Parameters", self.paramEdit)
-        #mainLayout.addRow("Download folder", folderlayout)
-        mainLayout.addRow("Maximum pages", self.pagesEdit)
-
-        mainLayout.addRow("Client Id", applayout)
-        mainLayout.addRow("Access Token", loginlayout)
-
-        self.setLayout(mainLayout)
+        # Add to main-Layout
+        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
+        self.mainLayout.addRow("Client Id", applayout)
+        self.mainLayout.addRow("Access Token", loginlayout)
 
         if loadSettings:
             self.loadSettings()
@@ -539,7 +548,7 @@ class FacebookTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,None,True)
+            data, headers, status = self.request(urlpath, urlparams,jsonify=True)
 
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
@@ -594,13 +603,9 @@ class TwitterTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
-        #Base path
-        self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, [credentials['twitter']['basepath']])
-        self.basepathEdit.setEditable(True)
 
         # Query and Parameter Box
-        self.setResource()
+        self.initInputs(credentials['twitter']['basepath'])
 
         # Pages-Box
         self.pagesEdit = QSpinBox(self)
@@ -633,19 +638,11 @@ class TwitterTab(ApiTab):
         loginlayout.addWidget(self.loginButton)
 
         # Construct main-Layout
-        mainLayout = QFormLayout()
-        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
-        mainLayout.setLabelAlignment(Qt.AlignLeft)
-        mainLayout.addRow("Base path", self.basepathEdit)
-        mainLayout.addRow("Resource", self.resourceEdit)
-        mainLayout.addRow("Parameters", self.paramEdit)
-        mainLayout.addRow("Maximum pages", self.pagesEdit)
-        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        mainLayout.addRow("Consumer Key", credentialslayout)
-        mainLayout.addRow("Access Token", loginlayout)
+        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
+        self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        self.mainLayout.addRow("Consumer Key", credentialslayout)
+        self.mainLayout.addRow("Access Token", loginlayout)
 
-        self.setLayout(mainLayout)
         if loadSettings:
             self.loadSettings()
 
@@ -737,7 +734,7 @@ class TwitterTab(ApiTab):
                                                                                    urlparams)))
 
             # data
-            data, headers, status = self.request(urlpath, urlparams,None,True)
+            data, headers, status = self.request(urlpath, urlparams,jsonify=True)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 
@@ -815,12 +812,8 @@ class TwitterStreamingTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
-        self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, [credentials['twitter_streaming']['basepath']])
-        self.basepathEdit.setEditable(True)
-
         # Query Box
-        self.setResource()
+        self.initInputs(credentials['twitter_streaming']['basepath'])
 
         # Construct Log-In elements
         self.tokenEdit = QLineEdit()
@@ -848,21 +841,12 @@ class TwitterStreamingTab(ApiTab):
         credentialslayout.addWidget(self.consumerSecretEdit)
 
 
-        # Construct main-Layout
-        mainLayout = QFormLayout()
-        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
-        mainLayout.setLabelAlignment(Qt.AlignLeft)
-        mainLayout.addRow("Base path", self.basepathEdit)
-        mainLayout.addRow("Resource", self.resourceEdit)
-        mainLayout.addRow("Parameters", self.paramEdit)
-        mainLayout.addRow("Consumer Key", credentialslayout)
-        mainLayout.addRow("Access Token", loginlayout)
+        # Add to main-Layout
+        self.mainLayout.addRow("Consumer Key", credentialslayout)
+        self.mainLayout.addRow("Access Token", loginlayout)
 
         if loadSettings:
             self.loadSettings()
-        self.setLayout(mainLayout)
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
         self.oauthdata = {}
@@ -1054,14 +1038,7 @@ class YoutubeTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(YoutubeTab, self).__init__(mainWindow, "YouTube")
 
-        #Base path
-        #URL prefix
-        self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, [credentials['youtube']['basepath']])
-        self.basepathEdit.setEditable(True)
-
-        # Query Box
-        self.setResource()
+        self.initInputs(credentials['youtube']['basepath'])
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -1095,21 +1072,10 @@ class YoutubeTab(ApiTab):
         applayout.addWidget(self.scopeEdit)
 
 
-        # Construct main-Layout
-        mainLayout = QFormLayout()
-        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
-        mainLayout.setLabelAlignment(Qt.AlignLeft)
-        mainLayout.addRow("Base path", self.basepathEdit)
-        mainLayout.addRow("Resource", self.resourceEdit)
-        mainLayout.addRow("Parameters", self.paramEdit)
-        mainLayout.addRow("Maximum pages", self.pagesEdit)
-
-        mainLayout.addRow("Client Id", applayout)
-        mainLayout.addRow("Access Token", loginlayout)
-
-        self.setLayout(mainLayout)
+        # Add to main-Layout
+        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
+        self.mainLayout.addRow("Client Id", applayout)
+        self.mainLayout.addRow("Access Token", loginlayout)
 
         if loadSettings:
             self.loadSettings()
@@ -1182,7 +1148,7 @@ class YoutubeTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,None,True)
+            data, headers, status = self.request(urlpath, urlparams,jsonify=True)
             options['querystatus'] = status
 
             callback(data, options, headers)
@@ -1233,40 +1199,23 @@ class GenericTab(ApiTab):
 
     def __init__(self, mainWindow=None, loadSettings=True):
         super(GenericTab, self).__init__(mainWindow, "Generic")
-        mainLayout = QFormLayout()
-        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows);
-        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
-        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
-        mainLayout.setLabelAlignment(Qt.AlignLeft);
 
-        #URL prefix
-        self.basepathEdit = QComboBox(self)
-        self.basepathEdit.setEditable(True)
-        mainLayout.addRow("Base path", self.basepathEdit)
+        #Basic inputs
+        self.initInputs()
 
-        # Query Box
-        self.setResource()
-        mainLayout.addRow("Resource", self.resourceEdit)
-        mainLayout.addRow("Parameters", self.paramEdit)
-#         #Parameter
-#         self.paramEdit = QParamEdit(self)
-#         self.paramEdit.setNameOptions([{'name':''}])
-#         self.paramEdit.setValueOptions([{'name':'',
-#                                          'doc':"No Value"},
-#                                          {'name':'<Object ID>',
-#                                           'doc':"The value in the Object ID-column of the datatree."}])
-#         mainLayout.addRow("Parameters", self.paramEdit)
+        #Headers
+        self.headerEdit = QParamEdit(self)
+        self.mainLayout.addRow("Headers", self.headerEdit)
 
         #Extract option
         self.extractEdit = QComboBox(self)
         self.extractEdit.setEditable(True)
-        mainLayout.addRow("Key to extract", self.extractEdit)
+        self.mainLayout.addRow("Key to extract", self.extractEdit)
 
         self.objectidEdit = QComboBox(self)
         self.objectidEdit.setEditable(True)
-        mainLayout.addRow("Key for Object ID", self.objectidEdit)
+        self.mainLayout.addRow("Key for Object ID", self.objectidEdit)
 
-        self.setLayout(mainLayout)
         if loadSettings:
             self.loadSettings()
 
@@ -1274,12 +1223,13 @@ class GenericTab(ApiTab):
         options = {}
 
         #options for request
-        if purpose != 'preset':
-            options['querytype'] = self.name
-
         options['basepath'] = self.basepathEdit.currentText()
         options['resource'] = self.resourceEdit.currentText()
         options['params'] = self.paramEdit.getParams()
+        options['headers'] = self.headerEdit.getParams()
+
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
         #options for data handling
         options['nodedata'] = self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
@@ -1291,6 +1241,7 @@ class GenericTab(ApiTab):
         self.basepathEdit.setEditText(options.get('basepath', ''))
         self.resourceEdit.setEditText(options.get('resource', ''))
         self.paramEdit.setParams(options.get('params', {}))
+        self.headerEdit.setParams(options.get('headers', {}))
 
         self.extractEdit.setEditText(options.get('nodedata', ''))
         self.objectidEdit.setEditText(options.get('objectid', ''))
@@ -1303,12 +1254,16 @@ class GenericTab(ApiTab):
         urlparams = {}
         urlparams.update(options['params'])
 
+        requestheaders = {}
+        requestheaders.update(options['headers'])
+
+
         urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
         if options['logrequests']:
                 logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
         #data
-        data, headers, status = self.request(urlpath, urlparams,None,True)
+        data, headers, status = self.request(urlpath, urlparams,requestheaders,jsonify=True)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
 
@@ -1318,26 +1273,16 @@ class GenericTab(ApiTab):
 class FilesTab(ApiTab):
     def __init__(self, mainWindow=None, loadSettings=True):
         super(FilesTab, self).__init__(mainWindow, "Files")
-        mainLayout = QFormLayout()
-        mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
-        mainLayout.setLabelAlignment(Qt.AlignLeft)
 
-        #URL field
-        self.basepathEdit = QComboBox(self)
-        self.basepathEdit.insertItems(0, ['<url>'])
-        self.basepathEdit.setEditable(True)
-        mainLayout.addRow("Base path", self.basepathEdit)
+        #Basic inputs
+        self.initInputs('<url>')
 
-        # Query Box
-        self.setResource()
-        mainLayout.addRow("Resource", self.resourceEdit)
-        mainLayout.addRow("Parameters", self.paramEdit)
+        #Headers
+        self.headerEdit = QParamEdit(self)
+        self.mainLayout.addRow("Headers", self.headerEdit)
 
         #Download folder
         folderlayout = QHBoxLayout()
-
         self.folderEdit = QLineEdit()
         folderlayout.addWidget(self.folderEdit)
 
@@ -1345,34 +1290,32 @@ class FilesTab(ApiTab):
         self.folderButton.clicked.connect(self.selectFolder)
         folderlayout.addWidget(self.folderButton)
 
-        mainLayout.addRow("Folder", folderlayout)
+        self.mainLayout.addRow("Folder", folderlayout)
 
         #filename
         self.filenameEdit = QComboBox(self)
         self.filenameEdit.insertItems(0, ['<None>'])
         self.filenameEdit.setEditable(True)
-        mainLayout.addRow("Custom filename", self.filenameEdit)
+        self.mainLayout.addRow("Custom filename", self.filenameEdit)
 
         #fileext
         self.fileextEdit = QComboBox(self)
         self.fileextEdit.insertItems(0, ['<None>'])
         self.fileextEdit.setEditable(True)
-        mainLayout.addRow("Custom file extension", self.fileextEdit)
+        self.mainLayout.addRow("Custom file extension", self.fileextEdit)
 
-        self.setLayout(mainLayout)
-        if loadSettings: self.loadSettings()
-
-
+        if loadSettings:
+            self.loadSettings()
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
-
-        if purpose != 'preset':
-            options['querytype'] = self.name
-
         options['basepath'] = self.basepathEdit.currentText()
         options['resource'] = self.resourceEdit.currentText()
         options['params'] = self.paramEdit.getParams()
+        options['headers'] = self.headerEdit.getParams()
+
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
         options['folder'] = self.folderEdit.text()
         options['filename'] = self.filenameEdit.currentText()
@@ -1386,6 +1329,7 @@ class FilesTab(ApiTab):
         self.basepathEdit.setEditText(options.get('basepath', '<url>'))
         self.resourceEdit.setEditText(options.get('resource', ''))
         self.paramEdit.setParams(options.get('params', {}))
+        self.headerEdit.setParams(options.get('headers', {}))
 
         self.folderEdit.setText(options.get('folder', ''))
         self.filenameEdit.setEditText(options.get('filename', '<None>'))
@@ -1399,22 +1343,33 @@ class FilesTab(ApiTab):
         if (foldername is None) or (not os.path.isdir(foldername)):
             raise Exception("Folder does not exists, select download folder, please!")
         filename = options.get('filename', None)
+        filename = self.parsePlaceholders(filename,nodedata)
+
         fileext = options.get('fileext', None)
+
+        if fileext is not None and fileext == '<None>':
+            fileext = None
+        elif fileext is not None and fileext != '':
+            fileext = self.parsePlaceholders(fileext,nodedata)
 
         urlpath = options["basepath"] + options['resource']
         urlparams = {}
         urlparams.update(options['params'])
 
         urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
-        filename = self.parsePlaceholders(filename,nodedata)
-        fileext = self.parsePlaceholders(fileext,nodedata)
+
+
+
+
+        requestheaders = {}
+        requestheaders.update(options['headers'])
 
         if options['logrequests']:
             logCallback(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
                                                                               urlpath + "?" + urllib.urlencode(
                                                                                   urlparams)))
 
-        data, headers, status = self.download(urlpath, urlparams, None, foldername,filename,fileext)
+        data, headers, status = self.download(urlpath, urlparams, requestheaders, foldername,filename,fileext)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
 
