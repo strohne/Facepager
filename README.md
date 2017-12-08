@@ -5,8 +5,8 @@ All data is stored in a SQLite database and may be exported to csv.
 
 ### Current status
 
-- Please be aware of API upgrades by Facebook. API version 2.3 is no longer supported and automatically redirected to some higher version. 
-- Facebook now only provides limited fields by default. Change the version in the base path to `v2.10` and use the `fields`-parameter (left side) to specify the data you want (right side, comma delimited). The available fields are listed in the Facebook Graph API reference, e.g. https://developers.facebook.com/docs/graph-api/reference/page/
+- Please be aware of API upgrades by Facebook. API version 2.3 is no longer supported and automatically redirected to some higher version. Change the version in the base path to `v2.10` or `v2.11`
+- Facebook now only provides limited fields by default. Use the `fields`-parameter (left side) to specify the data you want (right side, comma delimited). The available fields are listed in the Facebook Graph API reference, e.g. https://developers.facebook.com/docs/graph-api/reference/page/
 - If you use the pre-release version 3.9: the preset handling is under construction. If your presets vanish a) make sure to install the newest version and b) rename your custom presets according to the new naming scheme. In the new naming scheme the version number is concatenated with a dot instead of an underscore.
 
 ### Installer
