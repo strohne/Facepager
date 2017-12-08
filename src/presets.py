@@ -165,8 +165,7 @@ class PresetWindow(QDialog):
         self.folderButton.setText(self.presetFolder)
 
         self.presetsDownloaded = False
-        self.presetVersion = '3_9'
-        self.presetSuffix = '-'+self.presetVersion+'.json'
+        self.presetSuffix = '.3_9.json'
 
 #         if getattr(sys, 'frozen', False):
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
