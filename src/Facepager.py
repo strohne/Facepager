@@ -67,6 +67,7 @@ class MainWindow(QMainWindow):
         self.createUI()
         self.createDB()
         self.updateUI()
+        self.updateResources()
 
     def createDB(self):
         self.database = Database(self)
@@ -378,6 +379,14 @@ class MainWindow(QMainWindow):
         else:
             #self.statusBar().showMessage('No database connection')
             self.databaseLabel.setText('No database connection')
+
+    # Downloads default presets in the background
+    def updateResources(self):
+        def getter():
+            self.presetWindow.downloadDefaultPresets()
+
+        t = threading.Thread(target=getter)
+        t.start()
 
 
     def writeSettings(self):

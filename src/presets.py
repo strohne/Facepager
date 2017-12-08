@@ -8,6 +8,7 @@ import json
 from textviewer import *
 from urlparse import urlparse
 import requests
+import threading
 import webbrowser
 import platform
 from dictionarytree import *
@@ -29,6 +30,7 @@ class PresetWindow(QDialog):
 
 
         #loading indicator
+        self.loadingLock = threading.Lock()
         self.loadingIndicator = QLabel('Loading...please wait a second.')
         self.loadingIndicator.hide()
         layout.addWidget(self.loadingIndicator)
@@ -283,31 +285,32 @@ class PresetWindow(QDialog):
         self.loadingIndicator.show()
 
     def downloadDefaultPresets(self):
-        if self.presetsDownloaded:
-            return False
+        with self.loadingLock:
+            if self.presetsDownloaded:
+                return False
 
-        try:
-            #Create folder
-            if not os.path.exists(self.presetFolderDefault):
-                os.makedirs(self.presetFolderDefault)
+            try:
+                #Create folder
+                if not os.path.exists(self.presetFolderDefault):
+                    os.makedirs(self.presetFolderDefault)
 
-            #Clear folder
-            for filename in os.listdir(self.presetFolderDefault):
-                os.remove(os.path.join(self.presetFolderDefault,filename))
+                #Clear folder
+                for filename in os.listdir(self.presetFolderDefault):
+                    os.remove(os.path.join(self.presetFolderDefault,filename))
 
-            #Download
-            files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
-            files = [f['path'] for f in files if f['path'].endswith(self.presetSuffix)]
-            for filename in files:
-                response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
-                with open(os.path.join(self.presetFolderDefault, os.path.basename(filename)), 'wb') as f:
-                    f.write(response.content)
-        except Exception as e:
-             QMessageBox.information(self,"Facepager","Error downloading default presets:"+str(e))
-             return False
-        else:
-            self.presetsDownloaded = True
-            return True
+                #Download
+                files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
+                files = [f['path'] for f in files if f['path'].endswith(self.presetSuffix)]
+                for filename in files:
+                    response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
+                    with open(os.path.join(self.presetFolderDefault, os.path.basename(filename)), 'wb') as f:
+                        f.write(response.content)
+            except Exception as e:
+                 QMessageBox.information(self,"Facepager","Error downloading default presets:"+str(e))
+                 return False
+            else:
+                self.presetsDownloaded = True
+                return True
 
     def initPresets(self):
         self.loadingIndicator.show()
