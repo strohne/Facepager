@@ -1,0 +1,24 @@
+{
+  "description": "Add Facebook-IDs as nodes, e.g. \"Uni.Greifswald.de\".\n\nThis preset fetches the most basic information about a Facebook page for you. In case you want to fetch more data just add the fields you like. For example, add \"likes\" to get to know which pages this page liked. See https://developers.facebook.com/docs/graph-api/reference/page/ for more possibilities.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.\n",
+  "module": "Facebook",
+  "speed": 200,
+  "options": {
+    "resource": "<page>",
+    "basepath": "https://graph.facebook.com/v2.10/",
+    "params": {
+      "fields": "name, about, location, category, talking_about_count",
+      "<page>": "<Object ID>"
+    },
+    "pages": 1,
+    "scope": ""
+  },
+  "columns": [
+    "name",
+    "about",
+    "location.city",
+    "category",
+    "talking_about_count",
+    "error.message"
+  ],
+  "name": "Information about pages"
+}

@@ -1,0 +1,22 @@
+{
+  "description": "Add Facebook-IDs of pages as nodes, e.g. \"Uni.Greifswald.de\". This preset fetches the last 10 posts on a page. You can increase the limit-parameter or increade the maximum pages to get more posts.\n\nTo filter  by date use the parameters \"since\" and \"until\". The until-parameter always has to be one day later, the day starts at 0:00am.\n\nIf you want more data than message, created_time and updated_time adjust the fields-parameter. \nSee https://developers.facebook.com/docs/graph-api/reference/v2.10/post for more possibilities. \n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.",
+  "module": "Facebook",
+  "speed": 200,
+  "options": {
+    "resource": "<Object ID>/posts",
+    "basepath": "https://graph.facebook.com/v2.10/",
+    "params": {
+      "limit": "20",
+      "<fields>": "message, created_time, updated_time"
+    },
+    "pages": 1,
+    "scope": ""
+  },
+  "columns": [
+    "message",
+    "created_time",
+    "updated_time",
+    "error.message"
+  ],
+  "name": "Get Facebook posts"
+}
