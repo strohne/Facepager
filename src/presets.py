@@ -112,9 +112,9 @@ class PresetWindow(QDialog):
         #buttons.addButton(self.saveButton,QDialogButtonBox.ActionRole)
         buttons.addWidget(self.saveButton)
 
-        self.overwriteButton = QPushButton('Overwrite preset')
+        self.overwriteButton = QPushButton('Edit preset')
         self.overwriteButton.clicked.connect(self.overwritePreset)
-        self.overwriteButton.setToolTip("Overwrite the selected presets with the current tab and parameters")
+        self.overwriteButton.setToolTip("Edit the selected preset.")
         #buttons.addButton(self.overwriteButton,QDialogButtonBox.ActionRole)
         buttons.addWidget(self.overwriteButton)
 
@@ -182,8 +182,6 @@ class PresetWindow(QDialog):
             webbrowser.open('file:///'+self.presetFolder)
         else:
             webbrowser.open('file:///'+self.presetFolder)
-
-
 
 
     def currentChanged(self):
@@ -395,13 +393,14 @@ class PresetWindow(QDialog):
 
     def editPreset(self,data = None):
         dialog=QDialog(self.mainWindow)
-        if data is None:
-            dialog.setWindowTitle("New Preset")
-            data = {}
-        else:
-            dialog.setWindowTitle("Overwrite selected preset")
 
+        self.currentData = data if data is not None else {}
         self.currentFilename = data.get('filename',None)
+
+        if self.currentFilename is None:
+            dialog.setWindowTitle("New Preset")
+        else:
+            dialog.setWindowTitle("Edit selected preset")
 
         layout=QVBoxLayout()
         label=QLabel("<b>Name</b>")
@@ -420,6 +419,18 @@ class PresetWindow(QDialog):
         description.setFocus()
         layout.addWidget(description,1)
 
+
+        overwriteLayout =QHBoxLayout()
+        self.overwriteCheckbox = QCheckBox(self)
+        self.overwriteCheckbox.setCheckState(Qt.Unchecked)
+        overwriteLayout.addWidget(self.overwriteCheckbox)
+        label=QLabel("<b>Overwrite parameters with current settings</b>")
+        overwriteLayout.addWidget(label)
+        overwriteLayout.addStretch()
+
+        if self.currentFilename is not None:
+            layout.addLayout(overwriteLayout)
+
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         layout.addWidget(buttons,0)
         dialog.setLayout(layout)
@@ -428,28 +439,41 @@ class PresetWindow(QDialog):
             if self.currentFilename == None:
                 self.currentFilename = self.uniqueFilename(self.mainWindow.RequestTabs.currentWidget().name+"-"+name.text())
 
-            data = {
+            data_meta = {
                     'name':name.text(),
-                    'description':description.toPlainText(),
+                    'description':description.toPlainText()
+            }
+
+            data_settings = {
                     'module':self.mainWindow.RequestTabs.currentWidget().name,
                     'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
                     'speed':self.mainWindow.speedEdit.value(),
                     'columns':self.mainWindow.fieldList.toPlainText().splitlines()
             }
 
+            self.currentData.update(data_meta)
+
             if not os.path.exists(self.presetFolder):
                 os.makedirs(self.presetFolder)
 
-            if os.path.exists(os.path.join(self.presetFolder,self.currentFilename)):
+            if not os.path.exists(os.path.join(self.presetFolder,self.currentFilename)):
+                self.currentData.update(data_settings)
+
+            elif self.overwriteCheckbox.isChecked():
                 reply = QMessageBox.question(self, 'Overwrite Preset',u"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply != QMessageBox.Yes:
                     dialog.close()
                     self.currentFilename = None
                     return False
+                else:
+                    self.currentData.update(data_settings)
 
+            for k in self.currentData.keys():
+              if not k in ['name','description','module','options','speed','columns']:
+                self.currentData.pop(k)
 
             with open(os.path.join(self.presetFolder,self.currentFilename), 'w') as outfile:
-                json.dump(data, outfile,indent=2, separators=(',', ': '))
+                json.dump(self.currentData, outfile,indent=2, separators=(',', ': '))
 
             dialog.close()
             return True
@@ -484,7 +508,7 @@ class PresetWindow(QDialog):
         data = item.data(0,Qt.UserRole)
 
         if data.get('default',False):
-            QMessageBox.information(self,"Facepager","Cannot overwrite default presets.")
+            QMessageBox.information(self,"Facepager","Cannot edit default presets.")
             return False
 
         if data.get('iscategory',False):
