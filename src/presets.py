@@ -22,12 +22,9 @@ class PresetWindow(QDialog):
         self.setMinimumWidth(700);
         self.setMinimumHeight(600);
 
-
-
         #layout
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-
 
         #loading indicator
         self.loadingLock = threading.Lock()
@@ -35,11 +32,9 @@ class PresetWindow(QDialog):
         self.loadingIndicator.hide()
         layout.addWidget(self.loadingIndicator)
 
-
         #Middle
         central = QHBoxLayout()
         layout.addLayout(central,1)
-
 
         #list view
         self.presetList = QTreeWidget(self)
@@ -81,6 +76,7 @@ class PresetWindow(QDialog):
         self.detailForm.setLabelAlignment(Qt.AlignLeft);
 
         self.detailOptions = DictionaryTree()
+        self.detailOptions.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.detailOptions.setFrameShape(QFrame.NoFrame)
         #self.detailLayout.addWidget(self.detailViewer)
 
@@ -89,11 +85,7 @@ class PresetWindow(QDialog):
         self.detailModule = QLabel('')
         self.detailForm.addRow('<b>Module</b>',self.detailModule)
 
-        #self.detailOptions = QLabel()
-        #self.detailOptions.setWordWrap(True)
-        #self.detailOptions.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
         self.detailForm.addRow('<b>Options</b>',self.detailOptions)
-
         self.detailColumns = QLabel()
         self.detailColumns.setWordWrap(True)
         #self.detailColumns.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
@@ -103,6 +95,8 @@ class PresetWindow(QDialog):
         detailColumnsLabel.setStyleSheet("QLabel {height:25px;}")
         self.detailForm.addRow(detailColumnsLabel,self.detailColumns)
 
+        self.detailSpeed = QLabel('')
+        self.detailForm.addRow('<b>Speed</b>',self.detailSpeed)
 
         #buttons
         buttons= QHBoxLayout() #QDialogButtonBox()
@@ -166,6 +160,7 @@ class PresetWindow(QDialog):
 
         self.presetsDownloaded = False
         self.presetSuffix = '.3_9.json'
+        self.lastSelected = None
 
 #         if getattr(sys, 'frozen', False):
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
@@ -198,13 +193,13 @@ class PresetWindow(QDialog):
             data = current.data(0,Qt.UserRole)
 
             if not data.get('iscategory',False):
+                self.lastSelected = os.path.join(data.get('folder',''),data.get('filename',''))
+
                 self.detailName.setText(data.get('name'))
                 self.detailModule.setText(data.get('module'))
                 self.detailDescription.setText(data.get('description')+"\n")
-
                 self.detailOptions.showDict(data.get('options',[]))
-
-                #self.detailOptions.setText(json.dumps(data.get('options'),indent=2, separators=(',', ': '))[2:-2].replace('\"',''))
+                self.detailSpeed.setText(str(data.get('speed','')))
                 self.detailColumns.setText("\r\n".join(data.get('columns',[])))
 
                 self.detailWidget.show()
@@ -226,6 +221,7 @@ class PresetWindow(QDialog):
                     data = json.load(input)
 
             data['filename'] = filename
+            data['folder'] = folder
             data['default'] = default
             data['online'] = online
 
@@ -316,23 +312,29 @@ class PresetWindow(QDialog):
         self.categoryNodes = {}
         self.presetList.clear()
         self.detailWidget.hide()
+        selectitem = None
 
         self.downloadDefaultPresets()
         if os.path.exists(self.presetFolderDefault):
             files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(self.presetSuffix)]
             for filename in files:
-                self.addPresetItem(self.presetFolderDefault,filename,True)
+                newitem = self.addPresetItem(self.presetFolderDefault,filename,True)
+                if self.lastSelected is not None and (self.lastSelected == os.path.join(self.presetFolderDefault,filename)):
+                    selectitem = newitem
 
         if os.path.exists(self.presetFolder):
             files = [f for f in os.listdir(self.presetFolder) if f.endswith(self.presetSuffix)]
             for filename in files:
-                self.addPresetItem(self.presetFolder,filename)
+                newitem = self.addPresetItem(self.presetFolder,filename)
+                if self.lastSelected is not None and (self.lastSelected == os.path.join(self.presetFolder,filename)):
+                    selectitem = newitem
 
         self.presetList.expandAll()
         self.presetList.setFocus()
         self.presetList.sortItems(0,Qt.AscendingOrder)
 
-        self.presetList.setCurrentItem(self.presetList.topLevelItem(0))
+        selectitem = self.presetList.topLevelItem(0) if selectitem is None else selectitem
+        self.presetList.setCurrentItem(selectitem)
 
         self.applyButton.setDefault(True)
         self.loadingIndicator.hide()
@@ -395,7 +397,7 @@ class PresetWindow(QDialog):
         dialog=QDialog(self.mainWindow)
 
         self.currentData = data if data is not None else {}
-        self.currentFilename = data.get('filename',None)
+        self.currentFilename = self.currentData.get('filename',None)
 
         if self.currentFilename is None:
             dialog.setWindowTitle("New Preset")
@@ -406,7 +408,7 @@ class PresetWindow(QDialog):
         label=QLabel("<b>Name</b>")
         layout.addWidget(label)
         name=QLineEdit()
-        name.setText(data.get('name',''))
+        name.setText(self.currentData.get('name',''))
         layout.addWidget(name,0)
 
         label=QLabel("<b>Description</b>")
@@ -415,7 +417,7 @@ class PresetWindow(QDialog):
         description=QTextEdit()
         description.setMinimumWidth(500)
         description.acceptRichText=False
-        description.setPlainText(data.get('description',''))
+        description.setPlainText(self.currentData.get('description',''))
         description.setFocus()
         layout.addWidget(description,1)
 
