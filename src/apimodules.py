@@ -677,13 +677,13 @@ class TwitterTab(ApiTab):
             #options['basepath'] =  "https://api.twitter.com/1.1/"
             options['objectid'] = 'id'
 
-            if options["query"] == 'search/tweets':
+            if options["resource"] == 'search/tweets':
                 options['nodedata'] = 'statuses'
-            elif options["query"] == 'followers/list':
+            elif options["resource"] == 'followers/list':
                 options['nodedata'] = 'users'
-            elif options["query"] == 'followers/ids':
+            elif options["resource"] == 'followers/ids':
                 options['nodedata'] = 'ids'
-            elif options["query"] == 'friends/list':
+            elif options["resource"] == 'friends/list':
                 options['nodedata'] = 'users'
             else:
                 options['nodedata'] = None
@@ -722,7 +722,7 @@ class TwitterTab(ApiTab):
 
         for page in range(0, options.get('pages', 1)):
             if not ('url' in options):
-                urlpath = options["basepath"] + options["query"] + ".json"
+                urlpath = options["basepath"] + options["resource"] + ".json"
                 urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata)
             else:
                 urlpath = options['url']
@@ -879,11 +879,11 @@ class TwitterStreamingTab(ApiTab):
         # options for data handling
         if purpose == 'fetch':
             options['objectid'] = 'id'
-            if options["query"] == 'search/tweets':
+            if options["resource"] == 'search/tweets':
                 options['nodedata'] = 'statuses'
-            elif options["query"] == 'followers/list':
+            elif options["resource"] == 'followers/list':
                 options['nodedata'] = 'users'
-            elif options["query"] == 'friends/list':
+            elif options["resource"] == 'friends/list':
                 options['nodedata'] = 'users'
             else:
                 options['nodedata'] = None
@@ -985,7 +985,7 @@ class TwitterStreamingTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         if not ('url' in options):
-            urlpath = options["basepath"] + options["query"] + ".json"
+            urlpath = options["basepath"] + options["resource"] + ".json"
             urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata)
         else:
             urlpath = options['url']
