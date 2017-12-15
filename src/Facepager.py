@@ -317,7 +317,7 @@ class MainWindow(QMainWindow):
         self.clearCheckbox = QCheckBox(self)
         self.settings.beginGroup("GlobalSettings")
         clear = self.settings.value('clearsettings',False)
-        self.clearCheckbox.setChecked(str(clear)=="True")
+        self.clearCheckbox.setChecked(str(clear)=="true")
         self.settings.endGroup()
 
         self.clearCheckbox.setToolTip("Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials.")
@@ -397,7 +397,7 @@ class MainWindow(QMainWindow):
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
-        self.settings.setValue("version","3.0")
+        self.settings.setValue("version","3.9")
         self.settings.endGroup()
 
 
@@ -420,17 +420,21 @@ class MainWindow(QMainWindow):
         QSettings.setDefaultFormat(QSettings.IniFormat)
         QCoreApplication.setOrganizationName("Keyling")
         QCoreApplication.setApplicationName("Facepager")
-        self.settings = QSettings()
+        self.settings = QSettings()        
 
         self.settings.clear()
         self.settings.sync()
+        
+        self.settings.beginGroup("GlobalSettings")
+        self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
+        self.settings.endGroup()
 
 
     def closeEvent(self, event=QCloseEvent()):
         if self.close():
-            if self.clearCheckbox.isChecked():
+            if self.clearCheckbox.isChecked():                
                 self.deleteSettings()
-            else:
+            else:                    
                 self.writeSettings()
             event.accept()
         else:
