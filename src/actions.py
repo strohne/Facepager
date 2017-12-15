@@ -316,161 +316,166 @@ class Actions(object):
         self.mainWindow.selectNodesWindow.show()
 
 
-    def queryNodes(self, indexes=False, apimodule=False, options=False):
-        if not self.actionQuery.isEnabled() or not ((self.mainWindow.tree.selectedCount > 0) or (indexes != False)):
+    def queryNodes(self, indexes=None, apimodule=False, options=False):
+        if not self.actionQuery.isEnabled() or not ((self.mainWindow.tree.selectedCount > 0) or (indexes is not None)):
             return (False)
 
         #Show progress window
         progress = ProgressBar(u"Fetching Data",parent=self.mainWindow)
 
-        #Get global options
-        globaloptions = {}
-        globaloptions['threads'] = self.mainWindow.threadsEdit.value()
-        globaloptions['speed'] = self.mainWindow.speedEdit.value()
-        globaloptions['errors'] = self.mainWindow.errorEdit.value()
-        globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
-        objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
-        level = self.mainWindow.levelEdit.value() - 1
-
-        #Get selected nodes
-        if indexes == False:
-            indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
-                                                                              'objecttype':objecttypes})
-
-        #Update progress window
-        self.mainWindow.logmessage(u"Start fetching data for {} node(s).".format(len(indexes)))
-        progress.setMaximum(len(indexes))
-        self.mainWindow.tree.treemodel.nodecounter = 0
-
-        #Init status messages
-        statuscount = {}
-        errorcount = 0
-        laststatus = None
-        laststatuscount = 0
-        allowedstatus = ['fetched (200)','downloaded (200)','stream'] #,'error (400)'
-
-
-        if apimodule == False:
-            apimodule = self.mainWindow.RequestTabs.currentWidget()
-        if options == False:
-            options = apimodule.getOptions()
-
-        options.update(globaloptions)
-
         try:
-            #Spawn Threadpool
-            threadpool = ApiThreadPool(apimodule)
+            #Get global options
+            globaloptions = {}
+            globaloptions['threads'] = self.mainWindow.threadsEdit.value()
+            globaloptions['speed'] = self.mainWindow.speedEdit.value()
+            globaloptions['errors'] = self.mainWindow.errorEdit.value()
+            globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
+            objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
+            level = self.mainWindow.levelEdit.value() - 1
+
+            #Get selected nodes
+            if indexes is None:
+                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
+                                                                                  'objecttype':objecttypes})
+
+            if (len(indexes) == 0):
+                return (False)
+
+            #Update progress window
+            self.mainWindow.logmessage(u"Start fetching data for {} node(s).".format(len(indexes)))
+            progress.setMaximum(len(indexes))
+            self.mainWindow.tree.treemodel.nodecounter = 0
+
+            #Init status messages
+            statuscount = {}
+            errorcount = 0
+            laststatus = None
+            laststatuscount = 0
+            allowedstatus = ['fetched (200)','downloaded (200)','stream'] #,'error (400)'
 
 
-            #Fill Input Queue
-            indexes = deque(indexes)
-#             for index in indexes:
-#                 number += 1
-#                 if not index.isValid():
-#                     continue
-#
-#                 treenode = index.internalPointer()
-#                 job = {'number': number, 'nodeindex': index, 'data': deepcopy(treenode.data),
-#                        'options': deepcopy(options)}
-#                 threadpool.addJob(job)
+            if apimodule == False:
+                apimodule = self.mainWindow.RequestTabs.currentWidget()
+            if options == False:
+                options = apimodule.getOptions()
 
-            threadpool.processJobs(options.get("threads",None))
+            options.update(globaloptions)
 
-            #Process Input/Output Queue
-            while True:
-                try:
-                    #Logging (sync logs in threads with main thread)
-                    msg = threadpool.getLogMessage()
-                    if msg is not None:
-                        self.mainWindow.logmessage(msg)
+            try:
+                #Spawn Threadpool
+                threadpool = ApiThreadPool(apimodule)
 
-                    #Jobs in
-                    if (len(indexes) > 0):
-                        index = indexes.popleft()
-                        if index.isValid():
-                            treenode = index.internalPointer()
-                            job = {'nodeindex': index, 'data': deepcopy(treenode.data),
-                                   'options': deepcopy(options)}
-                            threadpool.addJob(job)
 
-                        if len(indexes) == 0:
-                            threadpool.closeJobs()
+                #Fill Input Queue
+                indexes = deque(indexes)
+    #             for index in indexes:
+    #                 number += 1
+    #                 if not index.isValid():
+    #                     continue
+    #
+    #                 treenode = index.internalPointer()
+    #                 job = {'number': number, 'nodeindex': index, 'data': deepcopy(treenode.data),
+    #                        'options': deepcopy(options)}
+    #                 threadpool.addJob(job)
+
+                threadpool.processJobs(options.get("threads",None))
+
+                #Process Input/Output Queue
+                while True:
+                    try:
+                        #Logging (sync logs in threads with main thread)
+                        msg = threadpool.getLogMessage()
+                        if msg is not None:
+                            self.mainWindow.logmessage(msg)
+
+                        #Jobs in
+                        if (len(indexes) > 0):
+                            index = indexes.popleft()
+                            if index.isValid():
+                                treenode = index.internalPointer()
+                                job = {'nodeindex': index, 'data': deepcopy(treenode.data),
+                                       'options': deepcopy(options)}
+                                threadpool.addJob(job)
+
+                            if len(indexes) == 0:
+                                threadpool.closeJobs()
+                                progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
+
+                        #Jobs out
+                        job = threadpool.getJob()
+
+                        #-Finished all nodes...
+                        if job is None:
+                            break
+
+                        #-Waiting...
+                        elif 'waiting' in job:
+                            time.sleep(0)
+
+                        #-Finished one node...
+                        elif 'progress' in job:
+                            #Update progress
+                            progress.step()
+
+                        #-Add data...
+                        elif not progress.wasCanceled:
+                            if not job['nodeindex'].isValid():
+                                continue
+
+                            #add data
+                            treenode = job['nodeindex'].internalPointer()
+                            treenode.appendNodes(job['data'], job['options'], job['headers'], True)
+
+                            #show status
+                            status = job['options'].get('querystatus','empty')
+                            count = 1 if not status in statuscount else statuscount[status]+1
+                            statuscount[status] = count
+                            progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
+                            progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
+                            progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
                             progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
 
-                    #Jobs out
-                    job = threadpool.getJob()
-
-                    #-Finished all nodes...
-                    if job is None:
-                        break
-
-                    #-Waiting...
-                    elif 'waiting' in job:
-                        time.sleep(0)
-
-                    #-Finished one node...
-                    elif 'progress' in job:
-                        #Update progress
-                        progress.step()
-
-                    #-Add data...
-                    elif not progress.wasCanceled:
-                        if not job['nodeindex'].isValid():
-                            continue
-
-                        #add data
-                        treenode = job['nodeindex'].internalPointer()
-                        treenode.appendNodes(job['data'], job['options'], job['headers'], True)
-
-                        #show status
-                        status = job['options'].get('querystatus','empty')
-                        count = 1 if not status in statuscount else statuscount[status]+1
-                        statuscount[status] = count
-                        progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
-                        progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
-                        progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
-                        progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
-
-                        #auto cancel after three consecutive errors
-                        if (status != laststatus):
-                            laststatus=status
-                            laststatuscount = 1
-                        else:
-                            laststatuscount += 1
-
-                        if not (laststatus in allowedstatus) and ((laststatuscount > (globaloptions['errors']-1)) or (laststatus == "rate limit (400)")):
-                            threadpool.suspendJobs()
-
-                            if laststatus == "rate limit (400)":
-                                msg = "You reached the rate limit of the API. You are strongly advised to calm down and retry later."
-                                timeout = 60 * 10 #10 minutes
-                            else:
-                                msg = "Something is wrong. {} consecutive errors occurred. You are strongly advised to check your settings.".format(laststatuscount)
-                                timeout = 60 #1 minute
-
-                            if RetryDialog.doContinue(msg,timeout,self.mainWindow) == QDialog.Accepted:
+                            #auto cancel after three consecutive errors
+                            if (status != laststatus):
+                                laststatus=status
                                 laststatuscount = 1
-                                threadpool.resumeJobs()
                             else:
-                                self.mainWindow.logmessage(u"Canceled because of {} consecutive errors or rate limit.".format(laststatuscount))
-                                progress.cancel()
+                                laststatuscount += 1
 
-                    #Abort
-                    if progress.wasCanceled:
-                        progress.showInfo('cancel',u"Disconnecting from stream may take up to one minute.")
-                        threadpool.stopJobs()
-                        #break
+                            if not (laststatus in allowedstatus) and ((laststatuscount > (globaloptions['errors']-1)) or (laststatus == "rate limit (400)")):
+                                threadpool.suspendJobs()
 
-                finally:
-                    QApplication.processEvents()
+                                if laststatus == "rate limit (400)":
+                                    msg = "You reached the rate limit of the API. You are strongly advised to calm down and retry later."
+                                    timeout = 60 * 10 #10 minutes
+                                else:
+                                    msg = "Something is wrong. {} consecutive errors occurred. You are strongly advised to check your settings.".format(laststatuscount)
+                                    timeout = 60 #1 minute
 
+                                if RetryDialog.doContinue(msg,timeout,self.mainWindow) == QDialog.Accepted:
+                                    laststatuscount = 1
+                                    threadpool.resumeJobs()
+                                else:
+                                    self.mainWindow.logmessage(u"Canceled because of {} consecutive errors or rate limit.".format(laststatuscount))
+                                    progress.cancel()
+
+                        #Abort
+                        if progress.wasCanceled:
+                            progress.showInfo('cancel',u"Disconnecting from stream may take up to one minute.")
+                            threadpool.stopJobs()
+                            #break
+
+                    finally:
+                        QApplication.processEvents()
+
+            finally:
+                request_summary = [str(val)+" x "+key for key,val in statuscount.iteritems()]
+                request_summary = ", ".join(request_summary)
+
+                self.mainWindow.logmessage(u"Fetching completed, {} new node(s) created. Summary of responses: {}.".format(self.mainWindow.tree.treemodel.nodecounter,request_summary))
+
+                self.mainWindow.tree.treemodel.commitNewNodes()
         finally:
-            request_summary = [str(val)+" x "+key for key,val in statuscount.iteritems()]
-            request_summary = ", ".join(request_summary)
-
-            self.mainWindow.logmessage(u"Fetching completed, {} new node(s) created. Summary of responses: {}.".format(self.mainWindow.tree.treemodel.nodecounter,request_summary))
-
-            self.mainWindow.tree.treemodel.commitNewNodes()
             progress.close()
 
     @Slot()
