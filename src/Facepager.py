@@ -316,7 +316,7 @@ class MainWindow(QMainWindow):
         #Clear setttings
         self.clearCheckbox = QCheckBox(self)
         self.settings.beginGroup("GlobalSettings")
-        clear = self.settings.value('clearsettings',True)
+        clear = self.settings.value('clearsettings',False)
         self.clearCheckbox.setChecked(str(clear)=="True")
         self.settings.endGroup()
 
