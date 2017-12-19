@@ -237,17 +237,17 @@ class PresetWindow(QDialog):
                 data['category'] = data.get('module')
 
             if default:
-                data['caption'] = data['caption'] +"*"
+                data['caption'] = data['caption'] +" *"
 
             if not data['category'] in self.categoryNodes:
-                categoryItem = QTreeWidgetItem()
+                categoryItem = PresetWidgetItem()
                 categoryItem.setText(0,data['category'])
 
                 ft = categoryItem.font(0)
                 ft.setWeight(QFont.Bold)
                 categoryItem.setFont(0,ft)
 
-                categoryItem.setData(0,Qt.UserRole,{'iscategory':True})
+                categoryItem.setData(0,Qt.UserRole,{'iscategory':True,'name':data['module'],'category':data['category']})
 
 
                 self.presetList.addTopLevelItem(categoryItem)
@@ -256,9 +256,14 @@ class PresetWindow(QDialog):
             else:
                 categoryItem = self.categoryNodes[data['category']]
 
-            newItem = QTreeWidgetItem()
+            newItem = PresetWidgetItem()
             newItem.setText(0,data['caption'])
             newItem.setData(0,Qt.UserRole,data)
+            if default:
+                newItem.setForeground(0,QBrush(QColor("darkblue")))
+
+
+
             categoryItem.addChild(newItem)
 
             #self.presetList.setCurrentItem(newItem,0)
@@ -326,7 +331,7 @@ class PresetWindow(QDialog):
             files = [f for f in os.listdir(self.presetFolder) if f.endswith(self.presetSuffix)]
             for filename in files:
                 newitem = self.addPresetItem(self.presetFolder,filename)
-                if self.lastSelected is not None and (self.lastSelected == os.path.join(self.presetFolder,filename)):
+                if self.lastSelected is not None and (self.lastSelected == unicode(os.path.join(self.presetFolder,filename))):
                     selectitem = newitem
 
         self.presetList.expandAll()
@@ -525,4 +530,24 @@ class PresetWindow(QDialog):
             self.presetList.sortItems(0,Qt.AscendingOrder)
             self.presetList.setCurrentItem(item,0)
 
+class PresetWidgetItem(QTreeWidgetItem):
+    def __lt__(self, other):
+        data1 = self.data(0,Qt.UserRole)
+        data2 = other.data(0,Qt.UserRole)
 
+        if data1.get('iscategory',False) and data2.get('iscategory',False):
+            order = ['Facebook','YouTube','Twitter','Twitter Streaming','Generic','Files']
+            if data1.get('name','') in order and data2.get('name','') in order:
+                if data1.get('name','') == data2.get('name',''):
+                    return data1.get('category','') < data2.get('category','')
+                else:
+                    return order.index(data1.get('name','')) < order.index(data2.get('name',''))
+
+            elif (data1.get('name','') in order) != (data2.get('name','') in order):
+                return data1.get('name','') in order
+            else:
+                return data1.get('name','') < data2.get('name','')
+        elif data1.get('default',False) != data2.get('default',False):
+            return data1.get('default',False)
+        else:
+            return data1.get('name','') < data2.get('name','')
