@@ -21,12 +21,14 @@ Installation packages for each versions are available on the [releases page](htt
 
 1. Click "New Database" in the toolbar to create a blank database
 2. Add Facebook IDs by clicking "Add Nodes" in the toolbar. Enter the last part of a Facebook page, e.g. enter "Tatort" for the page "http://www.facebook.com/Tatort". Alternatively you can enter "me" as reference to yourself.
-3. Select the Facebook tab and set Resource to `<Object ID>`, clear all parameters. Alternatively you can set Resource to `<page>` and add a parameter which replaces `<page>` (left side) by `<Object ID>` (right side).
-4. In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.
-5. Select one or more nodes in the view and click "Fetch data". Look at the status log (make sure "Log all requests" was enabled) to see how the URL is assembled from your settings.
-6. Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.
-7. Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
-8. For further information, click the "help" button and try the default presets
+3. Select the Facebook tab and type `https://graph.facebook.com/v2.10/` into the Base path field. 
+4. Type `<Object ID>` into the Resource field. 
+5. Delete any parameters. Then add just one parameter: the term `fields` goes into the left side, the term `name,category,fan_count,birthday` goes into the right side. See https://developers.facebook.com/docs/graph-api/reference/page/ for other fields if you like. 
+6. In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.
+7. Select one or more nodes in the view and click "Fetch data". Look at the status log (make sure "Log all requests" was enabled) to see how the URL is assembled from your settings.
+8. Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.
+9. Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
+10. For further information, click the "help" button and try the default presets.
 
 ### Getting help
 

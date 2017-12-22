@@ -165,7 +165,14 @@ table td:first-of-type p {
     "http://www.facebook.com/BobMarley".
 </li>
 <li>
-    Select the Facebook tab and type "&lt;Object ID&gt;" into the Resource field. Delete any parameters.
+    Select the Facebook tab and type "https://graph.facebook.com/v2.10/" into the Base path field. 
+</li>
+<li>
+    Type "&lt;Object ID&gt;" into the Resource field.
+</li>
+
+<li>
+    Delete any parameters. Then add just one parameter: the term "fields" goes into the left side, the term "name,category,fan_count,website,birthday" goes into the right side. See <a href="https://developers.facebook.com/docs/graph-api/reference/page/">https://developers.facebook.com/docs/graph-api/reference/page/</a> for other fields if you like.
 </li>
 <li>
     In the Facebook tab click "Login to Facebook" and login to get a valid access token. Your password is not shared with Facepager. But notice: the access
