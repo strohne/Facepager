@@ -1,5 +1,5 @@
 {
-  "description": "Get comments of a post and some basic information about the comments. Before you can use this preset, you have to fetch posts. See the preset named \"Get Facebook posts\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v2.10/comment to add or change the fields-parameters.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.\n",
+  "description": "Get comments of a post and some basic information about the comments. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. See the preset named \"Get Facebook posts\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v2.10/comment to add or change the fields-parameters.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.\n",
   "module": "Facebook",
   "speed": 200,
   "options": {

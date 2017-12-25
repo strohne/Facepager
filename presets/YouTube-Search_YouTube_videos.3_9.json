@@ -1,25 +1,22 @@
 {
-  "description": "Add search terms as nodes.\n\nSee https://developers.google.com/youtube/v3/docs/search/list for information about parameters.\n\nOberview about YouTube Data API reference: https://developers.google.com/youtube/v3/docs/",
-  "default": false,
+  "description": "Add search terms as nodes. Just write the search terms like you would type them on the YouTube website.\n\nThis preset gives you back 50 search results. If you want more change the number in the maxResults-parameter.\n\nSee https://developers.google.com/youtube/v3/docs/search/list for information about parameters.\n\nOverview about YouTube Data API reference: https://developers.google.com/youtube/v3/docs/",
   "module": "YouTube",
-  "filename": "YouTube-Search_YouTube_videos-3_9.json",
-  "caption": "YouTube: Search YouTube videos",
-  "online": false,
   "speed": 200,
   "options": {
+    "resource": "search",
+    "basepath": "https://www.googleapis.com/youtube/v3/",
     "params": {
       "q": "<Object ID>",
       "part": "snippet",
-      "maxResults": "10"
+      "maxResults": "50"
     },
-    "basepath": "https://www.googleapis.com/youtube/v3/",
-    "resource": "search",
     "pages": 1,
     "scope": ""
   },
   "columns": [
     "id.videoId",
-    "snippet.title"
+    "snippet.title",
+    "snippet.description"
   ],
-  "name": "Search YouTube videos"
+  "name": "NEW Search YouTube videos"
 }

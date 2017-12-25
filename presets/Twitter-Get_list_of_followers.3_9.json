@@ -1,20 +1,23 @@
 {
-  "description": "Add user id as node and fetch data. The user ids of the followers are returned in the id-list. \n\nIf you don't have the user id, you can use the user name as starting node and change the parameter user_id to screen_name.",
-  "default": false,
+  "description": "Add user names as nodes (without the @). This preset fetches you 10 pages with 100 followers each at maximum.\n\nEach user has a numeric ID as well. In case you want to work with the numeric ID change the parameter \"screen_name\" to \"user_id\". You can get the user ID with the preset \"Get information about users\". Select the result and fetch the data with this preset again.\n\nFor more information see the reference: https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-followers-list.",
   "module": "Twitter",
-  "filename": "Get_list_of_followers-3_8.json",
-  "caption": "Twitter: Get list of followers",
-  "online": false,
-  "options": {    
-    "basepath": "https://api.twitter.com/1.1/",
-	"resource": "followers/ids",
+  "speed": 200,
+  "options": {
     "params": {
+      "count": "100",
       "user_id": "<Object ID>"
     },
+    "basepath": "https://api.twitter.com/1.1/",
+    "resource": "followers/list",
     "pages": 10
   },
   "columns": [
-    "ids"
+    "id",
+    "name",
+    "screen_name",
+    "friends_count",
+    "created_at",
+    "errors.*.message"
   ],
   "name": "Get list of followers"
 }

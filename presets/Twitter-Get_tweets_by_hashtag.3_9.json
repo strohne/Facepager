@@ -1,21 +1,28 @@
 {
-  "description": "Add the hashtags (including the hash) as nodes, then fetch data.",
-  "default": false,
+  "description": "Add search terms as nodes. You can search for hashtags (starting with #) and users (starting with @).\n\nThis preset gives you back the 50 most recent tweets matching the query. In case you want to fetch more, change the count-parameter or increase the maximum pages.\n\nIf you want to change the parameters, take a look at https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets.html to see which ones are possible.\n\nPlease remind that Twitter distinguishes between standard (for free), premium and enterprise (both paid) search. If you're looking for older tweets from years ago this will not work with the standard search.",
   "module": "Twitter",
-  "filename": "Get_tweets_by_hashtag-3_8.json",
-  "caption": "Twitter: Get tweets by hashtag",
-  "online": false,
-  "options": {    
-    "basepath": "https://api.twitter.com/1.1/",
-	"resource": "search/tweets",
+  "speed": 200,
+  "options": {
     "params": {
-      "q": "<Object ID>"
+      "count": "50",
+      "q": "<Object ID>",
+      "result_type": "recent"
     },
-    "pages": 10
+    "basepath": "https://api.twitter.com/1.1/",
+    "resource": "search/tweets",
+    "pages": 1
   },
   "columns": [
-    "ids",
-    "created_at"
+    "id",
+    "created_at",
+    "user.screen_name",
+    "text",
+    "favorite_count",
+    "retweet_count",
+    "entities.hashtags.*.text",
+    "entities.user_mentions.*.name",
+    "entities.urls.*.display_url",
+    "lang"
   ],
   "name": "Get tweets by hashtag"
 }

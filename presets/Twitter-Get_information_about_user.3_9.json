@@ -1,17 +1,23 @@
 {
-  "columns": [
-    "type",
-    "error.message"
-  ],
-  "options": {    
+  "description": "Add user names as nodes (without the @). Each user has a numeric ID as well. In case you work with the numeric ID switch the parameter \"screen_name\" to \"user_id\".\n\nThis preset gives you some basic information about the user. See the detail section and add new columns if you like.\n\nSee https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-show for information about parameters.",
+  "module": "Twitter",
+  "speed": 200,
+  "options": {
+    "resource": "users/show",
     "basepath": "https://api.twitter.com/1.1/",
-	"resource": "users/show",
     "params": {
       "screen_name": "<Object ID>"
     },
-    "pages": 10
+    "pages": 1
   },
-  "name": "Get information about user",
-  "module": "Twitter",
-  "description": "Add user name as node, then fetch data"
+  "columns": [
+    "id",
+    "name",
+    "screen_name",
+    "created_at",
+    "description",
+    "location",
+    "lang"
+  ],
+  "name": "Get information about users"
 }
