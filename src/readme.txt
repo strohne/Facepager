@@ -10,6 +10,7 @@ PySide: Download from https://qt-project.org/wiki/Category:LanguageBindings::PyS
 SQLAlchemy: pip install SQLAlchemy (Licence: MIT)
 dateutil: pip install python-dateutil (PSF License)
 requests: pip install requests (Apache2 License)
+requests_oauthlib: pip install requests_oauthlib (ISC License, equivalent to the BSD 2-Clause and MIT licenses)
 rauth: pip install rauth (MIT licence)
 numpy and pandas: pip install numpy pandas
 
