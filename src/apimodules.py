@@ -1230,23 +1230,6 @@ class YoutubeTab(OAuth2Tab):
 
         super(YoutubeTab, self).__init__(mainWindow, "YouTube",options)
 
-
-class InstagramTab(OAuth2Tab):
-    def __init__(self, mainWindow=None):
-
-        options = {'login_buttoncaption':" Login to Instagram ",
-                   'login_window_caption':  "Instagram Login Page",
-                   'login_window_height':600,
-                   'login_window_width':600,
-                   'key_nodedata':'data',
-                   'key_objectid':'id',
-                   'pagination_urlkey':"pagination.next_url",
-                   'basepath':"https://api.instagram.com/v1/",
-                   'resource':'/users/<user-id>'
-                   }
-
-        super(InstagramTab, self).__init__(mainWindow, "Instagram",options)
-
 class GenericTab(ApiTab):
     # Youtube:
     # URL prefix: https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q=
