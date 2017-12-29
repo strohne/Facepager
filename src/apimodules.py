@@ -313,7 +313,7 @@ class ApiTab(QWidget):
 
 
     @Slot()
-    def doLogin(self, query=False, caption='', url=''):
+    def doLogin(self, query=False, caption='', url='',width=600,height=600):
         """
         Create a SSL-capable WebView for the login-process
         Uses a Custom QT-Webpage Implementation
@@ -322,7 +322,7 @@ class ApiTab(QWidget):
 
         self.doQuery = query
         window = QMainWindow(self.mainWindow)
-        window.resize(800, 800)
+        window.resize(width, height)
         window.setWindowTitle(caption)
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
@@ -423,7 +423,7 @@ class ApiTab(QWidget):
             QFileDialog.getExistingDirectory(self, 'Select Download Folder', datadir, QFileDialog.ShowDirsOnly))
 
 class FacebookTab(ApiTab):
-    def __init__(self, mainWindow=None, loadSettings=True):
+    def __init__(self, mainWindow=None):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         # Query Box
@@ -461,8 +461,7 @@ class FacebookTab(ApiTab):
         self.mainLayout.addRow("Client Id", applayout)
         self.mainLayout.addRow("Access Token", loginlayout)
 
-        if loadSettings:
-            self.loadSettings()
+        self.loadSettings()
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -600,7 +599,7 @@ class FacebookTab(ApiTab):
 
 
 class TwitterTab(ApiTab):
-    def __init__(self, mainWindow=None, loadSettings=True):
+    def __init__(self, mainWindow=None):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
 
@@ -643,8 +642,7 @@ class TwitterTab(ApiTab):
         self.mainLayout.addRow("Consumer Key", credentialslayout)
         self.mainLayout.addRow("Access Token", loginlayout)
 
-        if loadSettings:
-            self.loadSettings()
+        self.loadSettings()
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
         self.oauthdata = {}
@@ -809,7 +807,7 @@ class TwitterTab(ApiTab):
 
 
 class TwitterStreamingTab(ApiTab):
-    def __init__(self, mainWindow=None, loadSettings=True):
+    def __init__(self, mainWindow=None):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
         # Query Box
@@ -845,8 +843,7 @@ class TwitterStreamingTab(ApiTab):
         self.mainLayout.addRow("Consumer Key", credentialslayout)
         self.mainLayout.addRow("Access Token", loginlayout)
 
-        if loadSettings:
-            self.loadSettings()
+        self.loadSettings()
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
         self.oauthdata = {}
@@ -1034,11 +1031,16 @@ class TwitterStreamingTab(ApiTab):
 
                 self.login_webview.parent().close()
 
-class YoutubeTab(ApiTab):
-    def __init__(self, mainWindow=None, loadSettings=True):
-        super(YoutubeTab, self).__init__(mainWindow, "YouTube")
+class OAuth2Tab(ApiTab):
 
-        self.initInputs(credentials['youtube']['basepath'])
+    # see YoutubeTab for keys in the options-parameter
+    def __init__(self, mainWindow=None,name='NoName',options={}):
+        super(OAuth2Tab, self).__init__(mainWindow, name)
+
+        self.credentials = credentials.get(name.lower(),{})
+        self.options = options
+
+        self.initInputs(self.options['basepath'])
 
         # Pages Box
         self.pagesEdit = QSpinBox(self)
@@ -1048,7 +1050,7 @@ class YoutubeTab(ApiTab):
         # Login-Boxes
         self.tokenEdit = QLineEdit()
         self.tokenEdit.setEchoMode(QLineEdit.Password)
-        self.loginButton = QPushButton(" Login to Google ", self)
+        self.loginButton = QPushButton(options.get('login_buttoncaption',"Login"), self)
         self.loginButton.clicked.connect(self.doLogin)
 
         self.clientIdEdit = QLineEdit()
@@ -1077,8 +1079,7 @@ class YoutubeTab(ApiTab):
         self.mainLayout.addRow("Client Id", applayout)
         self.mainLayout.addRow("Access Token", loginlayout)
 
-        if loadSettings:
-            self.loadSettings()
+        self.loadSettings()
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -1099,18 +1100,20 @@ class YoutubeTab(ApiTab):
 
         # options for data handling
         if purpose == 'fetch':
-            options['objectid'] = 'id.videoId'
-            options['nodedata'] = 'items'
+            options['objectid'] = self.options.get('key_objectid',None)
+            options['nodedata'] =  self.options.get('key_nodedata',None)
+            options['param_paging'] =  self.options.get('param_paging',None)
+            options['key_paging'] =  self.options.get('key_paging',None)
 
         return options
 
     def setOptions(self, options):
         #define default values
         if options.get('basepath','') == '':
-            options['basepath'] = credentials['youtube']['basepath']
+            options['basepath'] = self.options['basepath']
 
         #set values
-        self.resourceEdit.setEditText(options.get('resource', 'videos'))
+        self.resourceEdit.setEditText(options.get('resource', self.options.get('resource','')))
         self.pagesEdit.setValue(int(options.get('pages', 1)))
 
         self.basepathEdit.setEditText(options.get('basepath'))
@@ -1118,7 +1121,7 @@ class YoutubeTab(ApiTab):
         self.paramEdit.setParams(options.get('params', {}))
 
         # set Access-tokens,use generic method from APITab
-        super(YoutubeTab, self).setOptions(options)
+        super(OAuth2Tab, self).setOptions(options)
 
     def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
     # Preconditions
@@ -1154,8 +1157,11 @@ class YoutubeTab(ApiTab):
             callback(data, options, headers)
 
             # paging
-            if isinstance(data,dict) and hasDictValue(data, "nextPageToken"):
-                options['params']['pageToken'] = data["nextPageToken"]
+            if options.get('key_paging',None) is not None:
+                if isinstance(data,dict) and hasDictValue(data, options['key_paging']):
+                    options['params'][options['param_paging']] = data[options['key_paging']]
+                else:
+                    break
             else:
                 break
 
@@ -1164,23 +1170,42 @@ class YoutubeTab(ApiTab):
 
 
     @Slot()
-    def doLogin(self, query=False, caption="YouTube Login Page",url=""):
+    def doLogin(self):
         #use credentials from input if provided
-        client_id = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else credentials['youtube']['client_id']
-        scope = [self.scopeEdit.text()] if self.scopeEdit.text() != "" else credentials['youtube']['scope']
-        redirect_uri = credentials['youtube']['redirect_uri']
+        client_id = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.credentials['client_id']
+        scope = [self.scopeEdit.text()] if self.scopeEdit.text() != "" else self.credentials.get('scope',None)
+        redirect_uri = self.credentials['redirect_uri']
 
         self.session = OAuth2Session(client_id, redirect_uri=redirect_uri,scope=scope)
-        url = credentials['youtube']['auth_uri'] + "?client_id=" + client_id + "&redirect_uri="+redirect_uri+"&response_type=code" + "&scope="+" ".join(scope)
+        params = {'client_id':client_id,
+                  'redirect_uri':redirect_uri,
+                  'response_type':self.credentials.get('response_type','code')}
 
-        super(YoutubeTab, self).doLogin(query, caption, url)
+        if scope is not None:
+            params['scope'] = " ".join(scope)
+
+        params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
+        url = self.credentials['auth_uri'] + "?"+params
+
+        #url = self.credentials['auth_uri'] + "?"+"client_id="+client_id+'&redirect_uri='+redirect_uri+'&response_type=code'
+        #if scope is not None:
+        #    url = url+'&scope='+" ".join(scope)
+
+
+
+        super(OAuth2Tab, self).doLogin(False,
+                                       self.options.get('login_window_caption','Login'),
+                                       url,
+                                       self.options.get('login_window_width',600),
+                                       self.options.get('login_window_height',600)
+                                       )
 
     @Slot(QUrl)
     def getToken(self,url):
-        if url.toString().startswith(credentials['youtube']['redirect_uri']):
+        if url.toString().startswith(self.credentials['redirect_uri']):
             try:
-                client_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else credentials['youtube']['client_secret']
-                token = self.session.fetch_token(credentials['youtube']['token_uri'],
+                client_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.credentials['client_secret']
+                token = self.session.fetch_token(self.credentials['token_uri'],
                         authorization_response=str(url.toString()),
                         client_secret=client_secret)
 
@@ -1188,6 +1213,39 @@ class YoutubeTab(ApiTab):
             finally:
                 self.login_webview.parent().close()
 
+class YoutubeTab(OAuth2Tab):
+    def __init__(self, mainWindow=None):
+
+        options = {'login_buttoncaption':" Login to Google ",
+                   'login_window_caption':  "YouTube Login Page",
+                   'login_window_height':600,
+                   'login_window_width':600,
+                   'key_objectid':'id.videoId',
+                   'key_nodedata':'items',
+                   'key_paging':"nextPageToken",
+                   'param_paging':'pageToken',
+                   'basepath':"https://www.googleapis.com/youtube/v3/",
+                   'resource':'videos'
+                   }
+
+        super(YoutubeTab, self).__init__(mainWindow, "YouTube",options)
+
+
+class InstagramTab(OAuth2Tab):
+    def __init__(self, mainWindow=None):
+
+        options = {'login_buttoncaption':" Login to Instagram ",
+                   'login_window_caption':  "Instagram Login Page",
+                   'login_window_height':600,
+                   'login_window_width':600,
+                   'key_nodedata':'data',
+                   'key_objectid':'id',
+                   'pagination_urlkey':"pagination.next_url",
+                   'basepath':"https://api.instagram.com/v1/",
+                   'resource':'/users/<user-id>'
+                   }
+
+        super(InstagramTab, self).__init__(mainWindow, "Instagram",options)
 
 class GenericTab(ApiTab):
     # Youtube:
@@ -1197,7 +1255,7 @@ class GenericTab(ApiTab):
     # -Extract: data.feed.entry
     # -ObjectId: id.$t
 
-    def __init__(self, mainWindow=None, loadSettings=True):
+    def __init__(self, mainWindow=None):
         super(GenericTab, self).__init__(mainWindow, "Generic")
 
         #Basic inputs
@@ -1216,8 +1274,7 @@ class GenericTab(ApiTab):
         self.objectidEdit.setEditable(True)
         self.mainLayout.addRow("Key for Object ID", self.objectidEdit)
 
-        if loadSettings:
-            self.loadSettings()
+        self.loadSettings()
 
         self.timeout = 30
 
@@ -1273,7 +1330,7 @@ class GenericTab(ApiTab):
 
 
 class FilesTab(ApiTab):
-    def __init__(self, mainWindow=None, loadSettings=True):
+    def __init__(self, mainWindow=None):
         super(FilesTab, self).__init__(mainWindow, "Files")
 
         #Basic inputs
@@ -1306,8 +1363,7 @@ class FilesTab(ApiTab):
         self.fileextEdit.setEditable(True)
         self.mainLayout.addRow("Custom file extension", self.fileextEdit)
 
-        if loadSettings:
-            self.loadSettings()
+        self.loadSettings()
 
         self.timeout = 30
 
