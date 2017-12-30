@@ -228,7 +228,8 @@ class Actions(object):
         dialog.setLayout(layout)
 
         def createNodes():
-            self.mainWindow.tree.treemodel.addNodes(input.toPlainText().splitlines())
+            newnodes = [node.strip() for node in input.toPlainText().splitlines()]
+            self.mainWindow.tree.treemodel.addNodes(newnodes)
             dialog.close()
 
         def close():

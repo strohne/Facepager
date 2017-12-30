@@ -465,12 +465,12 @@ class FacebookTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'resource': self.resourceEdit.currentText(),
+        options = {'basepath': self.basepathEdit.currentText().strip(),
+                   'resource': self.resourceEdit.currentText().strip(),
                    'pages': self.pagesEdit.value(),
-                   'params': self.paramEdit.getParams()}
+                   'params': self.paramEdit.getParams(),
+                   'scope':self.scopeEdit.text().strip()}
 
-        options['scope'] = self.scopeEdit.text()
-        options['basepath'] = self.basepathEdit.currentText()
         #options['folder'] = self.folderEdit.text()
 
         # options for request
@@ -520,7 +520,7 @@ class FacebookTab(ApiTab):
         for page in range(0, options.get('pages', 1)):
         # build url
             if not ('url' in options):
-                urlpath = options["basepath"] + options['resource']
+                urlpath = options["basepath"].strip() + options['resource'].strip()
                 urlparams = {}
 
 #                 if options['resource'] == 'search':
@@ -657,8 +657,8 @@ class TwitterTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'basepath' : self.basepathEdit.currentText(),
-                   'resource': self.resourceEdit.currentText(),
+        options = {'basepath' : self.basepathEdit.currentText().strip(),
+                   'resource': self.resourceEdit.currentText().strip(),
                    'params': self.paramEdit.getParams(),
                    'pages': self.pagesEdit.value()}
 
@@ -705,7 +705,7 @@ class TwitterTab(ApiTab):
         elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
             self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else credentials['twitter']['consumer_key']
             self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else credentials['twitter']['consumer_secret']
-            self.twitter.base_url = self.basepathEdit.currentText() if self.basepathEdit.currentText() != "" else credentials['twitter']['basepath']
+            self.twitter.base_url = self.basepathEdit.currentText().strip() if self.basepathEdit.currentText().strip() != "" else credentials['twitter']['basepath']
 
             self.session = self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
             return self.session
@@ -860,8 +860,8 @@ class TwitterStreamingTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'basepath': self.basepathEdit.currentText(),
-                   'resource': self.resourceEdit.currentText(),
+        options = {'basepath': self.basepathEdit.currentText().strip(),
+                   'resource': self.resourceEdit.currentText().strip(),
                    'params': self.paramEdit.getParams()}
         # options for request
 
@@ -1083,12 +1083,12 @@ class OAuth2Tab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'resource': self.resourceEdit.currentText(),
+        options = {'basepath': self.basepathEdit.currentText().strip(),
+                   'resource': self.resourceEdit.currentText().strip(),
                    'pages': self.pagesEdit.value(),
-                   'params': self.paramEdit.getParams()}
+                   'params': self.paramEdit.getParams(),
+                   'scope':self.scopeEdit.text().strip()}
 
-        options['scope'] = self.scopeEdit.text()
-        options['basepath'] = self.basepathEdit.currentText()
 
         # options for request
         if purpose != 'preset':
@@ -1265,8 +1265,8 @@ class GenericTab(ApiTab):
         options = {}
 
         #options for request
-        options['basepath'] = self.basepathEdit.currentText()
-        options['resource'] = self.resourceEdit.currentText()
+        options['basepath'] = self.basepathEdit.currentText().strip()
+        options['resource'] = self.resourceEdit.currentText().strip()
         options['params'] = self.paramEdit.getParams()
         options['headers'] = self.headerEdit.getParams()
 
@@ -1352,8 +1352,8 @@ class FilesTab(ApiTab):
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
-        options['basepath'] = self.basepathEdit.currentText()
-        options['resource'] = self.resourceEdit.currentText()
+        options['basepath'] = self.basepathEdit.currentText().strip()
+        options['resource'] = self.resourceEdit.currentText().strip()
         options['params'] = self.paramEdit.getParams()
         options['headers'] = self.headerEdit.getParams()
 
