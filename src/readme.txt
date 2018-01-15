@@ -11,6 +11,7 @@ SQLAlchemy: pip install SQLAlchemy (Licence: MIT)
 dateutil: pip install python-dateutil (PSF License)
 requests: pip install requests (Apache2 License)
 requests_oauthlib: pip install requests_oauthlib (ISC License, equivalent to the BSD 2-Clause and MIT licenses)
+requests[security]: pip install -U requests[security]==2.7.0
 rauth: pip install rauth (MIT licence)
 numpy and pandas: pip install numpy pandas
 
@@ -147,6 +148,7 @@ Edit virtual machine, in Network Adapter section set network connection to "Brid
 	pip install python-dateutil
 	pip install requests
 	pip install requests_oauthlib
+	pip install -U requests[security]==2.7.0
 	pip install rauth
 	pip install pandas
 	

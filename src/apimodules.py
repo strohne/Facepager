@@ -280,9 +280,9 @@ class ApiTab(QWidget):
             while True:
                 try:
                     if method == "post":  #headers is not None
-                        response = session.post(path, params=args, headers=headers, timeout=self.timeout, verify=False)
+                        response = session.post(path, params=args, headers=headers, timeout=self.timeout, verify=True)
                     else:
-                        response = session.get(path, params=args,headers=headers, timeout=self.timeout, verify=False)
+                        response = session.get(path, params=args,headers=headers, timeout=self.timeout, verify=True)
                 except (HTTPError, ConnectionError), e:
                     maxretries -= 1
                     if maxretries > 0:
