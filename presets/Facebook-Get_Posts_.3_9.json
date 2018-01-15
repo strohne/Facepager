@@ -8,7 +8,7 @@
     "params": {
       "limit": "20",
       "<fields>": "message, created_time, updated_time",
-	  "<page>": "<Object Id>"
+	  "<page>": "<Object ID>"
     },
     "pages": 1,
     "scope": ""
