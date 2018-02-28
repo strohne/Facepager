@@ -4,7 +4,7 @@
   "speed": 200,
   "options": {
     "params": {
-      "fields": "type,link,from",
+      "fields": "type,link,from,likes.limit(0).summary(1)",
       "<post>": "<Object ID>"
     },
     "basepath": "https://graph.facebook.com/v2.10/",
