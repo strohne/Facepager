@@ -99,7 +99,12 @@ class ProgressBar(QDialog):
                 #Save value for calculation of rolling average
                 currenttime = QDateTime.currentDateTime()
                 currentvalue =  self.progressBar.value()
-                self.rate_values = [v for v in self.rate_values if v['time'].secsTo(currenttime) <= self.rate_interval]
+
+                #Remove old values
+                if len(self.rate_values) > (self.rate_interval / self.rate_update_frequency):
+                    self.rate_values = [v for v in self.rate_values if v['time'].secsTo(currenttime) <= self.rate_interval]
+
+                #Add new value
                 self.rate_values.append({'time':currenttime,'value':currentvalue})
 
                 #Calculate rolling average
