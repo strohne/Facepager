@@ -383,7 +383,7 @@ class MainWindow(QMainWindow):
     # Downloads default presets in the background
     def updateResources(self):
         def getter():
-            self.presetWindow.downloadDefaultPresets()
+            self.presetWindow.downloadDefaultPresets(True)
 
         t = threading.Thread(target=getter)
         t.start()

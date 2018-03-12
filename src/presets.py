@@ -282,7 +282,7 @@ class PresetWindow(QDialog):
         self.detailWidget.hide()
         self.loadingIndicator.show()
 
-    def downloadDefaultPresets(self):
+    def downloadDefaultPresets(self,silent=False):
         with self.loadingLock:
             if self.presetsDownloaded:
                 return False
@@ -304,8 +304,9 @@ class PresetWindow(QDialog):
                     with open(os.path.join(self.presetFolderDefault, os.path.basename(filename)), 'wb') as f:
                         f.write(response.content)
             except Exception as e:
-                 QMessageBox.information(self,"Facepager","Error downloading default presets:"+str(e))
-                 return False
+                if not silent:
+                    QMessageBox.information(self,"Facepager","Error downloading default presets:"+str(e))
+                return False
             else:
                 self.presetsDownloaded = True
                 return True
