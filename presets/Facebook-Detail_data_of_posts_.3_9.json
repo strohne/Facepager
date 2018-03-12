@@ -4,7 +4,7 @@
   "speed": 200,
   "options": {
     "params": {
-      "fields": "type, link",
+      "fields": "type,link,from,likes.limit(0).summary(1)",
       "<post>": "<Object ID>"
     },
     "basepath": "https://graph.facebook.com/v2.10/",
@@ -13,8 +13,9 @@
     "scope": ""
   },
   "columns": [
-    "admin_creator",
+    "type",
     "link",
+	"from.name",
     "error.message"
   ],
   "name": "Detail data about posts"

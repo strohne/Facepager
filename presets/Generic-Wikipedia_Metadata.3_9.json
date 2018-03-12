@@ -1,0 +1,36 @@
+{
+  "description": "Add titles of articles as nodes, then fetch data from the German Wikipedia.\n\nThe metadata includes page views and date of the last revision. Redirects are automatically resolved.\n\nGeneral introduction to Wikipedia API: https://www.mediawiki.org/wiki/API:Main_page\n\nThe action=query module of Wikipedia is probably what you want to use: https://www.mediawiki.org/wiki/API:Query\n\nPossible values of the prop-parameter: https://www.mediawiki.org/w/api.php?action=help&modules=query\n\n",
+  "module": "Generic",
+  "speed": 200,
+  "options": {
+    "resource": "",
+    "objectid": "query.pages.*.pageid",
+    "basepath": "https://de.wikipedia.org/w/api.php",
+    "headers": {},
+    "params": {
+      "redirects": "1",
+      "format": "json",
+      "rvprop": "timestamp|user|userid",
+      "prop": "info|pageviews|revisions",
+      "titles": "<Object ID>",
+      "pvipdays": "7",
+      "action": "query"
+    },
+    "nodedata": null
+  },
+  "columns": [
+    "query.redirects.0.from",
+    "query.redirects.0.to",
+    "query.pages.*.title",
+    "query.pages.*.pageid",
+    "query.pages.*.touched",
+    "query.pages.*.pageviews.*",
+    "query.pages.*.length",
+    "query.pages.*.pagelanguage",
+    "query.pages.*.lastrevid",
+    "query.pages.*.revisions.*.timestamp",
+    "query.pages.*.revisions.*.userid",
+    "query.pages.*.revisions.*.user"
+  ],
+  "name": "Wikipedia: Meta data about articles"
+}

@@ -1,0 +1,41 @@
+{
+  "description": "This preset works at best together with the preset \"Get information about Google Cloud Storage bucket\", which gets bucket data and creates proper nodes for the files in the bucket. Alternatively you can add names of objects (=filename inside of the bucket) as nodes and set <bucket>-parameter to the name of the bucket.\n\nBefore fetching data create a folder on your computer and select it in the settings.\n\nYou need an authorization header. Go to https://developers.google.com/oauthplayground/ to get a request token. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".\n\n\n",
+  "module": "Files",
+  "speed": 200,
+  "options": {
+    "resource": "storage/v1/b/<bucket>/o/<Object ID>",
+    "objectid": "filename",
+    "basepath": "https://www.googleapis.com/",
+    "filename": "<Object ID>",
+    "fileext": "",
+    "headers": {
+      "Authorization": "Bearer INSERT_ACCESS_TOKEN_HERE"
+    },
+    "nodedata": null,
+    "params": {
+      "alt": "media",
+      "<bucket>": "<bucket>"
+    },
+    "folder": "G:\\GDELT\\"
+  },
+  "columns": [
+    "kind",
+    "contentType",
+    "name",
+    "timeCreated",
+    "generation",
+    "md5Hash",
+    "bucket",
+    "updated",
+    "crc32c",
+    "metageneration",
+    "mediaLink",
+    "timeStorageClassUpdated",
+    "etag",
+    "size",
+    "id",
+    "selfLink",
+    "storageClass"
+  ],
+  "name": "Download files from Google Cloud Storage buckets"
+}

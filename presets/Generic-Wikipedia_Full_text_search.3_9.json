@@ -1,0 +1,30 @@
+{
+  "description": "Add search terms as nodes, then fetch data from the German Wikipedia.\n\nThis gives you the first three results. Change the srlimit-parameter to get more or less. \n\nPossible parameters of the search function: https://www.mediawiki.org/w/api.php?action=help&modules=query%2Bsearch\n\nGeneral introduction to Wikipedia API: https://www.mediawiki.org/wiki/API:Main_page\n\nThe search is part of the action=query module of Wikipedia: https://www.mediawiki.org/wiki/API:Query\n",
+  "module": "Generic",
+  "speed": 200,
+  "options": {
+    "resource": "",
+    "objectid": "pageid",
+    "basepath": "https://de.wikipedia.org/w/api.php",
+    "headers": {},
+    "nodedata": "query.search",
+    "params": {
+      "srinfo": "totalhits|suggestion|rewrittenquery",
+      "srlimit": "3",
+      "format": "json",
+      "srsearch": "<Object ID>",
+      "list": "search",
+      "srwhat": "text",
+      "action": "query"
+    }
+  },
+  "columns": [
+    "pageid",
+    "title",
+    "timestamp",
+    "wordcount",
+    "size",
+    "query.searchinfo.totalhits"
+  ],
+  "name": "Wikipedia: Full text search"
+}

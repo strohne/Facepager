@@ -5,7 +5,7 @@
   "options": {
     "params": {
       "count": "100",
-      "user_id": "<Object ID>"
+      "screen_name": "<Object ID>"
     },
     "basepath": "https://api.twitter.com/1.1/",
     "resource": "followers/list",
