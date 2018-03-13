@@ -403,7 +403,11 @@ class ApiTab(QWidget):
                 with open(fullfilename, 'wb') as f:
                     for chunk in response.iter_content(1024):
                         f.write(chunk)
-                data = {'filename': os.path.basename(fullfilename), 'filepath': fullfilename, 'sourcepath': path,'sourcequery': args}
+                data = {'filename': os.path.basename(fullfilename),
+                        'filepath': fullfilename,
+                        'sourcepath': path,
+                        'sourcequery': args,
+                        'finalurl':response.url}
                 status = 'downloaded' + ' (' + str(response.status_code) + ')'
             else:
                 try:
