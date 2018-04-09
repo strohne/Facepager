@@ -33,7 +33,7 @@ class HelpWindow(QMainWindow):
 
 
     def loadPage(self):
-        self.browser.load(QUrl("https://htmlpreview.github.io/?https://github.com/strohne/Facepager/blob/master/src/help/help.html"))
+        self.browser.load(QUrl("http://strohne.github.io/Facepager/"))
         self.browser.page().setLinkDelegationPolicy(QWebPage.DelegateExternalLinks)
         self.browser.page().linkClicked.connect(self.linkClicked)
 
