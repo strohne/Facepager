@@ -1,0 +1,27 @@
+{
+  "description": "Fetch posts first or add post IDs, then use this preset to get the counts of different types of reactions.\n\n",
+  "module": "Facebook",
+  "speed": 200,
+  "options": {
+    "params": {
+      "fields": "comments.limit(0).summary(1),\nshares, reactions.limit(0).summary(1),\nreactions.type(LIKE).limit(0).summary(1).as(like),\nreactions.type(LOVE).limit(0).summary(1).as(love),\nreactions.type(HAHA).limit(0).summary(1).as(haha),\nreactions.type(WOW).limit(0).summary(1).as(wow),\nreactions.type(SAD).limit(0).summary(1).as(sad),\nreactions.type(ANGRY).limit(0).summary(1).as(angry)",
+      "<post>": "<Object ID>"
+    },
+    "basepath": "https://graph.facebook.com/v2.12/",
+    "resource": "<post>",
+    "pages": 10,
+    "scope": ""
+  },
+  "columns": [
+    "comments.summary.total_count",
+    "shares.count",
+    "reactions.summary.total_count",
+    "like.summary.total_count",
+    "love.summary.total_count",
+    "wow.summary.total_count",
+    "haha.summary.total_count",
+    "sad.summary.total_count",
+    "angry.summary.total_count"
+  ],
+  "name": "Get reactions"
+}
