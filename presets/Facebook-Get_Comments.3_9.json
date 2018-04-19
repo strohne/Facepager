@@ -1,5 +1,5 @@
 {
-  "description": "Get comments of a post and some basic information about the comments. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. See the preset named \"Get Facebook posts\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v2.10/comment for information about available fields.\n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.\n\nBy the way: you cannot access data about the author of comments (if you are not the owner of the page).",
+  "description": "Get comments of a post and some basic information about the comments. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. See the preset named \"Get Facebook posts\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v2.12/comment for information about available fields.\n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.\n\nBy the way: you cannot access data about the author of comments (if you are not the owner of the page).",
   "module": "Facebook",
   "speed": 200,
   "options": {
@@ -7,7 +7,7 @@
       "fields": "message, created_time, comment_count, like_count",
       "<post>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v2.10/",
+    "basepath": "https://graph.facebook.com/v2.12/",
     "resource": "<post>/comments",
     "pages": 1,
     "scope": ""
