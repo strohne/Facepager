@@ -1,5 +1,5 @@
 {
-  "description": "Get detailed data about a post. Use the fields-parameter to provide a list of the fields you would like to have back from the API. You can  use this preset to get fields you forgot in the first time :)\n\nBefore you can use this preset, you have to fetch the posts or add Facebook IDs of some posts. See the preset \"Get Facebook posts\". \n\nIn this preset you have the fields \"type\" and \"link\" as an example. If you want to change them or add more fields see https://developers.facebook.com/docs/graph-api/reference/v2.10/post for all available fields.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.",
+  "description": "Get detailed data about a post. Use the fields-parameter to provide a list of the fields you would like to have back from the API. You can  use this preset to get fields you forgot in the first time :)\n\nBefore you can use this preset, you have to fetch the posts or add Facebook IDs of some posts. See the preset \"Get Facebook posts\". \n\nIn this preset you have the fields \"type\" and \"link\" as an example. If you want to change them or add more fields see https://developers.facebook.com/docs/graph-api/reference/v2.12/post for all available fields.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.",
   "module": "Facebook",
   "speed": 200,
   "options": {
@@ -7,7 +7,7 @@
       "fields": "type,link,from,likes.limit(0).summary(1)",
       "<post>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v2.10/",
+    "basepath": "https://graph.facebook.com/v2.12/",
     "resource": "<post>",
     "pages": 1,
     "scope": ""
