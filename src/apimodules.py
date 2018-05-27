@@ -68,7 +68,11 @@ class ApiTab(QWidget):
         if not pattern:
             return pattern
 
-        matches = re.findall(ur"<([^>]*)>", pattern)
+        #matches = re.findall(ur"<([^>]*>", pattern)
+        #matches = re.findall(ur"(?<!\\)<([^>]*?)(?<!\\)>", pattern)
+        #Find placeholders in brackets, ignoring escaped brackets (escape character is backslash)
+        matches = re.findall(ur"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
+
         for match in matches:
             if match in paramdata:
                 value = paramdata[match]
@@ -80,6 +84,10 @@ class ApiTab(QWidget):
                 value = getDictValue(nodedata['response'], match)
 
             pattern = pattern.replace('<' + match + '>', value)
+
+        pattern = pattern.replace('\\<', '<')
+        pattern = pattern.replace('\\>', '>')
+        pattern = pattern.replace('\\\\', '\\')
 
         return pattern
 
@@ -98,17 +106,10 @@ class ApiTab(QWidget):
             if (name == '<None>') or (params[name] == '<None>') or (name == ''):
                 continue
 
-            # Set the value for the ObjectID or any other placeholder-param
-            if params[name] == '<Object ID>':
-                value = unicode(nodedata['objectid'])
-            else:
-                match = re.match(ur"^<(.*)>$", unicode(params[name]))
-                if match:
-                    value = getDictValue(nodedata['response'], match.group(1))
-                else:
-                    value = params[name]
+            # Replace placeholders in parameter value
+            value = self.parsePlaceholders(params[name], nodedata, {})
 
-            #check for template params
+            #check parameter name
             match = re.match(ur"^<(.*)>$", unicode(name))
             if match:
                 templateparams[match.group(1)] = value
@@ -297,13 +298,15 @@ class ApiTab(QWidget):
             raise Exception(u"Request Error: {0}".format(e.message))
         else:
             if jsonify == True:
-                if not response.json():
-                    raise Exception("Request Format Error: No JSON data!")
-
-                else:
+                try:
                     status = 'fetched' if response.ok else 'error'
                     status = status + ' (' + str(response.status_code) + ')'
                     return response.json(), dict(response.headers.items()), status
+                except:
+                    status = 'error'
+                    status = status + ' (' + str(response.status_code) + ')'
+                    return {'error': 'No JSON data','response':response.text}, dict(response.headers.items()), status
+
             else:
                 return response
 
