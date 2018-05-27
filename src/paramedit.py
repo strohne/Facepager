@@ -27,6 +27,36 @@ class QParamEdit(QTableWidget):
         self.calcRows()
         self.resizeRowsToContents()
 
+    # Takes params as dict and fills the widget
+    def setParams(self,vals={}):
+        self.setRowCount(len(vals))
+        self.setValueOptions(self.valueoptions)
+        self.setNameOptions(self.nameoptions)
+
+        row = 0
+        for name in vals:
+            self.setValue(row,0, name)
+            self.setValue(row,1, vals[name])
+            row = row+1
+
+        self.calcRows()
+        self.resizeRowsToContents()
+
+    # Returns the params set in the widget
+    def getParams(self):
+        params = {}
+        for row in range(0,self.rowCount()):
+            if not self.rowEmpty(row):
+                params[self.getValue(row,0).strip()] = self.getValue(row,1).strip()
+        return params
+
+    def initParamName(self, row):
+        self.setNameComboBox(row, self.nameoptions)
+        self.setValue(row, 0, '')
+
+    def initParamValue(self, row):
+        self.setValueComboBox(row, self.valueoptions)
+        self.setValue(row, 1, '')
 
     def setNameOptions(self, options):
         '''
@@ -39,7 +69,7 @@ class QParamEdit(QTableWidget):
         self.nameoptions = options
 
         for row in range(0, self.rowCount()):
-            self.setComboBox(row,0,options)
+            self.setNameComboBox(row,options)
         self.isCalculating = False
 
     def setValueOptions(self, options):
@@ -47,24 +77,60 @@ class QParamEdit(QTableWidget):
         self.valueoptions=options
 
         for row in range(0, self.rowCount()):
-            self.setComboBox(row,1,options)
+            self.setValueComboBox(row,options)
         self.isCalculating = False
 
-    def getComboBox(self, row, col):
-        combo = self.cellWidget(row,col)
+    def getNameComboBox(self, row):
+        combo = self.cellWidget(row,0)
         if combo is None:
             combo=QComboBox(self)
             combo.setEditable(True)
             combo.row = row
-            combo.col = col
+            combo.col = 0
             combo.editTextChanged.connect(self.calcRows)
             combo.activated.connect(self.onItemSelected)
-            self.setCellWidget(row,col,combo)
+            self.setCellWidget(row,0,combo)
 
         return (combo)
 
-    def setComboBox(self,row,col,options):
-        combo = self.getComboBox(row,col)
+    def getValueComboBox(self, row):
+
+        value = self.cellWidget(row,1)
+
+        if value is None:
+            value = ValueEdit(self)
+            combo = value.comboBox
+
+            combo.row = row
+            combo.col = 1
+            combo.editTextChanged.connect(self.calcRows)
+            combo.activated.connect(self.onItemSelected)
+
+            self.setCellWidget(row,1,value)
+        else:
+            combo = value.comboBox
+
+        return (combo)
+
+    def setNameComboBox(self,row,options):
+        combo = self.getNameComboBox(row)
+        combo.clear()
+        # edited: Insert each Item seperatly and set Tooltip
+        for o in reversed(options):
+            combo.insertItem(0,o.get("name",""))
+            # this one sets the tooltip
+            combo.setItemData(0,o.get("doc",None),Qt.ToolTipRole)
+            #set color
+            if (o.get("required",False)):
+                combo.setItemData(0,QColor("#FF333D"),Qt.BackgroundColorRole)
+            #save options as suggestion for value box
+            if ('options' in o):
+                combo.setItemData(0,o.get("options",[]),Qt.UserRole)
+
+        return (combo)
+
+    def setValueComboBox(self,row,options):
+        combo = self.getValueComboBox(row)
         combo.clear()
         # edited: Insert each Item seperatly and set Tooltip
         for o in reversed(options):
@@ -81,33 +147,22 @@ class QParamEdit(QTableWidget):
         return (combo)
 
     def setValue(self,row,col,val):
-        combo = self.getComboBox(row,col)
+        if col == 0:
+            combo = self.getNameComboBox(row)
+        else:
+            combo = self.getValueComboBox(row)
+
         combo.setEditText(val)
 
     def getValue(self,row,col):
-        combo = self.getComboBox(row,col)
+        if col == 0:
+            combo = self.getNameComboBox(row)
+        else:
+            combo = self.getValueComboBox(row)
+
         return(combo.currentText())
 
-    def setParams(self,vals={}):
-        self.setRowCount(len(vals))
-        self.setValueOptions(self.valueoptions)
-        self.setNameOptions(self.nameoptions)
 
-        row = 0
-        for name in vals:
-            self.setValue(row,0, name)
-            self.setValue(row,1, vals[name])
-            row = row+1
-
-        self.calcRows()
-        self.resizeRowsToContents()
-
-    def getParams(self):
-        params = {}
-        for row in range(0,self.rowCount()):
-            if not self.rowEmpty(row):
-                params[self.getValue(row,0).strip()] = self.getValue(row,1).strip()
-        return params
 
     def rowEmpty(self,row):
         col0 = self.getValue(row,0).strip()
@@ -125,7 +180,7 @@ class QParamEdit(QTableWidget):
         if not options:
             options = self.valueoptions
         if hasattr(sender,'col') and hasattr(sender,'row') and (sender.col == 0):
-            self.setComboBox(sender.row, 1, options)
+            self.setValueComboBox(sender.row, options)
 
 
 
@@ -146,14 +201,67 @@ class QParamEdit(QTableWidget):
         #Add last row
         row = self.rowCount()
         self.setRowCount(row+1)
-        self.setComboBox(row, 0, self.nameoptions)
-        self.setComboBox(row, 1, self.valueoptions)
-        self.setValue(row, 0, '')
-        self.setValue(row, 1, '')
+
+        self.initParamName(row)
+        self.initParamValue(row)
 
         self.resizeRowsToContents()
         self.isCalculating = False
 
 
+class ValueEdit(QWidget):
+    def __init__(self,parent):
+        super(ValueEdit, self).__init__(parent)
 
+        self.mainLayout = QHBoxLayout(self)
+        self.mainLayout.setContentsMargins(0,0,0,0)
+        self.setLayout(self.mainLayout)
+
+        self.comboBox = QComboBox(self)
+        self.comboBox.setEditable(True)
+
+
+        self.actionEditValue = QAction('...',self)
+        self.actionEditValue.setText('..')
+        self.actionEditValue.triggered.connect(self.editValue)
+
+        self.button =QToolButton(self)
+        self.button.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.button.setDefaultAction(self.actionEditValue)
+
+        self.mainLayout.addWidget(self.comboBox,2)
+        self.mainLayout.addWidget(self.button,0)
+
+    def editValue(self):
+        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        dialog.setWindowTitle("Edit value")
+        layout = QVBoxLayout()
+
+
+        input = QPlainTextEdit()
+        input.setMinimumWidth(400)
+        input.setPlainText(self.comboBox.currentText())
+        #input.LineWrapMode = QPlainTextEdit.NoWrap
+        #input.acceptRichText=False
+        input.setFocus()
+        layout.addWidget(input)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        layout.addWidget(buttons)
+
+        dialog.setLayout(layout)
+
+        def setValue():
+            value = input.toPlainText() #input.toPlainText().splitlines()
+            self.comboBox.setEditText(value)
+
+            dialog.close()
+
+        def close():
+            dialog.close()
+
+        #connect the nested functions above to the dialog-buttons
+        buttons.accepted.connect(setValue)
+        buttons.rejected.connect(close)
+        dialog.exec_()
 
