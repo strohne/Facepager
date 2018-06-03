@@ -1,0 +1,23 @@
+{
+  "module": "Generic",
+  "speed": 200,
+  "options": {
+    "resource": "sparql",
+    "objectid": "scientist.value",
+    "basepath": "http://dbpedia.org/",
+    "headers": {},
+    "params": {
+      "default-graph-uri": "http://dbpedia.org",
+      "query": "PREFIX rdf: \\<http://www.w3.org/1999/02/22-rdf-syntax-ns#\\>\nPREFIX dbo: \\<http://dbpedia.org/ontology/\\>\nPREFIX rdfs: \\<http://www.w3.org/2000/01/rdf-schema#\\>\nPREFIX dc:  \\<http://purl.org/dc/elements/1.1/\\>\n\nSelect distinct ?birthdate ?thumbnail ?scientist ?name ?description  WHERE {\n?scientist rdf:type dbo:Scientist ;\n        dbo:birthDate ?birthdate ;\n        rdfs:label ?name ;\n        rdfs:comment ?description \n FILTER ((lang(?name)=\"en\")&&(lang(?description)=\"en\")&&(STRLEN(STR(?birthdate))>6)&&(SUBSTR(STR(?birthdate),6)=SUBSTR(STR(bif:curdate('')),6))) .\n OPTIONAL { ?scientist dbo:thumbnail ?thumbnail . }\n} ORDER BY ?birthdate LIMIT 10",
+      "format": "application/sparql-results+json"
+    },
+    "nodedata": "results.bindings"
+  },
+  "columns": [
+    "name.value",
+    "description.value",
+    "birthdate.value",
+    "thumbnail.value"
+  ],
+  "name": "Scientists who have birthday today"
+}
