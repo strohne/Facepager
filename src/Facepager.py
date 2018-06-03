@@ -269,8 +269,14 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(GenericTab(self),"Generic")
         self.RequestTabs.addTab(FilesTab(self),"Files")
 
-        #Fetch settings
+        module = self.settings.value('module',False)
+        for i in range(0, self.RequestTabs.count()):
+            if self.RequestTabs.widget(i).name == module:
+                tab = self.RequestTabs.widget(i)
+                self.RequestTabs.setCurrentWidget(tab)
+                break
 
+        #Fetch settings
 
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
@@ -402,6 +408,7 @@ class MainWindow(QMainWindow):
 
 
         self.settings.setValue('columns',self.fieldList.toPlainText())
+        self.settings.setValue('module',self.RequestTabs.currentWidget().name)
 
         self.settings.beginGroup("GlobalSettings")
         self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
@@ -420,11 +427,11 @@ class MainWindow(QMainWindow):
         QSettings.setDefaultFormat(QSettings.IniFormat)
         QCoreApplication.setOrganizationName("Keyling")
         QCoreApplication.setApplicationName("Facepager")
-        self.settings = QSettings()        
+        self.settings = QSettings()
 
         self.settings.clear()
         self.settings.sync()
-        
+
         self.settings.beginGroup("GlobalSettings")
         self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
         self.settings.endGroup()
@@ -432,9 +439,9 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event=QCloseEvent()):
         if self.close():
-            if self.clearCheckbox.isChecked():                
+            if self.clearCheckbox.isChecked():
                 self.deleteSettings()
-            else:                    
+            else:
                 self.writeSettings()
             event.accept()
         else:
