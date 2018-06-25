@@ -208,14 +208,18 @@ class TreeItem(object):
             return False
 
         #filter response
-        if options['nodedata'] is not None:
+        if options['nodedata'] is None:
+            subkey = 0
+            nodes = data
+            offcut = None
+        elif hasDictValue(data,options['nodedata']):
             subkey = options['nodedata'].rsplit('.', 1)[0]
             nodes = getDictValue(data, options['nodedata'], False)
             offcut = filterDictValue(data, options['nodedata'], False)
         else:
-            subkey = 0
-            nodes = data
-            offcut = None
+            subkey = options['nodedata'].rsplit('.', 1)[0]
+            nodes = []
+            offcut = data
 
         if not (type(nodes) is list):
             nodes = [nodes]
