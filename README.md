@@ -3,11 +3,6 @@
 Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
 All data is stored in a SQLite database and may be exported to csv. 
 
-### Current status
-
-- Please be aware of API upgrades by Facebook. API version 2.3 is no longer supported and automatically redirected to some higher version. Change the version in the base path to `v2.11` or newer.
-- Facebook now only provides limited fields by default. Furthermore, some data like names of users commenting on a Facebook page are not available anymore (if you are not owner of the page). Use the `fields`-parameter (left side) to specify the data you want (right side, comma delimited). The available fields are listed in the Facebook Graph API reference, e.g. https://developers.facebook.com/docs/graph-api/reference/page/
-
 ### Installer
 
 Installation packages for each versions are available on the [releases page](https://github.com/strohne/Facepager/releases). Database files may be incompatible between versions.
@@ -16,24 +11,26 @@ Installation packages for each versions are available on the [releases page](htt
 - Mac OS X: Unzipp the file from the [releases page](https://github.com/strohne/Facepager/releases), drag & drop the App to your "Applications" folder. When a warning about the the source pop's up you should allow the installation of non-app-store applications (go to "System Preferrences>Security & Privacy" and check "Anywhere"). If you do not want to change your security settings permanently, you may open the Facepager by CTRL+Click on the icon (each time on startup).
 - Linux: There is no binary release, see src/readme.txt for steps to run under linux.
 
-### Getting started
-
-1. Click "New Database" in the toolbar to create a blank database
-2. Add Facebook IDs by clicking "Add Nodes" in the toolbar. Enter the last part of a Facebook page, e.g. enter "Tatort" for the page "http://www.facebook.com/Tatort". Alternatively you can enter "me" as reference to yourself.
-3. Select the Facebook tab and type `https://graph.facebook.com/v2.10/` into the Base path field. 
-4. Type `<Object ID>` into the Resource field. 
-5. Delete any parameters. Then add just one parameter: the term `fields` goes into the left side, the term `name,category,fan_count,birthday` goes into the right side. See https://developers.facebook.com/docs/graph-api/reference/page/ for other fields if you like. 
-6. In the Facebook tab click on "Login to Facebook" and login to get a valid access token. Notice: the access token is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.
-7. Select one or more nodes in the view and click "Fetch data". Look at the status log (make sure "Log all requests" was enabled) to see how the URL is assembled from your settings.
-8. Click "Expand nodes" in the toolbar and select one of the new child nodes. The raw data is shown to the right.
-9. Change the column setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. Don't forget to click "Apply Column Setup".
-10. For further information, click the "help" button and try the default presets.
-
 ### Getting help
 
-Try the [help button](http://strohne.github.io/Facepager/) built into Facepager.
+Try the [help button](http://strohne.github.io/Facepager/) built into Facepager or directly go to the [Wiki](https://github.com/strohne/Facepager/wiki). There you find everything to get you started.
 
 You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/groups/136224396995428/).
+
+
+### Getting started
+
+1.	**Create a database**: click `New Database` in the Menu Bar](https://github.com/strohne/Facepager/wiki/Layout#menu-bar).
+2.	**Login to Facebook**: In the Facebook tab of the [Query Setup](https://github.com/strohne/Facepager/wiki/Layout#query-setup) click on `Login to Facebook` to get a valid access token. Notice: the [Access Token](https://github.com/strohne/Facepager/wiki/OpenAuthorization-and-Access-Token) is like a password to Facebook. Since it may be printed in the status log and saved in the application settings don't give anyone untrusted access to your computer or to the status log.
+3.	**Add nodes**: Add Facebook IDs by clicking `Add Nodes` in the Menu Bar. Enter the last part of a Facebook page, e.g. enter "Uni.Greifswald.de" for the page "https://www.facebook.com/Uni.Greifswald.de" or enter "TheAcademy" for the page "https://www.facebook.com/TheAcademy". 
+4.	**Setup query**: Type `https://graph.facebook.com/v3/` into the Base path field of the Query Setup. Type `<Object ID>` into the Resource field.	Delete any Parameters. Then add just one parameter: the term `fields` goes into the left side, the term `name,category,fan_count,birthday` goes into the right side. See https://developers.facebook.com/docs/graph-api/reference/page/ for other fields if you like.
+7.	**Fetch data**: select one or more nodes in the [Nodes View](https://github.com/strohne/Facepager/wiki/Layout#nodes-view) and click `Fetch data`. Look at the Status Log (make sure "Log all requests" was enabled) to see how the URL is assembled from your settings.
+8.	**Inspect data**: Expand your node or click `Expand nodes` in the Menu Bar to open all nodes. Select one of the new child nodes. The raw data is shown in the [Data View](https://github.com/strohne/Facepager/wiki/Layout#data-view) to the right.
+9.	**Setup columns**: Click `Clear Column Setup` below the "Custom Table Columns" area. Change the Column Setup according to your needs by adding keys found in the raw data into the "Custom Table Columns" area. You can use `Add Column` after you clicked on the specific key or just use `Add All Columns`. Don't forget to click `Apply Column Setup` in the [Column Setup](https://github.com/strohne/Facepager/wiki/Layout#column-setup) to add them in the Nodes View. If the columns don't show up make sure to scroll right or to resize the columns (click between the headers).
+10. **Export data**: Click [`Export Data`](https://github.com/strohne/Facepager/wiki/Export-Data) to get a CSV file. Notice the options in the export mode field of the export dialog. You can open CSV files with Excel oder any statistics software you like.
+	
+10. For further information, click the "help" button and try the default presets.
+
 
 
 ### Citation
