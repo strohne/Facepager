@@ -1,0 +1,22 @@
+{
+  "description": "Add channel ID as node.\n\nYou can use the search preset to find a channel ID or take the last part of an URL, e.g.the last part of https://www.youtube.com/channel/UCpXaqdaawHUyujeSG1Wnm8Q\n\nIf you don't have the channel ID but the user name, remove the id parameter and add a parameter named \"forUsername\" with the value \"<Object ID>\". The user name can be found in the last part of URLs like https://www.youtube.com/user/MoritzTV\n\nSee https://developers.google.com/youtube/v3/docs/channels/list for further information about channels.",
+  "module": "YouTube",
+  "speed": 200,
+  "options": {
+    "resource": "channels",
+    "basepath": "https://www.googleapis.com/youtube/v3/",
+    "params": {
+      "part": "snippet,contentDetails,statistics,brandingSettings,topicDetails,status",
+      "id": "<Object ID>",
+      "maxResults": "50"
+    },
+    "pages": 1,
+    "scope": ""
+  },
+  "columns": [
+    "id.videoId",
+    "snippet.title",
+    "snippet.description"
+  ],
+  "name": "Channel information"
+}
