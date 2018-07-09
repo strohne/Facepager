@@ -1,6 +1,6 @@
 ﻿![Logo](https://raw.github.com/strohne/Facepager/master/icons/icon_facepager.png)
 
-Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. 
+Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based APIs. 
 All data is stored in a SQLite database and may be exported to csv. 
 
 ### Installer
@@ -15,7 +15,7 @@ Installation packages for each versions are available on the [releases page](htt
 
 Try the help button built into Facepager or directly go to the [Wiki](https://github.com/strohne/Facepager/wiki). There you find everything to [get you started](https://github.com/strohne/Facepager/wiki/Getting-Started).
 
-You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/groups/136224396995428/).
+You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/facepagerpage).
 
 
 ### Citation
