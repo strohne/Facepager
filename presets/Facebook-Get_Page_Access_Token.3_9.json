@@ -1,0 +1,19 @@
+{
+  "description": "Some data on Facebook pages can only be retrieved if you are the owner of the page. For example, information about the author of comments is only provided to the owner of a page. To verify you are the owner of a page you need a page accesss token.\n\nAdd the ID of a page you own as node (e.g. IPK.Greifswald). Then load this preset and login to Facebook. Make sure you request the page_show_list permission, this has to be insertet into the scope field before login. \n\nAfter login and fetching data a field with the access token will be returned. Copy the access token to the Access Token field of Facepager. Now you are talking to the API with an page access token. You are ready to fetch data of your pages.\n",
+  "module": "Facebook",
+  "speed": 200,
+  "options": {
+    "params": {
+      "fields": "access_token",
+      "<page>": "<Object ID>"
+    },
+    "basepath": "https://graph.facebook.com/v2.12/",
+    "resource": "<page>",
+    "pages": 1,
+    "scope": "pages_show_list"
+  },
+  "columns": [
+    "access_token"
+  ],
+  "name": "Get Page Access Token"
+}
