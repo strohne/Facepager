@@ -4,7 +4,7 @@
   "speed": 200,
   "options": {
     "params": {
-      "fields": "message, created_time, comment_count, like_count",
+      "fields": "message, created_time, parent, comment_count, like_count",
       "<post>": "<Object ID>"
     },
     "basepath": "https://graph.facebook.com/v2.12/",
