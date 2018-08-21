@@ -1,0 +1,25 @@
+{
+  "description": "Add video IDs as nodes. You can use the search preset to get video IDs or get one from the last part of a video URL. For example add O2t8EDyBPPs to get comments to the video https://www.youtube.com/watch?v=O2t8EDyBPPs. By the way: the video is very much related to this preset, you should definitely watch it.\n\nFetching comments requires Facepager to get permission to manage your account. For this purpose the scope is changed and you need to login to Google again. Facepager will not modify anything in your account and will not fetch any data you don't request yourself. The status log shows all requests Facepager makes for you.\n\nSee the YouTube Data API reference for further information: https://developers.google.com/youtube/v3/docs/commentThreads/list\n",
+  "module": "YouTube",
+  "speed": 200,
+  "options": {
+    "params": {
+      "textFormat": "plainText",
+      "part": "snippet",
+      "videoId": "<Object ID>",
+      "maxResults": "10"
+    },
+    "basepath": "https://www.googleapis.com/youtube/v3/",
+    "resource": "commentThreads",
+    "pages": 1,
+    "scope": "https://www.googleapis.com/auth/youtube.force-ssl"
+  },
+  "columns": [
+    "snippet.topLevelComment.snippet.authorDisplayName",
+    "snippet.topLevelComment.snippet.textDisplay",
+    "snippet.topLevelComment.snippet.publishedAt",
+    "snippet.topLevelComment.snippet.updatedAt",
+    "snippet.topLevelComment.snippet.likeCount"
+  ],
+  "name": "Get comments"
+}
