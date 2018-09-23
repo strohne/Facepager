@@ -148,28 +148,38 @@ class MainWindow(QMainWindow):
         dataSplitter.setStretchFactor(0, 1);
 
         #top right
-        detailWidget=QWidget()
+        detailSplitter=QSplitter(self)
+        detailSplitter.setOrientation(Qt.Vertical)
+
+        #top right top
+        detailWidget=QWidget(self)
         detailLayout=QVBoxLayout()
         detailLayout.setContentsMargins(11,0,0,0)
         detailWidget.setLayout(detailLayout)
-        dataSplitter.addWidget(detailWidget)
+        detailSplitter.addWidget(detailWidget)
+
+        dataSplitter.addWidget(detailSplitter)
         dataSplitter.setStretchFactor(1, 0);
 
         #bottom
-        bottomWidget=QWidget(self)
-        self.mainWidget.addWidget(bottomWidget)
+        bottomSplitter=QSplitter(self)
+        self.mainWidget.addWidget(bottomSplitter)
         self.mainWidget.setStretchFactor(0, 1);
 
-        requestLayout=QHBoxLayout()
-        bottomWidget.setLayout(requestLayout)
+        #requestLayout=QHBoxLayout()
+        #bottomWidget.setLayout(requestLayout)
 
         #bottom left
+        modulesWidget = QWidget(self)
         moduleslayout=QVBoxLayout()
-        requestLayout.addLayout(moduleslayout,2)
+        modulesWidget.setLayout(moduleslayout)
+        bottomSplitter.addWidget(modulesWidget)
 
         #bottom middle
+        fetchWidget = QWidget(self)
         fetchLayout=QVBoxLayout()
-        requestLayout.addLayout(fetchLayout,1)
+        fetchWidget.setLayout(fetchLayout)
+        bottomSplitter.addWidget(fetchWidget)
 
         settingsGroup=QGroupBox("Settings")
         fetchLayout.addWidget(settingsGroup)
@@ -187,8 +197,10 @@ class MainWindow(QMainWindow):
         fetchLayout.addLayout(fetchdata)
 
         #bottom right
+        statusWidget = QWidget(self)
         statusLayout=QVBoxLayout()
-        requestLayout.addLayout(statusLayout,2)
+        statusWidget.setLayout(statusLayout)
+        bottomSplitter.addWidget(statusWidget)
 
         #
         #  Components
@@ -216,11 +228,11 @@ class MainWindow(QMainWindow):
 
         #right sidebar - json viewer
         self.detailTree=DictionaryTree(self.mainWidget)
-        detailLayout.addWidget(self.detailTree,2)
+        detailLayout.addWidget(self.detailTree)
 
         #right sidebar - column setup
         detailGroup=QGroupBox("Custom Table Columns (one key per line)")
-        detailLayout.addWidget(detailGroup,1)
+        detailSplitter.addWidget(detailGroup)
         groupLayout=QVBoxLayout()
         detailGroup.setLayout(groupLayout)
 
