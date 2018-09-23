@@ -45,6 +45,8 @@ class ApiTab(QWidget):
         self.speed = None
         self.loadDocs()
         self.lock_session = threading.Lock()
+        self.options = {}
+
 
     def idtostr(self, val):
         """
@@ -121,21 +123,112 @@ class ApiTab(QWidget):
 
         return urlpath, urlparams
 
+    def getPayload(self,payload, params, nodedata):
+        if payload is None:
+            return None
+        else:
+            return self.parsePlaceholders(payload, nodedata, params)
 
-    def getOptions(self, purpose='fetch'): #purpose = 'fetch'|'settings'|'preset'
-        return {}
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = {}
+
+        #options for request
+        try:
+            options['basepath'] = self.basepathEdit.currentText().strip()
+            options['resource'] = self.resourceEdit.currentText().strip()
+            options['params'] = self.paramEdit.getParams()
+        except AttributeError:
+            pass
+
+        #headers and verbs
+        try:
+            options['headers'] = self.headerEdit.getParams()
+            options['verb'] = self.verbEdit.currentText().strip()
+        except AttributeError:
+            pass
+
+        #payload
+        try:
+            options['payload'] = self.payloadEdit.toPlainText()
+        except AttributeError:
+            pass
+
+        #options for data handling
+        try:
+            options['nodedata'] = self.extractEdit.currentText() if self.extractEdit.currentText() != "" else self.options.get('key_objectid',None)
+            options['objectid'] = self.objectidEdit.currentText() if self.objectidEdit.currentText() != "" else self.options.get('key_nodedata',None)
+        except AttributeError:
+            options['objectid'] = self.options.get('key_objectid',None)
+            options['nodedata'] = self.options.get('key_nodedata',None)
+
+        #paging
+        try:
+            options['pages'] = self.pagesEdit.value()
+        except AttributeError:
+            pass
+
+        # query type
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+
+        return options
 
     def setOptions(self, options):
         if options.has_key('client_id'):
             self.clientIdEdit.setText(options.get('client_id',''))
+        if options.has_key('client_secret'):
+            self.clientSecretEdit.setText(options.get('client_secret',''))
+
         if 'access_token' in options:
             self.tokenEdit.setText(options.get('access_token', ''))
-        if 'access_token_secret' in options:
+
+        # access_token_secret
+        try:
             self.tokensecretEdit.setText(options.get('access_token_secret', ''))
-        if options.has_key('consumer_key'):
+        except AttributeError:
+            pass
+
+        # Consumer key and secret
+        try:
             self.consumerKeyEdit.setText(options.get('consumer_key',''))
-        if options.has_key('consumer_secret'):
             self.consumerSecretEdit.setText(options.get('consumer_secret',''))
+        except AttributeError:
+            pass
+
+        # Paging
+        try:
+            self.pagesEdit.setValue(int(options.get('pages', 1)))
+        except AttributeError:
+            pass
+
+        # URLs
+        try:
+            #define default values
+            if options.get('basepath','') == '':
+                options['basepath'] = self.options.get('basepath','')
+
+            self.basepathEdit.setEditText(options.get('basepath', ''))
+            self.resourceEdit.setEditText(options.get('resource', self.options.get('resource','')))
+            self.paramEdit.setParams(options.get('params', {}))
+        except AttributeError:
+            pass
+
+        # Header and method
+        try:
+            self.headerEdit.setParams(options.get('headers', {}))
+            self.verbEdit.setCurrentIndex(self.verbEdit.findText(options.get('verb', 'GET')));
+            self.payloadEdit.setPlainText(options.get('payload',''))
+            self.verbChanged()
+        except AttributeError:
+            pass
+
+        # Extract options
+        try:
+            self.extractEdit.setEditText(options.get('nodedata', ''))
+            self.objectidEdit.setEditText(options.get('objectid', ''))
+        except AttributeError:
+            pass
 
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_" + self.name)
@@ -175,7 +268,7 @@ class ApiTab(QWidget):
         except:
             self.apidoc = None
 
-    def initInputs(self,basepath = None):
+    def initInputs(self):
         '''
         Create base path edit, resource edit and param edit
         Set resource according to the APIdocs, if any docs are available
@@ -185,12 +278,13 @@ class ApiTab(QWidget):
         self.mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
         self.mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.mainLayout.setLabelAlignment(Qt.AlignLeft)
+        self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.setLayout(self.mainLayout)
 
         #Base path
         self.basepathEdit = QComboBox(self)
-        if not basepath is None:
-            self.basepathEdit.insertItems(0, [basepath])
+        if not self.options.get('basepath',None) is None:
+            self.basepathEdit.insertItems(0, [self.options.get('basepath','')])
         self.basepathEdit.setEditable(True)
         self.mainLayout.addRow("Base path", self.basepathEdit)
 
@@ -216,6 +310,49 @@ class ApiTab(QWidget):
         self.resourceEdit.currentIndexChanged.connect(self.onchangedRelation)
         self.onchangedRelation()
 
+    def initPagingInputs(self):
+        self.pagesEdit = QSpinBox(self)
+        self.pagesEdit.setMinimum(1)
+        self.pagesEdit.setMaximum(50000)
+        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
+
+    def initHeaderInputs(self):
+        self.headerEdit = QParamEdit(self)
+        self.mainLayout.addRow("Headers", self.headerEdit)
+
+
+    def initVerbInputs(self):
+        self.verbEdit = QComboBox(self)
+        self.verbEdit.addItems(['GET','POST'])
+        self.verbEdit.currentIndexChanged.connect(self.verbChanged)
+        self.mainLayout.addRow("Method", self.verbEdit)
+
+        self.payloadEdit = QPlainTextEdit()
+        self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.mainLayout.addRow("Payload", self.payloadEdit)
+
+    def verbChanged(self):
+        label = self.mainLayout.labelForField(self.payloadEdit)
+
+        if self.verbEdit.currentText() == 'GET':
+            label.hide()
+            self.payloadEdit.hide()
+        else:
+            label.show()
+            self.payloadEdit.show()
+
+    def initExtractInputs(self):
+        self.extractEdit = QComboBox(self)
+        self.extractEdit.setEditable(True)
+
+        self.objectidEdit = QComboBox(self)
+        self.objectidEdit.setEditable(True)
+
+        layout= QHBoxLayout()
+        layout.addWidget(self.extractEdit)
+        layout.addWidget(QLabel("Key for Object ID") )
+        layout.addWidget(self.objectidEdit)
+        self.mainLayout.addRow("Key to extract", layout)
 
     @Slot()
     def onchangedRelation(self,index=0):
@@ -258,7 +395,7 @@ class ApiTab(QWidget):
                 self.session = requests.Session()
         return self.session
 
-    def request(self, path, args=None, headers=None, method="get", jsonify=True):
+    def request(self, path, args=None, headers=None, method="GET", payload=None, jsonify=True):
         """
         Start a new threadsafe session and request
         """
@@ -280,10 +417,12 @@ class ApiTab(QWidget):
             maxretries = 3
             while True:
                 try:
-                    if method == "post":  #headers is not None
-                        response = session.post(path, params=args, headers=headers, timeout=self.timeout, verify=True)
-                    else:
+                    if method == "POST":  #headers is not None
+                        response = session.post(path, params=args, headers=headers,data=payload, timeout=self.timeout, verify=True)
+                    elif method == "GET":
                         response = session.get(path, params=args,headers=headers, timeout=self.timeout, verify=True)
+                    else:
+                        response = session.request(method,path, params=args,headers=headers, timeout=self.timeout, verify=True)
                 except (HTTPError, ConnectionError), e:
                     maxretries -= 1
                     if maxretries > 0:
@@ -431,15 +570,18 @@ class ApiTab(QWidget):
 
 class FacebookTab(ApiTab):
     def __init__(self, mainWindow=None):
+
+        self.options = {
+                        'basepath': credentials['facebook']['basepath']
+                        }
+
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         # Query Box
-        self.initInputs(credentials['facebook']['basepath'])
+        self.initInputs()
 
         # Pages Box
-        self.pagesEdit = QSpinBox(self)
-        self.pagesEdit.setMinimum(1)
-        self.pagesEdit.setMaximum(50000)
+        self.initPagingInputs()
 
         # Login-Boxes
         self.tokenEdit = QLineEdit()
@@ -464,7 +606,6 @@ class FacebookTab(ApiTab):
 
 
         # Add to main-Layout
-        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
         self.mainLayout.addRow("Client Id", applayout)
         self.mainLayout.addRow("Access Token", loginlayout)
 
@@ -472,13 +613,7 @@ class FacebookTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'basepath': self.basepathEdit.currentText().strip(),
-                   'resource': self.resourceEdit.currentText().strip(),
-                   'pages': self.pagesEdit.value(),
-                   'params': self.paramEdit.getParams(),
-                   'scope':self.scopeEdit.text().strip()}
-
-        #options['folder'] = self.folderEdit.text()
+        options = super(FacebookTab, self).getOptions()
 
         # options for request
         if purpose != 'preset':
@@ -486,6 +621,7 @@ class FacebookTab(ApiTab):
             options['access_token'] = self.tokenEdit.text()
             options['client_id'] = self.clientIdEdit.text()
 
+        options['scope'] = self.scopeEdit.text().strip()
 
         # options for data handling
         if purpose == 'fetch':
@@ -607,16 +743,17 @@ class FacebookTab(ApiTab):
 
 class TwitterTab(ApiTab):
     def __init__(self, mainWindow=None):
+
+        self.options = {
+                        'basepath': credentials['twitter']['basepath']
+                        }
+
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
 
         # Query and Parameter Box
-        self.initInputs(credentials['twitter']['basepath'])
-
-        # Pages-Box
-        self.pagesEdit = QSpinBox(self)
-        self.pagesEdit.setMinimum(1)
-        self.pagesEdit.setMaximum(50000)
+        self.initInputs()
+        self.initPagingInputs()
 
         # LogIn Box
         self.tokenEdit = QLineEdit()
@@ -643,9 +780,7 @@ class TwitterTab(ApiTab):
         loginlayout.addWidget(self.tokensecretEdit)
         loginlayout.addWidget(self.loginButton)
 
-        # Construct main-Layout
-        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
-        self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+
         self.mainLayout.addRow("Consumer Key", credentialslayout)
         self.mainLayout.addRow("Access Token", loginlayout)
 
@@ -664,10 +799,8 @@ class TwitterTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'basepath' : self.basepathEdit.currentText().strip(),
-                   'resource': self.resourceEdit.currentText().strip(),
-                   'params': self.paramEdit.getParams(),
-                   'pages': self.pagesEdit.value()}
+
+        options = super(TwitterTab, self).getOptions()
 
         # options for request
         if purpose != 'preset':
@@ -815,10 +948,15 @@ class TwitterTab(ApiTab):
 
 class TwitterStreamingTab(ApiTab):
     def __init__(self, mainWindow=None):
+
+        self.options = {
+                'basepath': credentials['twitter_streaming']['basepath']
+                }
+
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
         # Query Box
-        self.initInputs(credentials['twitter_streaming']['basepath'])
+        self.initInputs()
 
         # Construct Log-In elements
         self.tokenEdit = QLineEdit()
@@ -867,9 +1005,8 @@ class TwitterStreamingTab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'basepath': self.basepathEdit.currentText().strip(),
-                   'resource': self.resourceEdit.currentText().strip(),
-                   'params': self.paramEdit.getParams()}
+        options = super(TwitterStreamingTab, self).getOptions()
+
         # options for request
 
         if purpose != 'preset':
@@ -1041,23 +1178,33 @@ class TwitterStreamingTab(ApiTab):
 class OAuth2Tab(ApiTab):
 
     # see YoutubeTab for keys in the options-parameter
-    def __init__(self, mainWindow=None,name='NoName',options={}):
+    def __init__(self, mainWindow=None,name='NoName'):
         super(OAuth2Tab, self).__init__(mainWindow, name)
 
         self.credentials = credentials.get(name.lower(),{})
-        self.options = options
 
-        self.initInputs(self.options['basepath'])
 
-        # Pages Box
-        self.pagesEdit = QSpinBox(self)
-        self.pagesEdit.setMinimum(1)
-        self.pagesEdit.setMaximum(50000)
+    def initOAuthInputs(self):
+        self.redirectURIEdit = QLineEdit()
+        self.authURIEdit = QLineEdit()
+        self.tokenURIEdit = QLineEdit()
 
-        # Login-Boxes
+        oauthlayout = QHBoxLayout()
+
+        oauthlayout.addWidget(self.authURIEdit)
+        oauthlayout .addWidget(QLabel("Redirect URI"))
+        oauthlayout.addWidget(self.redirectURIEdit)
+        oauthlayout .addWidget(QLabel("Token URI"))
+        oauthlayout.addWidget(self.tokenURIEdit)
+
+
+        self.mainLayout.addRow("Login URI", oauthlayout)
+        #self.mainLayout.addRow("Access Token", loginlayout)
+
+    def initLoginInputs(self):
         self.tokenEdit = QLineEdit()
         self.tokenEdit.setEchoMode(QLineEdit.Password)
-        self.loginButton = QPushButton(options.get('login_buttoncaption',"Login"), self)
+        self.loginButton = QPushButton(self.options.get('login_buttoncaption',"Login"), self)
         self.loginButton.clicked.connect(self.doLogin)
 
         self.clientIdEdit = QLineEdit()
@@ -1080,54 +1227,51 @@ class OAuth2Tab(ApiTab):
         applayout.addWidget(QLabel("Scope"))
         applayout.addWidget(self.scopeEdit)
 
-
-        # Add to main-Layout
-        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
         self.mainLayout.addRow("Client Id", applayout)
         self.mainLayout.addRow("Access Token", loginlayout)
 
-        self.loadSettings()
-
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {'basepath': self.basepathEdit.currentText().strip(),
-                   'resource': self.resourceEdit.currentText().strip(),
-                   'pages': self.pagesEdit.value(),
-                   'params': self.paramEdit.getParams(),
-                   'scope':self.scopeEdit.text().strip()}
+        options = super(OAuth2Tab, self).getOptions()
 
 
         # options for request
         if purpose != 'preset':
             options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
             options['access_token'] = self.tokenEdit.text()
-            options['client_id'] = self.clientIdEdit.text()
-            options['client_secret'] = self.clientSecretEdit.text()
+            options['client_id'] = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.credentials.get('client_id','')
+            options['client_secret'] = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.credentials.get('client_secret','')
 
+        # OAUTH URIs
+        try:
+            options['auth_uri'] = self.authURIEdit.text().strip() if self.authURIEdit.text() != "" else self.credentials.get('auth_uri','')
+            options['redirect_uri'] = self.redirectURIEdit.text().strip() if self.redirectURIEdit.text() != "" else self.credentials.get('redirect_uri','')
+            options['token_uri'] = self.tokenURIEdit.text().strip() if self.tokenURIEdit.text() != "" else self.credentials.get('token_uri','')
+        except AttributeError:
+            options['auth_uri'] = self.credentials.get('auth_uri','')
+            options['redirect_uri'] = self.credentials.get('redirect_uri','')
+            options['token_uri'] = self.credentials.get('token_uri','')
+
+        options['scope'] = self.scopeEdit.text().strip() if self.scopeEdit.text() != "" else self.credentials.get('scope',None)
 
         # options for data handling
         if purpose == 'fetch':
-            options['objectid'] = self.options.get('key_objectid',None)
-            options['nodedata'] =  self.options.get('key_nodedata',None)
             options['param_paging'] =  self.options.get('param_paging',None)
             options['key_paging'] =  self.options.get('key_paging',None)
 
         return options
 
     def setOptions(self, options):
-        #define default values
-        if options.get('basepath','') == '':
-            options['basepath'] = self.options['basepath']
-
         #set values
-        self.resourceEdit.setEditText(options.get('resource', self.options.get('resource','')))
-        self.pagesEdit.setValue(int(options.get('pages', 1)))
-
-        self.basepathEdit.setEditText(options.get('basepath'))
         self.scopeEdit.setText(options.get('scope'))
-        self.paramEdit.setParams(options.get('params', {}))
 
-        # set Access-tokens,use generic method from APITab
+        try:
+            self.authURIEdit.setText(options.get('auth_uri'))
+            self.redirectURIEdit.setText(options.get('redirect_uri'))
+            self.tokenURIEdit.setText(options.get('token_uri'))
+        except AttributeError:
+            pass
+
         super(OAuth2Tab, self).setOptions(options)
 
     def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
@@ -1147,6 +1291,9 @@ class OAuth2Tab(ApiTab):
 
                 urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
                 urlparams["access_token"] = options['access_token']
+
+                method=options.get('verb','GET')
+                payload = self.getPayload(options.get('payload',None), urlparams, nodedata)
             else:
                 urlpath = options['url']
                 urlparams = options['params']
@@ -1158,7 +1305,7 @@ class OAuth2Tab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,jsonify=True)
+            data, headers, status = self.request(urlpath, urlparams,method=method,payload=payload,jsonify=True)
             options['querystatus'] = status
 
             callback(data, options, headers)
@@ -1178,27 +1325,18 @@ class OAuth2Tab(ApiTab):
 
     @Slot()
     def doLogin(self):
-        #use credentials from input if provided
-        client_id = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.credentials['client_id']
-        scope = [self.scopeEdit.text()] if self.scopeEdit.text() != "" else self.credentials.get('scope',None)
-        redirect_uri = self.credentials['redirect_uri']
+        options = self.getOptions()
 
-        self.session = OAuth2Session(client_id, redirect_uri=redirect_uri,scope=scope)
-        params = {'client_id':client_id,
-                  'redirect_uri':redirect_uri,
-                  'response_type':self.credentials.get('response_type','code')}
+        self.session = OAuth2Session(options['client_id'], redirect_uri=options['redirect_uri'],scope=options['scope'])
+        params = {'client_id':options['client_id'],
+                  'redirect_uri':options['redirect_uri'],
+                  'response_type':options.get('response_type','code')}
 
-        if scope is not None:
-            params['scope'] = " ".join(scope)
+        if options.get('scope',None) is not None:
+            params['scope'] = options['scope']
 
         params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
-        url = self.credentials['auth_uri'] + "?"+params
-
-        #url = self.credentials['auth_uri'] + "?"+"client_id="+client_id+'&redirect_uri='+redirect_uri+'&response_type=code'
-        #if scope is not None:
-        #    url = url+'&scope='+" ".join(scope)
-
-
+        url = options['auth_uri'] + "?"+params
 
         super(OAuth2Tab, self).doLogin(False,
                                        self.options.get('login_window_caption','Login'),
@@ -1209,12 +1347,13 @@ class OAuth2Tab(ApiTab):
 
     @Slot(QUrl)
     def getToken(self,url):
-        if url.toString().startswith(self.credentials['redirect_uri']):
+        options = self.getOptions()
+
+        if url.toString().startswith(options['redirect_uri']):
             try:
-                client_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.credentials['client_secret']
-                token = self.session.fetch_token(self.credentials['token_uri'],
+                token = self.session.fetch_token(options['token_uri'],
                         authorization_response=str(url.toString()),
-                        client_secret=client_secret)
+                        client_secret=options['client_secret'])
 
                 self.tokenEdit.setText(token['access_token'])
             finally:
@@ -1223,7 +1362,7 @@ class OAuth2Tab(ApiTab):
 class YoutubeTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
 
-        options = {'login_buttoncaption':" Login to Google ",
+        self.options = {'login_buttoncaption':" Login to Google ",
                    'login_window_caption':  "YouTube Login Page",
                    'login_window_height':600,
                    'login_window_width':600,
@@ -1235,7 +1374,50 @@ class YoutubeTab(OAuth2Tab):
                    'resource':'videos'
                    }
 
-        super(YoutubeTab, self).__init__(mainWindow, "YouTube",options)
+        super(YoutubeTab, self).__init__(mainWindow, "YouTube")
+
+        # Standard inputs
+        self.initInputs()
+
+        # Pages Box
+        self.initPagingInputs()
+
+        # Login inputs
+        self.initLoginInputs()
+
+        self.loadSettings()
+
+
+class GenericOAuthTab(OAuth2Tab):
+    def __init__(self, mainWindow=None):
+
+        self.options = {
+                   'login_buttoncaption':" Login ",
+                   'login_window_caption':  "Login Page",
+                   'login_window_height':600,
+                   'login_window_width':600
+                   }
+
+        super(GenericOAuthTab, self).__init__(mainWindow, "OAuth")
+
+        # Standard inputs
+        self.initInputs()
+
+
+        # Header, Verbs
+        self.initHeaderInputs()
+        self.initVerbInputs()
+
+        # Extract input
+        self.initExtractInputs()
+
+        # Login inputs
+        self.initOAuthInputs()
+        self.initLoginInputs()
+
+        self.loadSettings()
+        self.timeout = 30
+
 
 class GenericTab(ApiTab):
     # Youtube:
@@ -1251,49 +1433,13 @@ class GenericTab(ApiTab):
         #Basic inputs
         self.initInputs()
 
-        #Headers
-        self.headerEdit = QParamEdit(self)
-        self.mainLayout.addRow("Headers", self.headerEdit)
-
-        #Extract option
-        self.extractEdit = QComboBox(self)
-        self.extractEdit.setEditable(True)
-        self.mainLayout.addRow("Key to extract", self.extractEdit)
-
-        self.objectidEdit = QComboBox(self)
-        self.objectidEdit.setEditable(True)
-        self.mainLayout.addRow("Key for Object ID", self.objectidEdit)
+        # Header, Verbs and Extract input
+        self.initHeaderInputs()
+        self.initVerbInputs()
+        self.initExtractInputs()
 
         self.loadSettings()
-
         self.timeout = 30
-
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {}
-
-        #options for request
-        options['basepath'] = self.basepathEdit.currentText().strip()
-        options['resource'] = self.resourceEdit.currentText().strip()
-        options['params'] = self.paramEdit.getParams()
-        options['headers'] = self.headerEdit.getParams()
-
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
-
-        #options for data handling
-        options['nodedata'] = self.extractEdit.currentText() if self.extractEdit.currentText() != "" else None
-        options['objectid'] = self.objectidEdit.currentText() if self.objectidEdit.currentText() != "" else None
-
-        return options
-
-    def setOptions(self, options):
-        self.basepathEdit.setEditText(options.get('basepath', ''))
-        self.resourceEdit.setEditText(options.get('resource', ''))
-        self.paramEdit.setParams(options.get('params', {}))
-        self.headerEdit.setParams(options.get('headers', {}))
-
-        self.extractEdit.setEditText(options.get('nodedata', ''))
-        self.objectidEdit.setEditText(options.get('objectid', ''))
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
@@ -1312,7 +1458,7 @@ class GenericTab(ApiTab):
                 logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
 
         #data
-        data, headers, status = self.request(urlpath, urlparams,requestheaders,jsonify=True)
+        data, headers, status = self.request(urlpath, urlparams,requestheaders,method=options.get('verb','GET') ,jsonify=True)
         options['querytime'] = str(datetime.now())
         options['querystatus'] = status
 
@@ -1321,14 +1467,16 @@ class GenericTab(ApiTab):
 
 class FilesTab(ApiTab):
     def __init__(self, mainWindow=None):
+        self.options = {
+                'basepath':'<url>'
+                }
+
+
         super(FilesTab, self).__init__(mainWindow, "Files")
 
         #Basic inputs
-        self.initInputs('<url>')
-
-        #Headers
-        self.headerEdit = QParamEdit(self)
-        self.mainLayout.addRow("Headers", self.headerEdit)
+        self.initInputs()
+        self.initHeaderInputs()
 
         #Download folder
         folderlayout = QHBoxLayout()

@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(TwitterTab(self),"Twitter")
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
         self.RequestTabs.addTab(GenericTab(self),"Generic")
+        self.RequestTabs.addTab(GenericOAuthTab(self),"OAuth")        
         self.RequestTabs.addTab(FilesTab(self),"Files")
 
         module = self.settings.value('module',False)
