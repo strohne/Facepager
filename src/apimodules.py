@@ -3,14 +3,13 @@ import urllib
 from mimetypes import guess_all_extensions
 from datetime import datetime
 import re
-import os
-import sys
-import time
+import os, sys, time
+import base64
 from collections import OrderedDict
 import threading
 
 from PySide.QtWebKit import QWebView, QWebPage
-from PySide.QtGui import QMessageBox
+from PySide.QtGui import QMessageBox, QHBoxLayout
 from PySide.QtCore import QUrl
 
 import requests
@@ -76,14 +75,22 @@ class ApiTab(QWidget):
         matches = re.findall(ur"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
 
         for match in matches:
-            if match in paramdata:
-                value = paramdata[match]
-            elif match == 'None':
+            pipeline = match.split('|')
+            key = pipeline[0]
+            modifier = pipeline[1] if len(pipeline) > 1 else None
+
+            if key in paramdata:
+                value = paramdata[key]
+            elif key == 'None':
                 value = ''
-            elif match == 'Object ID':
+            elif key == 'Object ID':
                 value = unicode(nodedata['objectid'])
             else:
-                value = getDictValue(nodedata['response'], match)
+                value = getDictValue(nodedata['response'], key)
+
+            if modifier == 'file':
+                with open(value, 'rb') as file:
+                    value = base64.b64encode(file.read())
 
             pattern = pattern.replace('<' + match + '>', value)
 
@@ -421,7 +428,7 @@ class ApiTab(QWidget):
             while True:
                 try:
                     if method == "POST":  #headers is not None
-                        response = session.post(path, params=args, headers=headers,data=payload, timeout=self.timeout, verify=True)
+                        response = session.post(path, params=args, headers=headers,data=payload,timeout=self.timeout, verify=True)
                     elif method == "GET":
                         response = session.get(path, params=args,headers=headers, timeout=self.timeout, verify=True)
                     else:
@@ -443,6 +450,21 @@ class ApiTab(QWidget):
                 try:
                     status = 'fetched' if response.ok else 'error'
                     status = status + ' (' + str(response.status_code) + ')'
+
+#                     #stream=True
+#                     while response and self.connected:
+#                         for line in response.iter_lines():
+#                             if line:
+#                                 try:
+#                                     data = json.loads(line)
+#                                 except ValueError:
+#                                     raise Exception("Unable to decode response, not valid JSON")
+#                                 else:
+#                                     pass
+#                                     #yield data, dict(response.headers.items()), status
+#
+#                     return data, dict(response.headers.items()), status
+
                     return response.json(), dict(response.headers.items()), status
                 except:
                     status = 'error'
