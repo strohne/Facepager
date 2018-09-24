@@ -190,7 +190,8 @@ class QParamEdit(QTableWidget):
         #myTable.blockSignals(True)
         #myTable.blockSignals(False)
 
-        if (self.isCalculating): return (False)
+        if (self.isCalculating):
+            return (False)
         self.isCalculating = True
 
         #Remove empty
@@ -206,8 +207,26 @@ class QParamEdit(QTableWidget):
         self.initParamValue(row)
 
         self.resizeRowsToContents()
+        self.verticalResizeTableViewToContents()
         self.isCalculating = False
 
+    def verticalResizeTableViewToContents(self):
+
+        rowTotalHeight=0
+        count= self.verticalHeader().count()
+        for i in range(count):
+            if (not self.verticalHeader().isSectionHidden(i)):
+                rowTotalHeight += self.verticalHeader().sectionSize(i)
+
+        #Check for scrollbar visibility
+        if (not self.horizontalScrollBar().isHidden()):
+             rowTotalHeight += self.horizontalScrollBar().height()
+
+        # Check for header visibility
+        if (not self.horizontalHeader().isHidden()):
+             rowTotalHeight += self.horizontalHeader().height()
+
+        self.setMaximumHeight(rowTotalHeight)
 
 class ValueEdit(QWidget):
     def __init__(self,parent):
