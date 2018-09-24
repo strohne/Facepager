@@ -217,7 +217,7 @@ class ApiTab(QWidget):
         # Header and method
         try:
             self.headerEdit.setParams(options.get('headers', {}))
-            self.verbEdit.setCurrentIndex(self.verbEdit.findText(options.get('verb', 'GET')));
+            self.verbEdit.setCurrentIndex(self.verbEdit.findText(options.get('verb', 'GET')))
             self.payloadEdit.setPlainText(options.get('payload',''))
             self.verbChanged()
         except AttributeError:
@@ -309,6 +309,8 @@ class ApiTab(QWidget):
         self.mainLayout.addRow("Parameters", self.paramEdit)
         self.resourceEdit.currentIndexChanged.connect(self.onchangedRelation)
         self.onchangedRelation()
+        #layout.setStretch(0, 1);
+
 
     def initPagingInputs(self):
         self.pagesEdit = QSpinBox(self)
@@ -350,8 +352,9 @@ class ApiTab(QWidget):
 
         layout= QHBoxLayout()
         layout.addWidget(self.extractEdit)
-        layout.addWidget(QLabel("Key for Object ID") )
+        layout.addWidget(QLabel("Key for Object ID"))
         layout.addWidget(self.objectidEdit)
+        layout.setStretch(2, 1);
         self.mainLayout.addRow("Key to extract", layout)
 
     @Slot()
@@ -474,7 +477,7 @@ class ApiTab(QWidget):
         # Use the custom- WebPage class
         webpage = QWebPageCustom(self)
         webpage.logmessage.connect(self.logMessage)
-        self.login_webview.setPage(webpage);
+        self.login_webview.setPage(webpage)
 
         #Connect to the getToken-method
         self.login_webview.urlChanged.connect(self.getToken)
@@ -1181,54 +1184,98 @@ class OAuth2Tab(ApiTab):
     def __init__(self, mainWindow=None,name='NoName'):
         super(OAuth2Tab, self).__init__(mainWindow, name)
 
+        self.options.update({
+                   'login_buttoncaption':" Login ",
+                   'login_window_caption':  "Login Page",
+                   'login_window_height':600,
+                   'login_window_width':600
+                   })
+
+        self.authWidgets = []
         self.credentials = credentials.get(name.lower(),{})
 
 
     def initOAuthInputs(self):
-        self.redirectURIEdit = QLineEdit()
+        self.authEdit = QComboBox(self)
+        self.authEdit.addItems(['None','Open Authorization 2'])
+        self.authEdit.currentIndexChanged.connect(self.authChanged)
+        self.mainLayout.addRow("Authentication", self.authEdit)
+
+        uriwidget = QWidget()
+        urilayout = QHBoxLayout()
+        urilayout.setContentsMargins(0,0,0,0)
+        uriwidget.setLayout(urilayout)
+
+        #urilayout.addWidget(QLabel("Login URI"))
         self.authURIEdit = QLineEdit()
+        urilayout.addWidget(self.authURIEdit)
+
+        urilayout.addWidget(QLabel("Redirect URI"))
+        self.redirectURIEdit = QLineEdit()
+        urilayout.addWidget(self.redirectURIEdit)
+
+        urilayout.addWidget(QLabel("Token URI"))
         self.tokenURIEdit = QLineEdit()
+        urilayout.addWidget(self.tokenURIEdit)
 
-        oauthlayout = QHBoxLayout()
+        self.mainLayout.addRow("Login URI", uriwidget)
 
-        oauthlayout.addWidget(self.authURIEdit)
-        oauthlayout .addWidget(QLabel("Redirect URI"))
-        oauthlayout.addWidget(self.redirectURIEdit)
-        oauthlayout .addWidget(QLabel("Token URI"))
-        oauthlayout.addWidget(self.tokenURIEdit)
+        self.authWidgets.append(uriwidget)
+        self.authWidgets.append(self.mainLayout.labelForField(uriwidget))
 
 
-        self.mainLayout.addRow("Login URI", oauthlayout)
-        #self.mainLayout.addRow("Access Token", loginlayout)
+    def authChanged(self):
+        try:
+            if self.authEdit.currentText() == 'None':
+                for widget in self.authWidgets:
+                    widget.hide()
+            else:
+                for widget in self.authWidgets:
+                    widget.show()
+        except AttributeError:
+            pass
 
     def initLoginInputs(self):
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        self.loginButton = QPushButton(self.options.get('login_buttoncaption',"Login"), self)
-        self.loginButton.clicked.connect(self.doLogin)
+
+        # App settings (secrets + scope)
+        appwidget = QWidget()
+        applayout = QHBoxLayout()
+        applayout.setContentsMargins(0,0,0,0)
+        appwidget.setLayout(applayout)
 
         self.clientIdEdit = QLineEdit()
         self.clientIdEdit.setEchoMode(QLineEdit.Password)
         self.clientSecretEdit = QLineEdit()
         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
-
         self.scopeEdit = QLineEdit()
 
-        # Construct Login-Layout
-        loginlayout = QHBoxLayout()
-        loginlayout.addWidget(self.tokenEdit)
-        loginlayout.addWidget(self.loginButton)
-
-
-        applayout = QHBoxLayout()
         applayout.addWidget(self.clientIdEdit)
         applayout.addWidget(QLabel("Client Secret"))
         applayout.addWidget(self.clientSecretEdit)
         applayout.addWidget(QLabel("Scope"))
         applayout.addWidget(self.scopeEdit)
 
-        self.mainLayout.addRow("Client Id", applayout)
-        self.mainLayout.addRow("Access Token", loginlayout)
+        self.mainLayout.addRow("Client Id", appwidget)
+        self.authWidgets.append(appwidget)
+        self.authWidgets.append(self.mainLayout.labelForField(appwidget))
+
+        # token and login button
+        loginwidget = QWidget()
+        loginlayout = QHBoxLayout()
+        loginlayout.setContentsMargins(0,0,0,0)
+        loginwidget.setLayout(loginlayout)
+
+        self.tokenEdit = QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        self.loginButton = QPushButton(self.options.get('login_buttoncaption',"Login"), self)
+        self.loginButton.clicked.connect(self.doLogin)
+
+        loginlayout.addWidget(self.tokenEdit)
+        loginlayout.addWidget(self.loginButton)
+
+        self.mainLayout.addRow("Access Token", loginwidget)
+        self.authWidgets.append(loginwidget)
+        self.authWidgets.append(self.mainLayout.labelForField(loginwidget))
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -1254,6 +1301,11 @@ class OAuth2Tab(ApiTab):
 
         options['scope'] = self.scopeEdit.text().strip() if self.scopeEdit.text() != "" else self.credentials.get('scope',None)
 
+        try:
+            options['auth'] = self.authEdit.currentText().strip()
+        except AttributeError:
+            options['auth']= self.options.get('auth','None')
+
         # options for data handling
         if purpose == 'fetch':
             options['param_paging'] =  self.options.get('param_paging',None)
@@ -1272,25 +1324,37 @@ class OAuth2Tab(ApiTab):
         except AttributeError:
             pass
 
+        try:
+            self.authEdit.setCurrentIndex(self.authEdit.findText(options.get('auth', 'None')))
+        except AttributeError:
+            pass
+
+        self.authChanged()
+
         super(OAuth2Tab, self).setOptions(options)
 
     def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
     # Preconditions
-        if options['access_token'] == '':
+        if (options.get('auth','None') != 'None') and (options.get('access_token','') == ''):
             raise Exception('Access token is missing, login please!')
+
         self.connected = True
         self.speed = options.get('speed',None)
 
         # Abort condition: maximum page count
         for page in range(0, options.get('pages', 1)):
-        # build url
+            # build url
             if not ('url' in options):
                 urlpath = options["basepath"] + options['resource']
                 urlparams = {}
                 urlparams.update(options['params'])
 
                 urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
-                urlparams["access_token"] = options['access_token']
+
+                if options.get('access_token',None) is not None:
+                    urlparams["access_token"] = options['access_token']
+
+                requestheaders = options.get('headers',{})
 
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), urlparams, nodedata)
@@ -1299,13 +1363,11 @@ class OAuth2Tab(ApiTab):
                 urlparams = options['params']
 
             if options['logrequests']:
-                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                                   urlpath + "?" + urllib.urlencode(
-                                                                                       urlparams)))
+                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath + "?" + urllib.urlencode(urlparams)))
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,method=method,payload=payload,jsonify=True)
+            data, headers, status = self.request(urlpath, urlparams,requestheaders,method=method,payload=payload,jsonify=True)
             options['querystatus'] = status
 
             callback(data, options, headers)
@@ -1362,19 +1424,24 @@ class OAuth2Tab(ApiTab):
 class YoutubeTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
 
-        self.options = {'login_buttoncaption':" Login to Google ",
+        super(YoutubeTab, self).__init__(mainWindow, "YouTube")
+
+        self.options.update ({'login_buttoncaption':" Login to Google ",
                    'login_window_caption':  "YouTube Login Page",
                    'login_window_height':600,
                    'login_window_width':600,
+
                    'key_objectid':'id.videoId',
                    'key_nodedata':'items',
                    'key_paging':"nextPageToken",
                    'param_paging':'pageToken',
+
+                   'auth' : 'Open Authorization 2',
                    'basepath':"https://www.googleapis.com/youtube/v3/",
                    'resource':'videos'
-                   }
+                   })
 
-        super(YoutubeTab, self).__init__(mainWindow, "YouTube")
+
 
         # Standard inputs
         self.initInputs()
@@ -1388,21 +1455,12 @@ class YoutubeTab(OAuth2Tab):
         self.loadSettings()
 
 
-class GenericOAuthTab(OAuth2Tab):
+class GenericTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
-
-        self.options = {
-                   'login_buttoncaption':" Login ",
-                   'login_window_caption':  "Login Page",
-                   'login_window_height':600,
-                   'login_window_width':600
-                   }
-
-        super(GenericOAuthTab, self).__init__(mainWindow, "OAuth")
+        super(GenericTab, self).__init__(mainWindow, "Generic")
 
         # Standard inputs
         self.initInputs()
-
 
         # Header, Verbs
         self.initHeaderInputs()
@@ -1418,51 +1476,50 @@ class GenericOAuthTab(OAuth2Tab):
         self.loadSettings()
         self.timeout = 30
 
-
-class GenericTab(ApiTab):
-    # Youtube:
-    # URL prefix: https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q=
-    # URL field: <Object ID>
-    # URL suffix:
-    # -Extract: data.feed.entry
-    # -ObjectId: id.$t
-
-    def __init__(self, mainWindow=None):
-        super(GenericTab, self).__init__(mainWindow, "Generic")
-
-        #Basic inputs
-        self.initInputs()
-
-        # Header, Verbs and Extract input
-        self.initHeaderInputs()
-        self.initVerbInputs()
-        self.initExtractInputs()
-
-        self.loadSettings()
-        self.timeout = 30
-
-    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
-        self.connected = True
-        self.speed = options.get('speed',None)
-
-        urlpath = options["basepath"] + options['resource']
-        urlparams = {}
-        urlparams.update(options['params'])
-
-        requestheaders = {}
-        requestheaders.update(options['headers'])
-
-
-        urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
-        if options['logrequests']:
-                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
-
-        #data
-        data, headers, status = self.request(urlpath, urlparams,requestheaders,method=options.get('verb','GET') ,jsonify=True)
-        options['querytime'] = str(datetime.now())
-        options['querystatus'] = status
-
-        callback(data, options, headers)
+# class GenericTab(ApiTab):
+#     # Youtube:
+#     # URL prefix: https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q=
+#     # URL field: <Object ID>
+#     # URL suffix:
+#     # -Extract: data.feed.entry
+#     # -ObjectId: id.$t
+#
+#     def __init__(self, mainWindow=None):
+#         super(GenericTab, self).__init__(mainWindow, "Generic")
+#
+#         #Basic inputs
+#         self.initInputs()
+#
+#         # Header, Verbs and Extract input
+#         self.initHeaderInputs()
+#         self.initVerbInputs()
+#         self.initExtractInputs()
+#
+#         self.loadSettings()
+#         self.timeout = 30
+#
+#     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
+#         self.connected = True
+#         self.speed = options.get('speed',None)
+#
+#         urlpath = options["basepath"] + options['resource']
+#         urlparams = {}
+#         urlparams.update(options['params'])
+#
+#         requestheaders = {}
+#         requestheaders.update(options['headers'])
+#
+#
+#         urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
+#         if options['logrequests']:
+#                 logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+#
+#         #data
+#         data, headers, status = self.request(urlpath, urlparams,requestheaders,method=options.get('verb','GET') ,jsonify=True)
+#         options['querytime'] = str(datetime.now())
+#         options['querystatus'] = status
+#
+#         callback(data, options, headers)
 
 
 class FilesTab(ApiTab):
