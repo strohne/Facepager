@@ -45,6 +45,8 @@ class ApiTab(QWidget):
         self.loadDocs()
         self.lock_session = threading.Lock()
 
+        self.authWidget = QWidget()
+
         try:
             self.defaults = credentials.get(name.lower(),{})
         except NameError:
@@ -522,7 +524,23 @@ class ApiTab(QWidget):
 
     @Slot()
     def editAuthSettings(self):
-        pass
+        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        dialog.setWindowTitle("Authentication settings")
+        dialog.setMinimumWidth(400)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.authWidget)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok)
+        layout.addWidget(buttons)
+        dialog.setLayout(layout)
+
+        def close():
+            dialog.close()
+
+        #connect the nested functions above to the dialog-buttons
+        buttons.accepted.connect(close)
+        dialog.exec_()
 
     @Slot()
     def doLogin(self, query=False, caption='', url='',width=600,height=600):
@@ -648,34 +666,41 @@ class FacebookTab(ApiTab):
         # Pages Box
         self.initPagingInputs()
 
-        # Login-Boxes
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        self.loginButton = QPushButton(" Login to Facebook ", self)
-        self.loginButton.clicked.connect(self.doLogin)
-
-        self.clientIdEdit = QLineEdit()
-        self.clientIdEdit.setEchoMode(QLineEdit.Password)
-        self.scopeEdit = QLineEdit()
-
-        # Construct Login-Layout
-        loginlayout = QHBoxLayout()
-        loginlayout.addWidget(self.tokenEdit)
-        loginlayout.addWidget(self.loginButton)
-
-
-        applayout = QHBoxLayout()
-        applayout.addWidget(self.clientIdEdit)
-        applayout.addWidget(QLabel("Scope"))
-        applayout.addWidget(self.scopeEdit)
-
-
-        # Add to main-Layout
-        self.mainLayout.addRow("Client Id", applayout)
-        self.mainLayout.addRow("Access Token", loginlayout)
+        self.initAuthInputs()
+        self.initLoginInputs()
 
         self.loadSettings()
 
+    def initLoginInputs(self):
+        # Login-Boxes
+        loginlayout = QHBoxLayout()
+
+        self.tokenEdit = QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
+
+        self.authButton = QPushButton('Settings', self)
+        self.authButton.clicked.connect(self.editAuthSettings)
+        loginlayout.addWidget(self.authButton)
+
+        self.loginButton = QPushButton(" Login to Facebook ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+
+        # Add to main-Layout
+        self.mainLayout.addRow("Access Token", loginlayout)
+
+    def initAuthInputs(self):
+        authlayout = QFormLayout()
+        authlayout.setContentsMargins(0,0,0,0)
+        self.authWidget.setLayout(authlayout)
+
+        self.clientIdEdit = QLineEdit()
+        self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Client Id", self.clientIdEdit)
+
+        self.scopeEdit = QLineEdit()
+        authlayout.addRow("Scopes",self.scopeEdit)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FacebookTab, self).getOptions()
@@ -810,34 +835,8 @@ class TwitterTab(ApiTab):
         self.initInputs()
         self.initPagingInputs()
 
-        # LogIn Box
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        self.tokensecretEdit = QLineEdit()
-        self.tokensecretEdit.setEchoMode(QLineEdit.Password)
-        self.loginButton = QPushButton(" Login to Twitter ", self)
-        self.loginButton.clicked.connect(self.doLogin)
-        self.consumerKeyEdit = QLineEdit()
-        self.consumerKeyEdit.setEchoMode(QLineEdit.Password)
-        self.consumerSecretEdit = QLineEdit()
-        self.consumerSecretEdit.setEchoMode(QLineEdit.Password)
-
-
-        # Construct login layout
-        credentialslayout = QHBoxLayout()
-        credentialslayout.addWidget(self.consumerKeyEdit)
-        credentialslayout.addWidget(QLabel("Consumer Secret"))
-        credentialslayout.addWidget(self.consumerSecretEdit)
-
-        loginlayout = QHBoxLayout()
-        loginlayout.addWidget(self.tokenEdit)
-        loginlayout.addWidget(QLabel("Access Token Secret"))
-        loginlayout.addWidget(self.tokensecretEdit)
-        loginlayout.addWidget(self.loginButton)
-
-
-        self.mainLayout.addRow("Consumer Key", credentialslayout)
-        self.mainLayout.addRow("Access Token", loginlayout)
+        self.initAuthInputs()
+        self.initLoginInputs()
 
         self.loadSettings()
 
@@ -852,6 +851,43 @@ class TwitterTab(ApiTab):
             request_token_url=self.defaults['request_token_url'],
             base_url=self.defaults['basepath'])
 
+    def initLoginInputs(self):
+        # Login-Boxes
+        loginlayout = QHBoxLayout()
+
+        self.tokenEdit = QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
+
+        loginlayout.addWidget(QLabel("Access Token Secret"))
+        self.tokensecretEdit = QLineEdit()
+        self.tokensecretEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokensecretEdit)
+
+        self.authButton = QPushButton('Settings', self)
+        self.authButton.clicked.connect(self.editAuthSettings)
+        loginlayout.addWidget(self.authButton)
+
+        self.loginButton = QPushButton(" Login to Twitter ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+
+        # Add to main-Layout
+        self.mainLayout.addRow("Access Token", loginlayout)
+
+
+    def initAuthInputs(self):
+        authlayout = QFormLayout()
+        authlayout.setContentsMargins(0,0,0,0)
+        self.authWidget.setLayout(authlayout)
+
+        self.consumerKeyEdit = QLineEdit()
+        self.consumerKeyEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Consumer Key", self.consumerKeyEdit)
+
+        self.consumerSecretEdit = QLineEdit()
+        self.consumerSecretEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Consumer Secret",self.consumerSecretEdit)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
 
@@ -1006,36 +1042,8 @@ class TwitterStreamingTab(ApiTab):
 
         # Query Box
         self.initInputs()
-
-        # Construct Log-In elements
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        self.tokensecretEdit = QLineEdit()
-        self.tokensecretEdit.setEchoMode(QLineEdit.Password)
-        self.loginButton = QPushButton(" Login to Twitter ", self)
-        self.loginButton.clicked.connect(self.doLogin)
-        self.consumerKeyEdit = QLineEdit()
-        self.consumerKeyEdit.setEchoMode(QLineEdit.Password)
-        self.consumerSecretEdit = QLineEdit()
-        self.consumerSecretEdit.setEchoMode(QLineEdit.Password)
-
-        # Construct login-Layout
-        loginlayout = QHBoxLayout()
-
-        loginlayout.addWidget(self.tokenEdit)
-        loginlayout.addWidget(QLabel("Access Token Secret"))
-        loginlayout.addWidget(self.tokensecretEdit)
-        loginlayout.addWidget(self.loginButton)
-
-        credentialslayout = QHBoxLayout()
-        credentialslayout.addWidget(self.consumerKeyEdit)
-        credentialslayout.addWidget(QLabel("Consumer Secret"))
-        credentialslayout.addWidget(self.consumerSecretEdit)
-
-
-        # Add to main-Layout
-        self.mainLayout.addRow("Consumer Key", credentialslayout)
-        self.mainLayout.addRow("Access Token", loginlayout)
+        self.initAuthInputs()
+        self.initLoginInputs()
 
         self.loadSettings()
 
@@ -1052,6 +1060,43 @@ class TwitterStreamingTab(ApiTab):
         self.timeout = 60
         self.connected = False
 
+    def initLoginInputs(self):
+        # Login-Boxes
+        loginlayout = QHBoxLayout()
+
+        self.tokenEdit = QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
+
+        loginlayout.addWidget(QLabel("Access Token Secret"))
+        self.tokensecretEdit = QLineEdit()
+        self.tokensecretEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokensecretEdit)
+
+        self.authButton = QPushButton('Settings', self)
+        self.authButton.clicked.connect(self.editAuthSettings)
+        loginlayout.addWidget(self.authButton)
+
+        self.loginButton = QPushButton(" Login to Twitter ", self)
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+
+        # Add to main-Layout
+        self.mainLayout.addRow("Access Token", loginlayout)
+
+
+    def initAuthInputs(self):
+        authlayout = QFormLayout()
+        authlayout.setContentsMargins(0,0,0,0)
+        self.authWidget.setLayout(authlayout)
+
+        self.consumerKeyEdit = QLineEdit()
+        self.consumerKeyEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Consumer Key", self.consumerKeyEdit)
+
+        self.consumerSecretEdit = QLineEdit()
+        self.consumerSecretEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Consumer Secret",self.consumerSecretEdit)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(TwitterStreamingTab, self).getOptions()
@@ -1235,72 +1280,33 @@ class OAuth2Tab(ApiTab):
                    'login_window_caption':  "Login Page",
                    })
 
-        self.authWidgets = []
+    def initAuthInputs(self):
+        authlayout = QFormLayout()
+        authlayout.setContentsMargins(0,0,0,0)
+        self.authWidget.setLayout(authlayout)
 
 
-
-    def initOAuthInputs(self):
-        self.authEdit = QComboBox(self)
-        self.authEdit.addItems(['None','Open Authorization 2'])
-        self.authEdit.currentIndexChanged.connect(self.authChanged)
-        self.mainLayout.addRow("Authentication", self.authEdit)
-
-        uriwidget = QWidget()
-        urilayout = QHBoxLayout()
-        urilayout.setContentsMargins(0,0,0,0)
-        uriwidget.setLayout(urilayout)
-
-        #urilayout.addWidget(QLabel("Login URI"))
         self.authURIEdit = QLineEdit()
-        urilayout.addWidget(self.authURIEdit)
+        authlayout.addRow("Login URI",self.authURIEdit)
 
-        urilayout.addWidget(QLabel("Redirect URI"))
         self.redirectURIEdit = QLineEdit()
-        urilayout.addWidget(self.redirectURIEdit)
+        authlayout.addRow("Redirect URI",self.redirectURIEdit)
 
-        urilayout.addWidget(QLabel("Token URI"))
         self.tokenURIEdit = QLineEdit()
-        urilayout.addWidget(self.tokenURIEdit)
-
-        self.mainLayout.addRow("Login URI", uriwidget)
-
-        self.authWidgets.append(uriwidget)
-        self.authWidgets.append(self.mainLayout.labelForField(uriwidget))
-
-
-    def authChanged(self):
-        try:
-            if self.authEdit.currentText() == 'None':
-                for widget in self.authWidgets:
-                    widget.hide()
-            else:
-                for widget in self.authWidgets:
-                    widget.show()
-        except AttributeError:
-            pass
-
-    def initLoginInputs(self):
-
-        # App settings (secrets + scope)
-        appwidget = QWidget()
-        applayout = QHBoxLayout()
-        applayout.setContentsMargins(0,0,0,0)
-        appwidget.setLayout(applayout)
+        authlayout.addRow("Token URI",self.tokenURIEdit)
 
         self.clientIdEdit = QLineEdit()
         self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Client Id", self.clientIdEdit)
+
         self.clientSecretEdit = QLineEdit()
         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Client Secret",self.clientSecretEdit)
 
+        self.scopeEdit = QLineEdit()
+        authlayout.addRow("Scopes",self.scopeEdit)
 
-        applayout.addWidget(self.clientIdEdit)
-        applayout.addWidget(QLabel("Client Secret"))
-        applayout.addWidget(self.clientSecretEdit)
-
-        self.mainLayout.addRow("Client Id", appwidget)
-        self.authWidgets.append(appwidget)
-        self.authWidgets.append(self.mainLayout.labelForField(appwidget))
-
+    def initLoginInputs(self):
         # token and login button
         loginwidget = QWidget()
         loginlayout = QHBoxLayout()
@@ -1311,11 +1317,7 @@ class OAuth2Tab(ApiTab):
         self.tokenEdit.setEchoMode(QLineEdit.Password)
         loginlayout.addWidget(self.tokenEdit)
 
-        self.scopeEdit = QLineEdit()
-        loginlayout.addWidget(QLabel("Scope"))
-        loginlayout.addWidget(self.scopeEdit)
-
-        self.authButton = QPushButton('...', self)
+        self.authButton = QPushButton('Settings', self)
         self.authButton.clicked.connect(self.editAuthSettings)
         loginlayout.addWidget(self.authButton)
 
@@ -1324,8 +1326,6 @@ class OAuth2Tab(ApiTab):
         loginlayout.addWidget(self.loginButton)
 
         self.mainLayout.addRow("Access Token", loginwidget)
-        self.authWidgets.append(loginwidget)
-        self.authWidgets.append(self.mainLayout.labelForField(loginwidget))
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -1349,12 +1349,9 @@ class OAuth2Tab(ApiTab):
             options['redirect_uri'] = self.defaults.get('redirect_uri','')
             options['token_uri'] = self.defaults.get('token_uri','')
 
-        options['scope'] = self.scopeEdit.text().strip() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
+        options['auth'] = self.tokenEdit.text() != ''
 
-        try:
-            options['auth'] = self.authEdit.currentText().strip()
-        except AttributeError:
-            options['auth']= self.defaults.get('auth','None')
+        options['scope'] = self.scopeEdit.text().strip() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
 
         # options for data handling
         if purpose == 'fetch':
@@ -1374,20 +1371,12 @@ class OAuth2Tab(ApiTab):
         except AttributeError:
             pass
 
-        try:
-            self.authEdit.setCurrentIndex(self.authEdit.findText(options.get('auth', 'None')))
-        except AttributeError:
-            pass
-
-        self.authChanged()
-
         super(OAuth2Tab, self).setOptions(options)
 
-    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
-    # Preconditions
-        if (options.get('auth','None') != 'None') and (options.get('access_token','') == ''):
-            raise Exception('Access token is missing, login please!')
+        if options.get('auth', False) == False:
+            self.tokenEdit.setText('')
 
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
         self.closeSession()
         self.connected = True
         self.speed = options.get('speed',None)
@@ -1402,7 +1391,7 @@ class OAuth2Tab(ApiTab):
 
                 urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
 
-                if options.get('access_token',None) is not None:
+                if options.get('access_token','') != '':
                     urlparams["access_token"] = options['access_token']
 
                 requestheaders = options.get('headers',{})
@@ -1485,7 +1474,7 @@ class YoutubeTab(OAuth2Tab):
                    'key_paging':"nextPageToken",
                    'param_paging':'pageToken',
 
-                   'auth' : 'Open Authorization 2',
+                   'auth' : 'oauth2',
                    'basepath':"https://www.googleapis.com/youtube/v3/",
                    'resource':'videos'
                    })
@@ -1499,9 +1488,26 @@ class YoutubeTab(OAuth2Tab):
         self.initPagingInputs()
 
         # Login inputs
+        self.initAuthInputs()
         self.initLoginInputs()
 
         self.loadSettings()
+
+    def initAuthInputs(self):
+        authlayout = QFormLayout()
+        authlayout.setContentsMargins(0,0,0,0)
+        self.authWidget.setLayout(authlayout)
+
+        self.clientIdEdit = QLineEdit()
+        self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Client Id", self.clientIdEdit)
+
+        self.clientSecretEdit = QLineEdit()
+        self.clientSecretEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Client Secret", self.clientSecretEdit)
+
+        self.scopeEdit = QLineEdit()
+        authlayout.addRow("Scopes",self.scopeEdit)
 
 
 class GenericTab(OAuth2Tab):
@@ -1520,7 +1526,7 @@ class GenericTab(OAuth2Tab):
         self.initExtractInputs()
 
         # Login inputs
-        self.initOAuthInputs()
+        self.initAuthInputs()
         self.initLoginInputs()
 
         self.loadSettings()
@@ -1700,3 +1706,4 @@ class QWebPageCustom(QWebPage):
         url = unicode(reply.url().toString())
         reply.ignoreSslErrors()
         self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
+
