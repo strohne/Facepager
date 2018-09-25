@@ -233,7 +233,11 @@ class DictionaryTreeItem(object):
         else:
             self.itemDataType = 'atom'
             self.itemDataValue = value
-            self.itemToolTip = self.itemToolTip + "<p>"+str(value)+"</p>"
+
+            try:
+                self.itemToolTip = self.itemToolTip + "<p>"+unicode(value)+"</p>"
+            except:
+                pass
 
 
     def clear(self):
