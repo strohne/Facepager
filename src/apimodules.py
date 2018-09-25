@@ -65,7 +65,7 @@ class ApiTab(QWidget):
 
         return path, query
 
-    def parsePlaceholders(self,pattern,nodedata,paramdata={}):
+    def parsePlaceholders(self,pattern,nodedata,paramdata={},options = {}):
         if not pattern:
             return pattern
 
@@ -90,7 +90,7 @@ class ApiTab(QWidget):
 
             for modifier in pipeline:
                 if modifier == 'file':
-                    with open(value, 'rb') as file:
+                    with open(os.path.join(options.get('folder',''),value), 'rb') as file:
                         value = file.read()
 
                 if modifier == 'base64':
@@ -136,11 +136,11 @@ class ApiTab(QWidget):
 
         return urlpath, urlparams
 
-    def getPayload(self,payload, params, nodedata):
+    def getPayload(self,payload, params, nodedata,options):
         if payload is None:
             return None
         else:
-            return self.parsePlaceholders(payload, nodedata, params)
+            return self.parsePlaceholders(payload, nodedata, params,options)
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -334,7 +334,11 @@ class ApiTab(QWidget):
 
     def initFolderInput(self):
         #Download folder
+        self.folderwidget = QWidget()
         folderlayout = QHBoxLayout()
+        folderlayout .setContentsMargins(0,0,0,0)
+        self.folderwidget.setLayout(folderlayout)
+
         self.folderEdit = QLineEdit()
         folderlayout.addWidget(self.folderEdit)
 
@@ -342,7 +346,7 @@ class ApiTab(QWidget):
         self.folderButton.clicked.connect(self.selectFolder)
         folderlayout.addWidget(self.folderButton)
 
-        self.mainLayout.addRow("Folder", folderlayout)
+        self.mainLayout.addRow("Folder", self.folderwidget)
 
     def initPagingInputs(self):
         self.pagesEdit = QSpinBox(self)
@@ -365,15 +369,19 @@ class ApiTab(QWidget):
         self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.mainLayout.addRow("Payload", self.payloadEdit)
 
-    def verbChanged(self):
-        label = self.mainLayout.labelForField(self.payloadEdit)
+        self.initFolderInput()
 
+    def verbChanged(self):
         if self.verbEdit.currentText() == 'GET':
-            label.hide()
             self.payloadEdit.hide()
+            self.mainLayout.labelForField(self.payloadEdit).hide()
+            self.folderwidget.hide()
+            self.mainLayout.labelForField(self.folderwidget).hide()
         else:
-            label.show()
             self.payloadEdit.show()
+            self.mainLayout.labelForField(self.payloadEdit).show()
+            self.folderwidget.show()
+            self.mainLayout.labelForField(self.folderwidget).show()
 
     def initExtractInputs(self):
         self.extractEdit = QComboBox(self)
@@ -1410,7 +1418,7 @@ class OAuth2Tab(ApiTab):
                 requestheaders = options.get('headers',{})
 
                 method=options.get('verb','GET')
-                payload = self.getPayload(options.get('payload',None), urlparams, nodedata)
+                payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
             else:
                 urlpath = options['url']
                 urlparams = options['params']
