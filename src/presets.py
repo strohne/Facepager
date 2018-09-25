@@ -159,7 +159,7 @@ class PresetWindow(QDialog):
         self.folderButton.setText(self.presetFolder)
 
         self.presetsDownloaded = False
-        self.presetSuffix = '.3_9.json'
+        self.presetSuffix = ['.3_9.json','.3_10.json']
         self.lastSelected = None
 
 #         if getattr(sys, 'frozen', False):
@@ -298,7 +298,7 @@ class PresetWindow(QDialog):
 
                 #Download
                 files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
-                files = [f['path'] for f in files if f['path'].endswith(self.presetSuffix)]
+                files = [f['path'] for f in files if f['path'].endswith(tuple(self.presetSuffix))]
                 for filename in files:
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
                     with open(os.path.join(self.presetFolderDefault, os.path.basename(filename)), 'wb') as f:
@@ -322,14 +322,14 @@ class PresetWindow(QDialog):
 
         self.downloadDefaultPresets()
         if os.path.exists(self.presetFolderDefault):
-            files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(self.presetSuffix)]
+            files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
                 newitem = self.addPresetItem(self.presetFolderDefault,filename,True)
                 if self.lastSelected is not None and (self.lastSelected == os.path.join(self.presetFolderDefault,filename)):
                     selectitem = newitem
 
         if os.path.exists(self.presetFolder):
-            files = [f for f in os.listdir(self.presetFolder) if f.endswith(self.presetSuffix)]
+            files = [f for f in os.listdir(self.presetFolder) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
                 newitem = self.addPresetItem(self.presetFolder,filename)
                 if self.lastSelected is not None and (self.lastSelected == unicode(os.path.join(self.presetFolder,filename))):
@@ -372,10 +372,10 @@ class PresetWindow(QDialog):
         self.close()
 
     def uniqueFilename(self,name):
-        filename = re.sub('[^a-zA-Z0-9_-]+', '_', name )+self.presetSuffix
+        filename = re.sub('[^a-zA-Z0-9_-]+', '_', name )+self.presetSuffix[-1]
         i = 1
         while os.path.exists(os.path.join(self.presetFolder, filename)) and i < 10000:
-            filename = re.sub('[^a-zA-Z0-9_-]+', '_', name )+"-"+str(i)+self.presetSuffix
+            filename = re.sub('[^a-zA-Z0-9_-]+', '_', name )+"-"+str(i)+self.presetSuffix[-1]
             i+=1
 
         if os.path.exists(os.path.join(self.presetFolder, filename)):
