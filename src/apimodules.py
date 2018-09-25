@@ -76,8 +76,8 @@ class ApiTab(QWidget):
 
         for match in matches:
             pipeline = match.split('|')
-            key = pipeline[0]
-            modifier = pipeline[1] if len(pipeline) > 1 else None
+            key = pipeline.pop(0)
+            #modifier = pipeline[1] if len(pipeline) > 1 else None
 
             if key in paramdata:
                 value = paramdata[key]
@@ -88,15 +88,21 @@ class ApiTab(QWidget):
             else:
                 value = getDictValue(nodedata['response'], key)
 
-            if modifier == 'file':
-                with open(value, 'rb') as file:
-                    value = base64.b64encode(file.read())
+            for modifier in pipeline:
+                if modifier == 'file':
+                    with open(value, 'rb') as file:
+                        value = file.read()
 
-            pattern = pattern.replace('<' + match + '>', value)
+                if modifier == 'base64':
+                    value = base64.b64encode(value)
 
-        pattern = pattern.replace('\\<', '<')
-        pattern = pattern.replace('\\>', '>')
-        pattern = pattern.replace('\\\\', '\\')
+            if (pattern == '<' + match + '>'):
+                pattern = value
+            else:
+               pattern = pattern.replace('<' + match + '>', value)
+               pattern = pattern.replace('\\<', '<')
+               pattern = pattern.replace('\\>', '>')
+               pattern = pattern.replace('\\\\', '\\')
 
         return pattern
 
@@ -156,8 +162,15 @@ class ApiTab(QWidget):
             pass
 
         #payload
+        if options.get('verb','GET') == 'POST':
+            try:
+                options['payload'] = self.payloadEdit.toPlainText()
+            except AttributeError:
+                pass
+
+        #folder
         try:
-            options['payload'] = self.payloadEdit.toPlainText()
+            options['folder'] = self.folderEdit.text()
         except AttributeError:
             pass
 
@@ -319,6 +332,18 @@ class ApiTab(QWidget):
         #layout.setStretch(0, 1);
 
 
+    def initFolderInput(self):
+        #Download folder
+        folderlayout = QHBoxLayout()
+        self.folderEdit = QLineEdit()
+        folderlayout.addWidget(self.folderEdit)
+
+        self.folderButton = QPushButton("...", self)
+        self.folderButton.clicked.connect(self.selectFolder)
+        folderlayout.addWidget(self.folderButton)
+
+        self.mainLayout.addRow("Folder", folderlayout)
+
     def initPagingInputs(self):
         self.pagesEdit = QSpinBox(self)
         self.pagesEdit.setMinimum(1)
@@ -404,6 +429,11 @@ class ApiTab(QWidget):
             if not hasattr(self, "session"):
                 self.session = requests.Session()
         return self.session
+
+    def closeSession(self):
+        with self.lock_session:
+            if hasattr(self, "session"):
+                del self.session
 
     def request(self, path, args=None, headers=None, method="GET", payload=None, jsonify=True):
         """
@@ -1360,6 +1390,7 @@ class OAuth2Tab(ApiTab):
         if (options.get('auth','None') != 'None') and (options.get('access_token','') == ''):
             raise Exception('Access token is missing, login please!')
 
+        self.closeSession()
         self.connected = True
         self.speed = options.get('speed',None)
 
@@ -1410,7 +1441,6 @@ class OAuth2Tab(ApiTab):
     @Slot()
     def doLogin(self):
         options = self.getOptions()
-
         self.session = OAuth2Session(options['client_id'], redirect_uri=options['redirect_uri'],scope=options['scope'])
         params = {'client_id':options['client_id'],
                   'redirect_uri':options['redirect_uri'],
@@ -1557,16 +1587,7 @@ class FilesTab(ApiTab):
         self.initInputs()
         self.initHeaderInputs()
 
-        #Download folder
-        folderlayout = QHBoxLayout()
-        self.folderEdit = QLineEdit()
-        folderlayout.addWidget(self.folderEdit)
-
-        self.folderButton = QPushButton("...", self)
-        self.folderButton.clicked.connect(self.selectFolder)
-        folderlayout.addWidget(self.folderButton)
-
-        self.mainLayout.addRow("Folder", folderlayout)
+        self.initFolderInput()
 
         #filename
         self.filenameEdit = QComboBox(self)
@@ -1585,32 +1606,24 @@ class FilesTab(ApiTab):
         self.timeout = 30
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = {}
-        options['basepath'] = self.basepathEdit.currentText().strip()
-        options['resource'] = self.resourceEdit.currentText().strip()
-        options['params'] = self.paramEdit.getParams()
-        options['headers'] = self.headerEdit.getParams()
+        options = super(FilesTab, self).getOptions()
 
         if purpose != 'preset':
             options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
-        options['folder'] = self.folderEdit.text()
         options['filename'] = self.filenameEdit.currentText()
         options['fileext'] = self.fileextEdit.currentText()
+
         options['nodedata'] = None
         options['objectid'] = 'filename'
 
         return options
 
     def setOptions(self, options):
-        self.basepathEdit.setEditText(options.get('basepath', '<url>'))
-        self.resourceEdit.setEditText(options.get('resource', ''))
-        self.paramEdit.setParams(options.get('params', {}))
-        self.headerEdit.setParams(options.get('headers', {}))
-
-        self.folderEdit.setText(options.get('folder', ''))
         self.filenameEdit.setEditText(options.get('filename', '<None>'))
         self.fileextEdit.setEditText(options.get('fileext', '<None>'))
+
+        super(FilesTab, self).setOptions(options)
 
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         self.connected = True
