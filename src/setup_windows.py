@@ -27,7 +27,7 @@ buildoptions = {
 
 setup(
         name = "Facepager 3",
-        version = "3.9",
+        version = "3.10",
         description = "Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based APIs.",
         options = {'build_exe': buildoptions},
         executables = [exe]
