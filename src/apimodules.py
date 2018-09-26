@@ -380,11 +380,13 @@ class ApiTab(QWidget):
         if self.verbEdit.currentText() == 'GET':
             self.payloadEdit.hide()
             self.mainLayout.labelForField(self.payloadEdit).hide()
+
             self.folderwidget.hide()
             self.mainLayout.labelForField(self.folderwidget).hide()
         else:
             self.payloadEdit.show()
             self.mainLayout.labelForField(self.payloadEdit).show()
+
             self.folderwidget.show()
             self.mainLayout.labelForField(self.folderwidget).show()
 
@@ -583,7 +585,7 @@ class ApiTab(QWidget):
             self.logMessage('Error loading web page')
 
 
-    def download(self, path, args=None, headers=None, foldername=None, filename=None, fileext=None):
+    def download(self, path, args=None, headers=None, method="GET", payload=None, foldername=None, filename=None, fileext=None):
         """
         Download files ...
         Uses the request-method without converting to json
@@ -621,7 +623,7 @@ class ApiTab(QWidget):
             return fullfilename
 
         try:
-            response = self.request(path, args, headers, jsonify=False)
+            response = self.request(path, args, headers,method,payload, jsonify=False)
 
             # Handle the response of the generic, non-json-returning response
             if response.status_code == 200:
@@ -1306,7 +1308,7 @@ class OAuth2Tab(ApiTab):
         self.scopeEdit = QLineEdit()
         authlayout.addRow("Scopes",self.scopeEdit)
 
-    def initLoginInputs(self):
+    def initLoginInputs(self,toggle = True):
         # token and login button
         loginwidget = QWidget()
         loginlayout = QHBoxLayout()
@@ -1316,6 +1318,13 @@ class OAuth2Tab(ApiTab):
         self.tokenEdit = QLineEdit()
         self.tokenEdit.setEchoMode(QLineEdit.Password)
         loginlayout.addWidget(self.tokenEdit)
+
+        if toggle:
+            loginlayout.addWidget(QLabel("Auth"))
+            self.authEdit = QComboBox(self)
+            self.authEdit.addItems(['disable','param'])
+            loginlayout.addWidget(self.authEdit)
+
 
         self.authButton = QPushButton('Settings', self)
         self.authButton.clicked.connect(self.editAuthSettings)
@@ -1349,7 +1358,11 @@ class OAuth2Tab(ApiTab):
             options['redirect_uri'] = self.defaults.get('redirect_uri','')
             options['token_uri'] = self.defaults.get('token_uri','')
 
-        options['auth'] = self.tokenEdit.text() != ''
+        try:
+            options['auth'] =  self.authEdit.currentText().strip() if self.authEdit.currentText() != "" else self.defaults.get('auth','disable')
+        except AttributeError:
+            pass
+
 
         options['scope'] = self.scopeEdit.text().strip() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
 
@@ -1371,10 +1384,12 @@ class OAuth2Tab(ApiTab):
         except AttributeError:
             pass
 
-        super(OAuth2Tab, self).setOptions(options)
+        try:
+            self.authEdit.setCurrentIndex(self.authEdit.findText(options.get('auth', 'disable')))
+        except AttributeError:
+            pass
 
-        if options.get('auth', False) == False:
-            self.tokenEdit.setText('')
+        super(OAuth2Tab, self).setOptions(options)
 
     def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
         self.closeSession()
@@ -1391,7 +1406,7 @@ class OAuth2Tab(ApiTab):
 
                 urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
 
-                if options.get('access_token','') != '':
+                if options.get('auth','disable') != 'disable':
                     urlparams["access_token"] = options['access_token']
 
                 requestheaders = options.get('headers',{})
@@ -1457,6 +1472,12 @@ class OAuth2Tab(ApiTab):
                         client_secret=options['client_secret'])
 
                 self.tokenEdit.setText(token['access_token'])
+
+                try:
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('param'))
+                except AttributeError:
+                    pass
+
             finally:
                 self.login_webview.parent().close()
 
@@ -1474,7 +1495,7 @@ class YoutubeTab(OAuth2Tab):
                    'key_paging':"nextPageToken",
                    'param_paging':'pageToken',
 
-                   'auth' : 'oauth2',
+                   'auth' : 'api key',
                    'basepath':"https://www.googleapis.com/youtube/v3/",
                    'resource':'videos'
                    })
@@ -1489,7 +1510,7 @@ class YoutubeTab(OAuth2Tab):
 
         # Login inputs
         self.initAuthInputs()
-        self.initLoginInputs()
+        self.initLoginInputs(False)
 
         self.loadSettings()
 
@@ -1508,6 +1529,11 @@ class YoutubeTab(OAuth2Tab):
 
         self.scopeEdit = QLineEdit()
         authlayout.addRow("Scopes",self.scopeEdit)
+
+    def getOptions(self, purpose='fetch'):
+        options = super(YoutubeTab, self).getOptions()
+        options['auth'] = 'api key'
+        return options
 
 
 class GenericTab(OAuth2Tab):
@@ -1532,53 +1558,7 @@ class GenericTab(OAuth2Tab):
         self.loadSettings()
         self.timeout = 30
 
-# class GenericTab(ApiTab):
-#     # Youtube:
-#     # URL prefix: https://gdata.youtube.com/feeds/api/videos?alt=json&v=2&q=
-#     # URL field: <Object ID>
-#     # URL suffix:
-#     # -Extract: data.feed.entry
-#     # -ObjectId: id.$t
-#
-#     def __init__(self, mainWindow=None):
-#         super(GenericTab, self).__init__(mainWindow, "Generic")
-#
-#         #Basic inputs
-#         self.initInputs()
-#
-#         # Header, Verbs and Extract input
-#         self.initHeaderInputs()
-#         self.initVerbInputs()
-#         self.initExtractInputs()
-#
-#         self.loadSettings()
-#         self.timeout = 30
-#
-#     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
-#         self.connected = True
-#         self.speed = options.get('speed',None)
-#
-#         urlpath = options["basepath"] + options['resource']
-#         urlparams = {}
-#         urlparams.update(options['params'])
-#
-#         requestheaders = {}
-#         requestheaders.update(options['headers'])
-#
-#
-#         urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
-#         if options['logrequests']:
-#                 logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
-#
-#         #data
-#         data, headers, status = self.request(urlpath, urlparams,requestheaders,method=options.get('verb','GET') ,jsonify=True)
-#         options['querytime'] = str(datetime.now())
-#         options['querystatus'] = status
-#
-#         callback(data, options, headers)
-
-
-class FilesTab(ApiTab):
+class FilesTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
         super(FilesTab, self).__init__(mainWindow, "Files")
         self.defaults['basepath'] = '<url>'
@@ -1586,31 +1566,40 @@ class FilesTab(ApiTab):
         #Basic inputs
         self.initInputs()
         self.initHeaderInputs()
-        #self.initVerbInputs()
-
+        self.initVerbInputs()
         self.initFolderInput()
+        self.initFileInputs()
+        self.initAuthInputs()
+        self.initLoginInputs()
 
-        #filename
+
+        self.loadSettings()
+        self.timeout = 30
+
+    def initFileInputs(self):
         self.filenameEdit = QComboBox(self)
         self.filenameEdit.insertItems(0, ['<None>'])
         self.filenameEdit.setEditable(True)
-        self.mainLayout.addRow("Custom filename", self.filenameEdit)
+        #self.mainLayout.addRow("Custom filename", self.filenameEdit)
 
         #fileext
         self.fileextEdit = QComboBox(self)
         self.fileextEdit.insertItems(0, ['<None>'])
         self.fileextEdit.setEditable(True)
-        self.mainLayout.addRow("Custom file extension", self.fileextEdit)
+        #self.mainLayout.addRow("Custom file extension", self.fileextEdit)
 
-        self.loadSettings()
+        layout= QHBoxLayout()
+        self.mainLayout.addRow("Custom filename", layout)
 
-        self.timeout = 30
+        layout.addWidget(self.filenameEdit)
+        layout.setStretch(0, 1);
+        layout.addWidget(QLabel("Custom file extension"))
+        layout.addWidget(self.fileextEdit)
+        layout.setStretch(2, 1);
+
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FilesTab, self).getOptions()
-
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
         options['filename'] = self.filenameEdit.currentText()
         options['fileext'] = self.fileextEdit.currentText()
@@ -1626,10 +1615,20 @@ class FilesTab(ApiTab):
 
         super(FilesTab, self).setOptions(options)
 
+    def verbChanged(self):
+        if self.verbEdit.currentText() == 'GET':
+            self.payloadEdit.hide()
+            self.mainLayout.labelForField(self.payloadEdit).hide()
+        else:
+            self.payloadEdit.show()
+            self.mainLayout.labelForField(self.payloadEdit).show()
+
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
+        self.closeSession()
         self.connected = True
         self.speed = options.get('speed',None)
 
+        # Folder and file
         foldername = options.get('folder', None)
         if (foldername is None) or (not os.path.isdir(foldername)):
             raise Exception("Folder does not exists, select download folder, please!")
@@ -1643,25 +1642,27 @@ class FilesTab(ApiTab):
         elif fileext is not None and fileext != '':
             fileext = self.parsePlaceholders(fileext,nodedata)
 
+        # Request
         urlpath = options["basepath"] + options['resource']
         urlparams = {}
         urlparams.update(options['params'])
 
-        urlpath, urlparams = self.getURL(urlpath,urlparams, nodedata)
+        urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
 
+        if options.get('auth','disable') != 'disable':
+            urlparams["access_token"] = options['access_token']
 
+        requestheaders = options.get('headers',{})
 
+        method=options.get('verb','GET')
+        payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
 
-        requestheaders = {}
-        requestheaders.update(options['headers'])
-
+        # Log
         if options['logrequests']:
-            logCallback(u"Downloading file for {0} from {1}".format(nodedata['objectid'],
-                                                                              urlpath + "?" + urllib.urlencode(
-                                                                                  urlparams)))
+            logCallback(u"Downloading file for {0} from {1}".format(nodedata['objectid'],urlpath + "?" + urllib.urlencode(urlparams)))
 
-        data, headers, status = self.download(urlpath, urlparams, requestheaders, foldername,filename,fileext)
         options['querytime'] = str(datetime.now())
+        data, headers, status = self.download(urlpath, urlparams, requestheaders,method,payload,foldername,filename,fileext)
         options['querystatus'] = status
 
         callback(data, options, headers)
