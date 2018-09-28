@@ -415,7 +415,7 @@ class MainWindow(QMainWindow):
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
-        self.settings.setValue("version","3.9")
+        self.settings.setValue("version","3.10")
         self.settings.endGroup()
 
 
