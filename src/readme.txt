@@ -168,3 +168,55 @@ Edit virtual machine, in Network Adapter section set network connection to "Brid
     - Create credentials.py (see above)
 
 4. Launch Facepager.py (with python launcher, not in terminal)
+
+
+#######
+#
+#   Steps to run under macOS High Sierra in VirtualBox under Windows
+#
+#######
+
+
+0. Install maxOS in virtual machine
+Follow the steps in https://saintlad.com/install-macos-high-sierra-in-virtualbox-on-windows-10/
+
+If network connection is not available: Edit virtual machine, in Network Adapter section set network connection to "Bridged" instead of "NAT"
+
+Eingeben von eckigen Klammern: Alt+5 / 6.
+Eingeben von @-Zeichen: Alt+L
+
+1.Prepare system
+	Install homebrew, type in terminal:	
+	/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+2. Install PySide, type in terminal:		
+
+	brew install qt
+	brew install PySide	
+	
+	[Check the output, replace USERNAME by your username in the following command]
+	
+	mkdir -p /Users/USERNAME/Library/Python/2.7/lib/python/site-packages
+	echo 'import site; site.addsitedir("/usr/local/lib/python2.7/site-packages")' >> /Users/USERNAME/Library/Python/2.7/lib/python/site-packages/homebrew.pth
+	
+3. Install other packages, type in terminal:
+
+	pip install SQLAlchemy
+	pip install python-dateutil
+	pip install requests
+	pip install requests_oauthlib
+	pip install -U requests[security]==2.7.0
+	pip install rauth
+	pip install pandas
+	
+
+4. Install Facepager
+
+    - Download from github or clone (https://github.com/strohne/Facepager.git)
+      
+	    $ cd Documents
+	    $ git clone https://github.com/strohne/Facepager.git
+	  
+    - Create credentials.py (see above)
+
+5. Launch Facepager.py (with python launcher, not in terminal)
