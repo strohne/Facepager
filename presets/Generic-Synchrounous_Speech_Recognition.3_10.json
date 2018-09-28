@@ -1,0 +1,26 @@
+{
+  "description": "Add filename as node, e.g.\"awesome-speech.flac\".\nSelect the folder where the file resides (below the payload field).\n\nFiles need to be FLAC-encoded, 16bit, 16000Hz. See https://cloud.google.com/speech-to-text/docs/reference/rest/v1/RecognitionConfig#AudioEncoding for other options.\n\nMaximum length is about 1 minute, see https://cloud.google.com/speech-to-text/quotas. Be aware of prices.\n\nSee https://cloud.google.com/speech-to-text/docs/sync-recognize for further information.\n\n__Authorization notes__\n\nYou need to register an app at Google Cloud Platform: https://console.cloud.google.com. Enable Cloud Storage JSON API and create OAuth2-Credentials. In Facepager, open the authorization settings (next to Login-button) and provide Client ID and Client Secret fields. Then you are ready to login with Facepager, which gets you an access token. Make sure the header option or param option is selected in the box next to the access token.\n\nAlternatively, you can get a request token from https://developers.google.com/oauthplayground/. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".",
+  "module": "Generic",
+  "speed": 200,
+  "options": {
+    "redirect_uri": "https://localhost",
+    "resource": "speech:recognize",
+    "objectid": "alternatives.0.transcript",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "basepath": "https://speech.googleapis.com/v1/",
+    "auth": "header",
+    "querytype": "Generic:https://speech.googleapis.com/v1/speech:recognize",
+    "headers": {},
+    "verb": "POST",
+    "params": {},
+    "scope": "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloud-language",
+    "nodedata": "results",
+    "payload": "{\n\"config\": {\n  \"encoding\":\"FLAC\",\n  \"languageCode\": \"en-US\",\n  \"enableWordTimeOffsets\": false,\n  maxAlternatives:2\n  },\n\"audio\":{\n  \"content\":\"<Object ID|file|base64>\"\n  }\n}"
+  },
+  "columns": [
+    "alternatives.0.confidence",
+    "alternatives.0.transcript"
+  ],
+  "name": "Synchronous speech recognition"
+}

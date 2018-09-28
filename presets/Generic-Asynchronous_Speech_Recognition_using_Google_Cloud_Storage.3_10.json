@@ -1,0 +1,25 @@
+{
+  "description": "At first, you need to upload your audio file to a Google Cloud Storage bucket. The encoding must be FLAC, see https://cloud.google.com/speech-to-text/docs/reference/rest/v1/RecognitionConfig#AudioEncoding for other options.\n\nSecond, get the bucket contents with the preset \"Get contents of bucket from Google Cloud Storage\". Alternatively, you can adjust the uri-setting in the payload.\n\nFetching data starts asynchronous processing at Google and gives you backk an ID of the operation. Last step is to poll the status of the operation with the preset \"Result of asyncronous speech recognition\".\n\nMaximum length of audio is about 180 minutes. Be aware of prices, see https://cloud.google.com/speech-to-text/quotas\n\n__Authorization notes__\n\nYou need to register an app at Google Cloud Platform: https://console.cloud.google.com. Enable Cloud Storage JSON API and create OAuth2-Credentials. In Facepager, open the authorization settings (next to Login-button) and provide Client ID and Client Secret fields. Then you are ready to login with Facepager, which gets you an access token. Make sure the header option or param option is selected in the box next to the access token.\n\nAlternatively, you can get a request token from https://developers.google.com/oauthplayground/. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".",
+  "module": "Generic",
+  "speed": 200,
+  "options": {
+    "redirect_uri": "https://localhost",
+    "resource": "speech:longrunningrecognize",
+    "objectid": "name",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "basepath": "https://speech.googleapis.com/v1/",
+    "auth": "header",
+    "headers": {},
+    "verb": "POST",
+    "params": {},
+    "scope": "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloud-language https://www.googleapis.com/auth/devstorage.full_control",
+    "nodedata": null,
+    "payload": "{\n\"config\": {\n  \"encoding\":\"FLAC\",\n  \"languageCode\": \"en-US\",\n  \"enableWordTimeOffsets\": false,\n  maxAlternatives:2\n  },\n\"audio\":{\n  \"uri\":\"gs://<bucket>/<name>\"\n  }\n}"
+  },
+  "columns": [
+    "alternatives.0.confidence",
+    "alternatives.0.transcript"
+  ],
+  "name": "Asynchronous speech recognition using cloud storage"
+}
