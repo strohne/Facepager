@@ -22,8 +22,14 @@ import dateutil.parser
 from paramedit import *
 
 from utilities import *
-from credentials import *
 
+#from credentials import *
+import imp
+try:
+    imp.find_module('credentials')
+    from credentials import *
+except ImportError:
+    credentials = {}
 
 class ApiTab(QWidget):
     """
@@ -663,6 +669,12 @@ class FacebookTab(ApiTab):
     def __init__(self, mainWindow=None):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
+        #Defaults
+        self.defaults['scope'] = '' #user_groups
+        self.defaults['basepath'] = 'https://graph.facebook.com/v2.10/'
+        self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
+        self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
+
         # Query Box
         self.initInputs()
 
@@ -834,6 +846,12 @@ class TwitterTab(ApiTab):
     def __init__(self, mainWindow=None):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
+        # Defaults
+        self.defaults['basepath'] = 'https://api.twitter.com/1.1/'
+        self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
+        self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
+        self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
+
         # Query and Parameter Box
         self.initInputs()
         self.initPagingInputs()
@@ -846,13 +864,13 @@ class TwitterTab(ApiTab):
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
         self.oauthdata = {}
         self.twitter = OAuth1Service(
-            consumer_key=self.defaults['consumer_key'],
-            consumer_secret=self.defaults['consumer_secret'],
+            consumer_key=self.defaults.get('consumer_key'),
+            consumer_secret=self.defaults.get('consumer_secret'),
             name='twitter',
-            access_token_url=self.defaults['access_token_url'],
-            authorize_url=self.defaults['authorize_url'],
-            request_token_url=self.defaults['request_token_url'],
-            base_url=self.defaults['basepath'])
+            access_token_url=self.defaults.get('access_token_url'),
+            authorize_url=self.defaults.get('authorize_url'),
+            request_token_url=self.defaults.get('request_token_url'),
+            base_url=self.defaults.get('basepath'))
 
     def initLoginInputs(self):
         # Login-Boxes
@@ -1041,7 +1059,18 @@ class TwitterTab(ApiTab):
 class TwitterStreamingTab(ApiTab):
     def __init__(self, mainWindow=None):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
-        self.defaults = credentials['twitter_streaming']
+
+        # Defaults
+        try:
+            self.defaults = credentials.get('twitter_streaming',{})
+        except NameError:
+            self.defaults = {}
+
+
+        self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
+        self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
+        self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
+        self.defaults['basepath'] = 'https://stream.twitter.com/1.1/'
 
         # Query Box
         self.initInputs()
@@ -1053,13 +1082,13 @@ class TwitterStreamingTab(ApiTab):
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
         self.oauthdata = {}
         self.twitter = OAuth1Service(
-            consumer_key=self.defaults['consumer_key'],
-            consumer_secret=self.defaults['consumer_secret'],
+            consumer_key=self.defaults.get('consumer_key'),
+            consumer_secret=self.defaults.get('consumer_secret'),
             name='twitterstreaming',
-            access_token_url=self.defaults['access_token_url'],
-            authorize_url=self.defaults['authorize_url'],
-            request_token_url=self.defaults['request_token_url'],
-            base_url=self.defaults['basepath'])
+            access_token_url=self.defaults.get('access_token_url'),
+            authorize_url=self.defaults.get('authorize_url'),
+            request_token_url=self.defaults.get('request_token_url'),
+            base_url=self.defaults.get('basepath'))
         self.timeout = 60
         self.connected = False
 
@@ -1129,7 +1158,7 @@ class TwitterStreamingTab(ApiTab):
         return options
 
     def setOptions(self, options):
-        self.basepathEdit.setEditText(options.get('basepath', self.defaults['basepath']))
+        self.basepathEdit.setEditText(options.get('basepath', self.defaults.get('basepath')))
         self.resourceEdit.setEditText(options.get('resource', 'statuses/filter'))
         self.paramEdit.setParams(options.get('params', {'track': '<Object ID>'}))
 
@@ -1278,10 +1307,8 @@ class OAuth2Tab(ApiTab):
     def __init__(self, mainWindow=None,name='NoName'):
         super(OAuth2Tab, self).__init__(mainWindow, name)
 
-        self.defaults.update({
-                   'login_buttoncaption':" Login ",
-                   'login_window_caption':  "Login Page",
-                   })
+        self.defaults['login_buttoncaption'] = " Login "
+        self.defaults['login_window_caption'] = "Login Page"
 
     def initAuthInputs(self):
         authlayout = QFormLayout()
@@ -1490,21 +1517,24 @@ class YoutubeTab(OAuth2Tab):
 
         super(YoutubeTab, self).__init__(mainWindow, "YouTube")
 
-        self.defaults.update ({
-                   'login_buttoncaption':" Login to Google ",
-                   'login_window_caption':  "YouTube Login Page",
+        # Defaults
+        self.defaults['auth_uri'] = 'https://accounts.google.com/o/oauth2/auth'
+        self.defaults['token_uri'] = "https://accounts.google.com/o/oauth2/token"
+        self.defaults['redirect_uri'] = 'https://localhost' #"urn:ietf:wg:oauth:2.0:oob" #, "http://localhost"
+        self.defaults['scope'] = "https://www.googleapis.com/auth/youtube.readonly" #,"https://www.googleapis.com/auth/youtube.force-ssl"
+        self.defaults['response_type'] = "code"
 
-                   'key_objectid':'id.videoId',
-                   'key_nodedata':'items',
-                   'key_paging':"nextPageToken",
-                   'param_paging':'pageToken',
+        self.defaults['login_buttoncaption'] = " Login to Google "
+        self.defaults['login_window_caption'] = "YouTube Login Page"
 
-                   'auth' : 'api key',
-                   'basepath':"https://www.googleapis.com/youtube/v3/",
-                   'resource':'videos'
-                   })
+        self.defaults['key_objectid'] = 'id.videoId'
+        self.defaults['key_nodedata'] = 'items'
+        self.defaults['key_paging'] = "nextPageToken"
+        self.defaults['param_paging'] = 'pageToken'
 
-
+        self.defaults['auth'] = 'api key'
+        self.defaults['basepath'] = "https://www.googleapis.com/youtube/v3/"
+        self.defaults['resource'] = 'videos'
 
         # Standard inputs
         self.initInputs()
