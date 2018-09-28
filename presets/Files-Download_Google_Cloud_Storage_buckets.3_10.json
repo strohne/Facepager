@@ -1,0 +1,45 @@
+{
+  "description": "This preset works at best together with the preset \"Get information about Google Cloud Storage bucket\", which gets bucket data and creates proper nodes for the files in the bucket. Alternatively you can add names of objects (=filename inside of the bucket) as nodes and set <bucket>-parameter to the name of the bucket.\n\nBefore fetching data create a folder on your computer and select it in the settings.\n\n__Authorization notes__\n\nYou need to register an app at Google Cloud Platform: https://console.cloud.google.com. Enable Cloud Storage JSON API and create OAuth2-Credentials. In Facepager, open the authorization settings (next to Login-button) and provide Client ID and Client Secret fields. Then you are ready to login with Facepager, which gets you an access token. Make sure the header option or param option is selected in the box next to the access token.\n\nAlternatively, you can get a request token from https://developers.google.com/oauthplayground/. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".\n",
+  "module": "Files",
+  "speed": 200,
+  "options": {
+    "verb": "GET",
+    "resource": "storage/v1/b/<bucket>/o/<Object ID>",
+    "objectid": "filename",
+    "headers": {},
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "basepath": "https://www.googleapis.com/",
+    "auth": "param",
+    "filename": "<Object ID>",
+    "fileext": "",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "querytype": "Files:storage/v1/b/<bucket>/o/<Object ID>",
+    "redirect_uri": "https://localhost",
+    "nodedata": null,
+    "scope": "https://www.googleapis.com/auth/devstorage.full_control",
+    "params": {
+      "alt": "media",
+      "<bucket>": "<bucket>"
+    }
+  },
+  "columns": [
+    "kind",
+    "contentType",
+    "name",
+    "timeCreated",
+    "generation",
+    "md5Hash",
+    "bucket",
+    "updated",
+    "crc32c",
+    "metageneration",
+    "mediaLink",
+    "timeStorageClassUpdated",
+    "etag",
+    "size",
+    "id",
+    "selfLink",
+    "storageClass"
+  ],
+  "name": "Download files from Google Cloud Storage buckets"
+}

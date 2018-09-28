@@ -176,10 +176,11 @@ class ApiTab(QWidget):
                 pass
 
         #folder
-        try:
-            options['folder'] = self.folderEdit.text()
-        except AttributeError:
-            pass
+        if purpose != 'preset':
+            try:
+                options['folder'] = self.folderEdit.text()
+            except AttributeError:
+                pass
 
         #options for data handling
         try:
@@ -1322,7 +1323,7 @@ class OAuth2Tab(ApiTab):
         if toggle:
             loginlayout.addWidget(QLabel("Auth"))
             self.authEdit = QComboBox(self)
-            self.authEdit.addItems(['disable','param'])
+            self.authEdit.addItems(['disable','param','header'])
             loginlayout.addWidget(self.authEdit)
 
 
@@ -1406,10 +1407,13 @@ class OAuth2Tab(ApiTab):
 
                 urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
 
-                if options.get('auth','disable') != 'disable':
-                    urlparams["access_token"] = options['access_token']
-
                 requestheaders = options.get('headers',{})
+
+                if options.get('auth','disable') == 'param':
+                    urlparams["access_token"] = options['access_token']
+                elif options.get('auth','disable') == 'header':
+                    requestheaders["Authorization"] = "Bearer "+options['access_token']
+
 
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
@@ -1474,7 +1478,7 @@ class OAuth2Tab(ApiTab):
                 self.tokenEdit.setText(token['access_token'])
 
                 try:
-                    self.authEdit.setCurrentIndex(self.authEdit.findText('param'))
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
                 except AttributeError:
                     pass
 
@@ -1532,7 +1536,7 @@ class YoutubeTab(OAuth2Tab):
 
     def getOptions(self, purpose='fetch'):
         options = super(YoutubeTab, self).getOptions()
-        options['auth'] = 'api key'
+        options['auth'] = 'param'
         return options
 
 
