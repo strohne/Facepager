@@ -177,27 +177,53 @@ Edit virtual machine, in Network Adapter section set network connection to "Brid
 #######
 
 
+NOTE: this will not work, I am stuck with getting QtWebkit to work. I now give up and move to Python3 with PySide2 and Qt5
+
+
 0. Install maxOS in virtual machine
 Follow the steps in https://saintlad.com/install-macos-high-sierra-in-virtualbox-on-windows-10/
 
 If network connection is not available: Edit virtual machine, in Network Adapter section set network connection to "Bridged" instead of "NAT"
 
-Eingeben von eckigen Klammern: Alt+5 / 6.
-Eingeben von @-Zeichen: Alt+L
+Special keys in macOS
+square brackets: Alt+5 / 6.
+@ character: Alt+L
+~ character: Alt+N
 
-1.Prepare system
+Open terminal by typing "terminal" in the spotlight search (top right corner on the screen)
+
+1.Install Python
+
+	High Sierra comes with Python 2.7. However, the settings ar not configured for 
+	development. Better  install a version for development using brew.
+	
+	See https://docs.python-guide.org/starting/install/osx/
+	
 	Install homebrew, type in terminal:	
-	/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+	Install Python2:	
+	$ brew install python@2
+
+	Add new Python to Path:
+	$ export PATH="/usr/local/opt/python@2/libexec/bin:$PATH"
 
 2. Install PySide, type in terminal:		
 
-	brew install qt
-	brew install PySide	
+	We need qt4, which is not easy to install, see https://github.com/cartr/homebrew-qt4
+
+	$ brew tap cartr/qt4
+	$ brew tap-pin cartr/qt4
+	$ brew install qt@4
+	$ brew install qt-webkit@2.3
+
+	You possibly need cmake to install PySide
 	
-	[Check the output, replace USERNAME by your username in the following command]
+	$ brew install cmake	
+	$ brew install PySide	
 	
-	mkdir -p /Users/USERNAME/Library/Python/2.7/lib/python/site-packages
-	echo 'import site; site.addsitedir("/usr/local/lib/python2.7/site-packages")' >> /Users/USERNAME/Library/Python/2.7/lib/python/site-packages/homebrew.pth
+	$ export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
+
 	
 3. Install other packages, type in terminal:
 
