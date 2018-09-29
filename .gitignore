@@ -2,6 +2,8 @@ tools/
 data/
 private/
 misc/
+build/windows/*.exe
+build/osx/*.zip
 src/build
 src/dist
 src/*.pyc
