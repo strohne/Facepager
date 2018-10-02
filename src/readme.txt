@@ -185,10 +185,15 @@ Follow the steps in https://saintlad.com/install-macos-high-sierra-in-virtualbox
 
 If network connection is not available: Edit virtual machine, in Network Adapter section set network connection to "Bridged" instead of "NAT"
 
+To exchange files between host and guest set network connection to bridged, open macos system preferences, search sharing -> files. click options and allow sharing. Note the address of the machine and open this address with windows explorer.
+
+Set display resolution with command line in admin mode: 
+$ VBoxManage setextradata "YOUR_MACHINE_NAME_GOES_HERE" VBoxInternal2/EfiGraphicsResolution 1280x1024
+
 Special keys in macOS
-square brackets: Alt+5 / 6.
-@ character: Alt+L
-~ character: Alt+N
+	square brackets: Alt+5 / 6.
+	@ character: Alt+L
+	~ character: Alt+N
 
 Open terminal by typing "terminal" in the spotlight search (top right corner on the screen)
 
