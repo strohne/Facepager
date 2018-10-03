@@ -207,11 +207,12 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	Install pyenv and python 2.7 (check versions, could be changed)
 
 	$ brew install pyenv
-	# $ pyenv install 2.7
-	$ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 2.7
+	$ pyenv install 2.7
 	$ PATH="~/.pyenv/versions/2.7/bin:${PATH}"
 	$ pyenv global 2.7
 
+	Alternative for pyenv install 2.7:
+	$ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 2.7
 
 	Alternatively install Python2 with brew
 	(might not work with PySide1 or Qt4)	
@@ -223,7 +224,8 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	Install PySide v 1.2.2. because this one has QWebkit
 	pip install -U PySide==1.2.2
 			
-	If dyld-error comes up:
+	If dyld-error comes up (adjust path, one of the following should work:
+	$ export DYLD_LIBRARY_PATH=~/.pyenv/versions/2.7/lib/python2.7/site-packages/PySide
 	$ export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
 
 	Optional: Maybe you need to install qt4 separately,
@@ -236,11 +238,7 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	
 3. Install other packages, type in terminal:
 
-	pip install SQLAlchemy
-	pip install python-dateutil
-	
-	pip install requests_oauthlib	
-	pip install rauth
+	pip install SQLAlchemy python-dateutil requests_oauthlib rauth
 	pip install numpy pandas
 
 	Maybe optional:
