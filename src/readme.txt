@@ -207,7 +207,17 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	Install homebrew, type in terminal:	
 	$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-	Install Python2:	
+	Install pyenv and python 2.7
+
+	$ brew install pyenv
+	# $ pyenv install 2.7
+	$ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 2.7
+	$ PATH="~/.pyenv/versions/2.7/bin:${PATH}"
+	$ pyenv global 2.7
+
+
+	Alternatively install Python2 with brew
+	(might not work with PySide1 or Qt4)	
 	$ brew install python@2
 
 	Add new Python to Path:
