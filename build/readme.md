@@ -20,28 +20,32 @@ Adjust paths and version numbers in
 - src/setup_osx.py
 - build.command
 
-Grant execute permissions to build.command by typing in terminal:
-  $chmod a+rwx build.command
-
-To show hidden files execute in terminal, then Alt+RightClick Finder and choose "Relaunch"
-    $defaults write com.apple.finder AppleShowAllFiles YES
-
-To edit files install text editor, e.g. sublime text	
 Run build.command by double clicking in Finder or in terminal
 
 
 Hints for solving errors:
-- run in interactive mode and open debugger, see
+- Test  alias mode:
+	python setup_osx.py py2app -A
+
+- Grant execute permissions to build.command by typing in terminal:
+  $chmod a+rwx build.command
+
+- To show hidden files execute in terminal, then Alt+RightClick Finder and choose "Relaunch"
+    $defaults write com.apple.finder AppleShowAllFiles YES
+
+- To edit files install text editor, e.g. sublime text		
+
+- After running py2app run the built from command line or double click, e.g. from
+  ~/Documents/GitHub/Facepager/dist/Facepager.app/Contents/MacOS/Facepager
+
+- Run in interactive mode and open debugger, see
   https://stackoverflow.com/questions/16131500/py2app-error-in-find-needed-modules-typeerror-nonetype-object-has-no-attribu
 
   $ python -i setup.py py2app
   $ from pdb import pm; pm()
-"
+  
   "Type up and hit enter - you are now a frame higher in the stack - you can type list to see where in the source code the current frame is positioned, and args to see the arguments passed to the current frame (usually a function or method). You can also run python commands to inspect the current state, and run pp var to pretty-print that variable."
 
-
-- After running py2app run the built from command line, e.g. from
-  ~/Documents/GitHub/Facepager/dist/Facepager.app/Contents/MacOS/Facepager
 
 
 # How to deploy builds

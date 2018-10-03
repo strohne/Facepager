@@ -221,12 +221,11 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	$ brew tap-pin cartr/qt4
 	$ brew install qt@4
 	$ brew install qt-webkit@2.3
-
-	You possibly need cmake to install PySide
 	
-	$ brew install cmake	
-	$ brew install PySide	
-	
+	Install PySide v 1.2.2. because this one has QWebkit
+	pip install -U PySide==1.2.2
+			
+	If dyld-error comes up:
 	$ export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
 
 	
@@ -250,4 +249,6 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	  
     - Create credentials.py (see above)
 
-5. Launch Facepager.py (with python launcher, not in terminal)
+5. Launch Facepager.py
+	
+	$ python Facepager.py
