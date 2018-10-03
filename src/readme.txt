@@ -177,9 +177,6 @@ Edit virtual machine, in Network Adapter section set network connection to "Brid
 #######
 
 
-NOTE: this will not work, I am stuck with getting QtWebkit to work. I now give up and move to Python3 with PySide2 and Qt5
-
-
 0. Install maxOS in virtual machine
 Follow the steps in https://saintlad.com/install-macos-high-sierra-in-virtualbox-on-windows-10/
 
