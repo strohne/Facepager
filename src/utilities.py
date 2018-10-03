@@ -4,6 +4,8 @@ import os,sys,platform
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
         folder = os.path.dirname(sys.executable)
+    elif getattr(sys, 'frozen', False) and (platform.system() == 'Darwin'):
+        folder = sys._MEIPASS
     else:
         folder = os.getcwd()
 

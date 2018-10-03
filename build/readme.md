@@ -12,9 +12,44 @@ Adjust paths and version numbers in
 
 Run build.bat
 
-## OS X El Capitan
+## OS X El Capitan and High Sierra
 
 Setup Facepager to run in your environment, see src/readme.txt
+
+Optional: Install upx: brew install upx
+
+Adjust paths and version numbers in build.pyinstaller.command
+
+Run build.pyinstaller.command by double clicking in Finder or execute in terminal
+
+You can set the icon of the unix distributable by right clicking -> get info -> drag icon.icns file to top left corner.
+
+Hints for solving errors:
+
+- Grant execute permissions to build.pyinstallercommand by typing in terminal:
+  $chmod a+rwx build.pyinstaller.command
+
+- If dyld-error comes up (check and adjust path if necessary):
+  $ export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
+
+- Create the build from scr-directory in folder-mode:
+
+	pyinstaller --log-level=WARN --noconfirm --upx-dir=/usr/local/bin/ \
+	    --name "Facepager" \
+	    --add-data "docs:docs" \
+	    --add-data "ssl:ssl" \
+	    --icon "icon.icns" \
+	    Facepager.py 
+
+	If everthing works add options: --onefile --windowed
+	Then create new spec file by replacing pyinstaller with py-makespec
+
+- To show hidden files execute in terminal, then Alt+RightClick Finder and choose "Relaunch"
+    $defaults write com.apple.finder AppleShowAllFiles YES
+
+- To edit files install text editor, e.g. sublime text		
+
+Previously, Facepager was built using py2app. Here are the old instructions:
 
 Adjust paths and version numbers in
 - src/setup_osx.py
@@ -22,22 +57,11 @@ Adjust paths and version numbers in
 
 Run build.command by double clicking in Finder or in terminal
 
-
 Hints for solving errors:
 - Test  alias mode:
 	python setup_osx.py py2app -A
-
-- Grant execute permissions to build.command by typing in terminal:
-  $chmod a+rwx build.command
-
-- To show hidden files execute in terminal, then Alt+RightClick Finder and choose "Relaunch"
-    $defaults write com.apple.finder AppleShowAllFiles YES
-
-- To edit files install text editor, e.g. sublime text		
-
 - After running py2app run the built from command line or double click, e.g. from
   ~/Documents/GitHub/Facepager/dist/Facepager.app/Contents/MacOS/Facepager
-
 - Run in interactive mode and open debugger, see
   https://stackoverflow.com/questions/16131500/py2app-error-in-find-needed-modules-typeerror-nonetype-object-has-no-attribu
 
