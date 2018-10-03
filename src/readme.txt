@@ -204,7 +204,7 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	Install homebrew, type in terminal:	
 	$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-	Install pyenv and python 2.7
+	Install pyenv and python 2.7 (check versions, could be changed)
 
 	$ brew install pyenv
 	# $ pyenv install 2.7
@@ -216,18 +216,9 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	Alternatively install Python2 with brew
 	(might not work with PySide1 or Qt4)	
 	$ brew install python@2
-
-	Add new Python to Path:
 	$ export PATH="/usr/local/opt/python@2/libexec/bin:$PATH"
 
 2. Install PySide, type in terminal:		
-
-	We need qt4, which is not easy to install, see https://github.com/cartr/homebrew-qt4
-
-	$ brew tap cartr/qt4
-	$ brew tap-pin cartr/qt4
-	$ brew install qt@4
-	$ brew install qt-webkit@2.3
 	
 	Install PySide v 1.2.2. because this one has QWebkit
 	pip install -U PySide==1.2.2
@@ -235,16 +226,26 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	If dyld-error comes up:
 	$ export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
 
+	Optional: Maybe you need to install qt4 separately,
+	see https://github.com/cartr/homebrew-qt4
+
+	$ brew tap cartr/qt4
+	$ brew tap-pin cartr/qt4
+	$ brew install qt@4
+	$ brew install qt-webkit@2.3
 	
 3. Install other packages, type in terminal:
 
 	pip install SQLAlchemy
 	pip install python-dateutil
-	pip install requests
-	pip install requests_oauthlib
-	pip install -U requests[security]==2.7.0
+	
+	pip install requests_oauthlib	
 	pip install rauth
-	pip install pandas
+	pip install numpy pandas
+
+	Maybe optional:
+	pip install requests
+	pip install -U requests[security]==2.7.0
 	
 
 4. Install Facepager
