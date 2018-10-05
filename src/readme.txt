@@ -211,7 +211,7 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	$ PATH="~/.pyenv/versions/2.7/bin:${PATH}"
 	$ pyenv global 2.7
 
-	Alternative for pyenv install 2.7:
+	Alternative for "pyenv install 2.7":
 	$ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 2.7
 
 	Alternatively install Python2 with brew
