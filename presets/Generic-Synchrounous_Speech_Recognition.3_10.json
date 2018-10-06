@@ -14,7 +14,7 @@
     "headers": {},
     "verb": "POST",
     "params": {},
-    "scope": "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloud-language",
+    "scope":  "https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/devstorage.read_write https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloud-language",
     "nodedata": "results",
     "payload": "{\n\"config\": {\n  \"encoding\":\"FLAC\",\n  \"languageCode\": \"en-US\",\n  \"enableWordTimeOffsets\": false,\n  maxAlternatives:2\n  },\n\"audio\":{\n  \"content\":\"<Object ID|file|base64>\"\n  }\n}"
   },

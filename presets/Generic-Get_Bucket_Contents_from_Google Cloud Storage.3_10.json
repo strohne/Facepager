@@ -13,7 +13,7 @@
     "headers": {},
     "verb": "GET",
     "params": {},
-    "scope": "https://www.googleapis.com/auth/devstorage.full_control",
+    "scope":  "https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/devstorage.read_write https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloud-language",
     "nodedata": "items",
     "folder": "C:\\Users\\Jakob\\Facepager\\audio",
     "querytype": "Generic:https://www.googleapis.com/storage/v1/b/<Object ID>/o"

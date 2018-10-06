@@ -1,5 +1,5 @@
 {
-  "description": "Add the filename as node, e.g. \"amazing-speech.flac\".\nSelect the folder where the file resides.\nSet <bucket> parameter to the name of you bucket, e.g. \"myfancyusername-myfancybucket\".\n\nThe content-type of the file must be audio/x-flac. For information about other file formats see https://cloud.google.com/speech-to-text/docs/reference/rest/v1/RecognitionConfig#AudioEncoding\n\nCheck the result at https://console.cloud.google.com/storage/browser.\n\n__Authorization notes__\n\nYou need to register an app at Google Cloud Platform: https://console.cloud.google.com. Enable Cloud Storage JSON API and create OAuth2-Credentials. In Facepager, open the authorization settings (next to Login-button) and provide Client ID and Client Secret fields. Then you are ready to login with Facepager, which gets you an access token. Make sure the header option or param option is selected in the box next to the access token.\n\nAlternatively, you can get a request token from https://developers.google.com/oauthplayground/. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".\n",
+  "description": "Select the folder where the file resides.  In the dialog make sure to check the option \"Add files as nodes\". Alternatively, you can manually add filenames afterwards, e.g. \"amazing-speech.flac\".\n\nSet <bucket> parameter to the name of you bucket, e.g. \"myfancyusername-myfancybucket\".\n\nThe content-type of the file must be audio/x-flac. For information about other file formats see https://cloud.google.com/speech-to-text/docs/reference/rest/v1/RecognitionConfig#AudioEncoding\n\nCheck the result at https://console.cloud.google.com/storage/browser.\n\n__Authorization notes__\n\nYou need to register an app at Google Cloud Platform: https://console.cloud.google.com. Enable Cloud Storage JSON API and create OAuth2-Credentials. In Facepager, open the authorization settings (next to Login-button) and provide Client ID and Client Secret fields. Then you are ready to login with Facepager, which gets you an access token. Make sure the header option or param option is selected in the box next to the access token.\n\nAlternatively, you can get a request token from https://developers.google.com/oauthplayground/. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".\n",
   "module": "Generic",
   "speed": 200,
   "options": {
@@ -20,7 +20,7 @@
       "<bucket>": "myfancyusername-myfancybucket",
       "name": "<Object ID>"
     },
-    "scope": "https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/devstorage.read_write",
+    "scope": "https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/devstorage.read_write https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloud-language",
     "nodedata": "items",
     "payload": "<Object ID|file>"
   },
