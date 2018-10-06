@@ -19,8 +19,8 @@ from requests_oauthlib import OAuth2Session
 
 import dateutil.parser
 
+from folder import SelectFolderDialog
 from paramedit import *
-
 from utilities import *
 
 from credentials import *
@@ -387,7 +387,7 @@ class ApiTab(QWidget):
         #Download folder
         self.folderwidget = QWidget()
         folderlayout = QHBoxLayout()
-        folderlayout .setContentsMargins(0,0,0,0)
+        folderlayout.setContentsMargins(0,0,0,0)
         self.folderwidget.setLayout(folderlayout)
 
         self.folderEdit = QLineEdit()
@@ -698,9 +698,15 @@ class ApiTab(QWidget):
             return data, dict(response.headers), status
 
     def selectFolder(self):
-        datadir = self.mainWindow.settings.value('lastpath', os.path.expanduser('~'))
-        self.folderEdit.setText(
-            QFileDialog.getExistingDirectory(self, 'Select Download Folder', datadir, QFileDialog.ShowDirsOnly))
+        datadir = self.folderEdit.text() if self.folderEdit.text() != '' else self.mainWindow.settings.value('lastpath', os.path.expanduser('~'))
+        dlg = SelectFolderDialog(self, 'Select Download Folder', datadir)
+        if dlg.exec_():
+            folder = dlg.selectedFiles()[0]
+            self.folderEdit.setText(folder)
+            if dlg.optionNodes.isChecked():
+                newnodes = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+                self.mainWindow.tree.treemodel.addNodes(newnodes)
+            
 
 class FacebookTab(ApiTab):
     def __init__(self, mainWindow=None):
@@ -1619,7 +1625,6 @@ class FilesTab(OAuth2Tab):
         layout.addWidget(QLabel("Custom file extension"))
         layout.addWidget(self.fileextEdit)
         layout.setStretch(2, 1);
-
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FilesTab, self).getOptions(purpose)
