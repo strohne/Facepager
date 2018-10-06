@@ -859,17 +859,22 @@ class FacebookTab(ApiTab):
 
     @Slot()
     def doLogin(self, query=False, caption="Facebook Login Page",url=""):
-        #use credentials from input if provided
-        clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
-        scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
-        
-        
-        if clientid  == '':
-             raise Exception('Client ID missing, please adjust settings!')
-        
-        url = self.defaults['auth_uri'] +"?client_id=" + clientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
-
-        super(FacebookTab, self).doLogin(query, caption, url)
+        try:
+            #use credentials from input if provided
+            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+            scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
+            
+            
+            if clientid  == '':
+                 raise Exception('Client ID missing, please adjust settings!')
+            
+            url = self.defaults['auth_uri'] +"?client_id=" + clientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
+    
+            super(FacebookTab, self).doLogin(query, caption, url)
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                            unicode(e.message),
+                                            QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
     def getToken(self,url):
@@ -1060,7 +1065,7 @@ class TwitterTab(ApiTab):
             super(TwitterTab, self).doLogin(query, caption, self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            u"Login canceled. Check you Consumer Key and Consumer Secret. Error Message: {0}".format(e.message),
+                                            unicode(e.message),
                                             QMessageBox.StandardButton.Ok)
 
 
@@ -1279,18 +1284,22 @@ class TwitterStreamingTab(ApiTab):
 
     @Slot()
     def doLogin(self, query=False, caption="Twitter Login Page", url=""):
-        self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults.get('consumer_key','')
-        self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults.get('consumer_secret','')
-        if self.twitter.consumer_key  == '' or self.twitter.consumer_secret == '':
-             raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
-            
-        self.oauthdata.pop('oauth_verifier', None)
-        self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
-            verify=False)
-
-        super(TwitterStreamingTab, self).doLogin(query, caption,
-                                                 self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
-
+        try:
+            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults.get('consumer_key','')
+            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults.get('consumer_secret','')
+            if self.twitter.consumer_key  == '' or self.twitter.consumer_secret == '':
+                 raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
+                
+            self.oauthdata.pop('oauth_verifier', None)
+            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
+                verify=False)
+    
+            super(TwitterStreamingTab, self).doLogin(query, caption,
+                                                     self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                            unicode(e.message),
+                                            QMessageBox.StandardButton.Ok)
 
     @Slot()
     def getToken(self):
@@ -1462,32 +1471,40 @@ class OAuth2Tab(ApiTab):
 
     @Slot()
     def doLogin(self):
-        options = self.getOptions()
+        try:
+            options = self.getOptions()
+    
+            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
+            loginurl = options.get('auth_uri','')
+                   
+            if loginurl  == '':
+                raise Exception('Login URL is missing, please adjust settings!')
 
-        clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
-        scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
-               
-        if clientid  == '':
-            raise Exception('Client Id is missing, please adjust settings!')
-                    
-        self.session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'],scope=scope)        
-        params = {'client_id':clientid,
-                  'redirect_uri':options['redirect_uri'],
-                  'response_type':options.get('response_type','code')}
-
-        if scope is not None:
-            params['scope'] = scope
-
-        params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
-        url = options['auth_uri'] + "?"+params
-
-        super(OAuth2Tab, self).doLogin(False,
-                                       self.defaults.get('login_window_caption','Login'),
-                                       url,
-                                       self.defaults.get('login_window_width',600),
-                                       self.defaults.get('login_window_height',600)
-                                       )
-
+            if clientid  == '':
+                raise Exception('Client Id is missing, please adjust settings!')
+                        
+            self.session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'],scope=scope)        
+            params = {'client_id':clientid,
+                      'redirect_uri':options['redirect_uri'],
+                      'response_type':options.get('response_type','code')}
+    
+            if scope is not None:
+                params['scope'] = scope
+    
+            params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
+            url = loginurl + "?"+params
+    
+            super(OAuth2Tab, self).doLogin(False,
+                                           self.defaults.get('login_window_caption','Login'),
+                                           url,
+                                           self.defaults.get('login_window_width',600),
+                                           self.defaults.get('login_window_height',600)
+                                           )
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                            unicode(e.message),
+                                            QMessageBox.StandardButton.Ok)
     @Slot(QUrl)
     def getToken(self,url):
         options = self.getOptions()
