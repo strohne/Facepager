@@ -16,13 +16,17 @@ Run build.bat
 
 Setup Facepager to run in your environment, see src/readme.txt
 
-Optional: Install upx: brew install upx
+Install pyinstaller:
+	$ pip install pyinstaller
+	
+Install upx (optional)
+	$ brew install upx
 
 Adjust paths and version numbers in build.pyinstaller.command
 
 Run build.pyinstaller.command by double clicking in Finder or execute in terminal
 
-You can set the icon of the unix distributable by right clicking -> get info -> drag icon.icns file to top left corner.
+[Obsolete: You can set the icon of the unix distributable by right clicking -> get info -> drag icon.icns file to top left corner.]
 
 Hints for solving errors:
 
