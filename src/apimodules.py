@@ -264,6 +264,12 @@ class ApiTab(QWidget):
         except AttributeError:
             pass
         
+        #Folder
+        try:
+            self.folderEdit.setText(options.get('folder',self.defaults.get('folder','')))
+        except AttributeError:
+            pass
+                
         # Paging
         try:
             self.pagesEdit.setValue(int(options.get('pages', 1)))
@@ -698,7 +704,10 @@ class ApiTab(QWidget):
             return data, dict(response.headers), status
 
     def selectFolder(self):
-        datadir = self.folderEdit.text() if self.folderEdit.text() != '' else self.mainWindow.settings.value('lastpath', os.path.expanduser('~'))
+        datadir = self.folderEdit.text()
+        datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', '')) if datadir == '' else datadir 
+        datadir = os.path.expanduser('~') if datadir == '' else datadir        
+        
         dlg = SelectFolderDialog(self, 'Select Download Folder', datadir)
         if dlg.exec_():
             folder = dlg.selectedFiles()[0]
