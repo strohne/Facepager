@@ -224,9 +224,9 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	Install PySide v 1.2.2. because this one has QWebkit
 	pip install -U PySide==1.2.2
 			
-	If dyld-error comes up (adjust path, one of the following should work:
-	$ export DYLD_LIBRARY_PATH=~/.pyenv/versions/2.7/lib/python2.7/site-packages/PySide
+	If dyld-error comes up (adjust path, one of the following should work):
 	$ export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
+	$ export DYLD_LIBRARY_PATH=~/.pyenv/versions/2.7/lib/python2.7/site-packages/PySide	
 
 	Optional: Maybe you need to install qt4 separately,
 	see https://github.com/cartr/homebrew-qt4
