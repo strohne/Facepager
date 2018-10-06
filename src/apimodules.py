@@ -251,7 +251,7 @@ class ApiTab(QWidget):
         try:
             self.basepathEdit.setEditText(options.get('basepath', self.defaults.get('basepath','')))
             self.resourceEdit.setEditText(options.get('resource', self.defaults.get('resource','')))
-            self.paramEdit.setParams(options.get('params', {}))
+            self.paramEdit.setParams(options.get('params',self.defaults.get('params','')))
         except AttributeError:
             pass
 
@@ -1097,8 +1097,8 @@ class TwitterStreamingTab(ApiTab):
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
         self.defaults['basepath'] = 'https://stream.twitter.com/1.1/'
-        #self.defaults['resource'] = 'search/tweets'
-        #self.defaults['params'] = {'q': '<Object ID>'}        
+        self.defaults['resource'] = 'statuses/filter'
+        self.defaults['params'] = {'track': '<Object ID>'}        
         self.defaults['objectid'] = 'id'
         self.defaults['nodedata'] = None
         
@@ -1549,7 +1549,8 @@ class YoutubeTab(OAuth2Tab):
 
         self.defaults['auth'] = 'param'
         self.defaults['basepath'] = "https://www.googleapis.com/youtube/v3/"
-        self.defaults['resource'] = 'videos'
+        self.defaults['resource'] = 'search'
+        self.defaults['params'] = {'q':'<Object ID>','part':'snippet','maxResults':'50'}
 
         # Standard inputs
         self.initInputs()
