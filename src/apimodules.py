@@ -23,13 +23,13 @@ from paramedit import *
 
 from utilities import *
 
-#from credentials import *
-import imp
-try:
-    imp.find_module('credentials')
-    from credentials import *
-except ImportError:
-    credentials = {}
+from credentials import *
+#import imp
+#try:
+#    imp.find_module('credentials')
+#    from credentials import *
+#except ImportError:
+#    credentials = {}
 
 class ApiTab(QWidget):
     """
