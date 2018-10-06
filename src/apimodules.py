@@ -54,7 +54,7 @@ class ApiTab(QWidget):
         self.authWidget = QWidget()
 
         try:
-            self.defaults = credentials.get(name.lower(),{})
+            self.defaults = credentials.get(name.lower().replace(' ','_'),{})
         except NameError:
             self.defaults = {}
 
@@ -155,7 +155,7 @@ class ApiTab(QWidget):
         else:
             return self.parsePlaceholders(payload, nodedata, params,options)
 
-
+    # Gets data from input fields or defaults (never gets credentials from default values!)
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
 
@@ -174,20 +174,19 @@ class ApiTab(QWidget):
         except AttributeError:
             pass
 
-        #payload
-        if options.get('verb','GET') == 'POST':
-            try:
+        #payload        
+        try:
+            if options.get('verb','GET') == 'POST':
                 options['payload'] = self.payloadEdit.toPlainText()
-            except AttributeError:
-                pass
+        except AttributeError:
+            pass
 
-        #folder
-        if purpose != 'preset':
-            try:
-                options['folder'] = self.folderEdit.text()
-            except AttributeError:
-                pass
-
+        #paging
+        try:
+            options['pages'] = self.pagesEdit.value()
+        except AttributeError:
+            pass
+        
         #options for data handling
         try:
             options['nodedata'] = self.extractEdit.currentText() if self.extractEdit.currentText() != "" else self.defaults.get('key_objectid',None)
@@ -196,53 +195,61 @@ class ApiTab(QWidget):
             options['objectid'] = self.defaults.get('key_objectid',None)
             options['nodedata'] = self.defaults.get('key_nodedata',None)
 
-        #paging
+        # Scopes
         try:
-            options['pages'] = self.pagesEdit.value()
+            options['scope'] = self.scopeEdit.text().strip()
         except AttributeError:
-            pass
-
-        # query type
+            pass    
+            
+        # Options not saved to preset but to settings
         if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+            # query type
+            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()            
+
+            # folder
+            try:
+                options['folder'] = self.folderEdit.text()
+            except AttributeError:
+                pass            
+            
+            # Credentials from input fields (not from defaults)
+            try:
+                options['access_token'] = self.tokenEdit.text()
+            except AttributeError:
+                pass            
+
+            try:
+                options['access_token_secret'] = self.tokensecretEdit.text()
+            except AttributeError:
+                pass    
+                        
+            try:
+                options['client_id'] = self.clientIdEdit.text()
+            except AttributeError:
+                pass            
+
+            try:
+                options['client_secret'] = self.clientSecretEdit.text()
+            except AttributeError:
+                pass       
+            
+            try:
+                options['consumer_key'] = self.consumerKeyEdit.text()
+            except AttributeError:
+                pass            
+
+            try:
+                options['consumer_secret'] = self.consumerSecretEdit.text()
+            except AttributeError:
+                pass            
 
         return options
 
+    # Populates input fields from loaded options, presets and default values 
     def setOptions(self, options):
-        if options.has_key('client_id'):
-            self.clientIdEdit.setText(options.get('client_id',''))
-        if options.has_key('client_secret'):
-            self.clientSecretEdit.setText(options.get('client_secret',''))
-
-        if 'access_token' in options:
-            self.tokenEdit.setText(options.get('access_token', ''))
-
-        # access_token_secret
-        try:
-            self.tokensecretEdit.setText(options.get('access_token_secret', ''))
-        except AttributeError:
-            pass
-
-        # Consumer key and secret
-        try:
-            self.consumerKeyEdit.setText(options.get('consumer_key',''))
-            self.consumerSecretEdit.setText(options.get('consumer_secret',''))
-        except AttributeError:
-            pass
-
-        # Paging
-        try:
-            self.pagesEdit.setValue(int(options.get('pages', 1)))
-        except AttributeError:
-            pass
-
         # URLs
         try:
-            #define default values
-            if options.get('basepath','') == '':
-                options['basepath'] = self.defaults.get('basepath','')
-
-            self.basepathEdit.setEditText(options.get('basepath', ''))
+            self.basepathEdit.setEditText(options.get('basepath', self.defaults.get('basepath','')))
             self.resourceEdit.setEditText(options.get('resource', self.defaults.get('resource','')))
             self.paramEdit.setParams(options.get('params', {}))
         except AttributeError:
@@ -256,6 +263,12 @@ class ApiTab(QWidget):
             self.verbChanged()
         except AttributeError:
             pass
+        
+        # Paging
+        try:
+            self.pagesEdit.setValue(int(options.get('pages', 1)))
+        except AttributeError:
+            pass
 
         # Extract options
         try:
@@ -263,6 +276,30 @@ class ApiTab(QWidget):
             self.objectidEdit.setEditText(options.get('objectid', ''))
         except AttributeError:
             pass
+                
+        #Scope
+        try:
+            self.scopeEdit.setText(options.get('scope',self.defaults.get('scope','')))
+        except AttributeError:
+            pass
+                
+        # Credentials
+        try:
+            if 'access_token' in options:
+                self.tokenEdit.setText(options.get('access_token', ''))
+            if 'access_token_secret' in options:
+                self.tokensecretEdit.setText(options.get('access_token_secret', ''))
+            if 'client_id' in options:
+                self.clientIdEdit.setText(options.get('client_id',''))
+            if 'client_secret' in options:
+                self.clientSecretEdit.setText(options.get('client_secret',''))
+            if 'consumer_key' in options:
+                self.consumerKeyEdit.setText(options.get('consumer_key', ''))
+            if 'consumer_secret' in options:
+                self.consumerSecretEdit.setText(options.get('consumer_secret', ''))                                
+        except AttributeError:
+            pass
+
 
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_" + self.name)
@@ -672,9 +709,12 @@ class FacebookTab(ApiTab):
         #Defaults
         self.defaults['scope'] = '' #user_groups
         self.defaults['basepath'] = 'https://graph.facebook.com/v2.10/'
+        self.defaults['resource'] = '<Object ID>'
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
-
+        self.defaults['objectid'] = 'id'
+        self.defaults['nodedata'] = 'data'
+            
         # Query Box
         self.initInputs()
 
@@ -718,38 +758,17 @@ class FacebookTab(ApiTab):
         authlayout.addRow("Scopes",self.scopeEdit)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(FacebookTab, self).getOptions()
-
-        # options for request
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
-            options['access_token'] = self.tokenEdit.text()
-            options['client_id'] = self.clientIdEdit.text()
-
-        options['scope'] = self.scopeEdit.text().strip()
+        options = super(FacebookTab, self).getOptions(purpose)
 
         # options for data handling
         if purpose == 'fetch':
-            options['objectid'] = 'id'
             options['nodedata'] = 'data' if ('/' in options['resource']) or (options['resource'] == 'search') else None
 
         return options
 
-    def setOptions(self, options):
-        #set values
-        self.resourceEdit.setEditText(options.get('resource', '<Object ID>'))
-        self.pagesEdit.setValue(int(options.get('pages', 1)))
-
-        self.basepathEdit.setEditText(options.get('basepath'))
-        self.scopeEdit.setText(options.get('scope'))
-        self.paramEdit.setParams(options.get('params', {}))
-
-        # set Access-tokens,use generic method from APITab
-        super(FacebookTab, self).setOptions(options)
-
     def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
     # Preconditions
-        if options['access_token'] == '':
+        if options.get('access_token','') == '':
             raise Exception('Access token is missing, login please!')
         self.connected = True
         self.speed = options.get('speed',None)
@@ -826,9 +845,14 @@ class FacebookTab(ApiTab):
     @Slot()
     def doLogin(self, query=False, caption="Facebook Login Page",url=""):
         #use credentials from input if provided
-        facebookclientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults['client_id']
-        scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults['scope']
-        url = self.defaults['auth_uri'] +"?client_id=" + facebookclientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
+        clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+        scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
+        
+        
+        if clientid  == '':
+             raise Exception('Client ID missing, please adjust settings!')
+        
+        url = self.defaults['auth_uri'] +"?client_id=" + clientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
 
         super(FacebookTab, self).doLogin(query, caption, url)
 
@@ -848,10 +872,14 @@ class TwitterTab(ApiTab):
 
         # Defaults
         self.defaults['basepath'] = 'https://api.twitter.com/1.1/'
+        self.defaults['resource'] = 'search/tweets'
+        self.defaults['params'] = {'q': '<Object ID>'}
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
-
+        self.defaults['objectid'] = 'id'
+        self.defaults['nodedata'] = None
+        
         # Query and Parameter Box
         self.initInputs()
         self.initPagingInputs()
@@ -912,21 +940,11 @@ class TwitterTab(ApiTab):
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
 
-        options = super(TwitterTab, self).getOptions()
+        options = super(TwitterTab, self).getOptions(purpose)
 
-        # options for request
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
-            options['access_token'] = self.tokenEdit.text()
-            options['access_token_secret'] = self.tokensecretEdit.text()
-            options['consumer_key'] = self.consumerKeyEdit.text()
-            options['consumer_secret'] = self.consumerSecretEdit.text()
 
         # options for data handling
         if purpose == 'fetch':
-            #options['basepath'] =  "https://api.twitter.com/1.1/"
-            options['objectid'] = 'id'
-
             if options["resource"] == 'search/tweets':
                 options['nodedata'] = 'statuses'
             elif options["resource"] == 'followers/list':
@@ -939,14 +957,6 @@ class TwitterTab(ApiTab):
                 options['nodedata'] = None
 
         return options
-
-
-    def setOptions(self, options):
-        super(TwitterTab, self).setOptions(options)
-
-        self.resourceEdit.setEditText(options.get('resource', 'search/tweets'))
-        self.paramEdit.setParams(options.get('params', {'q': '<Object ID>'}))
-        self.pagesEdit.setValue(int(options.get('pages', 1)))
 
     def initSession(self):
         if hasattr(self, "session"):
@@ -1021,9 +1031,12 @@ class TwitterTab(ApiTab):
     @Slot()
     def doLogin(self, query=False, caption="Twitter Login Page", url=""):
         try:
-            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults['consumer_key']
-            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults['consumer_secret']
+            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults.get('consumer_key')
+            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults.get('consumer_secret')
 
+            if self.twitter.consumer_key  == '' or self.twitter.consumer_secret == '':
+                raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
+            
             self.oauthdata.pop('oauth_verifier', None)
             self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
                 verify=False)
@@ -1060,18 +1073,15 @@ class TwitterStreamingTab(ApiTab):
     def __init__(self, mainWindow=None):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
-        # Defaults
-        try:
-            self.defaults = credentials.get('twitter_streaming',{})
-        except NameError:
-            self.defaults = {}
-
-
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
         self.defaults['basepath'] = 'https://stream.twitter.com/1.1/'
-
+        #self.defaults['resource'] = 'search/tweets'
+        #self.defaults['params'] = {'q': '<Object ID>'}        
+        self.defaults['objectid'] = 'id'
+        self.defaults['nodedata'] = None
+        
         # Query Box
         self.initInputs()
         self.initAuthInputs()
@@ -1131,21 +1141,10 @@ class TwitterStreamingTab(ApiTab):
         authlayout.addRow("Consumer Secret",self.consumerSecretEdit)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(TwitterStreamingTab, self).getOptions()
-
-        # options for request
-
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
-            options['access_token'] = self.tokenEdit.text()
-            options['access_token_secret'] = self.tokensecretEdit.text()
-            options['consumer_key'] = self.consumerKeyEdit.text()
-            options['consumer_secret'] = self.consumerSecretEdit.text()
-
+        options = super(TwitterStreamingTab, self).getOptions(purpose)
 
         # options for data handling
-        if purpose == 'fetch':
-            options['objectid'] = 'id'
+        if purpose == 'fetch':            
             if options["resource"] == 'search/tweets':
                 options['nodedata'] = 'statuses'
             elif options["resource"] == 'followers/list':
@@ -1156,15 +1155,7 @@ class TwitterStreamingTab(ApiTab):
                 options['nodedata'] = None
 
         return options
-
-    def setOptions(self, options):
-        self.basepathEdit.setEditText(options.get('basepath', self.defaults.get('basepath')))
-        self.resourceEdit.setEditText(options.get('resource', 'statuses/filter'))
-        self.paramEdit.setParams(options.get('params', {'track': '<Object ID>'}))
-
-        # set Access-tokens,use generic method from APITab
-        super(TwitterStreamingTab, self).setOptions(options)
-
+    
     def initSession(self):
         if hasattr(self, "session"):
             return self.session
@@ -1273,9 +1264,11 @@ class TwitterStreamingTab(ApiTab):
 
     @Slot()
     def doLogin(self, query=False, caption="Twitter Login Page", url=""):
-        self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults['consumer_key']
-        self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults['consumer_secret']
-
+        self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults.get('consumer_key','')
+        self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults.get('consumer_secret','')
+        if self.twitter.consumer_key  == '' or self.twitter.consumer_secret == '':
+             raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
+            
         self.oauthdata.pop('oauth_verifier', None)
         self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
             verify=False)
@@ -1366,15 +1359,7 @@ class OAuth2Tab(ApiTab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(OAuth2Tab, self).getOptions()
-
-
-        # options for request
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
-            options['access_token'] = self.tokenEdit.text()
-            options['client_id'] = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
-            options['client_secret'] = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get('client_secret','')
+        options = super(OAuth2Tab, self).getOptions(purpose)
 
         # OAUTH URIs
         try:
@@ -1389,22 +1374,11 @@ class OAuth2Tab(ApiTab):
         try:
             options['auth'] =  self.authEdit.currentText().strip() if self.authEdit.currentText() != "" else self.defaults.get('auth','disable')
         except AttributeError:
-            pass
-
-
-        options['scope'] = self.scopeEdit.text().strip() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
-
-        # options for data handling
-        if purpose == 'fetch':
-            options['param_paging'] =  self.defaults.get('param_paging',None)
-            options['key_paging'] =  self.defaults.get('key_paging',None)
+            options['auth'] = self.defaults.get('auth','disable')
 
         return options
 
     def setOptions(self, options):
-        #set values
-        self.scopeEdit.setText(options.get('scope'))
-
         try:
             self.authURIEdit.setText(options.get('auth_uri'))
             self.redirectURIEdit.setText(options.get('redirect_uri'))
@@ -1474,13 +1448,20 @@ class OAuth2Tab(ApiTab):
     @Slot()
     def doLogin(self):
         options = self.getOptions()
-        self.session = OAuth2Session(options['client_id'], redirect_uri=options['redirect_uri'],scope=options['scope'])
-        params = {'client_id':options['client_id'],
+
+        clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+        scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
+               
+        if clientid  == '':
+            raise Exception('Client Id is missing, please adjust settings!')
+                    
+        self.session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'],scope=scope)        
+        params = {'client_id':clientid,
                   'redirect_uri':options['redirect_uri'],
                   'response_type':options.get('response_type','code')}
 
-        if options.get('scope',None) is not None:
-            params['scope'] = options['scope']
+        if scope is not None:
+            params['scope'] = scope
 
         params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
         url = options['auth_uri'] + "?"+params
@@ -1498,9 +1479,11 @@ class OAuth2Tab(ApiTab):
 
         if url.toString().startswith(options['redirect_uri']):
             try:
+                clientsecret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get('client_secret','')
+
                 token = self.session.fetch_token(options['token_uri'],
                         authorization_response=str(url.toString()),
-                        client_secret=options['client_secret'])
+                        client_secret=clientsecret)
 
                 self.tokenEdit.setText(token['access_token'])
 
@@ -1532,7 +1515,7 @@ class YoutubeTab(OAuth2Tab):
         self.defaults['key_paging'] = "nextPageToken"
         self.defaults['param_paging'] = 'pageToken'
 
-        self.defaults['auth'] = 'api key'
+        self.defaults['auth'] = 'param'
         self.defaults['basepath'] = "https://www.googleapis.com/youtube/v3/"
         self.defaults['resource'] = 'videos'
 
@@ -1564,11 +1547,6 @@ class YoutubeTab(OAuth2Tab):
         self.scopeEdit = QLineEdit()
         authlayout.addRow("Scopes",self.scopeEdit)
 
-    def getOptions(self, purpose='fetch'):
-        options = super(YoutubeTab, self).getOptions()
-        options['auth'] = 'param'
-        return options
-
 
 class GenericTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
@@ -1592,11 +1570,22 @@ class GenericTab(OAuth2Tab):
         self.loadSettings()
         self.timeout = 30
 
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(GenericTab, self).getOptions(purpose)
+        
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+
+        return options
+
 class FilesTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
         super(FilesTab, self).__init__(mainWindow, "Files")
         self.defaults['basepath'] = '<url>'
 
+        self.defaults['key_objectid'] = 'filename'
+        self.defaults['key_nodedata'] = None        
+        
         #Basic inputs
         self.initInputs()
         self.initHeaderInputs()
@@ -1633,13 +1622,13 @@ class FilesTab(OAuth2Tab):
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(FilesTab, self).getOptions()
+        options = super(FilesTab, self).getOptions(purpose)
+        
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
         options['filename'] = self.filenameEdit.currentText()
         options['fileext'] = self.fileextEdit.currentText()
-
-        options['nodedata'] = None
-        options['objectid'] = 'filename'
 
         return options
 
