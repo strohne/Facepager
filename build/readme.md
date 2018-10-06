@@ -38,15 +38,16 @@ Hints for solving errors:
 
 - Create the build from scr-directory in folder-mode:
 
-	pyinstaller --log-level=WARN --noconfirm --upx-dir=/usr/local/bin/ \
+	pyinstaller --log-level=WARN  \
 	    --name "Facepager" \
+	    --windowed \
 	    --add-data "docs:docs" \
 	    --add-data "ssl:ssl" \
+	    --noupx \
 	    --icon "icon.icns" \
 	    Facepager.py 
 
-	If everthing works add options: --onefile --windowed
-	Then create new spec file by replacing pyinstaller with py-makespec
+	If everthing works create new spec file by replacing pyinstaller with pyi-makespec
 
 - To show hidden files execute in terminal, then Alt+RightClick Finder and choose "Relaunch"
     $defaults write com.apple.finder AppleShowAllFiles YES

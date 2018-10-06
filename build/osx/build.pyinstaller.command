@@ -8,7 +8,7 @@ rm -rf build
 rm -rf dist
 
 export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
-pyinstaller --onefile --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
+pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
 
 cd dist
 zip -r Facepager.app.zip Facepager.app
