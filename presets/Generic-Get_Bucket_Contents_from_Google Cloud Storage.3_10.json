@@ -19,8 +19,10 @@
     "querytype": "Generic:https://www.googleapis.com/storage/v1/b/<Object ID>/o"
   },
   "columns": [
-    "alternatives.0.confidence",
-    "alternatives.0.transcript"
+	"error.message",
+	"id",
+	"selfLink",
+	"updated"
   ],
   "name": "Get contents of bucket from Google Cloud Storage"
 }

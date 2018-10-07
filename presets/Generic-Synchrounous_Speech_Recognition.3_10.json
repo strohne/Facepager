@@ -19,6 +19,7 @@
     "payload": "{\n\"config\": {\n  \"encoding\":\"FLAC\",\n  \"languageCode\": \"en-US\",\n  \"enableWordTimeOffsets\": false,\n  maxAlternatives:2\n  },\n\"audio\":{\n  \"content\":\"<Object ID|file|base64>\"\n  }\n}"
   },
   "columns": [
+    "error.message",
     "alternatives.0.confidence",
     "alternatives.0.transcript"
   ],

@@ -17,6 +17,7 @@
     "nodedata": "response.results"
   },
   "columns": [
+    "error.message",
     "alternatives.0.transcript",
     "alternatives.0.confidence",
     "alternatives.1.transcript",

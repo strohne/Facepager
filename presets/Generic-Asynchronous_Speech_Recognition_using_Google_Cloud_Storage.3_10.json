@@ -18,8 +18,8 @@
     "payload": "{\n\"config\": {\n  \"encoding\":\"FLAC\",\n  \"languageCode\": \"en-US\",\n  \"enableWordTimeOffsets\": false,\n  maxAlternatives:2\n  },\n\"audio\":{\n  \"uri\":\"gs://<bucket>/<name>\"\n  }\n}"
   },
   "columns": [
-    "alternatives.0.confidence",
-    "alternatives.0.transcript"
+	"error.message",
+	"name"
   ],
   "name": "Asynchronous speech recognition using cloud storage"
 }
