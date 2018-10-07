@@ -229,7 +229,10 @@ class Actions(object):
 
         def createNodes():
             newnodes = [node.strip() for node in input.toPlainText().splitlines()]
+            
+            #rowcount = self.mainWindow.tree.treemodel.rowCount(QModelIndex())
             self.mainWindow.tree.treemodel.addNodes(newnodes)
+            #self.mainWindow.tree.selectRow(rowcount)
             dialog.close()
 
         def close():
@@ -318,7 +321,7 @@ class Actions(object):
 
 
     def queryNodes(self, indexes=None, apimodule=False, options=False):
-        if not self.actionQuery.isEnabled() or not ((self.mainWindow.tree.selectedCount > 0) or (indexes is not None)):
+        if not self.actionQuery.isEnabled() or not ((self.mainWindow.tree.selectedCount() > 0) or (indexes is not None)):
             return (False)
 
         #Show progress window
@@ -330,6 +333,7 @@ class Actions(object):
             globaloptions['threads'] = self.mainWindow.threadsEdit.value()
             globaloptions['speed'] = self.mainWindow.speedEdit.value()
             globaloptions['errors'] = self.mainWindow.errorEdit.value()
+            globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
             level = self.mainWindow.levelEdit.value() - 1
@@ -424,8 +428,12 @@ class Actions(object):
                                 continue
 
                             #add data
-                            treenode = job['nodeindex'].internalPointer()
+                            treeindex = job['nodeindex']
+                            treenode = treeindex.internalPointer()
                             treenode.appendNodes(job['data'], job['options'], job['headers'], True)
+                            if options.get('expand',False):
+                                 self.mainWindow.tree.setExpanded(treeindex,True)
+
 
                             #show status
                             status = job['options'].get('querystatus','empty')

@@ -46,6 +46,19 @@ class DataTree(QTreeView):
         indexes = self.selectionModel().selectedRows()
         return(len(indexes))
 
+    def selectRow(self,row = None):
+        #does not work yet because inserts are delayed or i don't know
+        model = self.model()
+        parent = QModelIndex()
+        if row is None:
+            row = model.rowCount(parent)-1
+         
+        index = model.index(row, 0,parent)
+        self.scrollTo(index)
+        self.selectionModel().select(index, QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
+        
+        #self.selectionModel().setCurrentIndex(index,QItemSelectionModel.Rows)
+                
     def noneOrAllSelected(self):
         indexes = self.selectionModel().selectedRows()
 
@@ -112,6 +125,9 @@ class DataTree(QTreeView):
                         addIndex(child)
                         child = index.child(child.row() + 1, 0)
 
+
+        #self.selectionModel().select(self.selectionModel().selection(), QItemSelectionModel.Rows | QItemSelectionModel.Current)
+        
         for index in self.selectionModel().selectedRows():
             addIndex(index)
 
@@ -264,6 +280,7 @@ class TreeItem(object):
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
+                    
 
     def unpackList(self, key):
         dbnode = Node.query.get(self.id)
@@ -342,11 +359,12 @@ class TreeModel(QAbstractItemModel):
 
 
     def addNodes(self, objectids):
+        
         try:
             if not self.database.connected:
                 return False
 
-            #self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(facebookids)-1)
+            #self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(objectids)-1)
             newnodes = []
             for objectid in objectids:
                 new = Node(objectid)
@@ -359,11 +377,13 @@ class TreeModel(QAbstractItemModel):
             self.database.session.add_all(newnodes)
             self.database.session.commit()
             self.rootItem._childcountall += len(objectids)
+            
             self.layoutChanged.emit()
 
             #self.endInsertRows()
         except Exception as e:
             QMessageBox.critical(self, "Facepager", str(e))
+        
 
 
     def commitNewNodes(self, delaycommit=False):
