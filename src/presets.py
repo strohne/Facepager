@@ -225,19 +225,20 @@ class PresetWindow(QDialog):
             data['default'] = default
             data['online'] = online
 
-            if (data.get('module') in ['Generic','Files']):
-                try:
-                    data['caption'] = data.get('name')
-                    data['category'] = data.get('module') + " ("+urlparse(data['options']['basepath']).netloc+")"
-                except:
-                    data['caption'] = data.get('name')
-                    data['category'] = data.get('module')
-            else:
-                data['caption'] = data.get('name')
-                data['category'] = data.get('module')
-
+            data['caption'] = data.get('name')
             if default:
                 data['caption'] = data['caption'] +" *"
+
+            data['category'] = data.get('category','')
+            if (data['category'] == ''):           
+                if (data.get('module') in ['Generic','Files']):
+                    try:                    
+                        data['category'] = data.get('module') + " ("+urlparse(data['options']['basepath']).netloc+")"
+                    except:
+                        data['category'] = data.get('module')
+                else:
+                    data['category'] = data.get('module')
+
 
             if not data['category'] in self.categoryNodes:
                 categoryItem = PresetWidgetItem()
@@ -335,7 +336,7 @@ class PresetWindow(QDialog):
                 if self.lastSelected is not None and (self.lastSelected == unicode(os.path.join(self.presetFolder,filename))):
                     selectitem = newitem
 
-        self.presetList.expandAll()
+        #self.presetList.expandAll()
         self.presetList.setFocus()
         self.presetList.sortItems(0,Qt.AscendingOrder)
 
@@ -417,9 +418,15 @@ class PresetWindow(QDialog):
         name.setText(self.currentData.get('name',''))
         layout.addWidget(name,0)
 
+        label=QLabel("<b>Category</b>")
+        layout.addWidget(label)
+        category=QLineEdit()
+        category.setText(self.currentData.get('category',''))
+        layout.addWidget(category,0)
+
+
         label=QLabel("<b>Description</b>")
         layout.addWidget(label)
-
         description=QTextEdit()
         description.setMinimumWidth(500)
         description.acceptRichText=False
@@ -449,6 +456,7 @@ class PresetWindow(QDialog):
 
             data_meta = {
                     'name':name.text(),
+                    'category':category.text(),
                     'description':description.toPlainText()
             }
 
@@ -477,7 +485,7 @@ class PresetWindow(QDialog):
                     self.currentData.update(data_settings)
 
             for k in self.currentData.keys():
-              if not k in ['name','description','module','options','speed','columns']:
+              if not k in ['name','category','description','module','options','speed','columns']:
                 self.currentData.pop(k)
 
             with open(os.path.join(self.presetFolder,self.currentFilename), 'w') as outfile:
