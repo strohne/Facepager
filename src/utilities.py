@@ -1,6 +1,11 @@
 import json
 import os,sys,platform
 
+import lxml
+import lxml.html
+from lxml.cssselect import CSSSelector
+
+
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
         folder = os.path.dirname(sys.executable)
@@ -27,6 +32,13 @@ def hasDictValue(data,multikey):
                 value = hasDictValue(value,keys[1])
             else:
                 value = len(data) > 0
+        elif type(data) is list and keys[0].isnumeric():
+            no = int(keys[0])
+            if len(keys) > 1 and len(data) > no:
+                value = data[no]
+                value = hasDictValue(value,keys[1])
+            else:
+                value = len(data) > no
 
         else:
             value = False
@@ -144,3 +156,52 @@ def recursiveIterKeys(value,prefix=None):
         else:
             fullkey = key if prefix is None else ".".join([prefix,key])
             yield fullkey
+
+def htmlToJson(data,csskey=None,type='lxml'):
+    #type='html5'
+    soup = lxml.html.fromstring(data)
+
+    def parseSoup(element,context = True):
+        out = {}
+        if context:
+            #out['name'] = element.tag
+            if element.text is not None:
+                out['text'] = unicode(element.text).strip("\n\t ")
+                
+        attributes= {}
+        if context:                
+            for name, value in sorted(element.items()):
+                attributes['@'+name] = value
+        out.update(attributes)
+                        
+        children = []
+        for child in element:
+            if isinstance(child.tag, basestring):
+                id = str(child.get('id',''))
+                key = child.tag+'#'+id if id != '' else child.tag
+                children.append({key:parseSoup(child)})
+            else:
+                value = unicode(child.text).strip("\n\t ")
+                if value != '':
+                    children.append({'text':value})
+
+        if len(children) > 0:
+            out['items'] = children
+        
+        #simplify:
+        if len(children) == 0 and len(attributes) ==0:
+            out = out.get('text',None)
+        elif len(children) > 0 and len(attributes) ==0 and out.get('text',None) is None:
+            del out['items']
+            out = children
+            
+        return out
+
+    output = []
+    if csskey is not None:
+        for part in soup.cssselect(csskey):
+            output.extend(parseSoup(part,True))
+    else:
+        output = {soup.tag : parseSoup(soup,True)}
+
+    return output

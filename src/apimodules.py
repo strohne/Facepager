@@ -542,16 +542,20 @@ class ApiTab(QWidget):
         except (HTTPError, ConnectionError), e:
             raise Exception(u"Request Error: {0}".format(e.message))
         else:
+            status = 'fetched' if response.ok else 'error'
+            status = status + ' (' + str(response.status_code) + ')'
+            
             if jsonify == True:
-                try:
-                    status = 'fetched' if response.ok else 'error'
-                    status = status + ' (' + str(response.status_code) + ')'
-                    return response.json(), dict(response.headers.items()), status
+                try:                    
+                    data = response.json()
                 except:
-                    status = 'error'
-                    status = status + ' (' + str(response.status_code) + ')'
-                    return {'error': 'No JSON data','response':response.text}, dict(response.headers.items()), status
+                    try:
+                        #.encode('utf-8').encode('ascii')
+                        data = htmlToJson(str(response.text))
+                    except:
+                        data = {'error': 'Data could not be converted to JSON','response':response.text}
 
+                return data, dict(response.headers.items()), status
             else:
                 return response
 
@@ -1565,6 +1569,9 @@ class AmazonTab(ApiTab):
     def __init__(self, mainWindow=None,name='Amazon'):
         super(AmazonTab, self).__init__(mainWindow, name)
 
+        self.defaults['region'] = 'us-east-1' # 'eu-central-1'
+        self.defaults['service'] = 's3'
+
         # Standard inputs
         self.initInputs()
 
@@ -1572,10 +1579,12 @@ class AmazonTab(ApiTab):
         self.initHeaderInputs()
         self.initVerbInputs()
         self.initFolderInput()
-
+        
+        self.initServiceInputs()
+        
         # Extract input
         self.initExtractInputs()
-
+        
         # Pages Box
         #self.initPagingInputs()
 
@@ -1585,35 +1594,7 @@ class AmazonTab(ApiTab):
 
 
         self.loadSettings()
-        
-#        self.defaults['login_buttoncaption'] = " Login "
-#        self.defaults['login_window_caption'] = "Login Page"
 
-#     def initAuthInputs(self):
-#         authlayout = QFormLayout()
-#         authlayout.setContentsMargins(0,0,0,0)
-#         self.authWidget.setLayout(authlayout)
-# 
-# 
-#         self.authURIEdit = QLineEdit()
-#         authlayout.addRow("Login URI",self.authURIEdit)
-# 
-#         self.redirectURIEdit = QLineEdit()
-#         authlayout.addRow("Redirect URI",self.redirectURIEdit)
-# 
-#         self.tokenURIEdit = QLineEdit()
-#         authlayout.addRow("Token URI",self.tokenURIEdit)
-# 
-#         self.clientIdEdit = QLineEdit()
-#         self.clientIdEdit.setEchoMode(QLineEdit.Password)
-#         authlayout.addRow("Client Id", self.clientIdEdit)
-# 
-#         self.clientSecretEdit = QLineEdit()
-#         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
-#         authlayout.addRow("Client Secret",self.clientSecretEdit)
-# 
-#         self.scopeEdit = QLineEdit()
-#         authlayout.addRow("Scopes",self.scopeEdit)
 
     def initLoginInputs(self):
         # token and login button
@@ -1631,19 +1612,31 @@ class AmazonTab(ApiTab):
         self.secretkeyEdit.setEchoMode(QLineEdit.Password)
         loginlayout.addWidget(self.secretkeyEdit)
 
-        #self.authButton = QPushButton('Settings', self)
-        #self.authButton.clicked.connect(self.editAuthSettings)
-        #loginlayout.addWidget(self.authButton)
-
-        #self.loginButton = QPushButton(self.defaults.get('login_buttoncaption',"Login"), self)
-        #self.loginButton.clicked.connect(self.doLogin)
-        #loginlayout.addWidget(self.loginButton)
 
         self.mainLayout.addRow("Access Key", loginwidget)
+
+    def initServiceInputs(self):
+        # token and login button
+        servicewidget = QWidget()
+        servicelayout = QHBoxLayout()
+        servicelayout.setContentsMargins(0,0,0,0)
+        servicewidget.setLayout(servicelayout)
+
+        self.serviceEdit = QLineEdit()
+        servicelayout.addWidget(self.serviceEdit)
+
+        servicelayout.addWidget(QLabel('Region'))
+        self.regionEdit = QLineEdit()
+        servicelayout.addWidget(self.regionEdit)
+
+        self.mainLayout.addRow("Service", servicewidget)
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(AmazonTab, self).getOptions(purpose)
+
+        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get('service','')
+        options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get('region','')
 
         if purpose != 'preset':
             options['secretkey'] = self.secretkeyEdit.text().strip() if self.secretkeyEdit.text() != "" else self.defaults.get('auth_uri','')
@@ -1652,9 +1645,15 @@ class AmazonTab(ApiTab):
         return options
 
     def setOptions(self, options):
-        self.secretkeyEdit.setText(options.get('secretkey'))
-        self.accesskeyEdit.setText(options.get('accesskey'))
+        if 'secretkey' in options:
+            self.secretkeyEdit.setText(options.get('secretkey'))
+            
+        if 'accesskey' in options:            
+            self.accesskeyEdit.setText(options.get('accesskey'))
 
+        self.serviceEdit.setText(options.get('service'))
+        self.regionEdit.setText(options.get('region'))
+        
         super(AmazonTab, self).setOptions(options)
 
             
@@ -1761,9 +1760,9 @@ class AmazonTab(ApiTab):
         # Access keys
         access_key = options.get('accesskey','')
         secret_key = options.get('secretkey','')
-        #region = options.get('region','us-east-1')
-        region = options.get('region','eu-central-1')
-        service = options.get('service','s3')
+        region = options.get('region','')
+        #region = options.get('region','eu-central-1')
+        service = options.get('service','')
 
         if access_key == '' or secret_key == '':
             raise Exception('Access key or secret key is missing, please fill the input fields!')
