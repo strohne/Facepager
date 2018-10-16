@@ -1,10 +1,10 @@
 import urlparse
 import urllib
+import hashlib, hmac, base64
 from mimetypes import guess_all_extensions
 from datetime import datetime
 import re
 import os, sys, time
-import base64
 from collections import OrderedDict
 import threading
 
@@ -546,21 +546,6 @@ class ApiTab(QWidget):
                 try:
                     status = 'fetched' if response.ok else 'error'
                     status = status + ' (' + str(response.status_code) + ')'
-
-#                     #stream=True
-#                     while response and self.connected:
-#                         for line in response.iter_lines():
-#                             if line:
-#                                 try:
-#                                     data = json.loads(line)
-#                                 except ValueError:
-#                                     raise Exception("Unable to decode response, not valid JSON")
-#                                 else:
-#                                     pass
-#                                     #yield data, dict(response.headers.items()), status
-#
-#                     return data, dict(response.headers.items()), status
-
                     return response.json(), dict(response.headers.items()), status
                 except:
                     status = 'error'
@@ -800,15 +785,6 @@ class FacebookTab(ApiTab):
             if not ('url' in options):
                 urlpath = options["basepath"].strip() + options['resource'].strip()
                 urlparams = {}
-
-#                 if options['resource'] == 'search':
-#                     urlparams['q'] = self.idtostr(nodedata['objectid'])
-#                     urlparams['type'] = 'page'
-#                 elif options['resource'] == '<Object ID>':
-#                     urlparams['metadata'] = '1'
-#
-#                 elif '<Object ID>/' in options['resource']:
-#                     urlparams['limit'] = '100'
 
                 urlparams.update(options['params'])
 
@@ -1443,6 +1419,8 @@ class OAuth2Tab(ApiTab):
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
             else:
+                #requestheaders = {}
+                payload = None
                 urlpath = options['url']
                 urlparams = options['params']
 
@@ -1581,6 +1559,259 @@ class YoutubeTab(OAuth2Tab):
         authlayout.addRow("Scopes",self.scopeEdit)
 
 
+class AmazonTab(ApiTab):
+
+    # see YoutubeTab for keys in the options-parameter
+    def __init__(self, mainWindow=None,name='Amazon'):
+        super(AmazonTab, self).__init__(mainWindow, name)
+
+        # Standard inputs
+        self.initInputs()
+
+        # Header, Verbs
+        self.initHeaderInputs()
+        self.initVerbInputs()
+        self.initFolderInput()
+
+        # Extract input
+        self.initExtractInputs()
+
+        # Pages Box
+        #self.initPagingInputs()
+
+        # Login inputs
+        #self.initAuthInputs()
+        self.initLoginInputs()
+
+
+        self.loadSettings()
+        
+#        self.defaults['login_buttoncaption'] = " Login "
+#        self.defaults['login_window_caption'] = "Login Page"
+
+#     def initAuthInputs(self):
+#         authlayout = QFormLayout()
+#         authlayout.setContentsMargins(0,0,0,0)
+#         self.authWidget.setLayout(authlayout)
+# 
+# 
+#         self.authURIEdit = QLineEdit()
+#         authlayout.addRow("Login URI",self.authURIEdit)
+# 
+#         self.redirectURIEdit = QLineEdit()
+#         authlayout.addRow("Redirect URI",self.redirectURIEdit)
+# 
+#         self.tokenURIEdit = QLineEdit()
+#         authlayout.addRow("Token URI",self.tokenURIEdit)
+# 
+#         self.clientIdEdit = QLineEdit()
+#         self.clientIdEdit.setEchoMode(QLineEdit.Password)
+#         authlayout.addRow("Client Id", self.clientIdEdit)
+# 
+#         self.clientSecretEdit = QLineEdit()
+#         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
+#         authlayout.addRow("Client Secret",self.clientSecretEdit)
+# 
+#         self.scopeEdit = QLineEdit()
+#         authlayout.addRow("Scopes",self.scopeEdit)
+
+    def initLoginInputs(self):
+        # token and login button
+        loginwidget = QWidget()
+        loginlayout = QHBoxLayout()
+        loginlayout.setContentsMargins(0,0,0,0)
+        loginwidget.setLayout(loginlayout)
+
+        self.accesskeyEdit = QLineEdit()
+        self.accesskeyEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.accesskeyEdit)
+
+        loginlayout.addWidget(QLabel('Secret Key'))
+        self.secretkeyEdit = QLineEdit()
+        self.secretkeyEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.secretkeyEdit)
+
+        #self.authButton = QPushButton('Settings', self)
+        #self.authButton.clicked.connect(self.editAuthSettings)
+        #loginlayout.addWidget(self.authButton)
+
+        #self.loginButton = QPushButton(self.defaults.get('login_buttoncaption',"Login"), self)
+        #self.loginButton.clicked.connect(self.doLogin)
+        #loginlayout.addWidget(self.loginButton)
+
+        self.mainLayout.addRow("Access Key", loginwidget)
+
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(AmazonTab, self).getOptions(purpose)
+
+        if purpose != 'preset':
+            options['secretkey'] = self.secretkeyEdit.text().strip() if self.secretkeyEdit.text() != "" else self.defaults.get('auth_uri','')
+            options['accesskey'] = self.accesskeyEdit.text().strip() if self.accesskeyEdit.text() != "" else self.defaults.get('redirect_uri','')
+
+        return options
+
+    def setOptions(self, options):
+        self.secretkeyEdit.setText(options.get('secretkey'))
+        self.accesskeyEdit.setText(options.get('accesskey'))
+
+        super(AmazonTab, self).setOptions(options)
+
+            
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
+        self.closeSession()
+        self.connected = True
+        self.speed = options.get('speed',None)
+
+        # Key derivation functions. See:
+        # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
+        def sign(key, msg):
+            return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+        
+        def getSignatureKey(key, dateStamp, regionName, serviceName):
+            kDate = sign(('AWS4' + key).encode('utf-8'), dateStamp)
+            kRegion = sign(kDate, regionName)
+            kService = sign(kRegion, serviceName)
+            kSigning = sign(kService, 'aws4_request')
+            return kSigning
+
+        # Get authorization header
+        # See https://docs.aws.amazon.com/de_de/general/latest/gr/sigv4-signed-request-examples.html
+        def signRequest(secret_key,access_key,method,urlpath,urlparams,headers,payload,region,service):
+                         
+    
+            timenow = datetime.utcnow()
+            amzdate = timenow.strftime('%Y%m%dT%H%M%SZ')
+            datestamp = timenow.strftime('%Y%m%d') # Date w/o time, used in credential scope            
+            
+            # Create canonical URI--the part of the URI from domain to query 
+            # string (use '/' if no path)
+            urlcomponents = urlparse.urlparse(urlpath)
+            canonical_uri = '/' if urlcomponents.path  == '' else urlcomponents.path
+                        
+            # Step 3: Create the canonical query string. In this example (a GET request),
+            # request parameters are in the query string. Query string values must
+            # be URL-encoded (space=%20). The parameters must be sorted by name.
+            # For this example, the query string is pre-formatted in the request_parameters variable.
+            urlparams = {} if urlparams is None else urlparams
+            canonical_querystring = OrderedDict(sorted(urlparams.items()))
+            canonical_querystring = urllib.urlencode(canonical_querystring)
+            
+            # Step 4: Create the canonical headers and signed headers. Header names
+            # must be trimmed and lowercase, and sorted in code point order from
+            # low to high. Note that there is a trailing \n.            
+            canonical_headers = {
+                'host' : urlcomponents.hostname, 
+                'x-amz-date' :  amzdate
+                }
+            
+            if headers is not None:
+                canonical_headers.update(headers)
+            
+            canonical_headers  = {k.lower():v for k, v in canonical_headers.items()}    
+            canonical_headers  = OrderedDict(sorted(canonical_headers.items()))                        
+            canonical_headers_str = "".join([key + ":"+value+'\n' for (key,value) in canonical_headers.iteritems()])
+            
+            # Step 5: Create the list of signed headers. This lists the headers
+            # in the canonical_headers list, delimited with ";" and in alpha order.
+            # Note: The request can include any headers; canonical_headers and
+            # signed_headers lists those that you want to be included in the 
+            # hash of the request. "Host" and "x-amz-date" are always required.
+            signed_headers = ';'.join(canonical_headers.keys())
+            
+            # Step 6: Create payload hash (hash of the request body content). For GET
+            # requests, the payload is an empty string ("").
+            payload = '' if payload is None else payload
+            payload_hash = hashlib.sha256(payload).hexdigest()
+            
+            # Step 7: Combine elements to create canonical request
+            canonical_request = method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers_str + '\n' + signed_headers + '\n' + payload_hash
+             
+            # Match the algorithm to the hashing algorithm you use, either SHA-1 or
+            # SHA-256 (recommended)
+            algorithm = 'AWS4-HMAC-SHA256'
+            credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
+            string_to_sign = algorithm + '\n' +  amzdate  + '\n' +  credential_scope + '\n' +  hashlib.sha256(canonical_request).hexdigest()
+            
+                 
+            # Create the signing key using the function defined above.
+            signing_key = getSignatureKey(secret_key, datestamp, region, service)
+            
+            # Sign the string_to_sign using the signing_key
+            signature = hmac.new(signing_key, (string_to_sign).encode('utf-8'), hashlib.sha256).hexdigest()        
+            
+            # The signing information can be either in a query string value or in 
+            # a header named Authorization. This code shows how to use a header.
+            # Create authorization header and add to request headers
+            authorization_header = algorithm + ' ' + 'Credential=' + access_key + '/' + credential_scope + ', ' +  'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
+            
+            # The request can include any headers, but MUST include "host", "x-amz-date", 
+            # and (for this scenario) "Authorization". "host" and "x-amz-date" must
+            # be included in the canonical_headers and signed_headers, as noted
+            # earlier. Order here is not significant.
+            # Python note: The 'host' header is added automatically by the Python 'requests' library.
+            headers.update({'x-amz-date':amzdate,
+                            'x-amz-content-sha256':payload_hash,                            
+                            'Authorization':authorization_header
+                            #'Accepts': 'application/json'
+                            })
+            
+            return (headers)
+                        
+        # Access keys
+        access_key = options.get('accesskey','')
+        secret_key = options.get('secretkey','')
+        #region = options.get('region','us-east-1')
+        region = options.get('region','eu-central-1')
+        service = options.get('service','s3')
+
+        if access_key == '' or secret_key == '':
+            raise Exception('Access key or secret key is missing, please fill the input fields!')
+
+        # Abort condition: maximum page count
+        for page in range(0, options.get('pages', 1)):
+            # build url
+            if not ('url' in options):
+                urlpath = options["basepath"] + options['resource']
+                urlparams = {}
+                urlparams.update(options['params'])
+
+                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
+                headers = options.get('headers',{})
+                method=options.get('verb','GET')
+                payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
+            else:
+                requestheaders = {}
+                payload = None
+                urlpath = options['url']
+                urlparams = options['params']
+
+            #authorize
+            headers = signRequest(secret_key,access_key,method,urlpath,urlparams,headers,payload,region,service)
+            
+            if options['logrequests']:
+                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath + "?" + urllib.urlencode(urlparams)))
+
+            # data
+            options['querytime'] = str(datetime.now())
+            data, headers, status = self.request(urlpath, urlparams,headers,method=method,payload=payload,jsonify=True)
+            options['querystatus'] = status
+
+            callback(data, options, headers)
+
+            # paging
+            if options.get('key_paging',None) is not None:
+                if isinstance(data,dict) and hasDictValue(data, options['key_paging']):
+                    options['params'][options['param_paging']] = data[options['key_paging']]
+                else:
+                    break
+            else:
+                break
+
+            if not self.connected:
+                break
+
+                
 class GenericTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
         super(GenericTab, self).__init__(mainWindow, "Generic")

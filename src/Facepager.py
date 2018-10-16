@@ -278,6 +278,7 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(YoutubeTab(self),"YouTube")
         self.RequestTabs.addTab(TwitterTab(self),"Twitter")
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
+        self.RequestTabs.addTab(AmazonTab(self),"Amazon")
         self.RequestTabs.addTab(GenericTab(self),"Generic")
         self.RequestTabs.addTab(FilesTab(self),"Files")
 
