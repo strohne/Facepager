@@ -267,7 +267,7 @@ class TreeItem(object):
             appendNode('offcut', dbnode.objectid, offcut)
 
         #Headers
-        if options.get('headers',False) and headers is not None:
+        if options.get('saveheaders',False) and headers is not None:
             appendNode('headers',dbnode.objectid,headers)
 
 
