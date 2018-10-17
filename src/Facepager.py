@@ -349,6 +349,12 @@ class MainWindow(QMainWindow):
         self.clearCheckbox.setToolTip("Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials.")
         fetchsettings.addRow("Clear settings when closing", self.clearCheckbox)
 
+        #Add headers
+        self.headersCheckbox = QCheckBox(self)
+        #self.headersCheckbox.setCheckState(Qt.Checked)
+        self.headersCheckbox.setToolTip("Check if you want to create nodes containing headers of the response.")
+        fetchsettings.addRow("Header nodes", self.headersCheckbox)
+        
         #Fetch data
 
         #-button
