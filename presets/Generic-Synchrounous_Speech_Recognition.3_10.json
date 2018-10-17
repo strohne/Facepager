@@ -1,6 +1,7 @@
 {
   "description": "Select the folder where the file resides (below the payload field). In the dialog make sure to check the option \"Add files as nodes\". Alternatively, you can manually add filenames as nodes, e.g. \"amazing-speech.flac\". \n\nFiles need to be FLAC-encoded, 16bit, 16000Hz. See https://cloud.google.com/speech-to-text/docs/reference/rest/v1/RecognitionConfig#AudioEncoding for other options.\n\nMaximum length is about 1 minute, see https://cloud.google.com/speech-to-text/quotas. Be aware of prices.\n\nSee https://cloud.google.com/speech-to-text/docs/sync-recognize for further information.\n\n__Authorization notes__\n\nYou need to register an app at Google Cloud Platform: https://console.cloud.google.com. Enable Cloud Storage JSON API and create OAuth2-Credentials. In Facepager, open the authorization settings (next to Login-button) and provide Client ID and Client Secret fields. Then you are ready to login with Facepager, which gets you an access token. Make sure the header option or param option is selected in the box next to the access token.\n\nAlternatively, you can get a request token from https://developers.google.com/oauthplayground/. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".",
   "module": "Generic",
+  "category": "Google Cloud Platform",
   "speed": 200,
   "options": {
     "redirect_uri": "https://localhost",

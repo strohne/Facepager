@@ -1,6 +1,7 @@
 {
   "description": "Add bucket name as node, e.g. \"myfancyusername-myfancybucket\".\n\nSee https://cloud.google.com/storage/docs/getting-bucket-information for more information about getting bucket information.\n\n__Authorization notes__\n\nYou need to register an app at Google Cloud Platform: https://console.cloud.google.com. Enable Cloud Storage JSON API and create OAuth2-Credentials. In Facepager, open the authorization settings (next to Login-button) and provide Client ID and Client Secret fields. Then you are ready to login with Facepager, which gets you an access token. Make sure the header option or param option is selected in the box next to the access token.\n\nAlternatively, you can get a request token from https://developers.google.com/oauthplayground/. Add request token as header: \"Authorization: Bearer [OAUTH2_TOKEN]\". Attention: the token is preceded by the string \"Bearer \".\n",
   "module": "Generic",
+  "category": "Google Cloud Platform",
   "speed": 200,
   "options": {
     "redirect_uri": "https://localhost",
