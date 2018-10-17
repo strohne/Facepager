@@ -267,8 +267,8 @@ class TreeItem(object):
             appendNode('offcut', dbnode.objectid, offcut)
 
         #Headers
-        #if (headers != None):
-        #    appendNode('headers',dbnode.objectid,headers)
+        if options.get('saveheaders',False) and headers is not None:
+            appendNode('headers',dbnode.objectid,headers)
 
 
         self.model.database.session.add_all(newnodes)

@@ -98,6 +98,9 @@ class PresetWindow(QDialog):
         self.detailSpeed = QLabel('')
         self.detailForm.addRow('<b>Speed</b>',self.detailSpeed)
 
+        self.detailHeaders = QLabel('')
+        self.detailForm.addRow('<b>Header nodes</b>',self.detailHeaders)
+        
         #buttons
         buttons= QHBoxLayout() #QDialogButtonBox()
         self.saveButton = QPushButton('New preset')
@@ -200,6 +203,7 @@ class PresetWindow(QDialog):
                 self.detailDescription.setText(data.get('description')+"\n")
                 self.detailOptions.showDict(data.get('options',[]))
                 self.detailSpeed.setText(str(data.get('speed','')))
+                self.detailHeaders.setText(str(data.get('headers','')))                
                 self.detailColumns.setText("\r\n".join(data.get('columns',[])))
 
                 self.detailWidget.show()
@@ -369,6 +373,7 @@ class PresetWindow(QDialog):
 
             #Set global settings
             self.mainWindow.speedEdit.setValue(data.get('speed',200))
+            self.mainWindow.headersCheckbox.setChecked(data.get('headers',False))
 
         self.close()
 
@@ -464,6 +469,7 @@ class PresetWindow(QDialog):
                     'module':self.mainWindow.RequestTabs.currentWidget().name,
                     'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
                     'speed':self.mainWindow.speedEdit.value(),
+                    'headers':self.mainWindow.headersCheckbox.isChecked(),
                     'columns':self.mainWindow.fieldList.toPlainText().splitlines()
             }
 
@@ -485,7 +491,7 @@ class PresetWindow(QDialog):
                     self.currentData.update(data_settings)
 
             for k in self.currentData.keys():
-              if not k in ['name','category','description','module','options','speed','columns']:
+              if not k in ['name','category','description','module','options','speed','headers','columns']:
                 self.currentData.pop(k)
 
             with open(os.path.join(self.presetFolder,self.currentFilename), 'w') as outfile:

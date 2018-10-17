@@ -14,7 +14,8 @@ class SelectFolderDialog(QFileDialog):
         #QFileDialog.getExistingDirectory(self, 'Select Download Folder', datadir)) #, QFileDialog.ShowDirsOnly
         #self.mainWindow = self.parent()
 
-        self.optionNodes = QCheckBox("Add files as nodes",self)
+        self.optionNodes = QCheckBox("Add selected files as nodes",self)
+        self.optionNodes.clicked.connect(self.optionNodesClick)
         #self.optionNodes.setCheckState(Qt.CheckState.Checked)
 
         layout = self.layout()
@@ -29,3 +30,9 @@ class SelectFolderDialog(QFileDialog):
 
         #if self.exec_():
             #if os.path.isfile(self.selectedFiles()[0]):
+            
+    def optionNodesClick(self):
+        if self.optionNodes.isChecked():
+            self.setFileMode(QFileDialog.ExistingFiles)
+        else:
+            self.setFileMode(QFileDialog.Directory)

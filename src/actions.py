@@ -335,6 +335,7 @@ class Actions(object):
             globaloptions['errors'] = self.mainWindow.errorEdit.value()
             globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
+            globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
             level = self.mainWindow.levelEdit.value() - 1
 

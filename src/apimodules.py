@@ -1,10 +1,10 @@
 import urlparse
 import urllib
+import hashlib, hmac, base64
 from mimetypes import guess_all_extensions
 from datetime import datetime
 import re
 import os, sys, time
-import base64
 from collections import OrderedDict
 import threading
 
@@ -109,6 +109,9 @@ class ApiTab(QWidget):
                 if modifier == 'base64':
                     value = base64.b64encode(value)
 
+                if modifier == 'length':
+                    value = len(value)
+
             if (pattern == '<' + match + '>'):
                 pattern = value
             else:
@@ -119,7 +122,7 @@ class ApiTab(QWidget):
 
         return pattern
 
-    def getURL(self, urlpath, params, nodedata):
+    def getURL(self, urlpath, params, nodedata,options):
         """
         Replaces the Facepager placeholders ("<",">")
         by the Object-ID or any other Facepager-Placeholder
@@ -135,7 +138,7 @@ class ApiTab(QWidget):
                 continue
 
             # Replace placeholders in parameter value
-            value = self.parsePlaceholders(params[name], nodedata, {})
+            value = self.parsePlaceholders(params[name], nodedata, {},options)
 
             #check parameter name
             match = re.match(ur"^<(.*)>$", unicode(name))
@@ -176,7 +179,7 @@ class ApiTab(QWidget):
 
         #payload        
         try:
-            if options.get('verb','GET') == 'POST':
+            if options.get('verb','GET') in ['POST','PUT']:
                 options['payload'] = self.payloadEdit.toPlainText()
         except AttributeError:
             pass
@@ -266,7 +269,8 @@ class ApiTab(QWidget):
         
         #Folder
         try:
-            self.folderEdit.setText(options.get('folder',self.defaults.get('folder','')))
+            if 'folder' in options:
+                self.folderEdit.setText(options.get('folder'))
         except AttributeError:
             pass
                 
@@ -418,7 +422,7 @@ class ApiTab(QWidget):
 
     def initVerbInputs(self):
         self.verbEdit = QComboBox(self)
-        self.verbEdit.addItems(['GET','POST'])
+        self.verbEdit.addItems(['GET','POST','PUT'])
         self.verbEdit.currentIndexChanged.connect(self.verbChanged)
         self.mainLayout.addRow("Method", self.verbEdit)
 
@@ -528,7 +532,8 @@ class ApiTab(QWidget):
                     elif method == "GET":
                         response = session.get(path, params=args,headers=headers, timeout=self.timeout, verify=True)
                     else:
-                        response = session.request(method,path, params=args,headers=headers, timeout=self.timeout, verify=True)
+                        response = session.request(method,path, params=args,headers=headers,data=payload, timeout=self.timeout, verify=True)
+                        
                 except (HTTPError, ConnectionError), e:
                     maxretries -= 1
                     if maxretries > 0:
@@ -542,31 +547,23 @@ class ApiTab(QWidget):
         except (HTTPError, ConnectionError), e:
             raise Exception(u"Request Error: {0}".format(e.message))
         else:
-            if jsonify == True:
-                try:
-                    status = 'fetched' if response.ok else 'error'
-                    status = status + ' (' + str(response.status_code) + ')'
-
-#                     #stream=True
-#                     while response and self.connected:
-#                         for line in response.iter_lines():
-#                             if line:
-#                                 try:
-#                                     data = json.loads(line)
-#                                 except ValueError:
-#                                     raise Exception("Unable to decode response, not valid JSON")
-#                                 else:
-#                                     pass
-#                                     #yield data, dict(response.headers.items()), status
-#
-#                     return data, dict(response.headers.items()), status
-
-                    return response.json(), dict(response.headers.items()), status
+            status = 'fetched' if response.ok else 'error'
+            status = status + ' (' + str(response.status_code) + ')'
+            headers = dict(response.headers.items())
+            
+            if jsonify == True and response.text == '':
+                return [], headers, status
+            elif jsonify == True:    
+                try:                    
+                    data = response.json()
                 except:
-                    status = 'error'
-                    status = status + ' (' + str(response.status_code) + ')'
-                    return {'error': 'No JSON data','response':response.text}, dict(response.headers.items()), status
+                    try:
+                        #.encode('utf-8').encode('ascii')
+                        data = htmlToJson(str(response.text))
+                    except:
+                        data = {'error': 'Data could not be converted to JSON','response':response.text}
 
+                return data, headers, status
             else:
                 return response
 
@@ -710,11 +707,16 @@ class ApiTab(QWidget):
         
         dlg = SelectFolderDialog(self, 'Select Download Folder', datadir)
         if dlg.exec_():
-            folder = dlg.selectedFiles()[0]
-            self.folderEdit.setText(folder)
             if dlg.optionNodes.isChecked():
-                newnodes = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+                #newnodes = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+                newnodes = [os.path.basename(f)  for f in dlg.selectedFiles()]
                 self.mainWindow.tree.treemodel.addNodes(newnodes)
+                folder = os.path.dirname(dlg.selectedFiles()[0])
+                self.folderEdit.setText(folder)            
+            else:
+                folder = dlg.selectedFiles()[0]
+                self.folderEdit.setText(folder)
+
             
 
 class FacebookTab(ApiTab):
@@ -801,18 +803,9 @@ class FacebookTab(ApiTab):
                 urlpath = options["basepath"].strip() + options['resource'].strip()
                 urlparams = {}
 
-#                 if options['resource'] == 'search':
-#                     urlparams['q'] = self.idtostr(nodedata['objectid'])
-#                     urlparams['type'] = 'page'
-#                 elif options['resource'] == '<Object ID>':
-#                     urlparams['metadata'] = '1'
-#
-#                 elif '<Object ID>/' in options['resource']:
-#                     urlparams['limit'] = '100'
-
                 urlparams.update(options['params'])
 
-                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
+                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata,options)
                 urlparams["access_token"] = options['access_token']
             else:
                 urlpath = options['url']
@@ -1001,7 +994,7 @@ class TwitterTab(ApiTab):
         for page in range(0, options.get('pages', 1)):
             if not ('url' in options):
                 urlpath = options["basepath"] + options["resource"] + ".json"
-                urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata)
+                urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata,options)
             else:
                 urlpath = options['url']
                 urlparams = options["params"]
@@ -1264,7 +1257,7 @@ class TwitterStreamingTab(ApiTab):
     def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
         if not ('url' in options):
             urlpath = options["basepath"] + options["resource"] + ".json"
-            urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata)
+            urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata,options)
         else:
             urlpath = options['url']
             urlparams = options["params"]
@@ -1430,7 +1423,7 @@ class OAuth2Tab(ApiTab):
                 urlparams = {}
                 urlparams.update(options['params'])
 
-                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
+                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata,options)
 
                 requestheaders = options.get('headers',{})
 
@@ -1443,6 +1436,8 @@ class OAuth2Tab(ApiTab):
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
             else:
+                #requestheaders = {}
+                payload = None
                 urlpath = options['url']
                 urlparams = options['params']
 
@@ -1581,6 +1576,250 @@ class YoutubeTab(OAuth2Tab):
         authlayout.addRow("Scopes",self.scopeEdit)
 
 
+class AmazonTab(ApiTab):
+
+    # see YoutubeTab for keys in the options-parameter
+    def __init__(self, mainWindow=None,name='Amazon'):
+        super(AmazonTab, self).__init__(mainWindow, name)
+
+        self.defaults['region'] = 'us-east-1' # 'eu-central-1'
+        self.defaults['service'] = 's3'
+
+        # Standard inputs
+        self.initInputs()
+
+        # Header, Verbs
+        self.initHeaderInputs()
+        self.initVerbInputs()
+        self.initFolderInput()
+        
+        self.initServiceInputs()
+        
+        # Extract input
+        self.initExtractInputs()
+        
+        # Pages Box
+        #self.initPagingInputs()
+
+        # Login inputs
+        #self.initAuthInputs()
+        self.initLoginInputs()
+
+        self.loadSettings()
+
+
+    def initLoginInputs(self):
+        # token and login button
+        loginwidget = QWidget()
+        loginlayout = QHBoxLayout()
+        loginlayout.setContentsMargins(0,0,0,0)
+        loginwidget.setLayout(loginlayout)
+
+        self.accesskeyEdit = QLineEdit()
+        self.accesskeyEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.accesskeyEdit)
+
+        loginlayout.addWidget(QLabel('Secret Key'))
+        self.secretkeyEdit = QLineEdit()
+        self.secretkeyEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.secretkeyEdit)
+
+
+        self.mainLayout.addRow("Access Key", loginwidget)
+
+    def initServiceInputs(self):
+        # token and login button
+        servicewidget = QWidget()
+        servicelayout = QHBoxLayout()
+        servicelayout.setContentsMargins(0,0,0,0)
+        servicewidget.setLayout(servicelayout)
+
+        self.serviceEdit = QLineEdit()
+        servicelayout.addWidget(self.serviceEdit)
+
+        servicelayout.addWidget(QLabel('Region'))
+        self.regionEdit = QLineEdit()
+        servicelayout.addWidget(self.regionEdit)
+
+        self.mainLayout.addRow("Service", servicewidget)
+
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(AmazonTab, self).getOptions(purpose)
+
+        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get('service','')
+        options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get('region','')
+
+        if purpose != 'preset':
+            options['secretkey'] = self.secretkeyEdit.text().strip() if self.secretkeyEdit.text() != "" else self.defaults.get('auth_uri','')
+            options['accesskey'] = self.accesskeyEdit.text().strip() if self.accesskeyEdit.text() != "" else self.defaults.get('redirect_uri','')
+
+        return options
+
+    def setOptions(self, options):
+        if 'secretkey' in options:
+            self.secretkeyEdit.setText(options.get('secretkey'))
+            
+        if 'accesskey' in options:            
+            self.accesskeyEdit.setText(options.get('accesskey'))
+
+        self.serviceEdit.setText(options.get('service'))
+        self.regionEdit.setText(options.get('region'))
+        
+        super(AmazonTab, self).setOptions(options)
+
+            
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
+        self.closeSession()
+        self.connected = True
+        self.speed = options.get('speed',None)
+
+        # Key derivation functions. See:
+        # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
+        def sign(key, msg):
+            return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+        
+        def getSignatureKey(key, dateStamp, regionName, serviceName):
+            kDate = sign(('AWS4' + key).encode('utf-8'), dateStamp)
+            kRegion = sign(kDate, regionName)
+            kService = sign(kRegion, serviceName)
+            kSigning = sign(kService, 'aws4_request')
+            return kSigning
+
+        # Get authorization header
+        # See https://docs.aws.amazon.com/de_de/general/latest/gr/sigv4-signed-request-examples.html
+        def signRequest(secret_key,access_key,method,urlpath,urlparams,headers,payload,region,service):
+            timenow = datetime.utcnow()
+            amzdate = timenow.strftime('%Y%m%dT%H%M%SZ')
+            datestamp = timenow.strftime('%Y%m%d') # Date w/o time, used in credential scope            
+            
+            # Create canonical URI--the part of the URI from domain to query string 
+            urlcomponents = urlparse.urlparse(urlpath)
+            canonical_uri = '/' if urlcomponents.path  == '' else urlcomponents.path
+                        
+            # Create the canonical query string. In this example (a GET request),
+            # request parameters are in the query string. Query string values must
+            # be URL-encoded (space=%20). The parameters must be sorted by name.
+            # For this example, the query string is pre-formatted in the request_parameters variable.
+            urlparams = {} if urlparams is None else urlparams
+            canonical_querystring = OrderedDict(sorted(urlparams.items()))
+            canonical_querystring = urllib.urlencode(canonical_querystring)
+            
+            # Create the canonical headers and signed headers. Header names
+            # must be trimmed and lowercase, and sorted in code point order from
+            # low to high. Note that there is a trailing \n.            
+            canonical_headers = {
+                'host' : urlcomponents.hostname, 
+                'x-amz-date' :  amzdate
+                }
+            
+            if headers is not None:
+                canonical_headers.update(headers)
+            
+            canonical_headers  = {k.lower():v for k, v in canonical_headers.items()}    
+            canonical_headers  = OrderedDict(sorted(canonical_headers.items()))                        
+            canonical_headers_str = "".join([key + ":"+value+'\n' for (key,value) in canonical_headers.iteritems()])
+            
+            # Create the list of signed headers. This lists the headers
+            # in the canonical_headers list, delimited with ";" and in alpha order.
+            # Note: The request can include any headers; canonical_headers and
+            # signed_headers lists those that you want to be included in the 
+            # hash of the request. "Host" and "x-amz-date" are always required.
+            signed_headers = ';'.join(canonical_headers.keys())
+            
+            # Create payload hash (hash of the request body content). For GET
+            # requests, the payload is an empty string ("").
+            payload = '' if payload is None else payload
+            payload_hash = hashlib.sha256(payload).hexdigest()
+            
+            # Combine elements to create canonical request
+            canonical_request = method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers_str + '\n' + signed_headers + '\n' + payload_hash
+             
+            # Match the algorithm to the hashing algorithm you use, either SHA-1 or
+            # SHA-256 (recommended)
+            algorithm = 'AWS4-HMAC-SHA256'
+            credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
+            string_to_sign = algorithm + '\n' +  amzdate  + '\n' +  credential_scope + '\n' +  hashlib.sha256(canonical_request).hexdigest()
+                             
+            # Create the signing key using the function defined above.
+            signing_key = getSignatureKey(secret_key, datestamp, region, service)
+            
+            # Sign the string_to_sign using the signing_key
+            signature = hmac.new(signing_key, (string_to_sign).encode('utf-8'), hashlib.sha256).hexdigest()        
+            
+            # The signing information can be either in a query string value or in 
+            # a header named Authorization. This code shows how to use a header.
+            # Create authorization header and add to request headers
+            authorization_header = algorithm + ' ' + 'Credential=' + access_key + '/' + credential_scope + ', ' +  'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
+            
+            # The request can include any headers, but MUST include "host", "x-amz-date", 
+            # and (for this scenario) "Authorization". "host" and "x-amz-date" must
+            # be included in the canonical_headers and signed_headers, as noted
+            # earlier. Order here is not significant.
+            # Python note: The 'host' header is added automatically by the Python 'requests' library.
+            headers.update({'x-amz-date':amzdate,                            
+                            'x-amz-content-sha256':payload_hash,                            
+                            #'x-amz-content-sha256':'UNSIGNED-PAYLOAD',
+                            'Authorization':authorization_header
+                            #'Accepts': 'application/json'
+                            })
+            
+            return (headers)
+                        
+        # Access keys
+        access_key = options.get('accesskey','')
+        secret_key = options.get('secretkey','')
+        region = options.get('region','')
+        #region = options.get('region','eu-central-1')
+        service = options.get('service','')
+
+        if access_key == '' or secret_key == '':
+            raise Exception('Access key or secret key is missing, please fill the input fields!')
+
+        # Abort condition: maximum page count
+        for page in range(0, options.get('pages', 1)):
+            # build url
+            if not ('url' in options):
+                urlpath = options["basepath"] + options['resource']
+                urlparams = {}
+                urlparams.update(options['params'])
+
+                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata,options)
+                headers = options.get('headers',{})
+                method=options.get('verb','GET')
+                payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
+            else:
+                requestheaders = {}
+                payload = None
+                urlpath = options['url']
+                urlparams = options['params']
+
+            #authorize
+            headers = signRequest(secret_key,access_key,method,urlpath,urlparams,headers,payload,region,service)
+            
+            if options['logrequests']:
+                logCallback(u"Fetching data for {0} from {1}".format(nodedata['objectid'],urlpath + "?" + urllib.urlencode(urlparams)))
+
+            # data
+            options['querytime'] = str(datetime.now())
+            data, headers, status = self.request(urlpath, urlparams,headers,method=method,payload=payload,jsonify=True)
+            options['querystatus'] = status
+
+            callback(data, options, headers)
+
+            # paging
+            if options.get('key_paging',None) is not None:
+                if isinstance(data,dict) and hasDictValue(data, options['key_paging']):
+                    options['params'][options['param_paging']] = data[options['key_paging']]
+                else:
+                    break
+            else:
+                break
+
+            if not self.connected:
+                break
+
+                
 class GenericTab(OAuth2Tab):
     def __init__(self, mainWindow=None):
         super(GenericTab, self).__init__(mainWindow, "Generic")
@@ -1702,7 +1941,7 @@ class FilesTab(OAuth2Tab):
         urlparams = {}
         urlparams.update(options['params'])
 
-        urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata)
+        urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata,options)
 
         if options.get('auth','disable') != 'disable':
             urlparams["access_token"] = options['access_token']
