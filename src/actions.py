@@ -230,9 +230,8 @@ class Actions(object):
         def createNodes():
             newnodes = [node.strip() for node in input.toPlainText().splitlines()]
             
-            #rowcount = self.mainWindow.tree.treemodel.rowCount(QModelIndex())
             self.mainWindow.tree.treemodel.addNodes(newnodes)
-            #self.mainWindow.tree.selectRow(rowcount)
+            self.mainWindow.tree.selectLastRow()
             dialog.close()
 
         def close():

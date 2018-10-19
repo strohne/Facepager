@@ -46,18 +46,17 @@ class DataTree(QTreeView):
         indexes = self.selectionModel().selectedRows()
         return(len(indexes))
 
-    def selectRow(self,row = None):
-        #does not work yet because inserts are delayed or i don't know
+    def selectLastRow(self):
+        QCoreApplication.processEvents()
+        
         model = self.model()
         parent = QModelIndex()
-        if row is None:
-            row = model.rowCount(parent)-1
+        row = model.rowCount(parent)-1
          
         index = model.index(row, 0,parent)
         self.scrollTo(index)
         self.selectionModel().select(index, QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
-        
-        #self.selectionModel().setCurrentIndex(index,QItemSelectionModel.Rows)
+        self.selectionModel().setCurrentIndex(index,QItemSelectionModel.Rows)
                 
     def noneOrAllSelected(self):
         indexes = self.selectionModel().selectedRows()
