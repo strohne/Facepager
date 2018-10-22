@@ -114,11 +114,18 @@ class ApiTab(QWidget):
 
             if (pattern == '<' + match + '>'):
                 pattern = value
-            else:
-               pattern = pattern.replace('<' + match + '>', value)
-               pattern = pattern.replace('\\<', '<')
-               pattern = pattern.replace('\\>', '>')
-               pattern = pattern.replace('\\\\', '\\')
+                return pattern
+            else:                
+                #Mask special characters 
+                value = value.replace('\\','\\\\')
+                value = value.replace('<','\\<')
+                value = value.replace('>','\\>')
+                
+                pattern = pattern.replace('<' + match + '>', value)
+               
+        pattern = pattern.replace('\\<', '<')
+        pattern = pattern.replace('\\>', '>')
+        pattern = pattern.replace('\\\\', '\\')
 
         return pattern
 
