@@ -142,6 +142,11 @@ class ApiThread(threading.Thread):
         def logMessage(msg):
             self.logs.put(msg)
 
+        def logProgress(current=0, total=0):
+            self.output.put({'progress': job.get('number', 0),'current':current,'total':total})
+            if self.halt.set():
+                raise CancelledError('Request cancelled.')
+            
         try:
             while not self.halt.isSet():
                 try:
@@ -151,7 +156,7 @@ class ApiThread(threading.Thread):
                         if job is None:
                             self.halt.set()
                         else:
-                            self.module.fetchData(job['data'], job['options'], streamingData,logMessage)
+                            self.module.fetchData(job['data'], job['options'], streamingData,logMessage,logProgress)
                     finally:
                         self.input.task_done()
                         if job is not None:

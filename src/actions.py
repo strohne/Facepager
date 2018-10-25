@@ -419,8 +419,13 @@ class Actions(object):
 
                         #-Finished one node...
                         elif 'progress' in job:
-                            #Update progress
-                            progress.step()
+                            #Update single progress
+                            if 'current' in job:
+                                percent = int((job.get('current',0) * 100.0 / job.get('total',1))) 
+                                progress.showInfo('progress'+str(job['progress']),u"{}% of node uploaded.".format(percent))
+                            #Update total progress
+                            else:
+                                progress.step()
 
                         #-Add data...
                         elif not progress.wasCanceled:

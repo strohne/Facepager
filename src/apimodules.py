@@ -50,6 +50,7 @@ class ApiTab(QWidget):
         self.speed = None
         self.loadDocs()
         self.lock_session = threading.Lock()
+        self.progress = None
 
         self.authWidget = QWidget()
 
@@ -160,9 +161,21 @@ class ApiTab(QWidget):
         return urlpath, urlparams
 
     def getPayload(self,payload, params, nodedata,options):
-        if payload is None:
+        #Return nothing
+        if (payload is None) or (payload == ''):            
             return None
-        else:
+        
+        # Parse JSON and replace placeholders in values
+        elif options.get('encoding','<None>') == 'multipart/form-data':
+            payload = json.loads(payload)
+
+            for name in payload:
+                payload[name] = self.parsePlaceholders(payload[name], nodedata, params,options)
+
+            return payload
+        
+        # Replace placeholders in string
+        else:   
             return self.parsePlaceholders(payload, nodedata, params,options)
 
     # Gets data from input fields or defaults (never gets credentials from default values!)
@@ -180,14 +193,15 @@ class ApiTab(QWidget):
         #headers and verbs
         try:
             options['headers'] = self.headerEdit.getParams()
-            options['verb'] = self.verbEdit.currentText().strip()
+            options['verb'] = self.verbEdit.currentText().strip()            
         except AttributeError:
             pass
 
         #payload        
         try:
             if options.get('verb','GET') in ['POST','PUT']:
-                options['payload'] = self.payloadEdit.toPlainText()
+                options['payload'] = self.payloadEdit.toPlainText()                
+                options['encoding'] = self.encodingEdit.currentText().strip()
         except AttributeError:
             pass
 
@@ -269,7 +283,8 @@ class ApiTab(QWidget):
         try:
             self.headerEdit.setParams(options.get('headers', {}))
             self.verbEdit.setCurrentIndex(self.verbEdit.findText(options.get('verb', 'GET')))
-            self.payloadEdit.setPlainText(options.get('payload',''))
+            self.payloadEdit.setPlainText(options.get('payload',''))                          
+            self.encodingEdit.setCurrentIndex(self.encodingEdit.findText(options.get('encoding', '<None>')))            
             self.verbChanged()
         except AttributeError:
             pass
@@ -428,28 +443,57 @@ class ApiTab(QWidget):
 
 
     def initVerbInputs(self):
+        # Verb and encoding
         self.verbEdit = QComboBox(self)
         self.verbEdit.addItems(['GET','POST','PUT'])
         self.verbEdit.currentIndexChanged.connect(self.verbChanged)
-        self.mainLayout.addRow("Method", self.verbEdit)
 
+        self.encodingLabel = QLabel("Encoding")
+        self.encodingEdit = QComboBox(self)
+        self.encodingEdit.addItems(['<None>','multipart/form-data'])
+        self.encodingEdit.currentIndexChanged.connect(self.verbChanged)
+        
+
+        layout= QHBoxLayout()
+        layout.addWidget(self.verbEdit)
+        layout.setStretch(0, 1);
+        layout.addWidget(self.encodingLabel)
+        layout.addWidget(self.encodingEdit)
+        layout.setStretch(2, 1);
+        self.mainLayout.addRow("Method", layout)
+        
+        # Payload
+        self.payloadWidget = QWidget()
+        self.payloadLayout = QHBoxLayout()
+        self.payloadWidget.setLayout(self.payloadLayout)
+        
         self.payloadEdit = QPlainTextEdit()
         self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.mainLayout.addRow("Payload", self.payloadEdit)
+        self.payloadLayout.addWidget(self.payloadEdit)
+        self.payloadLayout.setStretch(0, 1);
+
+        self.payloadLayout.setStretch(2, 1);    
+        self.mainLayout.addRow("Payload", self.payloadWidget)
 
     def verbChanged(self):
         if self.verbEdit.currentText() == 'GET':
-            self.payloadEdit.hide()
-            self.mainLayout.labelForField(self.payloadEdit).hide()
+            self.payloadWidget.hide()
+            self.mainLayout.labelForField(self.payloadWidget).hide()
+            
+            self.encodingEdit.hide()
+            self.encodingLabel.hide()                        
 
             self.folderwidget.hide()
             self.mainLayout.labelForField(self.folderwidget).hide()
         else:
-            self.payloadEdit.show()
-            self.mainLayout.labelForField(self.payloadEdit).show()
+            self.payloadWidget.show()
+            self.mainLayout.labelForField(self.payloadWidget).show()
 
+            self.encodingEdit.show()
+            self.encodingLabel.show()
+            
             self.folderwidget.show()
-            self.mainLayout.labelForField(self.folderwidget).show()
+            self.mainLayout.labelForField(self.folderwidget).show()                        
 
     def initExtractInputs(self):
         self.extractEdit = QComboBox(self)
@@ -512,7 +556,8 @@ class ApiTab(QWidget):
             if hasattr(self, "session"):
                 del self.session
 
-    def request(self, path, args=None, headers=None, method="GET", payload=None, jsonify=True):
+    
+    def request(self, path, args=None, headers=None, method="GET", payload=None, files = None,jsonify=True):
         """
         Start a new threadsafe session and request
         """
@@ -530,16 +575,14 @@ class ApiTab(QWidget):
         if (not session):
             raise Exception("No session available.")
 
+        if payload is not None:
+            payload = BufferReader(payload,self.progress)
+            
         try:
             maxretries = 3
             while True:
                 try:
-                    if method == "POST":  #headers is not None
-                        response = session.post(path, params=args, headers=headers,data=payload,timeout=self.timeout, verify=True)
-                    elif method == "GET":
-                        response = session.get(path, params=args,headers=headers, timeout=self.timeout, verify=True)
-                    else:
-                        response = session.request(method,path, params=args,headers=headers,data=payload, timeout=self.timeout, verify=True)
+                    response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout, verify=True)
                         
                 except (HTTPError, ConnectionError), e:
                     maxretries -= 1
@@ -790,7 +833,7 @@ class FacebookTab(ApiTab):
 
         return options
 
-    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
     # Preconditions
         if options.get('access_token','') == '':
             raise Exception('Access token is missing, login please!')
@@ -825,7 +868,7 @@ class FacebookTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,jsonify=True)
+            data, headers, status = self.request(urlpath, urlparams)
 
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
@@ -994,7 +1037,7 @@ class TwitterTab(ApiTab):
             raise Exception("No access, login please!")
 
 
-    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
         self.connected = True
         self.speed = options.get('speed',None)
 
@@ -1012,7 +1055,7 @@ class TwitterTab(ApiTab):
                                                                                    urlparams)))
 
             # data
-            data, headers, status = self.request(urlpath, urlparams,jsonify=True)
+            data, headers, status = self.request(urlpath, urlparams)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 
@@ -1261,7 +1304,7 @@ class TwitterStreamingTab(ApiTab):
         self.response.raw._fp.close()
         #self.response.close()
 
-    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
         if not ('url' in options):
             urlpath = options["basepath"] + options["resource"] + ".json"
             urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata,options)
@@ -1417,10 +1460,11 @@ class OAuth2Tab(ApiTab):
 
         super(OAuth2Tab, self).setOptions(options)
 
-    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
         self.closeSession()
         self.connected = True
         self.speed = options.get('speed',None)
+        self.progress = logProgress
 
         # Abort condition: maximum page count
         for page in range(0, options.get('pages', 1)):
@@ -1442,6 +1486,7 @@ class OAuth2Tab(ApiTab):
 
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
+                
             else:
                 #requestheaders = {}
                 payload = None
@@ -1453,7 +1498,7 @@ class OAuth2Tab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,requestheaders,method=method,payload=payload,jsonify=True)
+            data, headers, status = self.request(urlpath, urlparams,requestheaders,method,payload)
             options['querystatus'] = status
 
             callback(data, options, headers)
@@ -1676,7 +1721,7 @@ class AmazonTab(ApiTab):
         super(AmazonTab, self).setOptions(options)
 
             
-    def fetchData(self, nodedata, options=None, callback=None, logCallback=None):
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
         self.closeSession()
         self.connected = True
         self.speed = options.get('speed',None)
@@ -1809,7 +1854,7 @@ class AmazonTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,headers,method=method,payload=payload,jsonify=True)
+            data, headers, status = self.request(urlpath, urlparams,headers,method=method,payload=payload)
             options['querystatus'] = status
 
             callback(data, options, headers)
@@ -1916,15 +1961,7 @@ class FilesTab(OAuth2Tab):
 
         super(FilesTab, self).setOptions(options)
 
-    def verbChanged(self):
-        if self.verbEdit.currentText() == 'GET':
-            self.payloadEdit.hide()
-            self.mainLayout.labelForField(self.payloadEdit).hide()
-        else:
-            self.payloadEdit.show()
-            self.mainLayout.labelForField(self.payloadEdit).show()
-
-    def fetchData(self, nodedata, options=None, callback=None,logCallback=None):
+    def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
         self.closeSession()
         self.connected = True
         self.speed = options.get('speed',None)

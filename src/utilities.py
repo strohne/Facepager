@@ -5,6 +5,7 @@ import lxml
 import lxml.html
 from lxml.cssselect import CSSSelector
 
+import StringIO
 
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
@@ -205,3 +206,41 @@ def htmlToJson(data,csskey=None,type='lxml'):
         output = {soup.tag : parseSoup(soup,True)}
 
     return output
+
+# See http://foobarnbaz.com/2012/12/31/file-upload-progressbar-in-pyqt/
+# See http://code.activestate.com/recipes/578669-wrap-a-string-in-a-file-like-object-that-calls-a-u/
+class CancelledError(Exception):
+    """Error denoting user interruption.
+    """
+    def __init__(self, msg):
+        self.msg = msg
+        Exception.__init__(self, msg)
+
+    def __str__(self):
+        return self.msg
+
+    __repr__ = __str__
+
+
+class BufferReader():
+    """StringIO with a callback.
+    """
+    def __init__(self, data='',callback=None):
+        self._callback = callback
+        self._progress = 0
+        self._len = int(len(data))
+        self._io = StringIO.StringIO(data)
+
+    def __len__(self):
+        return self._len
+    
+    def read(self, *args):
+        chunk = self._io.read(*args)
+        self._progress += int(len(chunk))
+        if self._callback:
+            try:
+                self._callback(self._progress,self._len)
+            except:
+                raise CancelledError('The upload was cancelled.')
+
+        return chunk
