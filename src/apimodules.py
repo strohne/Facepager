@@ -16,6 +16,7 @@ import requests
 from requests.exceptions import *
 from rauth import OAuth1Service
 from requests_oauthlib import OAuth2Session
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 import dateutil.parser
 
@@ -24,6 +25,7 @@ from paramedit import *
 from utilities import *
 
 from credentials import *
+from pandas.core.config import is_instance_factory
 #import imp
 #try:
 #    imp.find_module('credentials')
@@ -168,15 +170,35 @@ class ApiTab(QWidget):
         # Parse JSON and replace placeholders in values
         elif options.get('encoding','<None>') == 'multipart/form-data':
             payload = json.loads(payload)
-
             for name in payload:
-                payload[name] = self.parsePlaceholders(payload[name], nodedata, params,options)
+                value = payload[name]
+                
+                # Files (convert dict to tuple)
+                if isinstance(value,dict):
+                   filename = self.parsePlaceholders(value.get('name',''), nodedata, params,options)
+                   filedata = self.parsePlaceholders(value.get('data',''), nodedata, params,options)
+                   filetype = self.parsePlaceholders(value.get('type',''), nodedata, params,options)                   
+                   payload[name] = (filename,filedata,filetype)
+                    
+                # Strings
+                else:
+                    payload[name] = self.parsePlaceholders(value, nodedata, params,options)
+            
+            payload = MultipartEncoder(fields=payload)
+            
+            if self.progress is not None: 
+                def callback(monitor):
+                    self.progress(monitor.bytes_read,monitor.len)
 
+                payload = MultipartEncoderMonitor(payload,callback)
+                
             return payload
         
-        # Replace placeholders in string
+        # Replace placeholders in string and setup progress callback
         else:   
-            return self.parsePlaceholders(payload, nodedata, params,options)
+            payload = self.parsePlaceholders(payload, nodedata, params,options)                    
+            payload = BufferReader(payload,self.progress)
+            return payload
 
     # Gets data from input fields or defaults (never gets credentials from default values!)
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -574,9 +596,6 @@ class ApiTab(QWidget):
         session = self.initSession()
         if (not session):
             raise Exception("No session available.")
-
-        if payload is not None:
-            payload = BufferReader(payload,self.progress)
             
         try:
             maxretries = 3
@@ -1485,8 +1504,10 @@ class OAuth2Tab(ApiTab):
 
 
                 method=options.get('verb','GET')
-                payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
-                
+                payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)                
+                if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
+                    requestheaders["Content-Type"] = payload.content_type
+                    
             else:
                 #requestheaders = {}
                 payload = None

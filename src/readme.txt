@@ -12,6 +12,7 @@ dateutil: pip install python-dateutil (PSF License)
 requests: pip install requests (Apache2 License)
 requests_oauthlib: pip install requests_oauthlib (ISC License, equivalent to the BSD 2-Clause and MIT licenses)
 requests[security]: pip install -U requests[security]==2.7.0
+requests-toolbelt pip install requests-toolbelt (Licence: Apache 2.0)
 rauth: pip install rauth (MIT licence)
 numpy and pandas: pip install numpy pandas
 
@@ -26,7 +27,6 @@ See credentials.py.readme for further details.
 #
 ########
 
-
 git clone https://github.com/strohne/Facepager
 cd Facepager
 
@@ -35,7 +35,7 @@ sudo apt-get install build-essential git cmake libqt4-dev libphonon-dev python2.
 virtualenv facepager_env
 . facepager_env/bin/activate
 
-pip install SQLAlchemy python-dateutil requests rauth wheel
+pip install SQLAlchemy python-dateutil requests requests-toolbelt rauth wheel
 cd src/
 
 #you may want to change the download link to the most recent version
@@ -82,7 +82,7 @@ python Facepager.py
 
 	$ virtualenv facepager_env
 	$ . facepager_env/bin/activate
-	$ pip install SQLAlchemy python-dateutil requests rauth wheel
+	$ pip install SQLAlchemy python-dateutil requests requests-toolbelt rauth wheel
 
 	# The following commands take a long time, press return if terminal seems to hang
 	$ pip install pyside
@@ -147,6 +147,7 @@ Edit virtual machine, in Network Adapter section set network connection to "Brid
 	pip install SQLAlchemy
 	pip install python-dateutil
 	pip install requests
+	pip install requests-toolbelt
 	pip install requests_oauthlib
 	pip install -U requests[security]==2.7.0
 	pip install rauth
@@ -238,7 +239,7 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	
 3. Install other packages, type in terminal:
 
-	pip install SQLAlchemy python-dateutil requests_oauthlib rauth
+	pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth
 	pip install numpy pandas
 
 	Maybe optional:
