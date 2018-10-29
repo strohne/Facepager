@@ -798,8 +798,8 @@ class FacebookTab(ApiTab):
         self.defaults['resource'] = '<Object ID>'
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
-        self.defaults['objectid'] = 'id'
-        self.defaults['nodedata'] = 'data'
+        self.defaults['key_objectid'] = 'id'
+        self.defaults['key_nodedata'] = 'data'
             
         # Query Box
         self.initInputs()
@@ -959,8 +959,8 @@ class TwitterTab(ApiTab):
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
-        self.defaults['objectid'] = 'id'
-        self.defaults['nodedata'] = None
+        self.defaults['key_objectid'] = 'id'
+        self.defaults['key_nodedata'] = None
         
         # Query and Parameter Box
         self.initInputs()
@@ -1161,8 +1161,8 @@ class TwitterStreamingTab(ApiTab):
         self.defaults['basepath'] = 'https://stream.twitter.com/1.1/'
         self.defaults['resource'] = 'statuses/filter'
         self.defaults['params'] = {'track': '<Object ID>'}        
-        self.defaults['objectid'] = 'id'
-        self.defaults['nodedata'] = None
+        self.defaults['key_objectid'] = 'id'
+        self.defaults['key_nodedata'] = None
         
         # Query Box
         self.initInputs()
