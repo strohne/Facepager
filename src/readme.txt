@@ -15,6 +15,7 @@ requests[security]: pip install -U requests[security]==2.7.0
 requests-toolbelt pip install requests-toolbelt (Licence: Apache 2.0)
 rauth: pip install rauth (MIT licence)
 numpy and pandas: pip install numpy pandas
+lxml: pip install lxml
 
 Facepager needs some secret keys to connect to Facebook and Twitter.
 See credentials.py.readme for further details.
@@ -239,7 +240,7 @@ Open terminal by typing "terminal" in the spotlight search (top right corner on 
 	
 3. Install other packages, type in terminal:
 
-	pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth
+	pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml
 	pip install numpy pandas
 
 	Maybe optional:
