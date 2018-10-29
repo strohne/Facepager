@@ -3,7 +3,6 @@ import os,sys,platform
 
 import lxml
 import lxml.html
-from lxml.cssselect import CSSSelector
 
 import StringIO
 
