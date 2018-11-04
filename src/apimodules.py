@@ -189,12 +189,17 @@ class ApiTab(QScrollArea):
         
         # Parse JSON and replace placeholders in values
         elif options.get('encoding','<None>') == 'multipart/form-data':
-            payload = json.loads(payload)
+            #payload = json.loads(payload)
             for name in payload:
                 value = payload[name]
                 
+                try:
+                    value = json.loads(value)
+                except:
+                    pass 
+                    
                 # Files (convert dict to tuple)
-                if isinstance(value,dict):
+                if isinstance(value,dict):                
                    filename = self.parsePlaceholders(value.get('name',''), nodedata, params,options)
                    filedata = self.parsePlaceholders(value.get('data',''), nodedata, params,options)
                    filetype = self.parsePlaceholders(value.get('type',''), nodedata, params,options)                   
@@ -1762,9 +1767,7 @@ class AmazonTab(ApiTab):
         self.initPagingInputs(True)
 
         # Login inputs
-        #self.initAuthInputs()
         self.initLoginInputs()
-        self.initServiceInputs()
 
         self.loadSettings()
 
@@ -1776,6 +1779,7 @@ class AmazonTab(ApiTab):
         loginlayout.setContentsMargins(0,0,0,0)
         loginwidget.setLayout(loginlayout)
 
+
         self.accesskeyEdit = QLineEdit()
         self.accesskeyEdit.setEchoMode(QLineEdit.Password)
         loginlayout.addWidget(self.accesskeyEdit)
@@ -1784,25 +1788,17 @@ class AmazonTab(ApiTab):
         self.secretkeyEdit = QLineEdit()
         self.secretkeyEdit.setEchoMode(QLineEdit.Password)
         loginlayout.addWidget(self.secretkeyEdit)
+        
 
-
-        self.mainLayout.addRow("Access Key", loginwidget)
-
-    def initServiceInputs(self):
-        # token and login button
-        servicewidget = QWidget()
-        servicelayout = QHBoxLayout()
-        servicelayout.setContentsMargins(0,0,0,0)
-        servicewidget.setLayout(servicelayout)
-
+        loginlayout.addWidget(QLabel('Service'))
         self.serviceEdit = QLineEdit()
-        servicelayout.addWidget(self.serviceEdit)
+        loginlayout.addWidget(self.serviceEdit)
 
-        servicelayout.addWidget(QLabel('Region'))
+        loginlayout.addWidget(QLabel('Region'))
         self.regionEdit = QLineEdit()
-        servicelayout.addWidget(self.regionEdit)
-
-        self.mainLayout.addRow("Service", servicewidget)
+        loginlayout.addWidget(self.regionEdit)
+        
+        self.mainLayout.addRow("Access Key", loginwidget)
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -1955,8 +1951,8 @@ class AmazonTab(ApiTab):
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
                                 
-                #if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
-                #    requestheaders["Content-Type"] = payload.content_type
+                if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
+                    headers["Content-Type"] = payload.content_type
                                     
             else:
                 requestheaders = {}
@@ -2119,6 +2115,8 @@ class FilesTab(OAuth2Tab):
 
         method=options.get('verb','GET')
         payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
+        if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
+            requestheaders["Content-Type"] = payload.content_type
 
         # Log
         if options['logrequests']:
