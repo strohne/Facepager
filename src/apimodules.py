@@ -9,7 +9,7 @@ from collections import OrderedDict
 import threading
 
 from PySide.QtWebKit import QWebView, QWebPage
-from PySide.QtGui import QMessageBox, QHBoxLayout
+from PySide.QtGui import QMessageBox, QHBoxLayout, QScrollArea
 from PySide.QtCore import QUrl
 
 import requests
@@ -33,7 +33,7 @@ from pandas.core.config import is_instance_factory
 #except ImportError:
 #    credentials = {}
 
-class ApiTab(QWidget):
+class ApiTab(QScrollArea):
     """
     Generic API Tab Class
         - handles URL-Substitutions
@@ -43,7 +43,7 @@ class ApiTab(QWidget):
     streamingData = Signal(list, list, list)
 
     def __init__(self, mainWindow=None, name="NoName"):
-        QWidget.__init__(self, mainWindow)
+        QScrollArea.__init__(self, mainWindow)
         self.timeout = None
         self.mainWindow = mainWindow
         self.name = name
@@ -54,13 +54,33 @@ class ApiTab(QWidget):
         self.lock_session = threading.Lock()
         self.progress = None
 
-        self.authWidget = QWidget()
+        # Layout       
+        self.mainLayout = QFormLayout()
+        self.mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        self.mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.mainLayout.setLabelAlignment(Qt.AlignLeft)
+        self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)    
+        self.mainLayout.setSizeConstraint(QLayout.SetMaximumSize) #QLayout.SetMinimumSize
+        
+        # For scrolling
+        page = QWidget(self)
+        page.setLayout(self.mainLayout)
+        
+        
+        self.setWidget(page)
+        self.setStyleSheet("QScrollArea {border:0px;background-color:transparent;}")
+        page.setAutoFillBackground(False) #import: place after setStyleSheet
+        self.setWidgetResizable(True)
 
+        
+        # Popup window for auth settings
+        self.authWidget = QWidget()
+        
+        # Default settings
         try:
             self.defaults = credentials.get(name.lower().replace(' ','_'),{})
         except NameError:
             self.defaults = {}
-
 
     def idtostr(self, val):
         """
@@ -221,9 +241,13 @@ class ApiTab(QWidget):
 
         #payload        
         try:
-            if options.get('verb','GET') in ['POST','PUT']:
-                options['payload'] = self.payloadEdit.toPlainText()                
+            if options.get('verb','GET') in ['POST','PUT','PATCH']:
                 options['encoding'] = self.encodingEdit.currentText().strip()
+                
+                if options['encoding'] == 'multipart/form-data':
+                    options['payload'] = self.multipartEdit.getParams()
+                else:
+                    options['payload'] = self.payloadEdit.toPlainText()
         except AttributeError:
             pass
 
@@ -232,7 +256,14 @@ class ApiTab(QWidget):
             options['pages'] = self.pagesEdit.value()
         except AttributeError:
             pass
-        
+
+        try:
+            options['key_paging'] = self.pagingkeyEdit.currentText() if self.pagingkeyEdit.currentText() != "" else self.defaults.get('key_paging',None)
+            options['param_paging'] = self.pagingparamEdit.currentText() if self.pagingparamEdit.currentText() != "" else self.defaults.get('param_paging',None)
+        except AttributeError:
+            options['key_paging'] = self.defaults.get('key_paging',None)
+            options['param_paging'] = self.defaults.get('param_paging',None)
+                    
         #options for data handling
         try:
             options['nodedata'] = self.extractEdit.currentText() if self.extractEdit.currentText() != "" else self.defaults.get('key_objectid',None)
@@ -305,8 +336,13 @@ class ApiTab(QWidget):
         try:
             self.headerEdit.setParams(options.get('headers', {}))
             self.verbEdit.setCurrentIndex(self.verbEdit.findText(options.get('verb', 'GET')))
-            self.payloadEdit.setPlainText(options.get('payload',''))                          
-            self.encodingEdit.setCurrentIndex(self.encodingEdit.findText(options.get('encoding', '<None>')))            
+            self.encodingEdit.setCurrentIndex(self.encodingEdit.findText(options.get('encoding', '<None>')))
+            
+            if options.get('encoding', '<None>') == 'multipart/form-data':                
+                self.multipartEdit.setParams(options.get('payload',{}))
+            else:
+                self.payloadEdit.setPlainText(options.get('payload',''))
+                    
             self.verbChanged()
         except AttributeError:
             pass
@@ -323,11 +359,17 @@ class ApiTab(QWidget):
             self.pagesEdit.setValue(int(options.get('pages', 1)))
         except AttributeError:
             pass
-
+        
+        try:
+            self.pagingkeyEdit.setEditText(options.get('key_paging', ''))
+            self.pagingparamEdit.setEditText(options.get('param_paging', ''))            
+        except AttributeError:
+            pass
+        
         # Extract options
         try:
             self.extractEdit.setEditText(options.get('nodedata', ''))
-            self.objectidEdit.setEditText(options.get('objectid', ''))
+            self.objectidEdit.setEditText(options.get('objectid', ''))            
         except AttributeError:
             pass
                 
@@ -399,12 +441,7 @@ class ApiTab(QWidget):
         Set resource according to the APIdocs, if any docs are available
         '''
 
-        self.mainLayout = QFormLayout()
-        self.mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        self.mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
-        self.mainLayout.setLabelAlignment(Qt.AlignLeft)
-        self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        self.setLayout(self.mainLayout)
+
 
         #Base path
         self.basepathEdit = QComboBox(self)
@@ -453,11 +490,42 @@ class ApiTab(QWidget):
 
         self.mainLayout.addRow("Folder", self.folderwidget)
 
-    def initPagingInputs(self):
-        self.pagesEdit = QSpinBox(self)
-        self.pagesEdit.setMinimum(1)
-        self.pagesEdit.setMaximum(50000)
-        self.mainLayout.addRow("Maximum pages", self.pagesEdit)
+    def initPagingInputs(self,keys = False):
+        layout= QHBoxLayout()
+        
+        if keys:
+            # Paging settings
+            
+            self.pagingkeyEdit = QComboBox(self)
+            self.pagingkeyEdit.setEditable(True)
+            layout.addWidget(self.pagingkeyEdit)
+            layout.setStretch(0, 1)        
+    
+            layout.addWidget(QLabel("Paging Param"))
+            self.pagingparamEdit = QComboBox(self)
+            self.pagingparamEdit.setEditable(True)
+            layout.addWidget(self.pagingparamEdit)
+            layout.setStretch(2, 1)
+            
+            #Page count
+            layout.addWidget(QLabel("Maximum Pages"))
+            self.pagesEdit = QSpinBox(self)
+            self.pagesEdit.setMinimum(1)
+            self.pagesEdit.setMaximum(50000)
+            layout.addWidget(self.pagesEdit)
+            layout.setStretch(4, 1)
+
+            self.mainLayout.addRow("Paging Key", layout)
+        else:
+            layout= QHBoxLayout()
+            
+            #Page count
+            self.pagesEdit = QSpinBox(self)
+            self.pagesEdit.setMinimum(1)
+            self.pagesEdit.setMaximum(50000)
+            layout.addWidget(self.pagesEdit)            
+            
+            self.mainLayout.addRow("Maximum pages", layout)            
 
     def initHeaderInputs(self):
         self.headerEdit = QParamEdit(self)
@@ -467,7 +535,7 @@ class ApiTab(QWidget):
     def initVerbInputs(self):
         # Verb and encoding
         self.verbEdit = QComboBox(self)
-        self.verbEdit.addItems(['GET','POST','PUT'])
+        self.verbEdit.addItems(['GET','POST','PUT','PATCH','DELETE'])
         self.verbEdit.currentIndexChanged.connect(self.verbChanged)
 
         self.encodingLabel = QLabel("Encoding")
@@ -487,12 +555,17 @@ class ApiTab(QWidget):
         # Payload
         self.payloadWidget = QWidget()
         self.payloadLayout = QHBoxLayout()
+        self.payloadLayout.setContentsMargins(0,0,0,0)
         self.payloadWidget.setLayout(self.payloadLayout)
         
         self.payloadEdit = QPlainTextEdit()
         self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.payloadLayout.addWidget(self.payloadEdit)
         self.payloadLayout.setStretch(0, 1);
+        
+        self.multipartEdit = QParamEdit()
+        self.payloadLayout.addWidget(self.multipartEdit)
+        self.payloadLayout.setStretch(0, 1);        
 
         self.payloadLayout.setStretch(2, 1);    
         self.mainLayout.addRow("Payload", self.payloadWidget)
@@ -511,25 +584,40 @@ class ApiTab(QWidget):
             self.payloadWidget.show()
             self.mainLayout.labelForField(self.payloadWidget).show()
 
+            #Encoding    
             self.encodingEdit.show()
             self.encodingLabel.show()
             
+            #Multipart
+            if self.encodingEdit.currentText().strip() == 'multipart/form-data':
+                self.multipartEdit.show()
+                self.payloadEdit.hide()
+                
+                #self.payloadEdit.setPlainText(json.dumps(self.multipartEdit.getParams(),indent=4,))
+            else:
+                self.payloadEdit.show()
+                self.multipartEdit.hide()
+            
+            #Folder
             self.folderwidget.show()
             self.mainLayout.labelForField(self.folderwidget).show()                        
 
     def initExtractInputs(self):
+        layout= QHBoxLayout()
+        
+        #Extract
         self.extractEdit = QComboBox(self)
         self.extractEdit.setEditable(True)
+        layout.addWidget(self.extractEdit)
+        layout.setStretch(0, 1)
 
+        layout.addWidget(QLabel("Key for Object ID"))
         self.objectidEdit = QComboBox(self)
         self.objectidEdit.setEditable(True)
-
-        layout= QHBoxLayout()
-        layout.addWidget(self.extractEdit)
-        layout.setStretch(0, 1);
-        layout.addWidget(QLabel("Key for Object ID"))
         layout.addWidget(self.objectidEdit)
-        layout.setStretch(2, 1);
+        layout.setStretch(2, 1)
+                    
+        #Add layout                
         self.mainLayout.addRow("Key to extract", layout)
 
     @Slot()
@@ -1442,8 +1530,7 @@ class OAuth2Tab(ApiTab):
         loginlayout.addWidget(self.loginButton)
 
         self.mainLayout.addRow("Access Token", loginwidget)
-
-
+        
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(OAuth2Tab, self).getOptions(purpose)
 
@@ -1525,7 +1612,7 @@ class OAuth2Tab(ApiTab):
             callback(data, options, headers)
 
             # paging
-            if options.get('key_paging',None) is not None:
+            if (options.get('key_paging','') is not None) and (options.get('param_paging','') is not None):
                 if isinstance(data,dict) and hasDictValue(data, options['key_paging']):
                     options['params'][options['param_paging']] = data[options['key_paging']]
                 else:
@@ -1666,17 +1753,18 @@ class AmazonTab(ApiTab):
         self.initVerbInputs()
         self.initFolderInput()
         
-        self.initServiceInputs()
+        
         
         # Extract input
         self.initExtractInputs()
         
         # Pages Box
-        #self.initPagingInputs()
+        self.initPagingInputs(True)
 
         # Login inputs
         #self.initAuthInputs()
         self.initLoginInputs()
+        self.initServiceInputs()
 
         self.loadSettings()
 
@@ -1803,6 +1891,11 @@ class AmazonTab(ApiTab):
             # Create payload hash (hash of the request body content). For GET
             # requests, the payload is an empty string ("").
             payload = '' if payload is None else payload
+            if isinstance(payload,BufferReader):
+                  payload_buffer = payload
+                  payload = payload_buffer.read()
+                  payload_buffer.rewind()
+                  
             payload_hash = hashlib.sha256(payload).hexdigest()
             
             # Combine elements to create canonical request
@@ -1842,8 +1935,8 @@ class AmazonTab(ApiTab):
         # Access keys
         access_key = options.get('accesskey','')
         secret_key = options.get('secretkey','')
+        
         region = options.get('region','')
-        #region = options.get('region','eu-central-1')
         service = options.get('service','')
 
         if access_key == '' or secret_key == '':
@@ -1861,6 +1954,10 @@ class AmazonTab(ApiTab):
                 headers = options.get('headers',{})
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
+                                
+                #if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
+                #    requestheaders["Content-Type"] = payload.content_type
+                                    
             else:
                 requestheaders = {}
                 payload = None
@@ -1881,7 +1978,7 @@ class AmazonTab(ApiTab):
             callback(data, options, headers)
 
             # paging
-            if options.get('key_paging',None) is not None:
+            if (options.get('key_paging',None) is not None) and (options.get('param_paging',None) is not None):
                 if isinstance(data,dict) and hasDictValue(data, options['key_paging']):
                     options['params'][options['param_paging']] = data[options['key_paging']]
                 else:
@@ -1907,6 +2004,7 @@ class GenericTab(OAuth2Tab):
 
         # Extract input
         self.initExtractInputs()
+        self.initPagingInputs(True)
 
         # Login inputs
         self.initAuthInputs()
@@ -1982,6 +2080,12 @@ class FilesTab(OAuth2Tab):
 
         super(FilesTab, self).setOptions(options)
 
+    def verbChanged(self):
+        super(FilesTab, self).verbChanged()
+
+        self.folderwidget.show()
+        self.mainLayout.labelForField(self.folderwidget).show()
+            
     def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
         self.closeSession()
         self.connected = True

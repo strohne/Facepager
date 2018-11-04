@@ -233,6 +233,9 @@ class BufferReader():
     def __len__(self):
         return self._len
     
+    def rewind(self):
+        self._io.seek(0)
+        
     def read(self, *args):
         chunk = self._io.read(*args)
         self._progress += int(len(chunk))

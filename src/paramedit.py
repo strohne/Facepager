@@ -1,12 +1,14 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
+from collections import OrderedDict
+import json
 
 class QParamEdit(QTableWidget):
 
     def __init__(self, parent=None):
         super(QParamEdit, self).__init__(parent)
 
-        self.setStyleSheet("QParamEdit {border:0px;} QParamEdit::item {margin-bottom:3px;margin-right:5px;}")
+        self.setStyleSheet("QParamEdit {border:0px;background-color:transparent;} QParamEdit::item {margin-bottom:3px;margin-right:5px;}")
         self.setShowGrid(False)
         self.nameoptions = []
         self.valueoptions = []
@@ -27,8 +29,16 @@ class QParamEdit(QTableWidget):
         self.calcRows()
         self.resizeRowsToContents()
 
+        self.horizontalScrollBar().setVisible(False)
+        
     # Takes params as dict and fills the widget
     def setParams(self,vals={}):
+        try:
+            if isinstance(vals,str) or isinstance(vals,unicode):
+                vals = json.loads(vals)
+        except:
+            vals = {}
+        
         self.setRowCount(len(vals))
         self.setValueOptions(self.valueoptions)
         self.setNameOptions(self.nameoptions)
@@ -44,7 +54,7 @@ class QParamEdit(QTableWidget):
 
     # Returns the params set in the widget
     def getParams(self):
-        params = {}
+        params = OrderedDict()
         for row in range(0,self.rowCount()):
             if not self.rowEmpty(row):
                 params[self.getValue(row,0).strip()] = self.getValue(row,1).strip()
@@ -152,6 +162,12 @@ class QParamEdit(QTableWidget):
         else:
             combo = self.getValueComboBox(row)
 
+        try:
+            if isinstance(val,dict) or isinstance(val,list):
+                val = json.dumps(val)
+        except:
+            val = ''
+            
         combo.setEditText(val)
 
     def getValue(self,row,col):
@@ -226,6 +242,7 @@ class QParamEdit(QTableWidget):
         if (not self.horizontalHeader().isHidden()):
              rowTotalHeight += self.horizontalHeader().height()
 
+        self.setMinimumHeight(rowTotalHeight)
         self.setMaximumHeight(rowTotalHeight)
 
 class ValueEdit(QWidget):
