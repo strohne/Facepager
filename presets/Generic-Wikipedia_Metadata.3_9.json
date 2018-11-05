@@ -1,6 +1,7 @@
 {
   "description": "Add titles of articles as nodes, then fetch data from the German Wikipedia.\n\nThe metadata includes page views and date of the last revision. Redirects are automatically resolved.\n\nGeneral introduction to Wikipedia API: https://www.mediawiki.org/wiki/API:Main_page\n\nThe action=query module of Wikipedia is probably what you want to use: https://www.mediawiki.org/wiki/API:Query\n\nPossible values of the prop-parameter: https://www.mediawiki.org/w/api.php?action=help&modules=query\n\n",
   "module": "Generic",
+  "category": "Wikipedia",
   "speed": 200,
   "options": {
     "resource": "",
