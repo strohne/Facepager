@@ -1,0 +1,25 @@
+{
+  "category": "YouTube",
+  "description": "Add video IDs as nodes. Alternatively, you can use the results of searching YouTube (see the corresponding preset).\n\nSee https://developers.google.com/youtube/v3/docs/videos/list for further information. Notice the different options for the part-parameter.\n\nOverview about YouTube Data API reference: https://developers.google.com/youtube/v3/docs/",
+  "module": "YouTube",
+  "speed": 200,
+  "options": {
+    "resource": "videos",
+    "basepath": "https://www.googleapis.com/youtube/v3/",
+    "params": {
+      "part": "snippet,contentDetails,statistics",
+      "id": "<Object ID>"
+    },
+    "pages": 1,
+    "scope": ""
+  },
+  "columns": [
+    "snippet.title",
+    "statistics.commentCount",
+    "statistics.viewCount",
+    "statistics.favoriteCount",
+    "statistics.dislikeCount",
+    "statistics.likeCount"
+  ],
+  "name": "Get video statistics"
+}
