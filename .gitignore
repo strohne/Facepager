@@ -11,6 +11,7 @@ src/credentials.py
 .project
 .pydevproject
 .settings/
+.idea/
 .settings/org.eclipse.core.resources.prefs
 *.DS_Store
 src/.eggs
