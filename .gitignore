@@ -16,3 +16,5 @@ src/credentials.py
 *.DS_Store
 src/.eggs
 src/Facepager.spec
+*.exe
+*.app.zip
