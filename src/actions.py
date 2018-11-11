@@ -449,7 +449,7 @@ class Actions(object):
 
                             #collect errors for automatic retry
                             if not (laststatus in allowedstatus):
-                                threadpool.addRetry(job)
+                                threadpool.addRetry(deepcopy(job))
 
                             #auto cancel after three consecutive errors
                             if (status != laststatus):
