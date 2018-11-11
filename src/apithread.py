@@ -141,6 +141,9 @@ class ApiThreadPool():
     def getJobCount(self):
         return len(self.input)
 
+    def getTotalCount(self):
+        return self.jobcount
+
     def getThreadCount(self):
         with self.pool_lock:
             return self.threadcount

@@ -475,6 +475,7 @@ class Actions(object):
                                     laststatuscount = 1
                                     if retry:
                                         threadpool.retryJobs()
+                                        progress.setMaximum(threadpool.getTotalCount())
                                     else:
                                         threadpool.clearRetry()
                                         threadpool.resumeJobs()
