@@ -1,18 +1,21 @@
 import Queue
+import collections
 import threading
 import time
 
 
 class ApiThreadPool():
     def __init__(self, module):
-        self.input = Queue.Queue()
+        self.input = collections.deque()
+        self.retry = Queue.Queue()
         self.output = Queue.Queue(100)
-        self.logs= Queue.Queue()
+        self.logs = Queue.Queue()
         self.module = module
         self.threads = []
         self.pool_lock = threading.Lock()
         self.threadcount = 0
         self.jobcount = 0
+        self.jobsadded = False
 
     def getLogMessage(self):
         try:
@@ -26,47 +29,61 @@ class ApiThreadPool():
         finally:
             return msg
 
+    def addRetry(self,job):
+        self.retry.put(job)
+
+    def clearRetry(self):
+        with self.retry.mutex:
+            self.retry.queue.clear()
+
     def addJob(self, job):
         if job is not None:
             job['number'] = self.jobcount
             self.jobcount += 1
-        self.input.put(job)
+        self.input.append(job)
+
+        if self.jobcount % 10 == 0:
+            self.resumeJobs()
+
+    def clearJobs(self):
+        self.input.clear()
 
     def getJob(self):
         try:
-            if self.output.empty():
-                job = {'waiting': True}
-            else:
-                job = self.output.get(True, 1)
-                self.output.task_done()
+            job = self.output.get(True, 1)
+            self.output.task_done()
         except Queue.Empty as e:
             job = {'waiting': True}
         finally:
             return job
 
-    def closeJobs(self):
-        with self.pool_lock:
-            for x in range(0,self.threadcount):
-                self.addJob(None)  # sentinel empty job
+    def applyJobs(self):
+        self.jobsadded = True
+        self.resumeJobs()
+        # with self.pool_lock:
+        #     for x in range(0,self.threadcount):
+        #         pass
+                #self.addJob(None)  # sentinel empty job
 
-    def processJobs(self,threadcount=None):
-        with self.pool_lock:
-            if threadcount is not None:
-                maxthreads = threadcount
-            elif self.input.qsize() > 50:
-                maxthreads = 5
-            elif self.input.qsize() > 10:
-                maxthreads = 2
-            else:
-                maxthreads = 1
+    def hasJobs(self):
+        if not self.jobsadded:
+            return True
 
-            self.threads = []
-            for x in range(maxthreads):
-                self.addThread()
+        for thread in self.threads:
+            if thread.process.isSet():
+                return True
+
+        if len(self.input) > 0:
+            return True
+
+        if not self.output.empty():
+            return True
+
+        return False
 
     def addThread(self):
         #self.addJob(None)  # sentinel empty job
-        thread = ApiThread(self.input, self.output, self.module, self,self.logs)
+        thread = ApiThread(self.input, self.retry, self.output, self.module, self,self.logs)
         self.threadcount += 1
         self.threads.append(thread)
 
@@ -78,6 +95,21 @@ class ApiThreadPool():
         if count(self.threads):
             self.threads[0].halt.set()
             self.threads[0].process.set()
+
+    def processJobs(self,threadcount=None):
+        with self.pool_lock:
+            if threadcount is not None:
+                maxthreads = threadcount
+            elif len(self.input) > 50:
+                maxthreads = 5
+            elif len(self.input) > 10:
+                maxthreads = 2
+            else:
+                maxthreads = 1
+
+            self.threads = []
+            for x in range(maxthreads):
+                self.addThread()
 
     def stopJobs(self):
         for thread in self.threads:
@@ -94,16 +126,20 @@ class ApiThreadPool():
         for thread in self.threads:
             thread.process.set()
 
+    def retryJobs(self):
+        while not self.retry.empty():
+            self.input.appendleft(self.retry.get())
+        self.resumeJobs()
+
     def threadFinished(self):
         with self.pool_lock:
             self.threadcount -= 1
             if (self.threadcount == 0):
-                with self.input.mutex:
-                    self.input.queue.clear()
+                self.clearJobs()
                 self.output.put(None)  #sentinel
 
     def getJobCount(self):
-        return self.input.qsize()
+        return len(self.input)
 
     def getThreadCount(self):
         with self.pool_lock:
@@ -121,20 +157,22 @@ class ApiThreadPool():
 
 
 class ApiThread(threading.Thread):
-    def __init__(self, input, output, module, pool,logs):
+    def __init__(self, input, retry, output, module, pool, logs):
         threading.Thread.__init__(self)
         #self.daemon = True
         self.pool = pool
         self.input = input
+        self.retry = retry
         self.output = output
         self.module = module
         self.logs = logs
         self.halt = threading.Event()
+        self.retry = threading.Event()
         self.process = threading.Event()
 
     def run(self):
         def streamingData(data, options, headers, streamingTab=False):
-            out = {'nodeindex': job['nodeindex'], 'data': data, 'options': options, 'headers': headers}
+            out = {'nodeindex': job['nodeindex'], 'nodedata' : job['nodedata'], 'data': data, 'options': options, 'headers': headers}
             if streamingTab:
                 out["streamprogress"] = True
             self.output.put(out)
@@ -151,16 +189,20 @@ class ApiThread(threading.Thread):
             while not self.halt.isSet():
                 try:
                     time.sleep(0)
-                    job = self.input.get()
+
+                    # Get from input queue
                     try:
-                        if job is None:
-                            self.halt.set()
-                        else:
-                            self.module.fetchData(job['data'], job['options'], streamingData,logMessage,logProgress)
-                    finally:
-                        self.input.task_done()
-                        if job is not None:
-                            self.output.put({'progress': job.get('number', 0)})
+                        job = self.input.popleft()
+                    except:
+                        self.process.clear()
+                        job = None
+
+                    # Process job
+                    if job is not None:
+                        self.module.fetchData(job['nodedata'], job['options'], streamingData,logMessage,logProgress)
+
+                    if job is not None:
+                        self.output.put({'progress': job.get('number', 0)})
                 except Exception as e:
                     logMessage(e)
 

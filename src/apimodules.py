@@ -946,7 +946,7 @@ class FacebookTab(ApiTab):
         return options
 
     def fetchData(self, nodedata, options=None, callback=None, logCallback=None, logProgress=None):
-    # Preconditions
+        # Preconditions
         if options.get('access_token','') == '':
             raise Exception('Access token is missing, login please!')
         self.connected = True
@@ -959,8 +959,11 @@ class FacebookTab(ApiTab):
             since = int((since - datetime(1970, 1, 1)).total_seconds())
 
         # Abort condition: maximum page count
-        for page in range(0, options.get('pages', 1)):
-        # build url
+        for page in range(options.get('currentpage', 0), options.get('pages', 1)):
+            # Save page
+            options['currentpage'] = page
+
+            # build url
             if not ('url' in options):
                 urlpath = options["basepath"].strip() + options['resource'].strip()
                 urlparams = {}
@@ -982,16 +985,19 @@ class FacebookTab(ApiTab):
             options['querytime'] = str(datetime.now())
             data, headers, status = self.request(urlpath, urlparams)
 
+            options['ratelimit'] = False
+            options['querystatus'] = status
+
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
                 code = getDictValue(data,"error.code")
                 logCallback(u"Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'],msg))
 
-                #see https://developers.facebook.com/docs/graph-api/using-graph-api
-                if (code in [4,17,341]) and (status == "error (400)"):
-                    status = "rate limit (400)"
+                # see https://developers.facebook.com/docs/graph-api/using-graph-api
+                # see https://developers.facebook.com/docs/graph-api/advanced/rate-limiting/
+                if (code in [4,17,32,613]) and (status == "error (400)"):
+                    options['ratelimit'] = True
 
-            options['querystatus'] = status
             callback(data, options, headers)
 
             # paging
@@ -1153,7 +1159,11 @@ class TwitterTab(ApiTab):
         self.connected = True
         self.speed = options.get('speed',None)
 
-        for page in range(0, options.get('pages', 1)):
+        for page in range(options.get('currentpage', 0), options.get('pages', 1)):
+            # Save page
+            options['currentpage'] = page
+
+            # Build URL
             if not ('url' in options):
                 urlpath = options["basepath"] + options["resource"] + ".json"
                 urlpath, urlparams = self.getURL(urlpath, options["params"], nodedata,options)
@@ -1170,6 +1180,10 @@ class TwitterTab(ApiTab):
             data, headers, status = self.request(urlpath, urlparams)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
+
+            if 'x-rate-limit-remaining' in headers:
+                options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
+            options['ratelimit'] = (status == "error (429)")
 
             callback(data, options, headers)
 
@@ -1578,7 +1592,10 @@ class OAuth2Tab(ApiTab):
         self.progress = logProgress
 
         # Abort condition: maximum page count
-        for page in range(0, options.get('pages', 1)):
+        for page in range(options.get('currentpage', 0), options.get('pages', 1)):
+            # Save page
+            options['currentpage'] = page
+
             # build url
             if not ('url' in options):
                 urlpath = options["basepath"] + options['resource']
@@ -1939,7 +1956,10 @@ class AmazonTab(ApiTab):
             raise Exception('Access key or secret key is missing, please fill the input fields!')
 
         # Abort condition: maximum page count
-        for page in range(0, options.get('pages', 1)):
+        for page in range(options.get('currentpage', 0), options.get('pages', 1)):
+            # Save page
+            options['currentpage'] = page
+
             # build url
             if not ('url' in options):
                 urlpath = options["basepath"] + options['resource']

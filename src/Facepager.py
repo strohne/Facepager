@@ -317,7 +317,6 @@ class MainWindow(QMainWindow):
         self.speedEdit.setToolTip("Limit the total amount of requests per minute (calm down to avoid API blocking)")
         fetchsettings.addRow("Requests per minute", self.speedEdit)
 
-
         #Error Box
         self.errorEdit = QSpinBox(self)
         self.errorEdit.setMinimum(1)
@@ -326,12 +325,17 @@ class MainWindow(QMainWindow):
         self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
         fetchsettings.addRow("Maximum errors", self.errorEdit)
 
+        #Retry Box
+        self.autoretryCheckbox = QCheckBox(self)
+        self.autoretryCheckbox.setCheckState(Qt.Checked)
+        self.autoretryCheckbox.setToolTip("Check to automatically retry fetching data after errors. If this is unchecked, fetching data will continue with the next nodes. Anyway, a dialog with a timeout will popup.")
+        fetchsettings.addRow("Retry instead of continue", self.autoretryCheckbox)
+
+        #Expand Box
         self.autoexpandCheckbox = QCheckBox(self)
-        self.autoexpandCheckbox.setCheckState(Qt.Checked)
+        self.autoexpandCheckbox.setCheckState(Qt.Unchecked)
         self.autoexpandCheckbox.setToolTip("Check to automatically expand new nodes when fetching data. Disable for big queries to speed up the process.")
         fetchsettings.addRow("Expand new nodes", self.autoexpandCheckbox)
-
-        
 
         #Log Settings
         self.logCheckbox = QCheckBox(self)

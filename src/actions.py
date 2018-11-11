@@ -333,6 +333,7 @@ class Actions(object):
             globaloptions['speed'] = self.mainWindow.speedEdit.value()
             globaloptions['errors'] = self.mainWindow.errorEdit.value()
             globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
+            globaloptions['autoretry'] = self.mainWindow.autoretryCheckbox.isChecked()
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
@@ -373,16 +374,6 @@ class Actions(object):
 
                 #Fill Input Queue
                 indexes = deque(indexes)
-    #             for index in indexes:
-    #                 number += 1
-    #                 if not index.isValid():
-    #                     continue
-    #
-    #                 treenode = index.internalPointer()
-    #                 job = {'number': number, 'nodeindex': index, 'data': deepcopy(treenode.data),
-    #                        'options': deepcopy(options)}
-    #                 threadpool.addJob(job)
-
                 threadpool.processJobs(options.get("threads",None))
 
                 #Process Input/Output Queue
@@ -398,12 +389,13 @@ class Actions(object):
                             index = indexes.popleft()
                             if index.isValid():
                                 treenode = index.internalPointer()
-                                job = {'nodeindex': index, 'data': deepcopy(treenode.data),
+                                job = {'nodeindex': index, 'nodedata': deepcopy(treenode.data),
                                        'options': deepcopy(options)}
                                 threadpool.addJob(job)
+                                threadpool.resumeJobs()
 
                             if len(indexes) == 0:
-                                threadpool.closeJobs()
+                                threadpool.applyJobs()
                                 progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
 
                         #Jobs out
@@ -441,13 +433,23 @@ class Actions(object):
 
 
                             #show status
-                            status = job['options'].get('querystatus','empty')
+                            status = job['options'].get('querystatus', 'empty')
+                            ratelimit = job['options'].get('ratelimit', False)
                             count = 1 if not status in statuscount else statuscount[status]+1
                             statuscount[status] = count
                             progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
                             progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                             progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
                             progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
+
+                            # Custom info from modules
+                            info = job['options'].get('info', {})
+                            for name, value in info.iteritems():
+                                progress.showInfo(name, value)
+
+                            #collect errors for automatic retry
+                            if not (laststatus in allowedstatus):
+                                threadpool.addRetry(job)
 
                             #auto cancel after three consecutive errors
                             if (status != laststatus):
@@ -456,21 +458,31 @@ class Actions(object):
                             else:
                                 laststatuscount += 1
 
-                            if not (laststatus in allowedstatus) and ((laststatuscount > (globaloptions['errors']-1)) or (laststatus == "rate limit (400)")):
+                            if (laststatus in allowedstatus) and (laststatuscount == 1) and not ratelimit:
+                                threadpool.clearRetry()
+                            elif not (laststatus in allowedstatus) and ((laststatuscount > (globaloptions['errors']-1)) or ratelimit):
                                 threadpool.suspendJobs()
 
-                                if laststatus == "rate limit (400)":
+                                if ratelimit:
                                     msg = "You reached the rate limit of the API. You are strongly advised to calm down and retry later."
-                                    timeout = 60 * 10 #10 minutes
                                 else:
                                     msg = "Something is wrong. {} consecutive errors occurred. You are strongly advised to check your settings.".format(laststatuscount)
-                                    timeout = 60 #1 minute
 
-                                if RetryDialog.doContinue(msg,timeout,self.mainWindow) == QDialog.Accepted:
+                                timeout = 60 #1 minute
+                                retry = ratelimit or globaloptions['autoretry']
+                                result, retry = RetryDialog.doContinue(msg,timeout,self.mainWindow, retry)
+                                if result == QDialog.Accepted:
                                     laststatuscount = 1
-                                    threadpool.resumeJobs()
+                                    if retry:
+                                        threadpool.retryJobs()
+                                    else:
+                                        threadpool.clearRetry()
+                                        threadpool.resumeJobs()
+                                elif ratelimit:
+                                    self.mainWindow.logmessage(u"Canceled because of rate limit.")
+                                    progress.cancel()
                                 else:
-                                    self.mainWindow.logmessage(u"Canceled because of {} consecutive errors or rate limit.".format(laststatuscount))
+                                    self.mainWindow.logmessage(u"Canceled because of {} consecutive errors.".format(laststatuscount))
                                     progress.cancel()
 
                         #Abort
@@ -478,6 +490,10 @@ class Actions(object):
                             progress.showInfo('cancel',u"Disconnecting from stream may take up to one minute.")
                             threadpool.stopJobs()
                             #break
+
+                        if not threadpool.hasJobs():
+                            progress.showInfo('cancel', u"Disconnecting from stream may take up to one ork finished, shutting down threads.")
+                            threadpool.stopJobs()
 
                     finally:
                         QApplication.processEvents()
