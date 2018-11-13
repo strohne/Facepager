@@ -2,20 +2,22 @@ import Queue
 import collections
 import threading
 import time
-
+from copy import deepcopy
 
 class ApiThreadPool():
     def __init__(self, module):
         self.input = collections.deque()
-        self.retry = Queue.Queue()
+        self.errors = Queue.Queue()
         self.output = Queue.Queue(100)
         self.logs = Queue.Queue()
         self.module = module
         self.threads = []
         self.pool_lock = threading.Lock()
         self.threadcount = 0
+        self.maxthreads = 1
         self.jobcount = 0
         self.jobsadded = False
+        self.suspended = False
 
     def getLogMessage(self):
         try:
@@ -29,12 +31,15 @@ class ApiThreadPool():
         finally:
             return msg
 
-    def addRetry(self,job):
-        self.retry.put(job)
+    def addError(self, job):
+        newjob = {'nodeindex': job['nodeindex'],
+                  'nodedata': deepcopy(job['nodedata']),
+                  'options': deepcopy(job['options'])}
+        self.errors.put(newjob)
 
     def clearRetry(self):
-        with self.retry.mutex:
-            self.retry.queue.clear()
+        with self.errors.mutex:
+            self.errors.queue.clear()
 
     def addJob(self, job):
         if job is not None:
@@ -42,14 +47,26 @@ class ApiThreadPool():
             self.jobcount += 1
         self.input.append(job)
 
-        if self.jobcount % 10 == 0:
+        if (self.jobcount % 10 == 0) and not self.suspended:
             self.resumeJobs()
+
+    def retryJobs(self):
+        while not self.errors.empty():
+            newjob = self.errors.get()
+            newjob['number'] = self.jobcount
+            self.jobcount += 1
+            self.input.appendleft(newjob)
+
+        self.resumeJobs()
 
     def clearJobs(self):
         self.input.clear()
 
     def getJob(self):
         try:
+            if self.output.empty():
+                raise Queue.Empty()
+
             job = self.output.get(True, 1)
             self.output.task_done()
         except Queue.Empty as e:
@@ -59,7 +76,11 @@ class ApiThreadPool():
 
     def applyJobs(self):
         self.jobsadded = True
-        self.resumeJobs()
+
+        if not self.suspended:
+            self.resumeJobs()
+
+#        self.resumeJobs()
         # with self.pool_lock:
         #     for x in range(0,self.threadcount):
         #         pass
@@ -69,9 +90,8 @@ class ApiThreadPool():
         if not self.jobsadded:
             return True
 
-        for thread in self.threads:
-            if thread.process.isSet():
-                return True
+        if self.suspended:
+            return True
 
         if len(self.input) > 0:
             return True
@@ -79,11 +99,14 @@ class ApiThreadPool():
         if not self.output.empty():
             return True
 
+        for thread in self.threads:
+            if thread.process.isSet():
+                return True
+
         return False
 
     def addThread(self):
-        #self.addJob(None)  # sentinel empty job
-        thread = ApiThread(self.input, self.retry, self.output, self.module, self,self.logs)
+        thread = ApiThread(self.input, self.errors, self.output, self.module, self, self.logs)
         self.threadcount += 1
         self.threads.append(thread)
 
@@ -96,20 +119,18 @@ class ApiThreadPool():
             self.threads[0].halt.set()
             self.threads[0].process.set()
 
-    def processJobs(self,threadcount=None):
-        with self.pool_lock:
-            if threadcount is not None:
-                maxthreads = threadcount
-            elif len(self.input) > 50:
-                maxthreads = 5
-            elif len(self.input) > 10:
-                maxthreads = 2
-            else:
-                maxthreads = 1
+    def spawnThreads(self, threadcount= None):
+        if threadcount is not None:
+            self.maxthreads = threadcount
 
-            self.threads = []
-            for x in range(maxthreads):
-                self.addThread()
+        if len(self.input) > 50:
+            threadcount = min(5,self.maxthreads)
+        elif len(self.input) > 10:
+            threadcount = min(1,self.maxthreads)
+        else:
+            threadcount = 1
+
+        self.setThreadCount(threadcount)
 
     def stopJobs(self):
         for thread in self.threads:
@@ -119,6 +140,7 @@ class ApiThreadPool():
         self.module.disconnectSocket()
 
     def suspendJobs(self):
+        self.suspended = True
         for thread in self.threads:
             thread.process.clear()
 
@@ -126,10 +148,9 @@ class ApiThreadPool():
         for thread in self.threads:
             thread.process.set()
 
-    def retryJobs(self):
-        while not self.retry.empty():
-            self.input.appendleft(self.retry.get())
-        self.resumeJobs()
+        self.spawnThreads()
+        self.suspended = False
+
 
     def threadFinished(self):
         with self.pool_lock:
@@ -158,7 +179,9 @@ class ApiThreadPool():
                 for x in range(diff):
                     self.removeThread()
 
-
+# Thread will process jobs and automatically pause if no job is available.
+# To resume after adding new jobs set process-Signal.
+# To completely halt the tread, set halt-Signal and process-Signal.
 class ApiThread(threading.Thread):
     def __init__(self, input, retry, output, module, pool, logs):
         threading.Thread.__init__(self)

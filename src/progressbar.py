@@ -10,6 +10,13 @@ class ProgressBar(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle(mainmessage)
 
+        self.timeout = 60
+        self.timer = None
+        self.countdown = False
+
+        self.retry = False
+        self.resume = False
+
         #Create layout
         layout = QVBoxLayout(self)
         self.setLayout(layout)
@@ -26,7 +33,20 @@ class ProgressBar(QDialog):
         self.infos = {}
         layout.addLayout(self.infoPanel)
 
+        self.errorLabel = QLabel()
+        self.errorLabel.setStyleSheet('color: red; font-weight: bold;')
+        self.errorLabel.hide()
+        layout.addWidget(self.errorLabel)
+
         buttons = QDialogButtonBox()
+        self.retryButton = QPushButton(u"Retry")
+        self.retryButton.clicked.connect(self.doretry)
+        buttons.addButton(self.retryButton, QDialogButtonBox.ActionRole)
+
+        self.skipButton = QPushButton(u"Skip")
+        self.skipButton.clicked.connect(self.doskip)
+        buttons.addButton(self.skipButton, QDialogButtonBox.ActionRole)
+
         self.cancelButton = QPushButton(u"Cancel")
         self.cancelButton.clicked.connect(self.cancel)
         buttons.addButton(self.cancelButton,QDialogButtonBox.ActionRole)
@@ -37,18 +57,96 @@ class ProgressBar(QDialog):
 
         #show
         self.open()
+        self.hideError()
+
+    def showError(self, msg, timeout = 60, mode = "retry"):
+        if self.countdown == False:
+            self.countdown = mode
+            self.resume = False
+            self.retry = False
+            self.timeout = timeout
+
+            self.errorLabel.setText(msg)
+            self.errorLabel.show()
+
+            self.retryButton.setText(u"Retry")
+            self.retryButton.show()
+            self.skipButton.setText(u"Skip")
+            self.skipButton.show()
+
+            self.startCountdown()
+
+    def hideError(self):
+        self.countdown = False
+
+        self.resume = False
+        self.retry = False
+
+        self.errorLabel.hide()
+        self.retryButton.hide()
+        self.skipButton.hide()
+
+    def timerEvent(self):
+        self.timeout -= 1
+        if (self.timeout <= 0):
+            if self.countdown == "retry":
+                self.doretry()
+            else:
+                self.doskip()
+        else:
+            if self.countdown == "retry":
+                self.retryButton.setText(u"Retry [{}]".format(self.timeout))
+                self.skipButton.setText(u"Skip")
+            else:
+                self.skipButton.setText(u"Skip [{}]".format(self.timeout))
+                self.retryButton.setText(u"Retry")
+
+            self.startCountdown()
+
+    def startCountdown(self):
+        if self.timer is not None:
+            self.timer.stop()
+
+        self.timer = QTimer()
+        self.timer.setInterval(1000)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.timerEvent)
+        self.timer.start()
+
+    def stopCountdown(self):
+        if self.timer is not None:
+            self.timer.stop()
+
+    def doskip(self):
+        self.stopCountdown()
+        self.countdown = False
+        self.timeout = 0
+        self.retry = False
+        self.resume = True
+
+
+    def doretry(self):
+        self.stopCountdown()
+        self.countdown = False
+        self.timeout = 0
+        self.retry = True
+        self.resume = True
 
 
     def cancel(self):
         '''
         Set cancel flag, but doesn't close the dialog
         '''
+        self.stopCountdown()
+        self.countdown = False
+        self.timeout = 0
         self.wasCanceled = True
         self.cancelButton.setText("Please wait...")
         self.cancelButton.setDisabled(True)
 
 
     def close(self):
+        self.stopCountdown()
         return super(ProgressBar,self).close()
 
     def setValue(self, progress):
@@ -79,6 +177,10 @@ class ProgressBar(QDialog):
 
         self.computeRate()
         QApplication.processEvents()
+
+    def stepBack(self, n):
+        self.progressBar.setValue(self.progressBar.value() - n)
+        self.computeRate()
 
     def computeRate(self):
         '''

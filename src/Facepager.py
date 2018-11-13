@@ -329,7 +329,7 @@ class MainWindow(QMainWindow):
         self.autoretryCheckbox = QCheckBox(self)
         self.autoretryCheckbox.setCheckState(Qt.Checked)
         self.autoretryCheckbox.setToolTip("Check to automatically retry fetching data after errors. If this is unchecked, fetching data will continue with the next nodes. Anyway, a dialog with a timeout will popup.")
-        fetchsettings.addRow("Retry instead of continue", self.autoretryCheckbox)
+        fetchsettings.addRow("Retry after error", self.autoretryCheckbox)
 
         #Expand Box
         self.autoexpandCheckbox = QCheckBox(self)
@@ -343,6 +343,12 @@ class MainWindow(QMainWindow):
         self.logCheckbox.setToolTip("Check to see every request in status window; uncheck to hide request messages.")
         fetchsettings.addRow("Log all requests", self.logCheckbox)
 
+        #Add headers
+        self.headersCheckbox = QCheckBox(self)
+        #self.headersCheckbox.setCheckState(Qt.Checked)
+        self.headersCheckbox.setToolTip("Check if you want to create nodes containing headers of the response.")
+        fetchsettings.addRow("Header nodes", self.headersCheckbox)
+
         #Clear setttings
         self.clearCheckbox = QCheckBox(self)
         self.settings.beginGroup("GlobalSettings")
@@ -353,11 +359,7 @@ class MainWindow(QMainWindow):
         self.clearCheckbox.setToolTip("Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials.")
         fetchsettings.addRow("Clear settings when closing", self.clearCheckbox)
 
-        #Add headers
-        self.headersCheckbox = QCheckBox(self)
-        #self.headersCheckbox.setCheckState(Qt.Checked)
-        self.headersCheckbox.setToolTip("Check if you want to create nodes containing headers of the response.")
-        fetchsettings.addRow("Header nodes", self.headersCheckbox)
+
         
         #Fetch data
 
