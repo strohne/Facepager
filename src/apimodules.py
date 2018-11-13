@@ -180,7 +180,7 @@ class ApiTab(QScrollArea):
         #Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
 
-        return urlpath, urlparams
+        return urlpath, urlparams, templateparams
 
     def getPayload(self,payload, params, nodedata,options):
         #Return nothing
@@ -576,7 +576,7 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Payload", self.payloadWidget)
 
     def verbChanged(self):
-        if self.verbEdit.currentText() == 'GET':
+        if self.verbEdit.currentText() in ['GET','DELETE']:
             self.payloadWidget.hide()
             self.mainLayout.labelForField(self.payloadWidget).hide()
             
@@ -1181,8 +1181,11 @@ class TwitterTab(ApiTab):
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 
+            # rate limit info
             if 'x-rate-limit-remaining' in headers:
                 options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
+            # if 'x-rate-limit-reset' in headers:
+            #     options['info'] = {'x-rate-limit-reset': u"{} seconds remaining until rate limit reset".format(headers['x-rate-limit-reset'])}
             options['ratelimit'] = (status == "error (429)")
 
             callback(data, options, headers)
@@ -1602,7 +1605,7 @@ class OAuth2Tab(ApiTab):
                 urlparams = {}
                 urlparams.update(options['params'])
 
-                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata,options)
+                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata,options)
 
                 requestheaders = options.get('headers',{})
 
@@ -1613,7 +1616,7 @@ class OAuth2Tab(ApiTab):
 
 
                 method=options.get('verb','GET')
-                payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)                
+                payload = self.getPayload(options.get('payload',None), templateparams, nodedata,options)
                 if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
                     requestheaders["Content-Type"] = payload.content_type
                     
@@ -1966,10 +1969,10 @@ class AmazonTab(ApiTab):
                 urlparams = {}
                 urlparams.update(options['params'])
 
-                urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata,options)
+                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata,options)
                 headers = options.get('headers',{})
                 method=options.get('verb','GET')
-                payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
+                payload = self.getPayload(options.get('payload',None), templateparams, nodedata,options)
                                 
                 if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
                     headers["Content-Type"] = payload.content_type
@@ -2126,7 +2129,7 @@ class FilesTab(OAuth2Tab):
         urlparams = {}
         urlparams.update(options['params'])
 
-        urlpath, urlparams = self.getURL(urlpath, urlparams, nodedata,options)
+        urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata,options)
 
         if options.get('auth','disable') != 'disable':
             urlparams["access_token"] = options['access_token']
@@ -2134,7 +2137,7 @@ class FilesTab(OAuth2Tab):
         requestheaders = options.get('headers',{})
 
         method=options.get('verb','GET')
-        payload = self.getPayload(options.get('payload',None), urlparams, nodedata,options)
+        payload = self.getPayload(options.get('payload',None), templateparams, nodedata,options)
         if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
             requestheaders["Content-Type"] = payload.content_type
 
