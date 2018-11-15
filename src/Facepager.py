@@ -325,12 +325,6 @@ class MainWindow(QMainWindow):
         self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
         fetchsettings.addRow("Maximum errors", self.errorEdit)
 
-        #Retry Box
-        self.autoretryCheckbox = QCheckBox(self)
-        self.autoretryCheckbox.setCheckState(Qt.Checked)
-        self.autoretryCheckbox.setToolTip("Check to automatically retry fetching data after errors. If this is unchecked, fetching data will continue with the next nodes. Anyway, a dialog with a timeout will popup.")
-        fetchsettings.addRow("Retry after error", self.autoretryCheckbox)
-
         #Expand Box
         self.autoexpandCheckbox = QCheckBox(self)
         self.autoexpandCheckbox.setCheckState(Qt.Unchecked)

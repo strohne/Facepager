@@ -333,7 +333,6 @@ class Actions(object):
             globaloptions['speed'] = self.mainWindow.speedEdit.value()
             globaloptions['errors'] = self.mainWindow.errorEdit.value()
             globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
-            globaloptions['autoretry'] = self.mainWindow.autoretryCheckbox.isChecked()
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
@@ -477,11 +476,10 @@ class Actions(object):
                                     msg = "{} consecutive errors occurred.\nPlease check your settings.".format(laststatuscount)
 
                                 timeout = 60 * 5 #5 minutes
-                                retry = "retry" if ratelimit or globaloptions['autoretry'] else "continue"
 
                                 # Adjust progress
                                 progress.setRemaining(threadpool.getJobCount() + threadpool.getRetryCount())
-                                progress.showError(msg, timeout, retry)
+                                progress.showError(msg, timeout)
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
                         # Retry

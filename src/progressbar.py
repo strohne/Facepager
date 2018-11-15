@@ -60,9 +60,9 @@ class ProgressBar(QDialog):
         self.open()
         self.hideError()
 
-    def showError(self, msg, timeout = 60, mode = "retry"):
+    def showError(self, msg, timeout = 60):
         if self.countdown == False:
-            self.countdown = mode
+            self.countdown = True
             self.resume = False
             self.retry = False
             self.timeout = timeout
@@ -90,17 +90,10 @@ class ProgressBar(QDialog):
     def timerEvent(self):
         self.timeout -= 1
         if (self.timeout <= 0):
-            if self.countdown == "retry":
-                self.doretry()
-            else:
-                self.doskip()
+            self.doretry()
         else:
-            if self.countdown == "retry":
-                self.retryButton.setText(u"Retry [{}]".format(self.timeout))
-                self.skipButton.setText(u"Skip")
-            else:
-                self.skipButton.setText(u"Skip [{}]".format(self.timeout))
-                self.retryButton.setText(u"Retry")
+            self.retryButton.setText(u"Retry [{}]".format(self.timeout))
+            self.skipButton.setText(u"Skip")
 
             self.startCountdown()
 
@@ -188,48 +181,49 @@ class ProgressBar(QDialog):
         '''
           Compute the speed of operations (rolling average) after three seconds
         '''
+
+        # Save value for calculation of rolling average
+        currenttime = QDateTime.currentDateTime()
+        currentvalue = self.progressBar.value()
+
         if not hasattr(self,'rate_update_next'):
             self.rate_update_frequency = 3
             self.rate_interval = 30
+            self.rate_values = []
 
             #Set time for next calculation
             self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)
 
-            #Save time and value for calculation of rolling average
-            self.rate_values = [{'time':QDateTime.currentDateTime(),'value':self.progressBar.value()}]
-
         elif QDateTime.currentDateTime() > self.rate_update_next:
             try:
-                #Save value for calculation of rolling average
-                currenttime = QDateTime.currentDateTime()
-                currentvalue =  self.progressBar.value()
-
                 #Remove old values
                 if len(self.rate_values) > (self.rate_interval / self.rate_update_frequency):
-                    threshold = self.rate_values[self.rate_interval / self.rate_update_frequency]
-                    
-                    self.rate_values = [v for v in self.rate_values if v['time'].secsTo(currenttime) <= self.rate_interval]
+                    self.rate_values = self.rate_values[:((self.rate_interval / self.rate_update_frequency) +1)]
+                    #self.rate_values = [v for v in self.rate_values if v['time'].secsTo(currenttime) <= self.rate_interval]
 
                 #Add new value
-                self.rate_values.append({'time':currenttime,'value':currentvalue})
+                if (currentvalue >= 0) and ((len(self.rate_values) == 0) or (self.rate_values[-1]['value'] < currentvalue)):
+                    self.rate_values.append({'time':currenttime,'value':currentvalue})
 
                 #Calculate rolling average
-                if len(self.rate_values) > 1:
-                    timespan = self.rate_values[0]['time'].secsTo(self.rate_values[-1]['time'])
-                    valuespan = self.rate_values[-1]['value'] - self.rate_values[0]['value']
+                if (len(self.rate_values) > 1) and (currentvalue > 0):
+                    timespan = self.rate_values[0]['time'].secsTo(currenttime)
+                    valuespan = currentvalue - self.rate_values[0]['value']
 
                     rate = (valuespan * 60 / float(timespan))
                     remainingseconds = round((self.progressBar.maximum() - self.progressBar.value()) / float(rate) * 60)
-                    remaining = timedelta(seconds=remainingseconds)
+                    remaining = timedelta(seconds=remainingseconds) if remainingseconds >= 0 else "lightyears"
+                else:
+                    rate = 0
+                    remaining = "lightyears"
             except:
                 rate = 0
-                remaining = 0
+                remaining = "lightyears"
 
             self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)
 
-            if len(self.rate_values) > 1:
-                self.showInfo('rate',u"Completing {} nodes per minute".format(int(round(rate))))
-                self.showInfo('remaining',u"Estimated remaining time is {}".format(str(remaining)))
+            self.showInfo('rate',u"Completing {} nodes per minute".format(int(round(rate))))
+            self.showInfo('remaining',u"Estimated remaining time is {}".format(str(remaining)))
 
 
     def showInfo(self,key,message):
