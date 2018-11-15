@@ -21,6 +21,11 @@ class ProgressBar(QDialog):
         layout = QVBoxLayout(self)
         self.setLayout(layout)
 
+        self.errorLabel = QLabel()
+        self.errorLabel.setStyleSheet('color: red; font-weight: bold;')
+        self.errorLabel.hide()
+        layout.addWidget(self.errorLabel)
+
         self.progressBar = QProgressBar()
         self.progressBar.setRange(0,0)
         layout.addWidget(self.progressBar,0)
@@ -33,10 +38,6 @@ class ProgressBar(QDialog):
         self.infos = {}
         layout.addLayout(self.infoPanel)
 
-        self.errorLabel = QLabel()
-        self.errorLabel.setStyleSheet('color: red; font-weight: bold;')
-        self.errorLabel.hide()
-        layout.addWidget(self.errorLabel)
 
         buttons = QDialogButtonBox()
         self.retryButton = QPushButton(u"Retry")
@@ -178,8 +179,9 @@ class ProgressBar(QDialog):
         self.computeRate()
         QApplication.processEvents()
 
-    def stepBack(self, n):
-        self.progressBar.setValue(self.progressBar.value() - n)
+    def setRemaining(self ,n):
+        self.showInfo('remainingnodes',u"{} node(s) remaining.".format(n))
+        self.progressBar.setValue(self.progressBar.maximum() - n)
         self.computeRate()
 
     def computeRate(self):
@@ -204,25 +206,30 @@ class ProgressBar(QDialog):
 
                 #Remove old values
                 if len(self.rate_values) > (self.rate_interval / self.rate_update_frequency):
+                    threshold = self.rate_values[self.rate_interval / self.rate_update_frequency]
+                    
                     self.rate_values = [v for v in self.rate_values if v['time'].secsTo(currenttime) <= self.rate_interval]
 
                 #Add new value
                 self.rate_values.append({'time':currenttime,'value':currentvalue})
 
                 #Calculate rolling average
-                timespan = self.rate_values[0]['time'].secsTo(self.rate_values[-1]['time'])
-                valuespan = self.rate_values[-1]['value'] - self.rate_values[0]['value']
+                if len(self.rate_values) > 1:
+                    timespan = self.rate_values[0]['time'].secsTo(self.rate_values[-1]['time'])
+                    valuespan = self.rate_values[-1]['value'] - self.rate_values[0]['value']
 
-                rate = (valuespan * 60 / float(timespan))
-                remainingseconds = round((self.progressBar.maximum() - self.progressBar.value()) / float(rate) * 60)
-                remaining = timedelta(seconds=remainingseconds)
+                    rate = (valuespan * 60 / float(timespan))
+                    remainingseconds = round((self.progressBar.maximum() - self.progressBar.value()) / float(rate) * 60)
+                    remaining = timedelta(seconds=remainingseconds)
             except:
                 rate = 0
                 remaining = 0
 
             self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)
-            self.showInfo('rate',u"Completing {} nodes per minute".format(int(round(rate))))
-            self.showInfo('remaining',u"Estimated remaining time is {}".format(str(remaining)))
+
+            if len(self.rate_values) > 1:
+                self.showInfo('rate',u"Completing {} nodes per minute".format(int(round(rate))))
+                self.showInfo('remaining',u"Estimated remaining time is {}".format(str(remaining)))
 
 
     def showInfo(self,key,message):
@@ -240,3 +247,19 @@ class ProgressBar(QDialog):
 
         widget.setText(message)
 
+
+    def removeInfo(self,key):
+        '''
+          Remove additional information
+          TODO: not working yet
+        '''
+
+        if key in self.infos:
+            pass
+            # widget = self.infos[key]
+            # label = self.infoPanel.labelForField(widget)
+            #
+            # del self.infos[key]
+            # del widget
+            # del label
+            # self.infoPanel.update()

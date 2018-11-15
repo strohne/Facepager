@@ -357,7 +357,7 @@ class Actions(object):
             errorcount = 0
             laststatus = None
             laststatuscount = 0
-            allowedstatus = ['fetched (200)','downloaded (200)','stream'] #,'error (400)'
+            allowedstatus = ['fetched (200)','downloaded (200)','fetched (202)','stream'] #,'error (400)'
 
 
             if apimodule == False:
@@ -395,7 +395,7 @@ class Actions(object):
 
                             if len(indexes) == 0:
                                 threadpool.applyJobs()
-                                progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
+                                progress.setRemaining(threadpool.getJobCount())
 
                         #Jobs out
                         job = threadpool.getJob()
@@ -406,17 +406,26 @@ class Actions(object):
 
                         #-Waiting...
                         elif 'waiting' in job:
-                            time.sleep(0)
+                            progress.computeRate()
+                            time.sleep(1.0 / 1000.0)
 
                         #-Finished one node...
                         elif 'progress' in job:
+                            #progresskey = 'progress' + str(job['progress'])
+                            progresskey = 'nodeprogress'
+
                             #Update single progress
                             if 'current' in job:
                                 percent = int((job.get('current',0) * 100.0 / job.get('total',1))) 
-                                progress.showInfo('progress'+str(job['progress']),u"{}% of node uploaded.".format(percent))
+                                progress.showInfo(progresskey, u"{}% of current node processed.".format(percent))
+                            elif 'page' in job:
+                                progress.showInfo(progresskey, u"{} page(s) of current node processed.".format(job.get('page',0)))
+
                             #Update total progress
                             else:
-                                progress.step()
+                                progress.removeInfo(progresskey)
+                                if not threadpool.suspended:
+                                    progress.step()
 
                         #-Add data...
                         elif not progress.wasCanceled:
@@ -439,7 +448,7 @@ class Actions(object):
                             progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
                             progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                             progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
-                            progress.showInfo('remainingnodes',u"{} node(s) remaining.".format(threadpool.getJobCount() ))
+                            progress.setRemaining(threadpool.getJobCount())
 
                             # Custom info from modules
                             info = job['options'].get('info', {})
@@ -450,7 +459,7 @@ class Actions(object):
                             if not (status in allowedstatus):
                                 threadpool.addError(job)
 
-                            #auto cancel after three consecutive errors
+                            #auto suspend after (consecutive) errors
                             if (status != laststatus):
                                 laststatus=status
                                 laststatuscount = 1
@@ -463,15 +472,16 @@ class Actions(object):
                                 threadpool.suspendJobs()
 
                                 if ratelimit:
-                                    msg = "You reached the rate limit of the API.\nYou can choose to skip nodes or to retry."
+                                    msg = "You reached the rate limit of the API."
                                 else:
-                                    msg = "{} consecutive errors occurred.\nYou are strongly advised to check your settings.\nYou can choose to skip nodes or to retry.".format(laststatuscount)
+                                    msg = "{} consecutive errors occurred.\nPlease check your settings.".format(laststatuscount)
 
-                                timeout = 60 #1 minute
+                                timeout = 60 * 5 #5 minutes
                                 retry = "retry" if ratelimit or globaloptions['autoretry'] else "continue"
 
-                                progress.showError(msg,timeout,retry)
-                                #progress.stepBack(laststatuscount)
+                                # Adjust progress
+                                progress.setRemaining(threadpool.getJobCount() + threadpool.getRetryCount())
+                                progress.showError(msg, timeout, retry)
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
                         # Retry
@@ -479,10 +489,11 @@ class Actions(object):
                             laststatuscount = 1
                             if progress.retry:
                                 threadpool.retryJobs()
-                                progress.setMaximum(threadpool.getTotalCount())
                             else:
                                 threadpool.clearRetry()
                                 threadpool.resumeJobs()
+
+                            progress.setRemaining(threadpool.getJobCount())
                             progress.hideError()
 
                         #Abort

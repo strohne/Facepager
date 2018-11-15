@@ -59,6 +59,10 @@ class ApiThreadPool():
 
         self.resumeJobs()
 
+
+    def getRetryCount(self):
+        return self.errors.qsize()
+
     def clearJobs(self):
         self.input.clear()
 
@@ -162,9 +166,6 @@ class ApiThreadPool():
     def getJobCount(self):
         return len(self.input)
 
-    def getTotalCount(self):
-        return self.jobcount
-
     def getThreadCount(self):
         with self.pool_lock:
             return self.threadcount
@@ -206,9 +207,10 @@ class ApiThread(threading.Thread):
         def logMessage(msg):
             self.logs.put(msg)
 
-        def logProgress(current=0, total=0):
-            self.output.put({'progress': job.get('number', 0),'current':current,'total':total})
-            if self.halt.set():
+        def logProgress(progress):
+            progress['progress'] = job.get('number', 0)
+            self.output.put(progress)
+            if self.halt.isSet():
                 raise CancelledError('Request cancelled.')
             
         try:
