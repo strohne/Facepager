@@ -1,7 +1,6 @@
 import csv
 from copy import deepcopy
 from progressbar import ProgressBar
-from retrydialog import RetryDialog
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
@@ -375,7 +374,7 @@ class Actions(object):
                 indexes = deque(indexes)
 
 
-                #Process Input/Output Queue
+                #Process Logging/Input/Output Queue
                 while True:
                     try:
                         #Logging (sync logs in threads with main thread)
@@ -388,13 +387,15 @@ class Actions(object):
                             index = indexes.popleft()
                             if index.isValid():
                                 treenode = index.internalPointer()
-                                job = {'nodeindex': index, 'nodedata': deepcopy(treenode.data),
+                                job = {'nodeindex': index,
+                                       'nodedata': deepcopy(treenode.data),
                                        'options': deepcopy(options)}
                                 threadpool.addJob(job)
 
                             if len(indexes) == 0:
                                 threadpool.applyJobs()
                                 progress.setRemaining(threadpool.getJobCount())
+                                progress.resetRate()
 
                         #Jobs out
                         job = threadpool.getJob()
@@ -403,31 +404,26 @@ class Actions(object):
                         if job is None:
                             break
 
-                        #-Waiting...
-                        elif 'waiting' in job:
-                            progress.computeRate()
-                            time.sleep(1.0 / 1000.0)
-
                         #-Finished one node...
                         elif 'progress' in job:
-                            #progresskey = 'progress' + str(job['progress'])
-                            progresskey = 'nodeprogress'
+                            progresskey = 'nodeprogress' + str(job.get('threadnumber', ''))
 
-                            #Update single progress
+                            # Update single progress
                             if 'current' in job:
                                 percent = int((job.get('current',0) * 100.0 / job.get('total',1))) 
                                 progress.showInfo(progresskey, u"{}% of current node processed.".format(percent))
                             elif 'page' in job:
-                                progress.showInfo(progresskey, u"{} page(s) of current node processed.".format(job.get('page',0)))
+                                if job.get('page', 0) > 1:
+                                    progress.showInfo(progresskey, u"{} page(s) of current node processed.".format(job.get('page',0)))
 
-                            #Update total progress
+                            # Update total progress
                             else:
                                 progress.removeInfo(progresskey)
                                 if not threadpool.suspended:
                                     progress.step()
 
                         #-Add data...
-                        elif not progress.wasCanceled:
+                        elif 'data' in job and (not progress.wasCanceled):
                             if not job['nodeindex'].isValid():
                                 continue
 
@@ -438,8 +434,7 @@ class Actions(object):
                             if options.get('expand',False):
                                  self.mainWindow.tree.setExpanded(treeindex,True)
 
-
-                            #show status
+                            # Show status
                             status = job['options'].get('querystatus', 'empty')
                             ratelimit = job['options'].get('ratelimit', False)
                             count = 1 if not status in statuscount else statuscount[status]+1
@@ -454,19 +449,22 @@ class Actions(object):
                             for name, value in info.iteritems():
                                 progress.showInfo(name, value)
 
-                            #collect errors for automatic retry
-                            if not (status in allowedstatus):
-                                threadpool.addError(job)
-
-                            #auto suspend after (consecutive) errors
+                            # Count status
                             if (status != laststatus):
                                 laststatus=status
                                 laststatuscount = 1
                             else:
                                 laststatuscount += 1
 
+                            # Collect errors for automatic retry
+                            if not (status in allowedstatus):
+                                threadpool.addError(job)
+
+                            # Clear errors
                             if (laststatus in allowedstatus) and (laststatuscount == 1) and not ratelimit:
                                 threadpool.clearRetry()
+
+                            # Suspend on error
                             elif not (laststatus in allowedstatus) and ((laststatuscount > (globaloptions['errors']-1)) or ratelimit):
                                 threadpool.suspendJobs()
 
@@ -482,8 +480,13 @@ class Actions(object):
                                 progress.showError(msg, timeout)
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
+                        # Abort
+                        elif progress.wasCanceled:
+                            progress.showInfo('cancel', u"Disconnecting from stream, may take some time.")
+                            threadpool.stopJobs()
+
                         # Retry
-                        if progress.resume:
+                        elif progress.wasResumed:
                             laststatuscount = 1
                             if progress.retry:
                                 threadpool.retryJobs()
@@ -494,24 +497,27 @@ class Actions(object):
                             progress.setRemaining(threadpool.getJobCount())
                             progress.hideError()
 
-                        #Abort
-                        if progress.wasCanceled:
-                            progress.showInfo('cancel',u"Disconnecting from stream may take up to one minute.")
-                            threadpool.stopJobs()
-                            #break
+                        # Continue
+                        elif not threadpool.suspended:
+                            threadpool.resumeJobs()
 
+                        # Finished
                         if not threadpool.hasJobs():
-                            progress.showInfo('cancel', u"Disconnecting from stream may take up to one ork finished, shutting down threads.")
+                            progress.showInfo('cancel', u"Work finished, shutting down threads.")
                             threadpool.stopJobs()
 
+                        #-Waiting...
+                        progress.computeRate()
+                        time.sleep(1.0 / 1000.0)
                     finally:
                         QApplication.processEvents()
 
             finally:
                 request_summary = [str(val)+" x "+key for key,val in statuscount.iteritems()]
                 request_summary = ", ".join(request_summary)
+                request_end = "Fetching completed" if not progress.wasCanceled else 'Fetching cancelled by user'
 
-                self.mainWindow.logmessage(u"Fetching completed, {} new node(s) created. Summary of responses: {}.".format(self.mainWindow.tree.treemodel.nodecounter,request_summary))
+                self.mainWindow.logmessage(u"{}, {} new node(s) created. Summary of responses: {}.".format(request_end, self.mainWindow.tree.treemodel.nodecounter,request_summary))
 
                 self.mainWindow.tree.treemodel.commitNewNodes()
         finally:

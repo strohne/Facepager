@@ -31,40 +31,15 @@ class ApiThreadPool():
         finally:
             return msg
 
-    def addError(self, job):
-        newjob = {'nodeindex': job['nodeindex'],
-                  'nodedata': deepcopy(job['nodedata']),
-                  'options': deepcopy(job['options'])}
-        self.errors.put(newjob)
-
-    def clearRetry(self):
-        with self.errors.mutex:
-            self.errors.queue.clear()
-
+    # Jobs
     def addJob(self, job):
         if job is not None:
             job['number'] = self.jobcount
             self.jobcount += 1
         self.input.append(job)
 
-        if (self.jobcount % 10 == 0) and not self.suspended:
-            self.resumeJobs()
-
-    def retryJobs(self):
-        while not self.errors.empty():
-            newjob = self.errors.get()
-            newjob['number'] = self.jobcount
-            self.jobcount += 1
-            self.input.appendleft(newjob)
-
-        self.resumeJobs()
-
-
-    def getRetryCount(self):
-        return self.errors.qsize()
-
-    def clearJobs(self):
-        self.input.clear()
+    def applyJobs(self):
+        self.jobsadded = True
 
     def getJob(self):
         try:
@@ -78,17 +53,30 @@ class ApiThreadPool():
         finally:
             return job
 
-    def applyJobs(self):
-        self.jobsadded = True
+    def suspendJobs(self):
+        self.suspended = True
+        for thread in self.threads:
+            thread.process.clear()
 
-        if not self.suspended:
-            self.resumeJobs()
+    def resumeJobs(self):
+        for thread in self.threads:
+            thread.process.set()
 
-#        self.resumeJobs()
-        # with self.pool_lock:
-        #     for x in range(0,self.threadcount):
-        #         pass
-                #self.addJob(None)  # sentinel empty job
+        self.spawnThreads()
+        self.suspended = False
+
+    def stopJobs(self):
+        for thread in self.threads:
+            thread.halt.set()
+            thread.process.set()
+
+        self.module.disconnectSocket()
+
+    def clearJobs(self):
+        self.input.clear()
+
+    def getJobCount(self):
+        return len(self.input)
 
     def hasJobs(self):
         if not self.jobsadded:
@@ -109,14 +97,37 @@ class ApiThreadPool():
 
         return False
 
+    # Errors
+    def addError(self, job):
+        newjob = {'nodeindex': job['nodeindex'],
+                  'nodedata': deepcopy(job['nodedata']),
+                  'options': deepcopy(job['options'])}
+        self.errors.put(newjob)
+
+    def retryJobs(self):
+        while not self.errors.empty():
+            newjob = self.errors.get()
+            newjob['number'] = self.jobcount
+            self.jobcount += 1
+            self.input.appendleft(newjob)
+
+        self.resumeJobs()
+
+    def clearRetry(self):
+        with self.errors.mutex:
+            self.errors.queue.clear()
+
+    def getRetryCount(self):
+        return self.errors.qsize()
+
+    # Threads
     def addThread(self):
-        thread = ApiThread(self.input, self.errors, self.output, self.module, self, self.logs)
+        thread = ApiThread(self.input, self.errors, self.output, self.module, self, self.logs, self.threadcount+1)
         self.threadcount += 1
         self.threads.append(thread)
 
         thread.start()
         thread.process.set()
-
 
     def removeThread(self):
         if count(self.threads):
@@ -136,35 +147,12 @@ class ApiThreadPool():
 
         self.setThreadCount(threadcount)
 
-    def stopJobs(self):
-        for thread in self.threads:
-            thread.halt.set()
-            thread.process.set()
-
-        self.module.disconnectSocket()
-
-    def suspendJobs(self):
-        self.suspended = True
-        for thread in self.threads:
-            thread.process.clear()
-
-    def resumeJobs(self):
-        for thread in self.threads:
-            thread.process.set()
-
-        self.spawnThreads()
-        self.suspended = False
-
-
     def threadFinished(self):
         with self.pool_lock:
             self.threadcount -= 1
             if (self.threadcount == 0):
                 self.clearJobs()
                 self.output.put(None)  #sentinel
-
-    def getJobCount(self):
-        return len(self.input)
 
     def getThreadCount(self):
         with self.pool_lock:
@@ -184,7 +172,7 @@ class ApiThreadPool():
 # To resume after adding new jobs set process-Signal.
 # To completely halt the tread, set halt-Signal and process-Signal.
 class ApiThread(threading.Thread):
-    def __init__(self, input, retry, output, module, pool, logs):
+    def __init__(self, input, retry, output, module, pool, logs, number):
         threading.Thread.__init__(self)
         #self.daemon = True
         self.pool = pool
@@ -193,15 +181,14 @@ class ApiThread(threading.Thread):
         self.output = output
         self.module = module
         self.logs = logs
+        self.number = number
         self.halt = threading.Event()
         self.retry = threading.Event()
         self.process = threading.Event()
 
     def run(self):
-        def streamingData(data, options, headers, streamingTab=False):
+        def logData(data, options, headers):
             out = {'nodeindex': job['nodeindex'], 'nodedata' : job['nodedata'], 'data': data, 'options': options, 'headers': headers}
-            if streamingTab:
-                out["streamprogress"] = True
             self.output.put(out)
 
         def logMessage(msg):
@@ -209,9 +196,10 @@ class ApiThread(threading.Thread):
 
         def logProgress(progress):
             progress['progress'] = job.get('number', 0)
+            progress['threadnumber'] = self.number
             self.output.put(progress)
             if self.halt.isSet():
-                raise CancelledError('Request cancelled.')
+                raise CancelException('Request cancelled.')
             
         try:
             while not self.halt.isSet():
@@ -219,21 +207,32 @@ class ApiThread(threading.Thread):
                     time.sleep(0)
 
                     # Get from input queue
-                    try:
-                        job = self.input.popleft()
-                    except:
-                        self.process.clear()
-                        job = None
+                    job = self.input.popleft()
+                    job['threadnumber'] = self.number
 
-                    # Process job
-                    if job is not None:
-                        self.module.fetchData(job['nodedata'], job['options'], streamingData,logMessage,logProgress)
+                    # Fetch data
+                    self.module.fetchData(job['nodedata'], job['options'], logData, logMessage, logProgress)
 
-                    if job is not None:
-                        self.output.put({'progress': job.get('number', 0)})
+                    # Progress
+                    self.output.put({'progress': job.get('number', 0), 'threadnumber': self.number})
+
+                # queue empty
+                except IndexError:
+                    pass
+
+                # canceled
+                except CancelException:
+                    pass
+
+                # error
                 except Exception as e:
                     logMessage(e)
 
+                # wait for signal
+                self.process.clear()
                 self.process.wait()
         finally:
             self.pool.threadFinished()
+
+class CancelException(Exception):
+    pass
