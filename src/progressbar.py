@@ -41,7 +41,7 @@ class ProgressBar(QDialog):
         #self.infoPanel.setLabelAlignment(Qt.AlignLeft)
         self.infos = {}
         layout.addLayout(self.infoPanel)
-
+        layout.addStretch(1)
 
         buttons = QDialogButtonBox()
         self.retryButton = QPushButton(u"Retry")
