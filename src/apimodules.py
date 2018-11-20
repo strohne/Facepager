@@ -1385,7 +1385,7 @@ class AuthTab(ApiTab):
 
     def setOptions(self, options):
         try:
-            self.authTypeEdit.setCurrentIndex(self.authTypeEdit.findText(options.get('auth_type', 'OAuth2')))
+            self.authTypeEdit.setCurrentIndex(self.authTypeEdit.findText(options.get('auth_type', self.defaults.get('auth_type','OAuth2'))))
             self.authURIEdit.setText(options.get('auth_uri'))
             self.redirectURIEdit.setText(options.get('redirect_uri'))
             self.tokenURIEdit.setText(options.get('token_uri'))
