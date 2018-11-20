@@ -37,8 +37,10 @@ from pandas.core.config import is_instance_factory
 class ApiTab(QScrollArea):
     """
     Generic API Tab Class
-        - handles URL-Substitutions
-        - saves current Settings
+        - parse placeholders
+        - saves and load current settings
+        - init basic inputs
+        - handle requests
     """
 
     streamingData = Signal(list, list, list)
@@ -1285,257 +1287,6 @@ class TwitterStreamingTab(ApiTab):
                 self.login_webview.parent().close()
 
 
-class AmazonTab(ApiTab):
-
-    # see YoutubeTab for keys in the options-parameter
-    def __init__(self, mainWindow=None, name='Amazon'):
-        super(AmazonTab, self).__init__(mainWindow, name)
-
-        self.defaults['region'] = 'us-east-1'  # 'eu-central-1'
-        self.defaults['service'] = 's3'
-
-        # Standard inputs
-        self.initInputs()
-
-        # Header, Verbs
-        self.initHeaderInputs()
-        self.initVerbInputs()
-        self.initFolderInput()
-
-        # Extract input
-        self.initExtractInputs()
-
-        # Pages Box
-        self.initPagingInputs(True)
-
-        # Login inputs
-        self.initLoginInputs()
-
-        self.loadSettings()
-
-    def initLoginInputs(self):
-        # token and login button
-        loginwidget = QWidget()
-        loginlayout = QHBoxLayout()
-        loginlayout.setContentsMargins(0, 0, 0, 0)
-        loginwidget.setLayout(loginlayout)
-
-        self.accesskeyEdit = QLineEdit()
-        self.accesskeyEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.accesskeyEdit)
-
-        loginlayout.addWidget(QLabel('Secret Key'))
-        self.secretkeyEdit = QLineEdit()
-        self.secretkeyEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.secretkeyEdit)
-
-        loginlayout.addWidget(QLabel('Service'))
-        self.serviceEdit = QLineEdit()
-        loginlayout.addWidget(self.serviceEdit)
-
-        loginlayout.addWidget(QLabel('Region'))
-        self.regionEdit = QLineEdit()
-        loginlayout.addWidget(self.regionEdit)
-
-        self.mainLayout.addRow("Access Key", loginwidget)
-
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(AmazonTab, self).getOptions(purpose)
-
-        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get(
-            'service', '')
-        options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get(
-            'region', '')
-
-        if purpose != 'preset':
-            options['secretkey'] = self.secretkeyEdit.text().strip() #if self.secretkeyEdit.text() != "" else self.defaults.get('auth_uri', '')
-            options['accesskey'] = self.accesskeyEdit.text().strip() #if self.accesskeyEdit.text() != "" else self.defaults.get('redirect_uri', '')
-
-        return options
-
-    def setOptions(self, options):
-        if 'secretkey' in options:
-            self.secretkeyEdit.setText(options.get('secretkey'))
-
-        if 'accesskey' in options:
-            self.accesskeyEdit.setText(options.get('accesskey'))
-
-        self.serviceEdit.setText(options.get('service'))
-        self.regionEdit.setText(options.get('region'))
-
-        super(AmazonTab, self).setOptions(options)
-
-
-    # Get authorization header
-    # See https://docs.aws.amazon.com/de_de/general/latest/gr/sigv4-signed-request-examples.html
-    def signRequest(urlpath, urlparams, headers, method, payload, options):
-
-        # Access keys
-        access_key = options.get('accesskey', '')
-        secret_key = options.get('secretkey', '')
-
-        region = options.get('region', '')
-        service = options.get('service', '')
-
-        if access_key == '' or secret_key == '':
-            raise Exception('Access key or secret key is missing, please fill the input fields!')
-
-
-        # Key derivation functions. See:
-        # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
-        def sign(key, msg):
-            return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
-
-        def getSignatureKey(key, dateStamp, regionName, serviceName):
-            kDate = sign(('AWS4' + key).encode('utf-8'), dateStamp)
-            kRegion = sign(kDate, regionName)
-            kService = sign(kRegion, serviceName)
-            kSigning = sign(kService, 'aws4_request')
-            return kSigning
-
-        timenow = datetime.utcnow()
-        amzdate = timenow.strftime('%Y%m%dT%H%M%SZ')
-        datestamp = timenow.strftime('%Y%m%d')  # Date w/o time, used in credential scope
-
-        # Create canonical URI--the part of the URI from domain to query string
-        urlcomponents = urlparse.urlparse(urlpath)
-        canonical_uri = '/' if urlcomponents.path == '' else urlcomponents.path
-
-        # Create the canonical query string. In this example (a GET request),
-        # request parameters are in the query string. Query string values must
-        # be URL-encoded (space=%20). The parameters must be sorted by name.
-        # For this example, the query string is pre-formatted in the request_parameters variable.
-        urlparams = {} if urlparams is None else urlparams
-        canonical_querystring = OrderedDict(sorted(urlparams.items()))
-        canonical_querystring = urllib.urlencode(canonical_querystring)
-
-        # Create the canonical headers and signed headers. Header names
-        # must be trimmed and lowercase, and sorted in code point order from
-        # low to high. Note that there is a trailing \n.
-        canonical_headers = {
-            'host': urlcomponents.hostname,
-            'x-amz-date': amzdate
-        }
-
-        if headers is not None:
-            canonical_headers.update(headers)
-
-        canonical_headers = {k.lower(): v for k, v in canonical_headers.items()}
-        canonical_headers = OrderedDict(sorted(canonical_headers.items()))
-        canonical_headers_str = "".join(
-            [key + ":" + value + '\n' for (key, value) in canonical_headers.iteritems()])
-
-        # Create the list of signed headers. This lists the headers
-        # in the canonical_headers list, delimited with ";" and in alpha order.
-        # Note: The request can include any headers; canonical_headers and
-        # signed_headers lists those that you want to be included in the
-        # hash of the request. "Host" and "x-amz-date" are always required.
-        signed_headers = ';'.join(canonical_headers.keys())
-
-        # Create payload hash (hash of the request body content). For GET
-        # requests, the payload is an empty string ("").
-        payload = '' if payload is None else payload
-        if isinstance(payload, BufferReader):
-            payload_buffer = payload
-            payload = payload_buffer.read()
-            payload_buffer.rewind()
-
-        payload_hash = hashlib.sha256(payload).hexdigest()
-
-        # Combine elements to create canonical request
-        canonical_request = method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers_str + '\n' + signed_headers + '\n' + payload_hash
-
-        # Match the algorithm to the hashing algorithm you use, either SHA-1 or
-        # SHA-256 (recommended)
-        algorithm = 'AWS4-HMAC-SHA256'
-        credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
-        string_to_sign = algorithm + '\n' + amzdate + '\n' + credential_scope + '\n' + hashlib.sha256(
-            canonical_request).hexdigest()
-
-        # Create the signing key using the function defined above.
-        signing_key = getSignatureKey(secret_key, datestamp, region, service)
-
-        # Sign the string_to_sign using the signing_key
-        signature = hmac.new(signing_key, (string_to_sign).encode('utf-8'), hashlib.sha256).hexdigest()
-
-        # The signing information can be either in a query string value or in
-        # a header named Authorization. This code shows how to use a header.
-        # Create authorization header and add to request headers
-        authorization_header = algorithm + ' ' + 'Credential=' + access_key + '/' + credential_scope + ', ' + 'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
-
-        # The request can include any headers, but MUST include "host", "x-amz-date",
-        # and (for this scenario) "Authorization". "host" and "x-amz-date" must
-        # be included in the canonical_headers and signed_headers, as noted
-        # earlier. Order here is not significant.
-        # Python note: The 'host' header is added automatically by the Python 'requests' library.
-        headers.update({'x-amz-date': amzdate,
-                        'x-amz-content-sha256': payload_hash,
-                        # 'x-amz-content-sha256':'UNSIGNED-PAYLOAD',
-                        'Authorization': authorization_header
-                        # 'Accepts': 'application/json'
-                        })
-
-        return (headers)
-
-    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
-        self.closeSession()
-        self.connected = True
-        self.speed = options.get('speed', None)
-        self.progress = logProgress
-
-
-        # Abort condition: maximum page count
-        for page in range(options.get('currentpage', 0), options.get('pages', 1)):
-            # Save page
-            options['currentpage'] = page
-
-            # build url
-            if not ('url' in options):
-                urlpath = options["basepath"] + options['resource']
-                urlparams = {}
-                urlparams.update(options['params'])
-
-                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
-                headers = options.get('headers', {})
-                method = options.get('verb', 'GET')
-                payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options)
-
-                if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
-                    headers["Content-Type"] = payload.content_type
-
-            else:
-                requestheaders = {}
-                payload = None
-                urlpath = options['url']
-                urlparams = options['params']
-
-            # authorize
-            headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
-
-            if options['logrequests']:
-                logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                    urlpath + "?" + urllib.urlencode(urlparams)))
-
-            # data
-            options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams, headers, method=method, payload=payload)
-            options['querystatus'] = status
-
-            logData(data, options, headers)
-            if self.progress is not None:
-                self.progress({'page':page+1})
-
-            # paging
-            if (options.get('key_paging', None) is not None) and (options.get('param_paging', None) is not None):
-                if isinstance(data, dict) and hasDictValue(data, options['key_paging']):
-                    options['params'][options['param_paging']] = data[options['key_paging']]
-                else:
-                    break
-            else:
-                break
-
-            if not self.connected:
-                break
 
 
 class AuthTab(ApiTab):
@@ -1685,6 +1436,10 @@ class AuthTab(ApiTab):
                 payload = None
                 urlpath = options['url']
                 urlparams = options['params']
+
+            # sign request (for Amazon tab)
+            if hasattr(self, "signRequest"):
+                headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
 
             if options['logrequests']:
                 logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
@@ -1909,6 +1664,198 @@ class AuthTab(ApiTab):
             QMessageBox.critical(self, "Login failed",
                                  unicode(e.message),
                                  QMessageBox.StandardButton.Ok)
+
+class AmazonTab(AuthTab):
+
+    # see YoutubeTab for keys in the options-parameter
+    def __init__(self, mainWindow=None, name='Amazon'):
+        super(AmazonTab, self).__init__(mainWindow, name)
+
+        self.defaults['region'] = 'us-east-1'  # 'eu-central-1'
+        self.defaults['service'] = 's3'
+
+        # Standard inputs
+        self.initInputs()
+
+        # Header, Verbs
+        self.initHeaderInputs()
+        self.initVerbInputs()
+        self.initFolderInput()
+
+        # Extract input
+        self.initExtractInputs()
+
+        # Pages Box
+        self.initPagingInputs(True)
+
+        # Login inputs
+        self.initLoginInputs()
+
+        self.loadSettings()
+
+    def initLoginInputs(self):
+        # token and login button
+        loginwidget = QWidget()
+        loginlayout = QHBoxLayout()
+        loginlayout.setContentsMargins(0, 0, 0, 0)
+        loginwidget.setLayout(loginlayout)
+
+        self.accesskeyEdit = QLineEdit()
+        self.accesskeyEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.accesskeyEdit)
+
+        loginlayout.addWidget(QLabel('Secret Key'))
+        self.secretkeyEdit = QLineEdit()
+        self.secretkeyEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.secretkeyEdit)
+
+        loginlayout.addWidget(QLabel('Service'))
+        self.serviceEdit = QLineEdit()
+        loginlayout.addWidget(self.serviceEdit)
+
+        loginlayout.addWidget(QLabel('Region'))
+        self.regionEdit = QLineEdit()
+        loginlayout.addWidget(self.regionEdit)
+
+        self.mainLayout.addRow("Access Key", loginwidget)
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(AmazonTab, self).getOptions(purpose)
+
+        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get(
+            'service', '')
+        options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get(
+            'region', '')
+
+        if purpose != 'preset':
+            options['secretkey'] = self.secretkeyEdit.text().strip() #if self.secretkeyEdit.text() != "" else self.defaults.get('auth_uri', '')
+            options['accesskey'] = self.accesskeyEdit.text().strip() #if self.accesskeyEdit.text() != "" else self.defaults.get('redirect_uri', '')
+
+        return options
+
+    def setOptions(self, options):
+        if 'secretkey' in options:
+            self.secretkeyEdit.setText(options.get('secretkey'))
+
+        if 'accesskey' in options:
+            self.accesskeyEdit.setText(options.get('accesskey'))
+
+        self.serviceEdit.setText(options.get('service'))
+        self.regionEdit.setText(options.get('region'))
+
+        super(AmazonTab, self).setOptions(options)
+
+
+    # Get authorization header
+    # See https://docs.aws.amazon.com/de_de/general/latest/gr/sigv4-signed-request-examples.html
+    def signRequest(urlpath, urlparams, headers, method, payload, options):
+
+        # Access keys
+        access_key = options.get('accesskey', '')
+        secret_key = options.get('secretkey', '')
+
+        region = options.get('region', '')
+        service = options.get('service', '')
+
+        if access_key == '' or secret_key == '':
+            raise Exception('Access key or secret key is missing, please fill the input fields!')
+
+
+        # Key derivation functions. See:
+        # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
+        def sign(key, msg):
+            return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+
+        def getSignatureKey(key, dateStamp, regionName, serviceName):
+            kDate = sign(('AWS4' + key).encode('utf-8'), dateStamp)
+            kRegion = sign(kDate, regionName)
+            kService = sign(kRegion, serviceName)
+            kSigning = sign(kService, 'aws4_request')
+            return kSigning
+
+        timenow = datetime.utcnow()
+        amzdate = timenow.strftime('%Y%m%dT%H%M%SZ')
+        datestamp = timenow.strftime('%Y%m%d')  # Date w/o time, used in credential scope
+
+        # Create canonical URI--the part of the URI from domain to query string
+        urlcomponents = urlparse.urlparse(urlpath)
+        canonical_uri = '/' if urlcomponents.path == '' else urlcomponents.path
+
+        # Create the canonical query string. In this example (a GET request),
+        # request parameters are in the query string. Query string values must
+        # be URL-encoded (space=%20). The parameters must be sorted by name.
+        # For this example, the query string is pre-formatted in the request_parameters variable.
+        urlparams = {} if urlparams is None else urlparams
+        canonical_querystring = OrderedDict(sorted(urlparams.items()))
+        canonical_querystring = urllib.urlencode(canonical_querystring)
+
+        # Create the canonical headers and signed headers. Header names
+        # must be trimmed and lowercase, and sorted in code point order from
+        # low to high. Note that there is a trailing \n.
+        canonical_headers = {
+            'host': urlcomponents.hostname,
+            'x-amz-date': amzdate
+        }
+
+        if headers is not None:
+            canonical_headers.update(headers)
+
+        canonical_headers = {k.lower(): v for k, v in canonical_headers.items()}
+        canonical_headers = OrderedDict(sorted(canonical_headers.items()))
+        canonical_headers_str = "".join(
+            [key + ":" + value + '\n' for (key, value) in canonical_headers.iteritems()])
+
+        # Create the list of signed headers. This lists the headers
+        # in the canonical_headers list, delimited with ";" and in alpha order.
+        # Note: The request can include any headers; canonical_headers and
+        # signed_headers lists those that you want to be included in the
+        # hash of the request. "Host" and "x-amz-date" are always required.
+        signed_headers = ';'.join(canonical_headers.keys())
+
+        # Create payload hash (hash of the request body content). For GET
+        # requests, the payload is an empty string ("").
+        payload = '' if payload is None else payload
+        if isinstance(payload, BufferReader):
+            payload_buffer = payload
+            payload = payload_buffer.read()
+            payload_buffer.rewind()
+
+        payload_hash = hashlib.sha256(payload).hexdigest()
+
+        # Combine elements to create canonical request
+        canonical_request = method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers_str + '\n' + signed_headers + '\n' + payload_hash
+
+        # Match the algorithm to the hashing algorithm you use, either SHA-1 or
+        # SHA-256 (recommended)
+        algorithm = 'AWS4-HMAC-SHA256'
+        credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
+        string_to_sign = algorithm + '\n' + amzdate + '\n' + credential_scope + '\n' + hashlib.sha256(
+            canonical_request).hexdigest()
+
+        # Create the signing key using the function defined above.
+        signing_key = getSignatureKey(secret_key, datestamp, region, service)
+
+        # Sign the string_to_sign using the signing_key
+        signature = hmac.new(signing_key, (string_to_sign).encode('utf-8'), hashlib.sha256).hexdigest()
+
+        # The signing information can be either in a query string value or in
+        # a header named Authorization. This code shows how to use a header.
+        # Create authorization header and add to request headers
+        authorization_header = algorithm + ' ' + 'Credential=' + access_key + '/' + credential_scope + ', ' + 'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
+
+        # The request can include any headers, but MUST include "host", "x-amz-date",
+        # and (for this scenario) "Authorization". "host" and "x-amz-date" must
+        # be included in the canonical_headers and signed_headers, as noted
+        # earlier. Order here is not significant.
+        # Python note: The 'host' header is added automatically by the Python 'requests' library.
+        headers.update({'x-amz-date': amzdate,
+                        'x-amz-content-sha256': payload_hash,
+                        # 'x-amz-content-sha256':'UNSIGNED-PAYLOAD',
+                        'Authorization': authorization_header
+                        # 'Accepts': 'application/json'
+                        })
+
+        return (headers)
 
 class TwitterTab(AuthTab):
     def __init__(self, mainWindow=None):
