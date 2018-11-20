@@ -489,7 +489,7 @@ class Actions(object):
                         elif progress.wasResumed:
                             laststatuscount = 1
                             if progress.retry:
-                                threadpool.retryJobs()
+                                threadpool.retryJobs(ratelimitonly=True)
                             else:
                                 threadpool.clearRetry()
                                 threadpool.resumeJobs()

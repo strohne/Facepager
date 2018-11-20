@@ -104,12 +104,13 @@ class ApiThreadPool():
                   'options': deepcopy(job['options'])}
         self.errors.put(newjob)
 
-    def retryJobs(self):
+    def retryJobs(self, ratelimitonly = False):
         while not self.errors.empty():
             newjob = self.errors.get()
-            newjob['number'] = self.jobcount
-            self.jobcount += 1
-            self.input.appendleft(newjob)
+            if not ratelimitonly or newjob['options'].get('ratelimit', False):
+                newjob['number'] = self.jobcount
+                self.jobcount += 1
+                self.input.appendleft(newjob)
 
         self.resumeJobs()
 
