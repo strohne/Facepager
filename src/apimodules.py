@@ -1482,6 +1482,15 @@ class AuthTab(ApiTab):
             self.doOAuth2Login()
 
     @Slot()
+    def getToken(self):
+        if self.authTypeEdit.currentText() == 'Twitter App-only':
+            return False
+        elif self.authTypeEdit.currentText() == 'Twitter OAuth1':
+            self.getOAuth1Token()
+        else:
+            self.getOAuth2Token()
+
+    @Slot()
     def initSession(self):
         if hasattr(self, "session"):
             return self.session
@@ -1495,11 +1504,6 @@ class AuthTab(ApiTab):
 
     @Slot()
     def doOAuth1Login(self):
-        #Connect to the getToken-method
-        self.login_webview.urlChanged.connect(self.getOAuth1Token)
-        # catch redirects to localhost or nonexistent uris
-        self.login_webview.page().urlNotFound.connect(self.getOAuth1Token)
-
         try:
             self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get(
                 'consumer_key')
@@ -1560,12 +1564,6 @@ class AuthTab(ApiTab):
 
     @Slot()
     def doOAuth2Login(self):
-        #Connect to the getToken-method
-        self.login_webview.urlChanged.connect(self.getOAuth2Token)
-        # catch redirects to localhost or nonexistent uris
-        self.login_webview.page().urlNotFound.connect(self.getOAuth2Token)
-
-
         try:
             options = self.getOptions()
     
@@ -1590,7 +1588,7 @@ class AuthTab(ApiTab):
             params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
             url = loginurl + "?"+params
     
-            self.showLoginWindow(False,
+            self.showLoginWindow(False,self.getOAuth2Token,
                                          self.defaults.get('login_window_caption','Login'),
                                          url,
                                          self.defaults.get('login_window_width',600),
@@ -2012,7 +2010,7 @@ class TwitterTab(AuthTab):
 
             # manual paging with max-id
             # if there are still statuses in the response, use the last ID-1 for further pagination
-            elif isinstance(data, list) and (len(data) > 0):
+            elif isinstance(data, list) and (len(data) >= urlparams.get('count',1)):
                 options['params']['max_id'] = int(data[-1]["id"]) - 1
                 paging = True
 
