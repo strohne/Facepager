@@ -13,12 +13,13 @@ class ProgressBar(QDialog):
         self.timeout = 60
         self.timer = None
         self.countdown = False
+        self.retryoption = False
 
         self.rate_update_frequency = 3
         self.rate_interval = 30
         self.rate_values = []
 
-        self.retry = False
+        self.wasRetried = False
         self.wasResumed = False
 
         #Create layout
@@ -64,18 +65,21 @@ class ProgressBar(QDialog):
         self.open()
         self.hideError()
 
-    def showError(self, msg, timeout = 60):
+    def showError(self, msg, timeout = 60, retryoption = False):
         if self.countdown == False:
             self.countdown = True
             self.wasResumed = False
-            self.retry = False
+            self.wasRetried = False
+            self.retryoption = retryoption
             self.timeout = timeout
 
             self.errorLabel.setText(msg)
             self.errorLabel.show()
 
-            self.retryButton.setText(u"Retry")
-            self.retryButton.show()
+            if self.retryoption:
+                self.retryButton.setText(u"Retry")
+                self.retryButton.show()
+
             self.skipButton.setText(u"Skip")
             self.skipButton.show()
 
@@ -85,7 +89,7 @@ class ProgressBar(QDialog):
         self.countdown = False
 
         self.wasResumed = False
-        self.retry = False
+        self.wasRetried = False
 
         self.errorLabel.hide()
         self.retryButton.hide()
@@ -95,10 +99,13 @@ class ProgressBar(QDialog):
         self.timeout -= 1
         if (self.timeout <= 0):
             self.doretry()
-        else:
+        elif self.retryoption:
             self.retryButton.setText(u"Retry [{}]".format(self.timeout))
             self.skipButton.setText(u"Skip")
-
+            self.startCountdown()
+        else:
+            self.skipButton.setText(u"Skip [{}]".format(self.timeout))
+            self.retryButton.setText(u"Retry")
             self.startCountdown()
 
     def startCountdown(self):
@@ -119,7 +126,7 @@ class ProgressBar(QDialog):
         self.stopCountdown()
         self.countdown = False
         self.timeout = 0
-        self.retry = False
+        self.wasRetried = False
         self.wasResumed = True
 
 
@@ -127,7 +134,7 @@ class ProgressBar(QDialog):
         self.stopCountdown()
         self.countdown = False
         self.timeout = 0
-        self.retry = True
+        self.wasRetried = True
         self.wasResumed = True
 
 

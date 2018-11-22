@@ -353,8 +353,7 @@ class Actions(object):
             #Init status messages
             statuscount = {}
             errorcount = 0
-            laststatus = None
-            laststatuscount = 0
+            ratelimitcount = 0
             allowedstatus = ['fetched (200)','downloaded (200)','fetched (202)','stream'] #,'error (400)'
 
 
@@ -427,19 +426,57 @@ class Actions(object):
                             if not job['nodeindex'].isValid():
                                 continue
 
-                            #add data
+                            # Add data
                             treeindex = job['nodeindex']
                             treenode = treeindex.internalPointer()
                             treenode.appendNodes(job['data'], job['options'], job['headers'], True)
                             if options.get('expand',False):
                                  self.mainWindow.tree.setExpanded(treeindex,True)
 
-                            # Show status
+                            # Count status
                             status = job['options'].get('querystatus', 'empty')
+
+                            if not status in statuscount:
+                                statuscount[status] = 1
+                            else:
+                                statuscount[status] = statuscount[status]+1
+
+                            # Collect errors for automatic retry
+                            if not status in allowedstatus:
+                                threadpool.addError(job)
+                                errorcount += 1
+
+                            # Detect rate limit
                             ratelimit = job['options'].get('ratelimit', False)
-                            count = 1 if not status in statuscount else statuscount[status]+1
-                            statuscount[status] = count
-                            progress.showInfo(status,u"{} response(s) with status: {}".format(count,status))
+
+                            if ratelimit:
+                                ratelimitcount += 1
+
+                            # Clear errors
+                            if not threadpool.suspended and (status in allowedstatus) and not ratelimit:
+                                threadpool.clearRetry()
+                                errorcount = 0
+                                ratelimitcount = 0
+
+
+                            # Suspend on error
+                            elif (errorcount > (globaloptions['errors']-1)) or (ratelimitcount > 0):
+                                threadpool.suspendJobs()
+
+                                if ratelimit:
+                                    msg = "You reached the rate limit of the API."
+                                else:
+                                    msg = "{} consecutive errors occurred.\nPlease check your settings.".format(errorcount)
+
+                                timeout = 60 * 5 #5 minutes
+
+                                # Adjust progress
+                                progress.setRemaining(threadpool.getJobCount() + threadpool.getRetryCount())
+                                progress.showError(msg, timeout, ratelimitcount > 0)
+                                self.mainWindow.tree.treemodel.commitNewNodes()
+
+                            # Show info
+                            progress.showInfo(status,u"{} response(s) with status: {}".format(statuscount[status],status))
                             progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
                             progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
                             progress.setRemaining(threadpool.getJobCount())
@@ -449,37 +486,6 @@ class Actions(object):
                             for name, value in info.iteritems():
                                 progress.showInfo(name, value)
 
-                            # Count status
-                            if (status != laststatus):
-                                laststatus=status
-                                laststatuscount = 1
-                            else:
-                                laststatuscount += 1
-
-                            # Collect errors for automatic retry
-                            if not (status in allowedstatus):
-                                threadpool.addError(job)
-
-                            # Clear errors
-                            if (laststatus in allowedstatus) and (laststatuscount == 1) and not ratelimit:
-                                threadpool.clearRetry()
-
-                            # Suspend on error
-                            elif not (laststatus in allowedstatus) and ((laststatuscount > (globaloptions['errors']-1)) or ratelimit):
-                                threadpool.suspendJobs()
-
-                                if ratelimit:
-                                    msg = "You reached the rate limit of the API."
-                                else:
-                                    msg = "{} consecutive errors occurred.\nPlease check your settings.".format(laststatuscount)
-
-                                timeout = 60 * 5 #5 minutes
-
-                                # Adjust progress
-                                progress.setRemaining(threadpool.getJobCount() + threadpool.getRetryCount())
-                                progress.showError(msg, timeout)
-                                self.mainWindow.tree.treemodel.commitNewNodes()
-
                         # Abort
                         elif progress.wasCanceled:
                             progress.showInfo('cancel', u"Disconnecting from stream, may take some time.")
@@ -487,9 +493,8 @@ class Actions(object):
 
                         # Retry
                         elif progress.wasResumed:
-                            laststatuscount = 1
-                            if progress.retry:
-                                threadpool.retryJobs(ratelimitonly=True)
+                            if progress.wasRetried:
+                                threadpool.retryJobs()
                             else:
                                 threadpool.clearRetry()
                                 threadpool.resumeJobs()
