@@ -1,11 +1,11 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 import csv
-from progressbar import ProgressBar
+from .progressbar import ProgressBar
 import codecs
 from pandas import merge,read_csv
 
-from database import *
+from .database import *
 
 class ExportFileDialog(QFileDialog):
     """
@@ -101,7 +101,7 @@ class ExportFileDialog(QFileDialog):
 
 
             #headers
-            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
@@ -112,7 +112,7 @@ class ExportFileDialog(QFileDialog):
                 if progress.wasCanceled:
                     break
 
-                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 if self.optionLinebreaks.isChecked():
                     row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
@@ -187,7 +187,7 @@ class ExportFileDialog(QFileDialog):
 
                 levels = dict(list(fulltable.groupby(levelcol)))
                 minlevel = fulltable.level.min()
-                for level, data in sorted(levels.iteritems()):
+                for level, data in sorted(levels.items()):
                     #First level is the starting point for the following merges
                     if level == minlevel:
                         #data = data[[idcol,'object_id','object_type']]

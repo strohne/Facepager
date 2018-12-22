@@ -1,5 +1,5 @@
-import urlparse
-import urllib
+import urllib.parse
+import urllib.request, urllib.parse, urllib.error
 import hashlib, hmac, base64
 from mimetypes import guess_all_extensions
 from datetime import datetime
@@ -21,11 +21,11 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 import dateutil.parser
 
-from folder import SelectFolderDialog
-from paramedit import *
-from utilities import *
+from .folder import SelectFolderDialog
+from .paramedit import *
+from .utilities import *
 
-from credentials import *
+from .credentials import *
 from pandas.core.config import is_instance_factory
 #import imp
 #try:
@@ -89,7 +89,7 @@ class ApiTab(QScrollArea):
         """
          Return the Node-ID as a string
         """
-        return unicode(val).encode("utf-8")
+        return str(val).encode("utf-8")
 
     def parseURL(self, url):
         """
@@ -98,7 +98,7 @@ class ApiTab(QScrollArea):
         url = url.split('?', 1)
         path = url[0]
         query = url[1] if len(url) > 1 else ''
-        query = urlparse.parse_qsl(query)
+        query = urllib.parse.parse_qsl(query)
         query = OrderedDict((k, v) for k, v in query)
 
         return path, query
@@ -107,12 +107,12 @@ class ApiTab(QScrollArea):
         if not pattern:
             return pattern
         else:
-            pattern = unicode(pattern)
+            pattern = str(pattern)
 
         #matches = re.findall(ur"<([^>]*>", pattern)
         #matches = re.findall(ur"(?<!\\)<([^>]*?)(?<!\\)>", pattern)
         #Find placeholders in brackets, ignoring escaped brackets (escape character is backslash)
-        matches = re.findall(ur"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
+        matches = re.findall(r"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
 
         for match in matches:
             pipeline = match.split('|')
@@ -124,7 +124,7 @@ class ApiTab(QScrollArea):
             elif key == 'None':
                 value = ''
             elif key == 'Object ID':
-                value = unicode(nodedata['objectid'])
+                value = str(nodedata['objectid'])
             else:
                 value = getDictValue(nodedata['response'], key)
 
@@ -176,11 +176,11 @@ class ApiTab(QScrollArea):
             value = self.parsePlaceholders(params[name], nodedata, {},options)
 
             #check parameter name
-            match = re.match(ur"^<(.*)>$", unicode(name))
+            match = re.match(r"^<(.*)>$", str(name))
             if match:
                 templateparams[match.group(1)] = value
             else:
-                urlparams[name] = unicode(value).encode("utf-8")
+                urlparams[name] = str(value).encode("utf-8")
 
         #Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
@@ -409,7 +409,7 @@ class ApiTab(QScrollArea):
         self.mainWindow.settings.beginGroup("ApiModule_" + self.name)
         options = self.getOptions('settings')
 
-        for key in options.keys():
+        for key in list(options.keys()):
             self.mainWindow.settings.setValue(key, options[key])
         self.mainWindow.settings.endGroup()
 
@@ -433,7 +433,7 @@ class ApiTab(QScrollArea):
 
         try:
             folder = os.path.join(getResourceFolder(),'docs')
-            filename = u"{0}.json".format(self.__class__.__name__)
+            filename = "{0}.json".format(self.__class__.__name__)
 
             with open(os.path.join(folder, filename),"r") as docfile:
                 if docfile:
@@ -703,22 +703,22 @@ class ApiTab(QScrollArea):
                 try:
                     response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout, verify=True)
                         
-                except (HTTPError, ConnectionError), e:
+                except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
                     if maxretries > 0:
                         time.sleep(0.1)
-                        self.logMessage(u"Automatic retry: Request Error: {0}".format(e.message))
+                        self.logMessage("Automatic retry: Request Error: {0}".format(e.message))
                     else:
                         raise e
                 else:
                     break
 
-        except (HTTPError, ConnectionError), e:
-            raise Exception(u"Request Error: {0}".format(e.message))
+        except (HTTPError, ConnectionError) as e:
+            raise Exception("Request Error: {0}".format(e.message))
         else:
             status = 'fetched' if response.ok else 'error'
             status = status + ' (' + str(response.status_code) + ')'
-            headers = dict(response.headers.items())
+            headers = dict(list(response.headers.items()))
             
             if jsonify == True and response.text == '':
                 return [], headers, status
@@ -815,8 +815,8 @@ class ApiTab(QScrollArea):
             if not filename:
                 filename = url_filename
 
-            filename = re.sub(ur'[^a-zA-Z0-9_.-]+', '', filename)
-            fileext = re.sub(ur'[^a-zA-Z0-9_.-]+', '', fileext)
+            filename = re.sub(r'[^a-zA-Z0-9_.-]+', '', filename)
+            fileext = re.sub(r'[^a-zA-Z0-9_.-]+', '', fileext)
 
             filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
             filenumber = 0
@@ -864,8 +864,8 @@ class ApiTab(QScrollArea):
                     data = {'sourcepath': path, 'sourcequery': args,'response':response.text}
 
                 status = 'error' + ' (' + str(response.status_code) + ')'
-        except Exception, e:
-            raise Exception(u"Download Error: {0}".format(e.message))
+        except Exception as e:
+            raise Exception("Download Error: {0}".format(e.message))
         else:
             return data, dict(response.headers), status
 
@@ -985,8 +985,8 @@ class FacebookTab(ApiTab):
                 urlparams = options['params']
 
             if options['logrequests']:
-                logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                    urlpath + "?" + urllib.urlencode(
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                    urlpath + "?" + urllib.parse.urlencode(
                                                                                        urlparams)))
 
             # data
@@ -999,7 +999,7 @@ class FacebookTab(ApiTab):
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
                 code = getDictValue(data,"error.code")
-                logMessage(u"Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'], msg))
+                logMessage("Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'], msg))
 
                 # see https://developers.facebook.com/docs/graph-api/using-graph-api
                 # see https://developers.facebook.com/docs/graph-api/advanced/rate-limiting/
@@ -1044,13 +1044,13 @@ class FacebookTab(ApiTab):
             self.showLoginWindow(query, caption, url)
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            unicode(e.message),
+                                            str(e.message),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
     def getToken(self,url):
         if url.toString().startswith(self.defaults['redirect_uri']):
-            url = urlparse.parse_qs(url.toString())
+            url = urllib.parse.parse_qs(url.toString())
             token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
 
             self.tokenEdit.setText(token[0])
@@ -1194,7 +1194,7 @@ class TwitterStreamingTab(ApiTab):
                             else:
                                 self.connected = False
                                 raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
-                        print "good response"
+                        print("good response")
                         return response
 
 
@@ -1238,7 +1238,7 @@ class TwitterStreamingTab(ApiTab):
             urlparams = options["params"]
 
         if options['logrequests']:
-            logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+            logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
         # data
         headers = None
@@ -1266,12 +1266,12 @@ class TwitterStreamingTab(ApiTab):
                                                      self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            unicode(e.message),
+                                            str(e.message),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot()
     def getToken(self):
-        url = urlparse.parse_qs(self.login_webview.url().toString())
+        url = urllib.parse.parse_qs(self.login_webview.url().toString())
         if 'oauth_verifier' in url:
             token = url['oauth_verifier']
             if token:
@@ -1442,7 +1442,7 @@ class AuthTab(ApiTab):
                 headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
 
             if options['logrequests']:
-                logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
             # data
             options['querytime'] = str(datetime.now())
@@ -1525,12 +1525,12 @@ class AuthTab(ApiTab):
                                  )
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                 unicode(e.message),
+                                 str(e.message),
                                  QMessageBox.StandardButton.Ok)
 
     @Slot()
     def getOAuth1Token(self):
-        url = urlparse.parse_qs(self.login_webview.url().toString())
+        url = urllib.parse.parse_qs(self.login_webview.url().toString())
         if "oauth_verifier" in url:
             token = url["oauth_verifier"]
             if token:
@@ -1585,7 +1585,7 @@ class AuthTab(ApiTab):
             if scope is not None:
                 params['scope'] = scope
     
-            params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
+            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
             url = loginurl + "?"+params
     
             self.showLoginWindow(False,self.getOAuth2Token,
@@ -1596,7 +1596,7 @@ class AuthTab(ApiTab):
                                          )
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            unicode(e.message),
+                                            str(e.message),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
@@ -1638,7 +1638,7 @@ class AuthTab(ApiTab):
             if clientsecret == '':
                 raise Exception('Client Secret is missing, please adjust settings!')
 
-            basicauth = urllib.quote_plus(clientid)+':'+urllib.quote_plus(clientsecret)
+            basicauth = urllib.parse.quote_plus(clientid)+':'+urllib.parse.quote_plus(clientsecret)
             basicauth = base64.b64encode(basicauth)
 
             path = 'https://api.twitter.com/oauth2/token/'
@@ -1660,7 +1660,7 @@ class AuthTab(ApiTab):
                 raise Exception("Check your settings, no token could be retrieved.")
         except Exception as e:
             QMessageBox.critical(self, "Login failed",
-                                 unicode(e.message),
+                                 str(e.message),
                                  QMessageBox.StandardButton.Ok)
 
 class AmazonTab(AuthTab):
@@ -1776,7 +1776,7 @@ class AmazonTab(AuthTab):
         datestamp = timenow.strftime('%Y%m%d')  # Date w/o time, used in credential scope
 
         # Create canonical URI--the part of the URI from domain to query string
-        urlcomponents = urlparse.urlparse(urlpath)
+        urlcomponents = urllib.parse.urlparse(urlpath)
         canonical_uri = '/' if urlcomponents.path == '' else urlcomponents.path
 
         # Create the canonical query string. In this example (a GET request),
@@ -1785,7 +1785,7 @@ class AmazonTab(AuthTab):
         # For this example, the query string is pre-formatted in the request_parameters variable.
         urlparams = {} if urlparams is None else urlparams
         canonical_querystring = OrderedDict(sorted(urlparams.items()))
-        canonical_querystring = urllib.urlencode(canonical_querystring)
+        canonical_querystring = urllib.parse.urlencode(canonical_querystring)
 
         # Create the canonical headers and signed headers. Header names
         # must be trimmed and lowercase, and sorted in code point order from
@@ -1798,17 +1798,17 @@ class AmazonTab(AuthTab):
         if headers is not None:
             canonical_headers.update(headers)
 
-        canonical_headers = {k.lower(): v for k, v in canonical_headers.items()}
+        canonical_headers = {k.lower(): v for k, v in list(canonical_headers.items())}
         canonical_headers = OrderedDict(sorted(canonical_headers.items()))
         canonical_headers_str = "".join(
-            [key + ":" + value + '\n' for (key, value) in canonical_headers.iteritems()])
+            [key + ":" + value + '\n' for (key, value) in canonical_headers.items()])
 
         # Create the list of signed headers. This lists the headers
         # in the canonical_headers list, delimited with ";" and in alpha order.
         # Note: The request can include any headers; canonical_headers and
         # signed_headers lists those that you want to be included in the
         # hash of the request. "Host" and "x-amz-date" are always required.
-        signed_headers = ';'.join(canonical_headers.keys())
+        signed_headers = ';'.join(list(canonical_headers.keys()))
 
         # Create payload hash (hash of the request body content). For GET
         # requests, the payload is an empty string ("").
@@ -1972,8 +1972,8 @@ class TwitterTab(AuthTab):
                 urlparams = options["params"]
 
             if options['logrequests']:
-                logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                    urlpath + "?" + urllib.urlencode(
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                    urlpath + "?" + urllib.parse.urlencode(
                                                                         urlparams)))
             # App auth
             requestheaders = options.get('headers', {})
@@ -1987,7 +1987,7 @@ class TwitterTab(AuthTab):
 
             # rate limit info
             if 'x-rate-limit-remaining' in headers:
-                options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(
+                options['info'] = {'x-rate-limit-remaining': "{} requests remaining until rate limit".format(
                     headers['x-rate-limit-remaining'])}
 
             options['ratelimit'] = (status == "error (429)")
@@ -2207,7 +2207,7 @@ class FilesTab(AuthTab):
 
         # Log
         if options['logrequests']:
-            logMessage(u"Downloading file for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+            logMessage("Downloading file for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
         options['querytime'] = str(datetime.now())
         data, headers, status = self.download(urlpath, urlparams, requestheaders,method,payload,foldername,filename,fileext)
@@ -2252,7 +2252,7 @@ class QWebPageCustom(QWebPage):
         return True
 
     def onSslErrors(self, reply, errors):
-        url = unicode(reply.url().toString())
+        url = str(reply.url().toString())
         reply.ignoreSslErrors()
         self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
 

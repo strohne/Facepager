@@ -1,7 +1,7 @@
 from PySide.QtCore import *
 from PySide.QtWebKit import *
 from PySide.QtGui import *
-from paramedit import *
+from .paramedit import *
 
 class SelectNodesWindow(QDialog):
     

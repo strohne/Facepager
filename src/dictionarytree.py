@@ -81,7 +81,7 @@ class DictionaryTreeModel(QAbstractItemModel):
         self.itemtype = itemtype
         if not isinstance(data, dict):
             data = {'': data}
-        items = data.items()
+        items = list(data.items())
         #items.sort()
         for item in items:
             newparent = DictionaryTreeItem(item, self.rootItem,self)
@@ -98,7 +98,7 @@ class DictionaryTreeModel(QAbstractItemModel):
             docid = self.itemtype.split(':')[0]
             if not docid in self.documentation:
                 folder = os.path.join(getResourceFolder(),'docs')
-                filename = u"{}Fields.json".format(docid)
+                filename = "{}Fields.json".format(docid)
 
                 self.documentation[docid] = json.load(open(os.path.join(folder, filename),"r"))
                 self.documentation[docid] = {entity["Field"]:entity  for entity in self.documentation[docid]}
@@ -153,7 +153,7 @@ class DictionaryTreeModel(QAbstractItemModel):
             return item.itemDataKey
         elif index.column() == 1:
             value = item.itemDataValue
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 value = value.replace('\n', ' ').replace('\r', '')
 
             return value
@@ -213,7 +213,7 @@ class DictionaryTreeItem(object):
         self.itemToolTip = self.model.getDocumentation(self.keyPath())
 
         if isinstance(value, dict):
-            items = value.items()
+            items = list(value.items())
             self.itemDataValue = '{' + str(len(items)) + '}'
             self.itemDataType = 'dict'
             #items.sort()
@@ -226,7 +226,7 @@ class DictionaryTreeItem(object):
             for idx, item in enumerate(value):
                 self.appendChild(DictionaryTreeItem((idx, item), self,self.model))
 
-        elif isinstance(value, (int, long)):
+        elif isinstance(value, int):
             self.itemDataType = 'atom'
             self.itemDataValue = str(value)
 
@@ -235,7 +235,7 @@ class DictionaryTreeItem(object):
             self.itemDataValue = value
 
             try:
-                self.itemToolTip = self.itemToolTip + "<p>"+unicode(value)+"</p>"
+                self.itemToolTip = self.itemToolTip + "<p>"+str(value)+"</p>"
             except:
                 pass
 

@@ -34,7 +34,7 @@ class QParamEdit(QTableWidget):
     # Takes params as dict and fills the widget
     def setParams(self,vals={}):
         try:
-            if isinstance(vals,str) or isinstance(vals,unicode):
+            if isinstance(vals,str) or isinstance(vals,str):
                 vals = json.loads(vals)
         except:
             vals = {}

@@ -29,16 +29,16 @@ import cProfile
 import sys
 from PySide.QtCore import *
 from PySide.QtGui import *
-import icons
-from datatree import *
-from dictionarytree import *
-from database import *
-from actions import *
-from apimodules import *
-from help import *
-from presets import *
-from timer import *
-from selectnodes import *
+from . import icons
+from .datatree import *
+from .dictionarytree import *
+from .database import *
+from .actions import *
+from .apimodules import *
+from .help import *
+from .presets import *
+from .timer import *
+from .selectnodes import *
 import logging
 import threading
 
@@ -524,7 +524,7 @@ if __name__ == "__main__":
             os.makedirs(logfolder)
         logging.basicConfig(filename=os.path.join(logfolder,'facepager.log'),level=logging.ERROR,format='%(asctime)s %(levelname)s:%(message)s')
     except Exception as e:
-        print u"Error intitializing log file: {}".format(e.message)
+        print("Error intitializing log file: {}".format(e.message))
 
 
     # Locate the SSL certificate for requests

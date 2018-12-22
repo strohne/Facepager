@@ -1,6 +1,6 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from database import *
+from .database import *
 import csv
 
 
@@ -91,7 +91,7 @@ class DataTree(QTreeView):
                 return False
 
             treeitem = index.internalPointer()
-            for key, value in filter.iteritems():
+            for key, value in filter.items():
                 if treeitem.data is not None and treeitem.data[key] is not None:
                     orlist = value if type(value) is list else [value]
                     if not treeitem.data[key] in orlist:
@@ -171,7 +171,7 @@ class TreeItem(object):
             self.childItems.remove(child)
 
             #Update row indexes
-            for row in xrange(rowidx, len(self.childItems) - 1):
+            for row in range(rowidx, len(self.childItems) - 1):
                 self.childItems[row]._row = row
 
             if persistent:
@@ -344,7 +344,7 @@ class TreeModel(QAbstractItemModel):
 
 
     def deleteNode(self, index, delaycommit=False):
-        if (not self.database.connected) or (not index.isValid()) or (index.column() <> 0):
+        if (not self.database.connected) or (not index.isValid()) or (index.column() != 0):
             return False
 
         self.beginRemoveRows(index.parent(), index.row(), index.row())

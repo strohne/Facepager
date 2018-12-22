@@ -1,17 +1,17 @@
 import csv
 from copy import deepcopy
-from progressbar import ProgressBar
-from database import *
-from apimodules import *
-from apithread import ApiThreadPool
+from .progressbar import ProgressBar
+from .database import *
+from .apimodules import *
+from .apithread import ApiThreadPool
 from collections import deque
-import StringIO
+import io
 import codecs
 import os
 import platform
 import subprocess
 
-from export import ExportFileDialog
+from .export import ExportFileDialog
 
 class Actions(object):
     def __init__(self, mainWindow):
@@ -171,13 +171,13 @@ class Actions(object):
         indexes = self.mainWindow.tree.selectionModel().selectedRows()
         progress.setMaximum(len(indexes))
 
-        output = StringIO.StringIO()
+        output = io.StringIO()
         try:
             writer = csv.writer(output, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
             #headers
-            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
             writer.writerow(row)
 
             #rows
@@ -185,7 +185,7 @@ class Actions(object):
                 if progress.wasCanceled:
                     break
 
-                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 writer.writerow(row)
 
                 progress.step()
@@ -323,7 +323,7 @@ class Actions(object):
             return (False)
 
         #Show progress window
-        progress = ProgressBar(u"Fetching Data", parent=self.mainWindow)
+        progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
             #Get global options
@@ -346,7 +346,7 @@ class Actions(object):
                 return (False)
 
             #Update progress window
-            self.mainWindow.logmessage(u"Start fetching data for {} node(s).".format(len(indexes)))
+            self.mainWindow.logmessage("Start fetching data for {} node(s).".format(len(indexes)))
             progress.setMaximum(len(indexes))
             self.mainWindow.tree.treemodel.nodecounter = 0
 
@@ -410,10 +410,10 @@ class Actions(object):
                             # Update single progress
                             if 'current' in job:
                                 percent = int((job.get('current',0) * 100.0 / job.get('total',1))) 
-                                progress.showInfo(progresskey, u"{}% of current node processed.".format(percent))
+                                progress.showInfo(progresskey, "{}% of current node processed.".format(percent))
                             elif 'page' in job:
                                 if job.get('page', 0) > 1:
-                                    progress.showInfo(progresskey, u"{} page(s) of current node processed.".format(job.get('page',0)))
+                                    progress.showInfo(progresskey, "{} page(s) of current node processed.".format(job.get('page',0)))
 
                             # Update total progress
                             else:
@@ -476,19 +476,19 @@ class Actions(object):
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
                             # Show info
-                            progress.showInfo(status,u"{} response(s) with status: {}".format(statuscount[status],status))
-                            progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
-                            progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
+                            progress.showInfo(status,"{} response(s) with status: {}".format(statuscount[status],status))
+                            progress.showInfo('newnodes',"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
+                            progress.showInfo('threads',"{} active thread(s)".format(threadpool.getThreadCount()))
                             progress.setRemaining(threadpool.getJobCount())
 
                             # Custom info from modules
                             info = job['options'].get('info', {})
-                            for name, value in info.iteritems():
+                            for name, value in info.items():
                                 progress.showInfo(name, value)
 
                         # Abort
                         elif progress.wasCanceled:
-                            progress.showInfo('cancel', u"Disconnecting from stream, may take some time.")
+                            progress.showInfo('cancel', "Disconnecting from stream, may take some time.")
                             threadpool.stopJobs()
 
                         # Retry
@@ -508,7 +508,7 @@ class Actions(object):
 
                         # Finished
                         if not threadpool.hasJobs():
-                            progress.showInfo('cancel', u"Work finished, shutting down threads.")
+                            progress.showInfo('cancel', "Work finished, shutting down threads.")
                             threadpool.stopJobs()
 
                         #-Waiting...
@@ -518,11 +518,11 @@ class Actions(object):
                         QApplication.processEvents()
 
             finally:
-                request_summary = [str(val)+" x "+key for key,val in statuscount.iteritems()]
+                request_summary = [str(val)+" x "+key for key,val in statuscount.items()]
                 request_summary = ", ".join(request_summary)
                 request_end = "Fetching completed" if not progress.wasCanceled else 'Fetching cancelled by user'
 
-                self.mainWindow.logmessage(u"{}, {} new node(s) created. Summary of responses: {}.".format(request_end, self.mainWindow.tree.treemodel.nodecounter,request_summary))
+                self.mainWindow.logmessage("{}, {} new node(s) created. Summary of responses: {}.".format(request_end, self.mainWindow.tree.treemodel.nodecounter,request_summary))
 
                 self.mainWindow.tree.treemodel.commitNewNodes()
         finally:

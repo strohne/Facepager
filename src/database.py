@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_ses
 from sqlalchemy.engine import Engine
 
 import json
-from utilities import *
+from .utilities import *
 from dateutil import parser
 import datetime
 import os
@@ -146,7 +146,7 @@ class Node(Base):
 
         def getResponseValue(self,key,encoding=None):
             value=getDictValue(self.response,key)
-            if encoding and isinstance(value, unicode):
+            if encoding and isinstance(value, str):
                 return value.encode(encoding)
             else:
                 return value
