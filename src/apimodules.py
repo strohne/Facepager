@@ -1262,8 +1262,7 @@ class TwitterStreamingTab(ApiTab):
             self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
                 verify=False)
     
-            self.showLoginWindow(query, caption,
-                                                     self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
+            self.showLoginWindow(query, caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
                                             unicode(e.message),
@@ -1474,30 +1473,30 @@ class AuthTab(ApiTab):
         if hasattr(self, "session"):
             del self.session
 
-        if self.authTypeEdit.currentText() == 'Twitter App-only':
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
             self.doTwitterAppLogin()
-        elif self.authTypeEdit.currentText() == 'Twitter OAuth1':
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
             self.doOAuth1Login()
         else:
             self.doOAuth2Login()
 
     @Slot()
-    def getToken(self):
-        if self.authTypeEdit.currentText() == 'Twitter App-only':
+    def getToken(self, url = False):
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
             return False
-        elif self.authTypeEdit.currentText() == 'Twitter OAuth1':
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
             self.getOAuth1Token()
         else:
-            self.getOAuth2Token()
+            self.getOAuth2Token(url)
 
     @Slot()
     def initSession(self):
         if hasattr(self, "session"):
             return self.session
 
-        if self.authTypeEdit.currentText() == 'Twitter App-only':
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
             return self.initOAuth2Session()
-        elif self.authTypeEdit.currentText() == 'Twitter OAuth1':
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
             return self.initOAuth1Session()
         else:
             return self.initOAuth2Session()
@@ -1587,9 +1586,8 @@ class AuthTab(ApiTab):
     
             params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
             url = loginurl + "?"+params
-    
-            self.showLoginWindow(False,self.getOAuth2Token,
-                                         self.defaults.get('login_window_caption','Login'),
+
+            self.showLoginWindow(False,self.defaults.get('login_window_caption','Login'),
                                          url,
                                          self.defaults.get('login_window_width',600),
                                          self.defaults.get('login_window_height',600)
@@ -1600,7 +1598,7 @@ class AuthTab(ApiTab):
                                             QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
-    def getOAuth2Token(self,url):
+    def getOAuth2Token(self, url):
         options = self.getOptions()
 
         if url.toString().startswith(options['redirect_uri']):
