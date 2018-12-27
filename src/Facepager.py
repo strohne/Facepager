@@ -3,7 +3,7 @@
 
 # MIT License
 
-# Copyright (c) 2016 Till Keyling and Jakob Jünger
+# Copyright (c) 2016 Jakob Jünger and Till Keyling
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,13 +47,13 @@ class MainWindow(QMainWindow):
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
 
-        self.setWindowTitle("Facepager 3.10")
+        self.setWindowTitle("Facepager 4.0")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
 
         # This is needed to display the app icon on the taskbar on Windows 7
         if os.name == 'nt':
             import ctypes
-            myappid = 'Facepager.3.10' # arbitrary string
+            myappid = 'Facepager.4.0' # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         self.setMinimumSize(800,600)
@@ -421,14 +421,14 @@ class MainWindow(QMainWindow):
 
 
     def writeSettings(self):
-        QCoreApplication.setOrganizationName("Keyling")
+        QCoreApplication.setOrganizationName("Strohne")
         QCoreApplication.setApplicationName("Facepager")
 
         self.settings = QSettings()
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
-        self.settings.setValue("version","3.10")
+        self.settings.setValue("version","4.0.0")
         self.settings.endGroup()
 
 
@@ -444,13 +444,13 @@ class MainWindow(QMainWindow):
 
     def readSettings(self):
         QSettings.setDefaultFormat(QSettings.IniFormat)
-        QCoreApplication.setOrganizationName("Keyling")
+        QCoreApplication.setOrganizationName("Strohne")
         QCoreApplication.setApplicationName("Facepager")
         self.settings = QSettings()
 
     def deleteSettings(self):
         QSettings.setDefaultFormat(QSettings.IniFormat)
-        QCoreApplication.setOrganizationName("Keyling")
+        QCoreApplication.setOrganizationName("Strohne")
         QCoreApplication.setApplicationName("Facepager")
         self.settings = QSettings()
 
