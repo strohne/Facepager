@@ -27,18 +27,18 @@
 #import yappi
 import cProfile
 import sys
-from PySide.QtCore import *
-from PySide.QtGui import *
-from . import icons
-from .datatree import *
-from .dictionarytree import *
-from .database import *
-from .actions import *
-from .apimodules import *
-from .help import *
-from .presets import *
-from .timer import *
-from .selectnodes import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from icons import *
+from datatree import *
+from dictionarytree import *
+from database import *
+from actions import *
+from apimodules import *
+from help import *
+from presets import *
+from timer import *
+from selectnodes import *
 import logging
 import threading
 
@@ -77,7 +77,6 @@ class MainWindow(QMainWindow):
 
         self.tree.loadData(self.database)
         self.actions.actionShowColumns.trigger()
-
 
     def createActions(self):
         self.actions=Actions(self)

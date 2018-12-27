@@ -1,9 +1,13 @@
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import QActionGroup
+
 import csv
 from copy import deepcopy
-from .progressbar import ProgressBar
-from .database import *
-from .apimodules import *
-from .apithread import ApiThreadPool
+from progressbar import ProgressBar
+from database import *
+from apimodules import *
+from apithread import ApiThreadPool
 from collections import deque
 import io
 import codecs
@@ -11,7 +15,7 @@ import os
 import platform
 import subprocess
 
-from .export import ExportFileDialog
+from export import ExportFileDialog
 
 class Actions(object):
     def __init__(self, mainWindow):
@@ -108,10 +112,15 @@ class Actions(object):
         fldg.setFileMode(QFileDialog.ExistingFile)
         if fldg.exec_():
             self.mainWindow.timerWindow.cancelTimer()
+            self.mainWindow.tree.treemodel.clear()
             self.mainWindow.database.connect(fldg.selectedFiles()[0])
             self.mainWindow.settings.setValue("lastpath", fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
-            self.mainWindow.tree.treemodel.reset()
+
+            self.mainWindow.tree.loadData(self.mainWindow.database)
+            self.mainWindow.actions.actionShowColumns.trigger()
+
+
 
     @Slot()
     def openDBFolder(self):
@@ -135,10 +144,11 @@ class Actions(object):
 
         if fldg.exec_():
             self.mainWindow.timerWindow.cancelTimer()
+            self.mainWindow.tree.treemodel.clear()
             self.mainWindow.database.createconnect(fldg.selectedFiles()[0])
             self.mainWindow.settings.setValue("lastpath", fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
-            self.mainWindow.tree.treemodel.reset()
+
 
 
     @Slot()

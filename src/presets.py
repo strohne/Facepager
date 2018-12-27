@@ -1,17 +1,19 @@
-from PySide.QtCore import *
-from PySide.QtWebKit import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+
+#from PySide.QtWebKit import *
+
 import os
 import sys
 import re
 import json
-from .textviewer import *
+from textviewer import *
 from urllib.parse import urlparse
 import requests
 import threading
 import webbrowser
 import platform
-from .dictionarytree import *
+from dictionarytree import *
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):

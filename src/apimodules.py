@@ -9,9 +9,9 @@ import os, sys, time
 from collections import OrderedDict
 import threading
 
-from PySide.QtWebKit import QWebView, QWebPage
-from PySide.QtGui import QMessageBox, QHBoxLayout, QScrollArea
-from PySide.QtCore import QUrl
+from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
+from PySide2.QtWidgets import *
+from PySide2.QtCore import QUrl
 
 import requests
 from requests.exceptions import *
@@ -21,11 +21,11 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 import dateutil.parser
 
-from .folder import SelectFolderDialog
-from .paramedit import *
-from .utilities import *
+from folder import SelectFolderDialog
+from paramedit import *
+from utilities import *
 
-from .credentials import *
+from credentials import *
 from pandas.core.config import is_instance_factory
 #import imp
 #try:
@@ -774,7 +774,7 @@ class ApiTab(QScrollArea):
         window.setWindowTitle(caption)
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
-        self.login_webview = QWebView(window)
+        self.login_webview = QWebEngineView(window)
         window.setCentralWidget(self.login_webview )
 
         # Use the custom- WebPage class
@@ -1044,7 +1044,7 @@ class FacebookTab(ApiTab):
             self.showLoginWindow(query, caption, url)
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            str(e.message),
+                                            str(e),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
@@ -2216,33 +2216,33 @@ class FilesTab(AuthTab):
         logData(data, options, headers)
 
 
-class QWebPageCustom(QWebPage):
+class QWebPageCustom(QWebEnginePage):
     logmessage = Signal(str)
     urlNotFound = Signal(QUrl)
 
     def __init__(self, *args, **kwargs):
         super(QWebPageCustom, self).__init__(*args, **kwargs)
-        self.networkAccessManager().sslErrors.connect(self.onSslErrors)
+        #TODO: self.networkAccessManager().sslErrors.connect(self.onSslErrors)
 
     def supportsExtension(self, extension):
-        if extension == QWebPage.ErrorPageExtension:
+        if extension == QWebEnginePage.ErrorPageExtension:
             return True
         else:
             return False
 
     def extension(self, extension, option=0, output=0):
-        if extension != QWebPage.ErrorPageExtension: return False
+        if extension != QWebEnginePage.ErrorPageExtension: return False
 
-        if option.domain == QWebPage.QtNetwork:
+        if option.domain == QWebEnginePage.QtNetwork:
             #msg = "Network error (" + str(option.error) + "): " + option.errorString
             #self.logmessage.emit(msg)
             self.urlNotFound.emit(option.url)
 
-        elif option.domain == QWebPage.Http:
+        elif option.domain == QWebEnginePage.Http:
             msg = "HTTP error (" + str(option.error) + "): " + option.errorString
             self.logmessage.emit(msg)
 
-        elif option.domain == QWebPage.WebKit:
+        elif option.domain == QWebEnginePage.WebKit:
             msg = "WebKit error (" + str(option.error) + "): " + option.errorString
             self.logmessage.emit(msg)
         else:

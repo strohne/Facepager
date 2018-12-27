@@ -1,5 +1,6 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 import json
 import re
 import os
@@ -73,8 +74,9 @@ class DictionaryTreeModel(QAbstractItemModel):
         self.setdata(dic)
 
     def reset(self):
+        self.beginResetModel()
         self.rootItem.clear()
-        super(DictionaryTreeModel, self).reset()
+        self.endResetModel()
 
     def setdata(self, data,itemtype="Generic"):
         self.reset()

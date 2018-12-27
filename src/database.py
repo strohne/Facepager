@@ -8,12 +8,12 @@ from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_ses
 from sqlalchemy.engine import Engine
 
 import json
-from .utilities import *
+from utilities import *
 from dateutil import parser
 import datetime
 import os
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtCore import *
 
 Base = declarative_base()
 
