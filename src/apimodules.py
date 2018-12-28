@@ -25,14 +25,15 @@ from folder import SelectFolderDialog
 from paramedit import *
 from utilities import *
 
-from credentials import *
-from pandas.core.config import is_instance_factory
+try:
+    from credentials import *
+#from pandas.core.config import is_instance_factory
 #import imp
 #try:
 #    imp.find_module('credentials')
 #    from credentials import *
-#except ImportError:
-#    credentials = {}
+except ImportError:
+    credentials = {}
 
 class ApiTab(QScrollArea):
     """
@@ -707,14 +708,14 @@ class ApiTab(QScrollArea):
                     maxretries -= 1
                     if maxretries > 0:
                         time.sleep(0.1)
-                        self.logMessage("Automatic retry: Request Error: {0}".format(e.message))
+                        self.logMessage("Automatic retry: Request Error: {0}".format(str(e)))
                     else:
                         raise e
                 else:
                     break
 
         except (HTTPError, ConnectionError) as e:
-            raise Exception("Request Error: {0}".format(e.message))
+            raise Exception("Request Error: {0}".format(str(e)))
         else:
             status = 'fetched' if response.ok else 'error'
             status = status + ' (' + str(response.status_code) + ')'
@@ -865,7 +866,7 @@ class ApiTab(QScrollArea):
 
                 status = 'error' + ' (' + str(response.status_code) + ')'
         except Exception as e:
-            raise Exception("Download Error: {0}".format(e.message))
+            raise Exception("Download Error: {0}".format(str(e)))
         else:
             return data, dict(response.headers), status
 
@@ -1263,7 +1264,7 @@ class TwitterStreamingTab(ApiTab):
             self.showLoginWindow(query, caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            str(e.message),
+                                            str(e),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot()
@@ -1520,7 +1521,7 @@ class AuthTab(ApiTab):
                                  )
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                 str(e.message),
+                                 str(e),
                                  QMessageBox.StandardButton.Ok)
 
     @Slot()
@@ -1589,7 +1590,7 @@ class AuthTab(ApiTab):
                                          )
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            str(e.message),
+                                            str(e),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
@@ -1653,7 +1654,7 @@ class AuthTab(ApiTab):
                 raise Exception("Check your settings, no token could be retrieved.")
         except Exception as e:
             QMessageBox.critical(self, "Login failed",
-                                 str(e.message),
+                                 str(e),
                                  QMessageBox.StandardButton.Ok)
 
 class AmazonTab(AuthTab):
