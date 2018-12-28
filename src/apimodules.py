@@ -701,7 +701,7 @@ class ApiTab(QScrollArea):
             maxretries = 3
             while True:
                 try:
-                    response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout, verify=True)
+                    response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout)
                         
                 except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
@@ -1172,11 +1172,10 @@ class TwitterStreamingTab(ApiTab):
                             response = self.session.post(path, params=args,
                                                          headers=headers,
                                                          timeout=self.timeout,
-                                                         verify=False,
                                                          stream=True)
                         else:
                             response = self.session.get(path, params=args, timeout=self.timeout,
-                                                        verify=False, stream=True)
+                                                        stream=True)
 
                     except requests.exceptions.Timeout:
                         raise Exception('Request timed out.')
@@ -1259,8 +1258,7 @@ class TwitterStreamingTab(ApiTab):
                  raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
                 
             self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
-                verify=False)
+            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token()
     
             self.showLoginWindow(query, caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
@@ -1277,8 +1275,7 @@ class TwitterStreamingTab(ApiTab):
                 self.oauthdata['oauth_verifier'] = token[0]
                 self.session = self.twitter.get_auth_session(self.oauthdata['requesttoken'],
                                                              self.oauthdata['requesttoken_secret'], method='POST',
-                                                             data={'oauth_verifier': self.oauthdata['oauth_verifier']},
-                                                             verify=False)
+                                                             data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
                 self.tokenEdit.setText(self.session.access_token)
                 self.tokensecretEdit.setText(self.session.access_token_secret)
@@ -1513,8 +1510,7 @@ class AuthTab(ApiTab):
                 raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
 
             self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.oauth1service.get_request_token(
-                verify=False)
+            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.oauth1service.get_request_token()
 
             self.showLoginWindow(False,
                                  self.defaults.get('login_window_caption','Login'),
@@ -1536,8 +1532,7 @@ class AuthTab(ApiTab):
                 self.oauthdata['oauth_verifier'] = token[0]
                 self.session = self.oauth1service.get_auth_session(self.oauthdata['requesttoken'],
                                                                    self.oauthdata['requesttoken_secret'], method="POST",
-                                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']},
-                                                                   verify=False)
+                                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
                 self.tokenEdit.setText(self.session.access_token)
                 self.tokensecretEdit.setText(self.session.access_token_secret)
@@ -2220,7 +2215,6 @@ class QWebPageCustom(QWebEnginePage):
 
     def __init__(self, *args, **kwargs):
         super(QWebPageCustom, self).__init__(*args, **kwargs)
-        #TODO: self.networkAccessManager().sslErrors.connect(self.onSslErrors)
 
     def supportsExtension(self, extension):
         if extension == QWebEnginePage.ErrorPageExtension:
@@ -2249,8 +2243,8 @@ class QWebPageCustom(QWebEnginePage):
 
         return True
 
-    def onSslErrors(self, reply, errors):
-        url = str(reply.url().toString())
-        reply.ignoreSslErrors()
-        self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
+    # def onSslErrors(self, reply, errors):
+    #     url = str(reply.url().toString())
+    #     reply.ignoreSslErrors()
+    #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
 
