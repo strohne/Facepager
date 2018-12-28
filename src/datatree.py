@@ -1,5 +1,4 @@
 from PySide2.QtCore import *
-from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from database import *
 
@@ -19,16 +18,6 @@ class DataTree(QTreeView):
     def loadData(self, database):
         self.treemodel = TreeModel(database)
         self.setModel(self.treemodel)
-
-        #self.proxymodel =  QSortFilterProxyModel(self)
-        #self.proxymodel.setSourceModel(self.treemodel)
-        #self.setModel(self.proxymodel)
-
-    #    def keyPressEvent(self, e):
-    #        if e == QKeySequence.Copy:
-    #            self.copyToClipboard()
-    #        else:
-    #            super(DataTree,self).keyPressEvent(e)
 
     @Slot()
     def currentChanged(self, current, previous):
@@ -132,28 +121,50 @@ class DataTree(QTreeView):
         return filtered
 
 
-class TreeItem():
+class TreeItem(object):
     def __init__(self, model=None, parent=None, id=None, data=None):
-        self.parentItem = parent
+        self.model = model
+
+        self.id = id
         self.data = data
 
-        self.model = model
-        self.id = id
+        self.parentItem = parent
         self.childItems = []
+
         self.loaded = False
         self._childcountallloaded = False
         self._childcountall = 0
         self._row = None
 
+        if parent is not None:
+            parent.appendChild(self)
+
     def appendChild(self, item, persistent=False):
         item.parentItem = self
-        item._row = len(self.childItems)
         self.childItems.append(item)
+
+        item._row = len(self.childItems)-1
         if persistent:
             self._childcountall += 1
 
+    def removeChild(self, position):
+        if position < 0 or position > len(self.childItems):
+            return False
+        child = self.childItems.pop(position)
+        child.parentItem = None
+
+        return True
+
     def child(self, row):
         return self.childItems[row]
+
+    def parent(self):
+        return self.parentItem
+
+    def setParent(self, new_parent):
+        self.parentItem.childItems.remove(self)
+        self.parentItem = new_parent
+        new_parent.childItems.append(self)
 
     def clear(self):
         self.childItems = []
@@ -162,7 +173,6 @@ class TreeItem():
 
     def remove(self, persistent=False):
         self.parentItem.removeChild(self, persistent)
-
 
     def removeChild(self, child, persistent=False):
         if child in self.childItems:
@@ -210,9 +220,11 @@ class TreeItem():
             return self.data['level']
 
     def row(self):
-        if self._row is None:
-            self._row = self.parentItem.childItems.index(self) if self.parentItem else 0
-        return self._row
+        if self.parentItem is not None:
+            return self.parentItem.childItems.index(self)
+
+        return None
+
 
     def appendNodes(self, data, options, headers=None, delaycommit=False):
         dbnode = Node.query.get(self.id)
@@ -276,7 +288,7 @@ class TreeItem():
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
-                    
+
 
     def unpackList(self, key):
         dbnode = Node.query.get(self.id)
@@ -305,18 +317,20 @@ class TreeItem():
         self.model.database.session.commit()
         self.model.layoutChanged.emit()
 
+    def __repr__(self):
+        return self.id
 
 class TreeModel(QAbstractItemModel):
-    def __init__(self,database=None):
-        super(TreeModel, self).__init__()
+    def __init__(self, database, parent=None):
+        super(TreeModel, self).__init__(parent)
 
-        self.customcolumns = []
-        self.rootItem = TreeItem(self)
         self.database = database
+        self.customcolumns = []
         self.newnodes = 0
         self.nodecounter = 0
 
-        #self.setupModelData()
+        #Hidden root
+        self.rootItem = TreeItem(self)
 
     def clear(self):
         self.beginResetModel()
@@ -325,26 +339,9 @@ class TreeModel(QAbstractItemModel):
         finally:
             self.endResetModel()
 
-
-
-    def setCustomColumns(self, newcolumns=[]):
-        self.customcolumns = newcolumns
+    def setCustomColumns(self,cols):
+        self.customcolumns = cols
         self.layoutChanged.emit()
-
-    def delete(self, level, querytype):
-        if not self.database.connected:
-            return False
-
-            #self.beginRemoveRows(index.parent(),index.row(),index.row())
-            #item=index.internalPointer()
-        self.beginResetModel()
-        Node.query.filter(Node.level == level, Node.querytype == querytype).delete()
-        self.database.session.commit()
-        #item.remove(True)
-        self.endResetModel()
-        #self.reset()
-        #self.endRemoveRows()
-
 
     def deleteNode(self, index, delaycommit=False):
         if (not self.database.connected) or (not index.isValid()) or (index.column() != 0):
@@ -359,34 +356,24 @@ class TreeModel(QAbstractItemModel):
         item.remove(True)
         self.endRemoveRows()
 
-
     def addNodes(self, objectids):
-        
+
         try:
             if not self.database.connected:
                 return False
 
-            #self.beginInsertRows(QModelIndex(),self.rootItem.childCount(),self.rootItem.childCount()+len(objectids)-1)
             newnodes = []
             for objectid in objectids:
                 new = Node(objectid)
                 newnodes.append(new)
 
-                #self.database.session.flush()
-                #itemdata=self.getItemData(new)
-                #self.rootItem.appendChild(TreeItem(self.rootItem,new.id,itemdata),True)
-
             self.database.session.add_all(newnodes)
             self.database.session.commit()
             self.rootItem._childcountall += len(objectids)
-            
-            self.layoutChanged.emit()
 
-            #self.endInsertRows()
+            self.layoutChanged.emit()
         except Exception as e:
             QMessageBox.critical(self, "Facepager", str(e))
-        
-
 
     def commitNewNodes(self, delaycommit=False):
         if (not delaycommit and self.newnodes > 0) or (self.newnodes > 500):
@@ -395,62 +382,83 @@ class TreeModel(QAbstractItemModel):
         if not delaycommit:
             self.layoutChanged.emit()
 
+    def rowCount(self, parent=QModelIndex()):
+        if not parent.isValid():
+            parentNode = self.rootItem
+        else:
+            parentNode = parent.internalPointer()
+
+        return parentNode.childCount()
+
     def columnCount(self, parent):
         return 5 + len(self.customcolumns)
 
-    def rowCount(self, parent):
-        if parent.column() > 0:
-            return 0
+    def data(self, index, role):
+        if not index.isValid():
+            return None
 
-        if not parent.isValid():
-            parentItem = self.rootItem
-        else:
-            parentItem = parent.internalPointer()
+        item = index.internalPointer()
 
-        return parentItem.childCount()
-
-
-    def headerData(self, section, orientation, role):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            captions = ['Object ID', 'Object Type', 'Query Status', 'Query Time', 'Query Type'] + self.customcolumns
-            return captions[section] if section < len(captions) else ""
-
-        return None
+        if role == Qt.DisplayRole:
+            if index.column() == 0:
+                return item.data.get('objectid','')
+            elif index.column() == 1:
+                return item.data.get('objecttype','')
+            elif index.column() == 2:
+                return item.data.get('querystatus','')
+            elif index.column() == 3:
+                return item.data.get('querytime','')
+            elif index.column() == 4:
+                return item.data.get('querytype','')
+            else:
+                return getDictValue(item.data.get('response',''), self.customcolumns[index.column() - 5])
 
     def index(self, row, column, parent):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
         if not parent.isValid():
-            parentItem = self.rootItem
+            # parent is not valid when it is the root node, since the "parent"
+            # method returns an empty QModelIndex
+            parentNode = self.rootItem
         else:
-            parentItem = parent.internalPointer()
+            parentNode = parent.internalPointer()  # the node
 
-        childItem = parentItem.child(row)
-        if childItem:
-            return self.createIndex(row, column, childItem)
-        else:
-            return QModelIndex()
+        childItem = parentNode.child(row)
 
+        return self.createIndex(row, column, childItem)
 
     def parent(self, index):
-        if not index.isValid():
+        node = index.internalPointer()
+
+        parentNode = node.parent()
+
+        if parentNode == self.rootItem:
             return QModelIndex()
 
-        childItem = index.internalPointer()
-        parentItem = childItem.parentItem
+        return self.createIndex(parentNode.row(), 0, parentNode)
 
-        if parentItem == self.rootItem:
-            return QModelIndex()
+    # def flags(self, index):
+    #
+    #     # Original, inherited flags:
+    #     original_flags = super(TreeModel, self).flags(index)
+    #
+    #     return (original_flags | Qt.ItemIsEnabled
+    #             | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled
+    #             | Qt.ItemIsDropEnabled)
 
-        return self.createIndex(parentItem.row(), 0, parentItem)
+    def headerData(self, section, orientation, role):
+        if role == Qt.DisplayRole:
+            captions = ['Object ID', 'Object Type', 'Query Status', 'Query Time', 'Query Type'] + self.customcolumns
+            return captions[section] if section < len(captions) else ""
+
+        return None
 
     def getRowHeader(self):
         row = ["id", "parent_id", "level", "object_id", "object_type", "query_status", "query_time", "query_type"]
         for key in self.customcolumns:
             row.append(str(key))
         return row
-
 
     def getRowData(self, index):
         node = index.internalPointer()
@@ -467,35 +475,6 @@ class TreeModel(QAbstractItemModel):
             row.append(getDictValue(node.data['response'], key))
         return row
 
-
-    def data(self, index, role):
-        if not index.isValid():
-            return None
-
-        if role != Qt.DisplayRole:
-            return None
-
-        item = index.internalPointer()
-
-        if index.column() == 0:
-            return item.data.get('objectid','')
-        elif index.column() == 1:
-            return item.data.get('objecttype','')
-        elif index.column() == 2:
-            return item.data.get('querystatus','')
-        elif index.column() == 3:
-            return item.data.get('querytime','')
-        elif index.column() == 4:
-            return item.data.get('querytype','')
-        else:
-            return getDictValue(item.data.get('response',''), self.customcolumns[index.column() - 5])
-
-    # def flags(self, index):
-    #     if not index.isValid():
-    #         return 0
-    #
-    #     return super(TreeModel, self).flags(index)
-
     def hasChildren(self, index):
         if not self.database.connected:
             return False
@@ -505,20 +484,18 @@ class TreeModel(QAbstractItemModel):
         else:
             item = index.internalPointer()
 
-        return item.childCountAll() > 0 if item is TreeItem else 0
-
+        return item.childCountAll() > 0
 
     def getItemData(self, item):
-        itemdata = {'level': item.level, 'objectid': item.objectid, 'objecttype': item.objecttype,
-                    'querystatus': item.querystatus, 'querytime': item.querytime, 'querytype': item.querytype,
-                    'queryparams': item.queryparams, 'response': item.response}
+        itemdata = {'level': item.level,
+                    'objectid': item.objectid,
+                    'objecttype': item.objecttype,
+                    'querystatus': item.querystatus,
+                    'querytime': item.querytime,
+                    'querytype': item.querytype,
+                    'queryparams': item.queryparams,
+                    'response': item.response}
         return itemdata
-    #
-    # def setupModelData(self):
-    #     parent = self.rootItem
-    #     newitem = TreeItem(self, parent, 0, {'objectid': 'TEST'})
-    #     parent.appendChild(newitem)
-    #
 
     def canFetchMore(self, index):
         if not self.database.connected:
@@ -550,9 +527,7 @@ class TreeModel(QAbstractItemModel):
             new = TreeItem(self, parentItem, item.id, itemdata)
             new._childcountall = item.childcount
             new._childcountallloaded = True
-            parentItem.appendChild(new)
-            #self.createIndex(row, 0, new)
-            row += 1
+
 
         self.endInsertRows()
         parentItem.loaded = parentItem.childCountAll() == parentItem.childCount()
