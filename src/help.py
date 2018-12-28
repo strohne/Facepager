@@ -20,7 +20,10 @@ class HelpWindow(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
         vLayout = QVBoxLayout(central)
+
+        self.page = MyQWebEnginePage()
         self.browser = QWebEngineView(central)
+        self.browser.setPage(self.page)
 
         vLayout.addWidget(self.browser)
         hLayout = QHBoxLayout()
@@ -39,13 +42,17 @@ class HelpWindow(QMainWindow):
 
     def loadPage(self):
         self.browser.load(QUrl("http://strohne.github.io/Facepager/"))
-        #TODO: self.browser.page().setLinkDelegationPolicy(QWebPage.DelegateExternalLinks)
-        #TODO: self.browser.page().linkClicked.connect(self.linkClicked)
+
+class MyQWebEnginePage(QWebEnginePage):
+    def __init__(self, parent=None):
+        super(MyQWebEnginePage,self).__init__(parent)
 
 
-    def linkClicked(self,url):
-        url = url.toString()
-        if url.startswith("http://strohne.github.io/Facepager/"):
-            self.browser.load(url)
-        else:
-            webbrowser.open(url)
+    def acceptNavigationRequest(self, url, type, isMainFrame):
+        if (type == QWebEnginePage.NavigationTypeLinkClicked):
+            url = url.toString()
+            if not url.startswith("http://strohne.github.io/Facepager/"):
+                webbrowser.open(url)
+                return False
+
+        return True
