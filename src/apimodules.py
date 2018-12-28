@@ -9,7 +9,7 @@ import os, sys, time
 from collections import OrderedDict
 import threading
 
-from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
+from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
 from PySide2.QtWidgets import *
 from PySide2.QtCore import QUrl
 
@@ -775,7 +775,7 @@ class ApiTab(QScrollArea):
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
         self.login_webview = QWebEngineView(window)
-        window.setCentralWidget(self.login_webview )
+        window.setCentralWidget(self.login_webview)
 
         # Use the custom- WebPage class
         webpage = QWebPageCustom(self)
@@ -2213,8 +2213,17 @@ class QWebPageCustom(QWebEnginePage):
     logmessage = Signal(str)
     urlNotFound = Signal(QUrl)
 
-    def __init__(self, *args, **kwargs):
-        super(QWebPageCustom, self).__init__(*args, **kwargs)
+    def __init__(self, parent):
+        #super(QWebPageCustom, self).__init__(*args, **kwargs)
+        super(QWebPageCustom, self).__init__(parent)
+
+        profile = self.profile()
+        profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
+        profile.clearHttpCache()
+
+        cookies = profile.cookieStore()
+        profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
+        cookies.deleteAllCookies()
 
     def supportsExtension(self, extension):
         if extension == QWebEnginePage.ErrorPageExtension:
