@@ -187,7 +187,7 @@ class Actions(object):
                                 lineterminator='\r\n')
 
             #headers
-            row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [str(val) for val in self.mainWindow.tree.treemodel.getRowHeader()]
             writer.writerow(row)
 
             #rows
@@ -195,13 +195,13 @@ class Actions(object):
                 if progress.wasCanceled:
                     break
 
-                row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [str(val) for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 writer.writerow(row)
 
                 progress.step()
 
             clipboard = QApplication.clipboard()
-            clipboard.setText(output.getvalue().decode("utf-8"))
+            clipboard.setText(output.getvalue())
         finally:
             output.close()
             progress.close()
