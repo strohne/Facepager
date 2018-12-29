@@ -1,20 +1,45 @@
 # How to build Facepager
-## Windows
+## Windows 10
 
-Setup Facepager to run in your environment, see src/readme.txt
+Setup Facepager to run in your environment, see src/readme.md
 
-Install NSIS
+Install software
+- Install NSIS (https://sourceforge.net/projects/nsis/)
+- Install pyinstaller and pywin32:
+  `$ pip install pyinstaller`
+  `$ pip install pywin32`
 
 Adjust paths and version numbers in
-- src/setup_windows.py
+- src/Facepager.py
+- Facepager.spec
 - Facepager_Setupscript.nsi
 - build.bat
 
 Run build.bat
 
+
+Hints for solving errors:
+
+- See https://pyinstaller.readthedocs.io
+
+- Create the build from scr-directory in folder-mode and with console option:
+
+   pyinstaller --log-level=WARN --name "Facepager" --windowed --add-data "docs;docs" --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py
+	 
+  If everthing works, replace option "--console" with "--windowed" and create new spec file by replacing pyinstaller with pyi-makespec:
+  
+   pyi-makespec --log-level=WARN --name "Facepager" --windowed --add-data "docs;docs" --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py
+  
+  
+ - Copy the following folders and files to dist folder:
+	PySide2/resources
+	PySide2/translations
+	PySide2/QtWebEngineProcess.exe
+	PySide2/qt.conf	
+		
 ## OS X El Capitan and High Sierra
 
-Setup Facepager to run in your environment, see src/readme.txt
+Setup Facepager to run in your environment, see src/readme.md
 
 Install pyinstaller:
 	$ pip install pyinstaller
@@ -53,28 +78,6 @@ Hints for solving errors:
     $defaults write com.apple.finder AppleShowAllFiles YES
 
 - To edit files install text editor, e.g. sublime text		
-
-Previously, Facepager was built using py2app. Here are the old instructions:
-
-Adjust paths and version numbers in
-- src/setup_osx.py
-- build.command
-
-Run build.command by double clicking in Finder or in terminal
-
-Hints for solving errors:
-- Test  alias mode:
-	python setup_osx.py py2app -A
-- After running py2app run the built from command line or double click, e.g. from
-  ~/Documents/GitHub/Facepager/dist/Facepager.app/Contents/MacOS/Facepager
-- Run in interactive mode and open debugger, see
-  https://stackoverflow.com/questions/16131500/py2app-error-in-find-needed-modules-typeerror-nonetype-object-has-no-attribu
-
-  $ python -i setup.py py2app
-  $ from pdb import pm; pm()
-  
-  "Type up and hit enter - you are now a frame higher in the stack - you can type list to see where in the source code the current frame is positioned, and args to see the arguments passed to the current frame (usually a function or method). You can also run python commands to inspect the current state, and run pp var to pretty-print that variable."
-
 
 
 # How to deploy builds

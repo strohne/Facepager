@@ -4,10 +4,10 @@ block_cipher = None
 
 
 a = Analysis(['Facepager.py'],
-             pathex=['/Users/devel/Documents/GitHub/Facepager/src'],
-             binaries=[],
+             pathex=['D:\\Benutzer\\Jakob\\Baustelle\\GitReps\\Facepager\\src'],
+             binaries=[('../build/windows/PySide2', 'PySide2')],
              datas=[('docs', 'docs'), ('ssl', 'ssl')],
-             hiddenimports=['credentials'],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -25,16 +25,12 @@ exe = EXE(pyz,
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
-          upx=False,
-          console=False , icon='..\\icons\\icon_facepager.icns')
+          upx=True,
+          console=False , icon='..\\icons\\icon_facepager.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
                a.datas,
                strip=False,
-               upx=False,
+               upx=True,
                name='Facepager')
-app = BUNDLE(coll,
-             name='Facepager.app',
-             icon='icon_facepager.icns',
-             bundle_identifier=None)

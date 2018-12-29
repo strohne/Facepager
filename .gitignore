@@ -8,6 +8,7 @@ src/*.pyc
 src/*.pyo
 src/__pycache__
 src/credentials.py
+build/windows/PySide2
 .project
 .pydevproject
 .settings/

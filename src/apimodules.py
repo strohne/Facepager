@@ -27,11 +27,6 @@ from utilities import *
 
 try:
     from credentials import *
-#from pandas.core.config import is_instance_factory
-#import imp
-#try:
-#    imp.find_module('credentials')
-#    from credentials import *
 except ImportError:
     credentials = {}
 
