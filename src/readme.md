@@ -15,7 +15,7 @@ Facepager depends on the following packages:
 - numpy and pandas: pip install numpy pandas
 - lxml: pip install lxml
 
-Facepager needs some secret keys to connect to Facebook and Twitter. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
+Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
 The right version of PySide2 matters. Not every version includes the WebEngineWidgets module. For example, there is no version working out of the box for Windows 32bit.
 
@@ -28,3 +28,30 @@ $ pip install numpy pandas
 $ git clone https://github.com/strohne/Facepager
 $ cd Facepager/src
 $ python Facepager.py 
+
+
+# Steps to runder under Ubuntu 18.04.1 LTS
+
+Open terminal in a directory of your choice and execute the commands indicated by the $ sign.
+
+- Install additional software:
+
+   $ sudo apt install git
+   $ sudo apt-get install python3-venv
+
+- Clone Facepager
+   $ git clone https://github.com/strohne/Facepager
+   $ cd Facepager
+
+- Setup Python environment
+  $ python3 -m venv v
+  $ source bin/activate
+  
+  $ bin/pip pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml
+  $ bin/pip pip install PySide2==5.11.1
+  $ bin/pip pip install numpy pandas
+
+- Start Facepager
+  $ python src/Facepager.py
+  
+Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
