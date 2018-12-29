@@ -29,6 +29,25 @@ $ git clone https://github.com/strohne/Facepager
 $ cd Facepager/src  
 $ python Facepager.py  
 
+# Steps to runder under macOS High Sierra
+
+Open terminal in a directory of your choice and execute the commands indicated by the $ sign.
+
+- Clone Facepager  
+   $ git clone https://github.com/strohne/Facepager  
+   $ cd Facepager  
+
+- Setup Python environment  
+  $ python3 -m venv .  
+  $ source bin/activate  
+  
+  $ bin/pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
+  $ bin/pip install PySide2==5.11.1  
+  $ bin/pip install numpy pandas  
+
+- Start Facepager  
+  $ cd src
+  $ python Facepager.py  
 
 # Steps to runder under Ubuntu 18.04.1 LTS
 
@@ -43,7 +62,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
    $ cd Facepager  
 
 - Setup Python environment  
-  $ python3 -m venv v  
+  $ python3 -m venv .  
   $ source bin/activate  
   
   $ bin/pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
