@@ -208,7 +208,7 @@ class Actions(object):
 
     @Slot()
     def exportNodes(self):
-        fldg = ExportFileDialog(self.mainWindow)
+        fldg = ExportFileDialog(self.mainWindow, filter ="CSV Files (*.csv)")
 
 
     @Slot()

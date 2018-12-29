@@ -1,6 +1,6 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QFileDialog
+from PySide2.QtWidgets import QFileDialog, QCheckBox, QComboBox, QLabel, QHBoxLayout
 import csv
 from progressbar import ProgressBar
 import codecs
@@ -19,7 +19,8 @@ class ExportFileDialog(QFileDialog):
         self.mainWindow = self.parent()
         self.setWindowTitle("Export nodes to CSV")
         self.setAcceptMode(QFileDialog.AcceptSave)
-        self.setFilter("CSV Files (*.csv)")
+        self.setOption(QFileDialog.DontUseNativeDialog)
+        #self.setFilter("CSV Files (*.csv)")
         self.setDefaultSuffix("csv")
 
         self.optionBOM = QCheckBox("Use a BOM",self)
