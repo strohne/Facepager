@@ -26,8 +26,8 @@ $ pip install PySide2==5.11.1
 $ pip install numpy pandas  
 
 $ git clone https://github.com/strohne/Facepager  
-$ cd Facepager/src  
-$ python Facepager.py  
+$ cd Facepager  
+$ python src/Facepager.py  
 
 
 # Steps to runder under Ubuntu 18.04.1 LTS
@@ -35,7 +35,6 @@ $ python Facepager.py
 Open terminal in a directory of your choice and execute the commands indicated by the $ sign.
 
 - Install additional software:  
-
    $ sudo apt install git  
    $ sudo apt-get install python3-venv  
 
@@ -47,9 +46,9 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv v  
   $ source bin/activate  
   
-  $ bin/pip pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
-  $ bin/pip pip install PySide2==5.11.1  
-  $ bin/pip pip install numpy pandas  
+  $ bin/pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
+  $ bin/pip install PySide2==5.11.1  
+  $ bin/pip install numpy pandas  
 
 - Start Facepager  
   $ python src/Facepager.py  
