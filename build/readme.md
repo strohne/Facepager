@@ -35,9 +35,12 @@ __Hints for solving errors:__
 	PySide2/QtWebEngineProcess.exe  
 	PySide2/qt.conf	
 		
-## OS X El Capitan and High Sierra
+## macOS High Sierra
+
+__Notice: this does not work yet, needs further testing__
 
 Setup Facepager to run in your environment, see src/readme.md
+When using venv make sure to use `bin/pip` instead of `pip` in the following steps.  
 
 Install software:
 - Install pyinstaller  
@@ -60,16 +63,9 @@ __Hints for solving errors:__
 
 - Create the build from scr-directory in folder-mode:  
 
-	pyinstaller --log-level=WARN  \  
-	    --name "Facepager" \  
-	    --windowed \  
-	    --add-data "docs:docs" \  
-	    --add-data "ssl:ssl" \  
-	    --noupx \  
-	    --icon "icon.icns" \  
-	    Facepager.py  
+	pyinstaller --log-level=WARN --name "Facepager" --console --add-data "docs:docs" --add-data "ssl:ssl" --noupx --icon "icon.icns" Facepager.py  
 
-	If everthing works create new spec file by replacing pyinstaller with pyi-makespec  
+	If everthing works, replace option "--console" with "--windowed" and create new spec file by replacing pyinstaller with pyi-makespec.
 
 - To show hidden files execute in terminal, then Alt+RightClick Finder and choose "Relaunch"  
   $ defaults write com.apple.finder AppleShowAllFiles YES

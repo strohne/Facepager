@@ -46,7 +46,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ bin/pip install numpy pandas  
 
 - Start Facepager  
-  $ cd src
+  $ cd src  
   $ python Facepager.py  
 
 # Steps to runder under Ubuntu 18.04.1 LTS
@@ -70,7 +70,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ bin/pip install numpy pandas  
 
 - Start Facepager  
-  $ cd src
+  $ cd src  
   $ python Facepager.py  
   
 Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
