@@ -21,37 +21,37 @@ The right version of PySide2 matters. Not every version includes the WebEngineWi
 
 # Steps to runder under Windows 10
 
-$ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml
-$ pip install PySide2==5.11.1
-$ pip install numpy pandas
+$ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
+$ pip install PySide2==5.11.1  
+$ pip install numpy pandas  
 
-$ git clone https://github.com/strohne/Facepager
-$ cd Facepager/src
-$ python Facepager.py 
+$ git clone https://github.com/strohne/Facepager  
+$ cd Facepager/src  
+$ python Facepager.py  
 
 
 # Steps to runder under Ubuntu 18.04.1 LTS
 
 Open terminal in a directory of your choice and execute the commands indicated by the $ sign.
 
-- Install additional software:
+- Install additional software:  
 
-   $ sudo apt install git
-   $ sudo apt-get install python3-venv
+   $ sudo apt install git  
+   $ sudo apt-get install python3-venv  
 
-- Clone Facepager
-   $ git clone https://github.com/strohne/Facepager
-   $ cd Facepager
+- Clone Facepager  
+   $ git clone https://github.com/strohne/Facepager  
+   $ cd Facepager  
 
-- Setup Python environment
-  $ python3 -m venv v
-  $ source bin/activate
+- Setup Python environment  
+  $ python3 -m venv v  
+  $ source bin/activate  
   
-  $ bin/pip pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml
-  $ bin/pip pip install PySide2==5.11.1
-  $ bin/pip pip install numpy pandas
+  $ bin/pip pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
+  $ bin/pip pip install PySide2==5.11.1  
+  $ bin/pip pip install numpy pandas  
 
-- Start Facepager
-  $ python src/Facepager.py
+- Start Facepager  
+  $ python src/Facepager.py  
   
 Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
