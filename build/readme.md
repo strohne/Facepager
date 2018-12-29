@@ -102,7 +102,8 @@ __Hints for solving errors:__
   If everthing works, replace option "--console" with "--windowed" and create new spec file by replacing pyinstaller with pyi-makespec:
   
    pyi-makespec --log-level=WARN --name "Facepager" --windowed --add-data "docs;docs" --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py
-  
+
+- Manually copy PySide2 folder into dist folder 
 	
 # How to deploy builds
 
