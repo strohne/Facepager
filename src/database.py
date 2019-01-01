@@ -151,13 +151,3 @@ class Node(Base):
             else:
                 return value
 
-        @property
-        def objectid_encoded(self):
-            return self.objectid.encode('utf-8')
-
-
-
-
-
-
-

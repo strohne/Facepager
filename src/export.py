@@ -71,11 +71,8 @@ class ExportFileDialog(QFileDialog):
 
             if os.path.isfile(self.selectedFiles()[0]):
                 os.remove(self.selectedFiles()[0])
-            output = open(self.selectedFiles()[0], 'wb')
+            output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
             try:
-                if self.optionBOM.isChecked() and not self.optionWide.isChecked():
-                    output.write(codecs.BOM_UTF8)
-
                 if self.optionAll.currentIndex() == 0:
                     self.exportAllNodes(output)
                 else:
@@ -97,7 +94,6 @@ class ExportFileDialog(QFileDialog):
 
         try:
             delimiter = self.optionSeparator.currentText()
-            delimiter = str(delimiter.decode('string-escape'))
             writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
@@ -133,7 +129,6 @@ class ExportFileDialog(QFileDialog):
 
         try:
             delimiter = self.optionSeparator.currentText()
-            delimiter = str(delimiter.decode('string-escape'))
             writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
@@ -144,7 +139,6 @@ class ExportFileDialog(QFileDialog):
                 row.append(key)
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
-
 
             writer.writerow(row)
 
@@ -158,10 +152,10 @@ class ExportFileDialog(QFileDialog):
                 for node in allnodes:
                     if progress.wasCanceled:
                         break
-                    row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
+                    row = [node.level, node.id, node.parent_id, node.objectid, node.objecttype,
                            node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
-                        row.append(node.getResponseValue(key, "utf-8"))
+                        row.append(node.getResponseValue(key))
 
                     if self.optionLinebreaks.isChecked():
                         row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]
