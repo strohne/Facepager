@@ -99,7 +99,7 @@ class ExportFileDialog(QFileDialog):
 
 
             #headers
-            row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [str(val) for val in self.mainWindow.tree.treemodel.getRowHeader()]
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
@@ -110,7 +110,7 @@ class ExportFileDialog(QFileDialog):
                 if progress.wasCanceled:
                     break
 
-                row = [str(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [str(val) for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 if self.optionLinebreaks.isChecked():
                     row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
