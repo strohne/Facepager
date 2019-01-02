@@ -179,9 +179,6 @@ class ExportFileDialog(QFileDialog):
     def convertToWideFormat(self,filename):
         progress = ProgressBar("Converting data...", self.mainWindow)
         try:
-
-            #from pandas import merge,read_csv
-
             #Separate levels
             def flattenTable(fulltable,levelcol,idcol,parentidcol,countchildren,removeempty):
                 fulltable[[levelcol]] = fulltable[[levelcol]].astype(int)
@@ -219,19 +216,23 @@ class ExportFileDialog(QFileDialog):
                 return flattable
 
             try:
+                #delimiter
+                delimiter = self.optionSeparator.currentText()
+                delimiter = delimiter.encode('utf-8').decode('unicode_escape')
+
                 #open
-                data = read_csv(filename, sep=";",encoding='utf-8',dtype=str)
+                data = read_csv(filename, sep=delimiter,encoding='utf-8',dtype=str)
 
                 #convert
                 newdata = flattenTable(data,'level','id','parent_id',['object_type','query_status','query_type'],False)
 
 
                 #save
-                outfile = open(filename, 'wb')
+                outfile = open(filename, 'w',newline='',encoding='utf8')
                 try:
                     if self.optionBOM.isChecked():
-                        outfile.write(codecs.BOM_UTF8) #UTF8 BOM
-                    newdata.to_csv(outfile,sep=';',index=False,encoding="utf-8")
+                        outfile.write('\ufeff') #UTF8 BOM
+                    newdata.to_csv(outfile,sep=delimiter,index=False,encoding="utf-8")
                 finally:
                     outfile.close()
             except Exception as e:
