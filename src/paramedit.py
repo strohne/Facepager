@@ -12,7 +12,7 @@ class QParamEdit(QTableWidget):
         self.setStyleSheet("QParamEdit {border:0px;background-color:transparent;} QParamEdit::item {margin-bottom:3px;margin-right:5px;}")
         self.setShowGrid(False)
         self.nameoptions = []
-        self.valueoptions = []
+        self.valueoptions = {}
 
         #Cols
         self.setColumnCount(2)
@@ -68,6 +68,21 @@ class QParamEdit(QTableWidget):
     def initParamValue(self, row):
         self.setValueComboBox(row, self.valueoptions)
         self.setValue(row, 1, '')
+
+    def setOptions(self, params):
+        #Set param names
+        self.setNameOptions(params)
+
+        #Set param values
+        values = {}
+        for param in params:
+            if param.get("required", False):
+                name = param.get("name","")
+                name = "<" + name + ">" if param.get("in", "query") == "path" else name
+                value = param.get("example","<Object ID>")
+                values[name] = value
+
+        self.setParams(values)
 
     def setNameOptions(self, options):
         '''
@@ -126,34 +141,61 @@ class QParamEdit(QTableWidget):
     def setNameComboBox(self,row,options):
         combo = self.getNameComboBox(row)
         combo.clear()
-        # edited: Insert each Item seperatly and set Tooltip
+
+        # Insert items and set tooltips
         for o in reversed(options):
-            combo.insertItem(0,o.get("name",""))
+            # Add name
+            name = o.get("name","")
+            name = "<"+name+">" if o.get("in","query") == "path" else name
+            combo.insertItem(0,name)
+
             # this one sets the tooltip
-            combo.setItemData(0,o.get("doc",None),Qt.ToolTipRole)
+            combo.setItemData(0,o.get("description",None),Qt.ToolTipRole)
+
             #set color
             if (o.get("required",False)):
                 combo.setItemData(0,QColor("#FF333D"),Qt.BackgroundColorRole)
+
             #save options as suggestion for value box
-            if ('options' in o):
-                combo.setItemData(0,o.get("options",[]),Qt.UserRole)
+            combo.setItemData(0,o,Qt.UserRole)
+
+        # Insert empty item
+        combo.insertItem(0, "")
 
         return (combo)
 
     def setValueComboBox(self,row,options):
         combo = self.getValueComboBox(row)
         combo.clear()
-        # edited: Insert each Item seperatly and set Tooltip
-        for o in reversed(options):
-            combo.insertItem(0,o.get("name",""))
-            # this one sets the tooltip
-            combo.setItemData(0,o.get("doc",None),Qt.ToolTipRole)
-            #set color
-            if (o.get("required",False)):
-                combo.setItemData(0,QColor("#FF333D"),Qt.BackgroundColorRole)
-            #save options as suggestion for value box
-            if ('options' in o):
-                combo.setItemData(0,o.get("options",[]),Qt.UserRole)
+
+        schema = options.get("schema",{})
+
+        # Get options
+        if schema.get('type') == 'array':
+            items = schema.get('items',{})
+            enum = items.get('enum',[])
+            oneof = items.get('oneOf',[])
+        else:
+            enum = schema.get('enum',[])
+            oneof = schema.get('oneOf',[])
+
+        for value in reversed(enum):
+            combo.insertItem(0, value)
+
+        for value in reversed(oneof):
+            combo.insertItem(0, value.get('const','') )
+            combo.setItemData(0,value.get('description','') , Qt.ToolTipRole)
+
+
+        # Default options
+        if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
+            combo.insertItem(0, '0')
+            combo.insertItem(0, '1')
+        else:
+            combo.insertItem(0, '<Object ID>')
+            combo.setItemData(0,'The value in the Object ID-column in the data view.',Qt.ToolTipRole)
+            combo.insertItem(0, '')
+
 
         return (combo)
 
@@ -190,15 +232,26 @@ class QParamEdit(QTableWidget):
     @Slot()
     def onItemSelected(self,index=0):
         '''
-        If sender is in first column sets value suggestions
+        Value suggestions for right side
         '''
         sender = self.sender()
-        options = sender.itemData(index,Qt.UserRole)
-        if not options:
-            options = self.valueoptions
         if hasattr(sender,'col') and hasattr(sender,'row') and (sender.col == 0):
+            # Get options
+            options = sender.itemData(index, Qt.UserRole)
+            if not options:
+                options = self.valueoptions
+
+            # Set options
             self.setValueComboBox(sender.row, options)
 
+            # Select value
+
+            if options.get('required', False) and not ('example' in options):
+                value = '<Object ID>'
+            else:
+                value = options.get('example', '')
+
+            self.setValue(sender.row, 1,value)
 
 
     def calcRows(self):

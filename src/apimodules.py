@@ -445,8 +445,6 @@ class ApiTab(QScrollArea):
         Set resource according to the APIdocs, if any docs are available
         '''
 
-
-
         #Base path
         self.basepathEdit = QComboBox(self)
         if not self.defaults.get('basepath',None) is None:
@@ -457,26 +455,31 @@ class ApiTab(QScrollArea):
         #Resource
         self.resourceEdit = QComboBox(self)
         self.mainLayout.addRow("Resource", self.resourceEdit)
-
-        if self.apidoc:
-            #Insert one item for every endpoint
-            for endpoint in reversed(self.apidoc):
-                #store url as item text
-                self.resourceEdit.insertItem(0, endpoint["path"])
-                #store doc as tooltip
-                self.resourceEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
-                #store params-dict for later use in onChangedRelation
-                self.resourceEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
-
         self.resourceEdit.setEditable(True)
 
         #Parameters
         self.paramEdit = QParamEdit(self)
         self.mainLayout.addRow("Parameters", self.paramEdit)
-        self.resourceEdit.currentIndexChanged.connect(self.onchangedRelation)
-        self.onchangedRelation()
-        #layout.setStretch(0, 1);
+        self.resourceEdit.currentIndexChanged.connect(self.onChangedRelation)
+        self.onChangedRelation()
 
+        # Documentation
+        if self.apidoc and isinstance(self.apidoc,dict):
+            # Add base path
+            self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.url"))
+
+            # Add endpoints in reverse order
+            endpoints = self.apidoc.get("paths",{})
+            paths = endpoints.keys()
+            for path in reversed(list(paths)):
+                operations = endpoints[path]
+                path = path.replace("{", "<").replace("}", ">")
+
+                self.resourceEdit.insertItem(0, path)
+                self.resourceEdit.setItemData(0, getDictValue(operations,"get.summary",""), Qt.ToolTipRole)
+
+                #store params for later use in onChangedRelation
+                self.resourceEdit.setItemData(0, operations, Qt.UserRole)
 
     def initFolderInput(self):
         #Download folder
@@ -625,35 +628,15 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Key to extract", layout)
 
     @Slot()
-    def onchangedRelation(self,index=0):
+    def onChangedRelation(self, index=0):
         '''
         Handles the automated parameter suggestion for the current
-        selected API relation/endpoint
+        selected API relation/endpoint based on the OpenAPI specification 3.0.0
         '''
-        #retrieve param-dict stored in initInputs-method
-        params = self.resourceEdit.itemData(index,Qt.UserRole)
-
-        #Set name options and build value dict
-        values = {}
-        nameoptions = []
-        if params:
-            for param in params:
-                if param["required"]==True:
-                    nameoptions.append(param)
-                    values[param["name"]] = param["default"]
-                else:
-                    nameoptions.insert(0,param)
-        nameoptions.insert(0,{})
-        self.paramEdit.setNameOptions(nameoptions)
-
-        #Set value options
-        self.paramEdit.setValueOptions([{'name':'',
-                                         'doc':"No Value"},
-                                         {'name':'<Object ID>',
-                                          'doc':"The value in the Object ID-column of the datatree."}])
-
-        #Set values
-        self.paramEdit.setParams(values)
+        #retrieve OpenAPI specification and set parameter options
+        operations = self.resourceEdit.itemData(index,Qt.UserRole)
+        params = getDictValue(operations,"get.parameters",False) if operations else []
+        self.paramEdit.setOptions(params)
 
     @Slot()
     def onChangedParam(self,index=0):
