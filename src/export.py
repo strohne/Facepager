@@ -72,6 +72,9 @@ class ExportFileDialog(QFileDialog):
             if os.path.isfile(self.selectedFiles()[0]):
                 os.remove(self.selectedFiles()[0])
             output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
+            if self.optionBOM.isChecked() and not self.optionWide.isChecked():
+                output.write('\ufeff')
+
             try:
                 if self.optionAll.currentIndex() == 0:
                     self.exportAllNodes(output)
@@ -94,6 +97,7 @@ class ExportFileDialog(QFileDialog):
 
         try:
             delimiter = self.optionSeparator.currentText()
+            delimiter = delimiter.encode('utf-8').decode('unicode_escape')
             writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
@@ -129,6 +133,7 @@ class ExportFileDialog(QFileDialog):
 
         try:
             delimiter = self.optionSeparator.currentText()
+            delimiter = delimiter.encode('utf-8').decode('unicode_escape')
             writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
