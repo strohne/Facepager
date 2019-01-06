@@ -1,5 +1,6 @@
 {
     "openapi": "3.0.0",
+    "x-facepager-module":"Facebook",
     "info": {
         "title": "Facebook Graph API",
         "description": "The Graph API is the primary way to get data into and out of the Facebook platform.",
