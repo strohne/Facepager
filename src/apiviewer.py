@@ -19,10 +19,24 @@ class ApiViewer(QDialog):
     def __init__(self, parent=None):
         super(ApiViewer,self).__init__(parent)
 
+        # Main window
         self.mainWindow = parent
         self.setWindowTitle("API Viewer")
         self.setMinimumWidth(700);
         self.setMinimumHeight(600);
+
+        # Properties
+        self.folder = os.path.join(os.path.expanduser("~"), 'Facepager', 'APIs')
+        self.folderDefault = os.path.join(os.path.expanduser("~"), 'Facepager', 'DefaultAPIs')
+        self.filesSuffix = ['.json']
+        self.lastSelected = None
+        self.moduleDoc = {}
+        self.topNodes= {}
+        self.detailTables = {}
+        self.detailWidgets = {}
+
+        self.allFilesLoaded = False
+        self.filesDownloaded = False
 
         #layout
         layout = QVBoxLayout(self)
@@ -68,18 +82,12 @@ class ApiViewer(QDialog):
         #self.detailDescription .setStyleSheet("QTextViewer  {padding-left:0px;}")
         self.detailLayout.addWidget(self.detailDescription)
 
-        self.detailForm=QFormLayout()
-        self.detailForm.setRowWrapPolicy(QFormLayout.DontWrapRows);
-        self.detailForm.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
-        self.detailForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
-        self.detailForm.setLabelAlignment(Qt.AlignLeft);
-        self.detailLayout.addLayout(self.detailForm,1)
-
         #buttons
         buttons= QHBoxLayout() #QDialogButtonBox()
         
         self.folderButton = QPushButton("")
         self.folderButton.setFlat(True)
+        self.folderButton.setText(self.folder)
         self.folderButton.clicked.connect(self.folderClicked)
         buttons.addWidget(self.folderButton)
         
@@ -101,18 +109,6 @@ class ApiViewer(QDialog):
         #self.statusbar = QStatusBar()
         #self.statusbar.insertWidget(0,self.folderButton)
         #layout.addWidget(self.statusbar)
-
-        self.folder = os.path.join(os.path.expanduser("~"), 'Facepager', 'APIs')
-        self.folderButton.setText(self.folder)
-        self.filesSuffix = ['.json']
-        self.lastSelected = None
-        self.moduleDoc = {}
-        self.topNodes= {}
-
-        self.allFilesLoaded = False
-
-        self.filesDownloaded = False
-        self.folderDefault = os.path.join(os.path.expanduser("~"), 'Facepager', 'DefaultAPIs')
 
 
 
@@ -152,7 +148,6 @@ class ApiViewer(QDialog):
         self.loadAllFiles()
 
         # Select
-        path = path.replace("<", "{").replace(">", "}")
         selectedItem = None
 
         # Find file / module / api
@@ -175,23 +170,46 @@ class ApiViewer(QDialog):
                 break
         self.itemList.setCurrentItem(selectedItem)
         self.itemList.setFocus()
+
+        # Focus field
+        if field is not None:
+            params = self.detailWidgets.get('Response',{})
+            field = field.split('.',1)[0]
+            if field in params:
+                valuewidget = params.get(field)
+                valuewidget.setStyleSheet("border: 2px solid blue;font-weight:bold;")
+                self.detailView.ensureWidgetVisible(valuewidget)
+
         self.exec_()
 
-    def addDetailRowCaption(self,caption):
+    def addDetailTable(self, caption):
+        detailForm=QFormLayout()
+        detailForm.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        detailForm.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        detailForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        detailForm.setLabelAlignment(Qt.AlignLeft);
+        self.detailLayout.addLayout(detailForm,1)
+        self.detailTables[caption] = detailForm
+
         caption = QLabel(caption)
         caption.setWordWrap(True)
         caption.setStyleSheet("QLabel  {font-size:12pt;margin-top:1em;margin-bottom:0.5em;font-weight:bold;}")
-
-        self.detailForm.addRow(caption)
+        detailForm.addRow(caption)
 
     def addDetailRow(self,name,value):
-        name =  QLabel(name)
-        name.setWordWrap(True)
-        name.setStyleSheet("QLabel  {padding-left:0.4em;}")
+        detailCaption, detailForm = list(self.detailTables.items())[-1]
+
+        nameWidget =  QLabel(name)
+        nameWidget.setWordWrap(True)
+        nameWidget.setStyleSheet("QLabel  {padding-left:0.4em;}")
 
         valueWidget = TextViewer()
         valueWidget.setText(value)
-        self.detailForm.addRow(name,valueWidget)
+        detailForm.addRow(nameWidget,valueWidget)
+
+        if not detailCaption in self.detailWidgets:
+            self.detailWidgets[detailCaption] = {}
+        self.detailWidgets[detailCaption][name] = nameWidget
 
     def currentChanged(self):
         self.clearDetails()
@@ -210,6 +228,7 @@ class ApiViewer(QDialog):
                 self.detailDescription.setText(getDictValue(data,'info.description'))
 
                 # Info
+                self.addDetailTable('Paths')
                 self.addDetailRow('Documentation: ',getDictValue(data, 'info.externalDocs.url'))
                 self.addDetailRow('Base path: ', getDictValue(data, 'info.servers.0.url'))
 
@@ -223,24 +242,27 @@ class ApiViewer(QDialog):
                     self.detailDescription.setText(getDictValue(operation, 'summary'))
 
                     # Info
-                    self.addDetailRowCaption('Paths')
+                    self.addDetailTable('Paths')
                     self.addDetailRow('Documentation: ', getDictValue(operation, 'externalDocs.url'))
                     self.addDetailRow('Base path: ', getDictValue(data, 'info.servers.0.url'))
-                    self.addDetailRow('Path: ', getDictValue(data, 'path'))
+                    self.addDetailRow('Resource path: ', getDictValue(data, 'path'))
 
                     # Parameters
                     params = operation.get('parameters',{})
                     if params:
-                        self.addDetailRowCaption('Parameters')
+                        self.addDetailTable('Parameters')
                         for param in params:
-                            self.addDetailRow(param.get('name'),param.get('description'))
+                            paramname = param.get('name')
+                            if param.get('in','query') == 'path':
+                                paramname = '<'+paramname+'>'
+                            self.addDetailRow(paramname,param.get('description'))
 
                     response = getDictValue(operation, 'responses.200.content.application/json.schema.properties', False)
                     if not response:
                         response = getDictValue(operation, 'responses.200.content.application/json.schema.items.properties',False)
 
                     if response and isinstance(response,dict):
-                        self.addDetailRowCaption('Response')
+                        self.addDetailTable('Response')
                         for name, value in response.items():
                             self.addDetailRow(name,value.get('description'))
 
@@ -252,8 +274,12 @@ class ApiViewer(QDialog):
         self.detailName.setText("")
         self.detailDescription.setText("")
 
-        while self.detailForm.rowCount() > 0:
-            self.detailForm.removeRow(0)
+        for detailCaption,detailForm in self.detailTables.items():
+            while detailForm.rowCount() > 0:
+               detailForm.removeRow(0)
+            self.detailLayout.removeItem(detailForm)
+        self.detailTables = {}
+        self.detailWidgets = {}
 
     def clear(self):
         self.itemList.clear()
@@ -372,12 +398,12 @@ class ApiViewer(QDialog):
 
             # Path nodes
             for path,operations in data.get('paths',{}).items():
+                path = path.replace("{", "<").replace("}", ">")
                 pathItemData = itemData.copy()
                 pathItemData['type'] = 'path'
                 pathItemData['caption'] = path
                 pathItemData['path'] = path
                 pathItemData['operations'] = operations
-
 
                 newItem = ApiWidgetItem()
                 newItem.setText(0,path)
@@ -411,7 +437,6 @@ class ApiViewer(QDialog):
                 paths = data.get('paths',{}) if data is not None else None
 
                 # Operation response
-                path = path.replace("<", "{").replace(">", "}")
                 if path in paths:
                     operation = paths.get(path)
                 elif path.replace(basepath,"") in paths:
@@ -457,7 +482,7 @@ class ApiViewer(QDialog):
                 path = data.get('path', '')
                 options = {
                     'basepath' : getDictValue(data, 'info.servers.0.url',''),
-                    'resource' : path.replace("{", "<").replace("}", ">")
+                    'resource' : path
                 }
                 tab.setOptions(options)
                 self.mainWindow.RequestTabs.setCurrentWidget(tab)
