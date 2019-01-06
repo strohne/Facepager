@@ -5,7 +5,6 @@
     <file>add.png</file>
     <file>delete.png</file>
     <file>export.png</file>
-    <file>login.png</file>
     <file>new.png</file>
     <file>save.png</file>
     <file>fetch.png</file>
@@ -13,14 +12,12 @@
     <file>presets.png</file>
     <file>collapse.png</file>
     <file>expand.png</file>
-    <file>fetch.png</file>
     <file>timer.png</file>
     <file>help.png</file>
     <file>toclip.png</file>
     <file>unpack.png</file>
+    <file>apis.png</file>
     <file>addcolumn.png</file>
-
-
   </qresource>
 </RCC>
 
