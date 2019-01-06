@@ -49,7 +49,6 @@ class ApiTab(QScrollArea):
         self.connected = False
         self.lastrequest = None
         self.speed = None
-        self.loadDocs()
         self.lock_session = threading.Lock()
         self.progress = None
 
@@ -74,7 +73,7 @@ class ApiTab(QScrollArea):
         
         # Popup window for auth settings
         self.authWidget = QWidget()
-        
+
         # Default settings
         try:
             self.defaults = credentials.get(name.lower().replace(' ','_'),{})
@@ -332,6 +331,7 @@ class ApiTab(QScrollArea):
         try:
             self.basepathEdit.setEditText(options.get('basepath', self.defaults.get('basepath','')))
             self.resourceEdit.setEditText(options.get('resource', self.defaults.get('resource','')))
+            self.onChangedRelation()
             self.paramEdit.setParams(options.get('params',self.defaults.get('params','')))
         except AttributeError:
             pass
@@ -422,11 +422,39 @@ class ApiTab(QScrollArea):
     def logMessage(self,message):
         self.mainWindow.logmessage(message)
 
-    def loadDocs(self):
+    def loadDoc(self):
         '''
         Loads and prepares documentation
         '''
-        self.apidoc = self.mainWindow.apiWindow.getDocumentation(self.name)
+        self.apidoc = self.mainWindow.apiWindow.getDocModule(self.name)
+
+        if self.apidoc and isinstance(self.apidoc,dict):
+            # Add base path
+            self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.url"))
+
+            # Add endpoints in reverse order
+            self.resourceEdit.clear()
+            endpoints = self.apidoc.get("paths",{})
+            paths = endpoints.keys()
+            for path in reversed(list(paths)):
+                operations = endpoints[path]
+                path = path.replace("{", "<").replace("}", ">")
+
+                self.resourceEdit.insertItem(0, path)
+                self.resourceEdit.setItemData(0, getDictValue(operations,"get.summary",""), Qt.ToolTipRole)
+
+                #store params for later use in onChangedRelation
+                self.resourceEdit.setItemData(0, operations, Qt.UserRole)
+
+            self.buttonApiHelp.setVisible(True)
+
+    def showDoc(self):
+        '''
+        Open window with documentation
+        '''
+        basepath = self.basepathEdit.currentText().strip()
+        path = self.resourceEdit.currentText().strip()
+        self.mainWindow.apiWindow.showDoc(self.name, basepath, path)
 
     def initInputs(self):
         '''
@@ -442,33 +470,27 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Base path", self.basepathEdit)
 
         #Resource
+        self.resourceLayout = QHBoxLayout()
+        self.actionApiHelp = QAction('Open documentation if available.',self)
+        self.actionApiHelp.setText('?')
+        self.actionApiHelp.triggered.connect(self.showDoc)
+        self.buttonApiHelp =QToolButton(self)
+        self.buttonApiHelp.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.buttonApiHelp.setDefaultAction(self.actionApiHelp)
+        self.buttonApiHelp.setVisible(False)
+
         self.resourceEdit = QComboBox(self)
-        self.mainLayout.addRow("Resource", self.resourceEdit)
         self.resourceEdit.setEditable(True)
+
+        self.resourceLayout.addWidget(self.resourceEdit)
+        self.resourceLayout.addWidget(self.buttonApiHelp)
+
+        self.mainLayout.addRow("Resource", self.resourceLayout)
 
         #Parameters
         self.paramEdit = QParamEdit(self)
         self.mainLayout.addRow("Parameters", self.paramEdit)
         self.resourceEdit.currentIndexChanged.connect(self.onChangedRelation)
-        self.onChangedRelation()
-
-        # Documentation
-        if self.apidoc and isinstance(self.apidoc,dict):
-            # Add base path
-            self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.url"))
-
-            # Add endpoints in reverse order
-            endpoints = self.apidoc.get("paths",{})
-            paths = endpoints.keys()
-            for path in reversed(list(paths)):
-                operations = endpoints[path]
-                path = path.replace("{", "<").replace("}", ">")
-
-                self.resourceEdit.insertItem(0, path)
-                self.resourceEdit.setItemData(0, getDictValue(operations,"get.summary",""), Qt.ToolTipRole)
-
-                #store params for later use in onChangedRelation
-                self.resourceEdit.setItemData(0, operations, Qt.UserRole)
 
     def initFolderInput(self):
         #Download folder
@@ -617,12 +639,16 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Key to extract", layout)
 
     @Slot()
-    def onChangedRelation(self, index=0):
+    def onChangedRelation(self, index = None):
         '''
         Handles the automated parameter suggestion for the current
         selected API relation/endpoint based on the OpenAPI specification 3.0.0
         '''
-        #retrieve OpenAPI specification and set parameter options
+
+        if index is None:
+            index = self.resourceEdit.findText(self.resourceEdit.currentText())
+            self.resourceEdit.setCurrentIndex(index)
+
         operations = self.resourceEdit.itemData(index,Qt.UserRole)
         params = getDictValue(operations,"get.parameters",False) if operations else []
         self.paramEdit.setOptions(params)
@@ -878,6 +904,7 @@ class FacebookTab(ApiTab):
         self.initAuthSettingsInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
 
     def initLoginInputs(self):
@@ -1043,6 +1070,7 @@ class TwitterStreamingTab(ApiTab):
         self.initAuthSettingsInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
@@ -1389,7 +1417,6 @@ class AuthTab(ApiTab):
                 elif options.get('auth','disable') == 'header':
                     requestheaders["Authorization"] = "Bearer "+options['access_token']
 
-
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), templateparams, nodedata,options)
                 if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
@@ -1650,7 +1677,9 @@ class AmazonTab(AuthTab):
         # Login inputs
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
+
 
     def initLoginInputs(self):
         # token and login button
@@ -1840,6 +1869,7 @@ class TwitterTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
@@ -2016,6 +2046,7 @@ class YoutubeTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs(False)
 
+        self.loadDoc()
         self.loadSettings()
 
     def initAuthSetupInputs(self):
@@ -2054,6 +2085,7 @@ class GenericTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
         self.timeout = 30
 
@@ -2082,7 +2114,7 @@ class FilesTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
-
+        self.loadDoc()
         self.loadSettings()
         self.timeout = 30
 

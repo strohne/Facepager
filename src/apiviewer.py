@@ -90,11 +90,11 @@ class ApiViewer(QDialog):
         self.rejectButton.setToolTip("Close the window")
         buttons.addWidget(self.rejectButton)
 
-        # self.applyButton=QPushButton('Apply')
-        # self.applyButton.setDefault(True)
-        # self.applyButton.clicked.connect(self.applyItem)
-        # self.applyButton.setToolTip("Apply the selected option.")
-        # buttons.addWidget(self.applyButton)
+        self.applyButton=QPushButton('Apply')
+        self.applyButton.setDefault(True)
+        self.applyButton.clicked.connect(self.applyItem)
+        self.applyButton.setToolTip("Apply the selected path.")
+        buttons.addWidget(self.applyButton)
         layout.addLayout(buttons)
 
         #status bar
@@ -143,7 +143,38 @@ class ApiViewer(QDialog):
         self.itemList.setFocus()
 
         #self.applyButton.setDefault(True)
-        self.loadingIndicator.hide()
+        self.exec_()
+
+    def showDoc(self, module, basepath, path, field = None):
+        # Show
+        self.show()
+        QApplication.processEvents()
+        self.loadAllFiles()
+
+        # Select
+        path = path.replace("<", "{").replace(">", "}")
+        selectedItem = None
+
+        # Find file / module / api
+        for idx_file in range(self.itemList.topLevelItemCount()):
+            topItem = self.itemList.topLevelItem(idx_file)
+            topData = topItem.data(0,Qt.UserRole)
+
+            # Find path
+            if topData.get('module',None) == module:
+                selectedItem = topItem
+
+                for idx_path in range(topItem.childCount()):
+                    pathItem = topItem.child(idx_path)
+                    pathData = pathItem.data(0, Qt.UserRole)
+
+                    if pathData.get('path', None) == path:
+                        selectedItem = pathItem
+                        break
+
+                break
+        self.itemList.setCurrentItem(selectedItem)
+        self.itemList.setFocus()
         self.exec_()
 
     def addDetailRowCaption(self,caption):
@@ -361,17 +392,20 @@ class ApiViewer(QDialog):
              QMessageBox.information(self,"Facepager","Error loading items:"+str(e))
              return None
 
-    def getDocumentation(self, module, path=None, field=None):
+    def getDocModule(self, module):
         try:
             # Documentation
             self.downloadDefaultFiles(True)
             filename = module + 'Tab'+self.filesSuffix[0]
             self.loadFile(self.folderDefault, filename, True)
-            data = self.moduleDoc.get(module, None)
+            return self.moduleDoc.get(module, None)
+        except:
+            return None
 
+    def getDocField(self, module, path=None, field=None):
+        try:
+            data = self.getDocModule(module)
             if data is not None:
-                if path is None:
-                    return data
 
                 basepath = getDictValue(data,"servers.0.url") if data is not None else None
                 paths = data.get('paths',{}) if data is not None else None
@@ -404,25 +438,38 @@ class ApiViewer(QDialog):
                         return response.get(field).get('description')
 
             return None
-        except Exception as e:
+        except:
             return None
 
     def applyItem(self):
         if not self.itemList.currentItem():
             return False
 
+        # Find API module
         data = self.itemList.currentItem().data(0,Qt.UserRole)
-        if not data.get('iscategory',False):
-            pass
+        module = data.get('module', None)
+        if module is None:
+            return False
 
-            # #Find API module
-            # for i in range(0, self.mainWindow.RequestTabs.count()):
-            #     if self.mainWindow.RequestTabs.widget(i).name == data.get('module',''):
-            #         tab = self.mainWindow.RequestTabs.widget(i)
-            #         tab.setOptions(data.get('options',{}))
-            #         self.mainWindow.RequestTabs.setCurrentWidget(tab)
-            #         break
-            # 
+        for i in range(0, self.mainWindow.RequestTabs.count()):
+            if self.mainWindow.RequestTabs.widget(i).name == module:
+                tab = self.mainWindow.RequestTabs.widget(i)
+                path = data.get('path', '')
+                options = {
+                    'basepath' : getDictValue(data, 'info.servers.0.url',''),
+                    'resource' : path.replace("{", "<").replace("}", ">")
+                }
+                tab.setOptions(options)
+                self.mainWindow.RequestTabs.setCurrentWidget(tab)
+
+                break
+
+
+
+
+        pass
+
+            #
             # #Set columns
             # self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
             # self.mainWindow.actions.showColumns()

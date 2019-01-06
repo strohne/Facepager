@@ -196,7 +196,6 @@ class QParamEdit(QTableWidget):
             combo.setItemData(0,'The value in the Object ID-column in the data view.',Qt.ToolTipRole)
             combo.insertItem(0, '')
 
-
         return (combo)
 
     def setValue(self,row,col,val):

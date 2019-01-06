@@ -79,7 +79,17 @@ class DictionaryTreeModel(QAbstractItemModel):
 
     def setdata(self, data = {}, itemtype=None):
         self.reset()
-        self.itemtype = itemtype
+
+        if itemtype is not None:
+            parts = itemtype.split(':', 1)
+            self.module = parts[0] if len(parts) > 0 else ""
+            self.path = parts[1] if len(parts) > 1 else ""
+            self.itemtype = itemtype
+        else:
+            self.itemtype = None
+            self.module = None
+            self.path = None
+
         if not isinstance(data, dict):
             data = {'': data}
         items = list(data.items())
@@ -92,14 +102,10 @@ class DictionaryTreeModel(QAbstractItemModel):
         key, val = self.rootItem.getValue()
         return val
 
-    def getDocumentation(self,field):
+    def getDoc(self, field):
         try:
             if (self.apiWindow is not None) and (self.itemtype is not None):
-                parts = self.itemtype.split(':', 1)
-                module = parts[0] if len(parts) > 0 else ""
-                path = parts[1] if len(parts) > 1 else ""
-
-                doc = self.apiWindow.getDocumentation(module,path,field)
+                doc = self.apiWindow.getDocField(self.module, self.path, field)
                 doc = field if doc is None else doc
             else:
                 doc = field
@@ -107,6 +113,7 @@ class DictionaryTreeModel(QAbstractItemModel):
             return doc
         except:
             return field
+
 
     def columnCount(self, parent):
         return 2
@@ -194,7 +201,7 @@ class DictionaryTreeItem(object):
         self.itemDataValue = value
         self.itemDataType = 'atom'
 
-        self.itemToolTip = self.model.getDocumentation(self.keyPath())
+        self.itemToolTip = self.model.getDoc(self.keyPath())
 
         if isinstance(value, dict):
             items = list(value.items())

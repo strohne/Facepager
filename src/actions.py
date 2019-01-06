@@ -87,6 +87,10 @@ class Actions(object):
         self.actionJsonCopy.setToolTip("Copy the selected JSON-data to the clipboard")
         self.actionJsonCopy.triggered.connect(self.jsonCopy)
 
+        self.actionFieldDoc = self.detailActions.addAction(QIcon(":/icons/help.png"),"")
+        self.actionFieldDoc.setToolTip("Open the documentation for the selected item if available.")
+        self.actionFieldDoc.triggered.connect(self.showFieldDoc)
+
         #Tree actions
         self.treeActions = QActionGroup(self.mainWindow)
         self.actionExpandAll = self.treeActions.addAction(QIcon(":/icons/expand.png"), "Expand nodes")
@@ -321,6 +325,17 @@ class Actions(object):
                 treenode.unpackList(key)
         except Exception as e:
             self.mainWindow.logmessage(e)
+
+    @Slot()
+    def showFieldDoc(self):
+        tree = self.mainWindow.detailTree
+        key = tree.selectedKey()
+        if key == '':
+            return False
+
+        if  tree.treemodel.itemtype is not None:
+            self.mainWindow.apiWindow.showDoc(tree.treemodel.module, None, tree.treemodel.path, key)
+
 
     @Slot()
     def expandAll(self):

@@ -1,10 +1,7 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 
-#from PySide.QtWebKit import *
-
 import os
-import sys
 import re
 import json
 from textviewer import *
