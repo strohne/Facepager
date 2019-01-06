@@ -65,12 +65,12 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv .  
   $ source bin/activate  
   
-  $ bin/pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
-  $ bin/pip install PySide2==5.11.1  
-  $ bin/pip install numpy pandas  
+  $ bin/pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
+  $ bin/pip3 install PySide2==5.11.1  
+  $ bin/pip3 install numpy pandas  
 
 - Start Facepager  
   $ cd src  
-  $ python Facepager.py  
+  $ python3 Facepager.py  
   
 Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
