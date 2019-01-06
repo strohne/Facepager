@@ -1,5 +1,6 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import QFileDialog, QCheckBox, QComboBox, QLabel, QHBoxLayout
 import csv
 from progressbar import ProgressBar
 import codecs
@@ -18,7 +19,8 @@ class ExportFileDialog(QFileDialog):
         self.mainWindow = self.parent()
         self.setWindowTitle("Export nodes to CSV")
         self.setAcceptMode(QFileDialog.AcceptSave)
-        self.setFilter("CSV Files (*.csv)")
+        self.setOption(QFileDialog.DontUseNativeDialog)
+        #self.setFilter("CSV Files (*.csv)")
         self.setDefaultSuffix("csv")
 
         self.optionBOM = QCheckBox("Use a BOM",self)
@@ -69,11 +71,11 @@ class ExportFileDialog(QFileDialog):
 
             if os.path.isfile(self.selectedFiles()[0]):
                 os.remove(self.selectedFiles()[0])
-            output = open(self.selectedFiles()[0], 'wb')
-            try:
-                if self.optionBOM.isChecked() and not self.optionWide.isChecked():
-                    output.write(codecs.BOM_UTF8)
+            output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
+            if self.optionBOM.isChecked() and not self.optionWide.isChecked():
+                output.write('\ufeff')
 
+            try:
                 if self.optionAll.currentIndex() == 0:
                     self.exportAllNodes(output)
                 else:
@@ -95,13 +97,13 @@ class ExportFileDialog(QFileDialog):
 
         try:
             delimiter = self.optionSeparator.currentText()
-            delimiter = str(delimiter.decode('string-escape'))
+            delimiter = delimiter.encode('utf-8').decode('unicode_escape')
             writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
 
             #headers
-            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [str(val) for val in self.mainWindow.tree.treemodel.getRowHeader()]
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
@@ -112,7 +114,7 @@ class ExportFileDialog(QFileDialog):
                 if progress.wasCanceled:
                     break
 
-                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [str(val) for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 if self.optionLinebreaks.isChecked():
                     row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
@@ -131,7 +133,7 @@ class ExportFileDialog(QFileDialog):
 
         try:
             delimiter = self.optionSeparator.currentText()
-            delimiter = str(delimiter.decode('string-escape'))
+            delimiter = delimiter.encode('utf-8').decode('unicode_escape')
             writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
@@ -142,7 +144,6 @@ class ExportFileDialog(QFileDialog):
                 row.append(key)
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
-
 
             writer.writerow(row)
 
@@ -156,10 +157,10 @@ class ExportFileDialog(QFileDialog):
                 for node in allnodes:
                     if progress.wasCanceled:
                         break
-                    row = [node.level, node.id, node.parent_id, node.objectid_encoded, node.objecttype,
+                    row = [node.level, node.id, node.parent_id, node.objectid, node.objecttype,
                            node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
-                        row.append(node.getResponseValue(key, "utf-8"))
+                        row.append(node.getResponseValue(key))
 
                     if self.optionLinebreaks.isChecked():
                         row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]
@@ -178,16 +179,13 @@ class ExportFileDialog(QFileDialog):
     def convertToWideFormat(self,filename):
         progress = ProgressBar("Converting data...", self.mainWindow)
         try:
-
-            #from pandas import merge,read_csv
-
             #Separate levels
             def flattenTable(fulltable,levelcol,idcol,parentidcol,countchildren,removeempty):
                 fulltable[[levelcol]] = fulltable[[levelcol]].astype(int)
 
                 levels = dict(list(fulltable.groupby(levelcol)))
                 minlevel = fulltable.level.min()
-                for level, data in sorted(levels.iteritems()):
+                for level, data in sorted(levels.items()):
                     #First level is the starting point for the following merges
                     if level == minlevel:
                         #data = data[[idcol,'object_id','object_type']]
@@ -218,19 +216,23 @@ class ExportFileDialog(QFileDialog):
                 return flattable
 
             try:
+                #delimiter
+                delimiter = self.optionSeparator.currentText()
+                delimiter = delimiter.encode('utf-8').decode('unicode_escape')
+
                 #open
-                data = read_csv(filename, sep=";",encoding='utf-8',dtype=str)
+                data = read_csv(filename, sep=delimiter,encoding='utf-8',dtype=str)
 
                 #convert
                 newdata = flattenTable(data,'level','id','parent_id',['object_type','query_status','query_type'],False)
 
 
                 #save
-                outfile = open(filename, 'wb')
+                outfile = open(filename, 'w',newline='',encoding='utf8')
                 try:
                     if self.optionBOM.isChecked():
-                        outfile.write(codecs.BOM_UTF8) #UTF8 BOM
-                    newdata.to_csv(outfile,sep=';',index=False,encoding="utf-8")
+                        outfile.write('\ufeff') #UTF8 BOM
+                    newdata.to_csv(outfile,sep=delimiter,index=False,encoding="utf-8")
                 finally:
                     outfile.close()
             except Exception as e:

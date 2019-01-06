@@ -1,12 +1,11 @@
-from PySide.QtCore import *
-from PySide.QtWebKit import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+
 import os
-import sys
 import re
 import json
 from textviewer import *
-from urlparse import urlparse
+from urllib.parse import urlparse
 import requests
 import threading
 import webbrowser
@@ -337,7 +336,7 @@ class PresetWindow(QDialog):
             files = [f for f in os.listdir(self.presetFolder) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
                 newitem = self.addPresetItem(self.presetFolder,filename)
-                if self.lastSelected is not None and (self.lastSelected == unicode(os.path.join(self.presetFolder,filename))):
+                if self.lastSelected is not None and (self.lastSelected == str(os.path.join(self.presetFolder,filename))):
                     selectitem = newitem
 
         #self.presetList.expandAll()
@@ -399,7 +398,7 @@ class PresetWindow(QDialog):
         if data.get('iscategory',False):
             return False
 
-        reply = QMessageBox.question(self, 'Delete Preset',u"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes: return
 
         os.remove(os.path.join(self.presetFolder, data.get('filename')))
@@ -482,7 +481,7 @@ class PresetWindow(QDialog):
                 self.currentData.update(data_settings)
 
             elif self.overwriteCheckbox.isChecked():
-                reply = QMessageBox.question(self, 'Overwrite Preset',u"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                reply = QMessageBox.question(self, 'Overwrite Preset',"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply != QMessageBox.Yes:
                     dialog.close()
                     self.currentFilename = None
@@ -490,7 +489,7 @@ class PresetWindow(QDialog):
                 else:
                     self.currentData.update(data_settings)
 
-            for k in self.currentData.keys():
+            for k in list(self.currentData.keys()):
               if not k in ['name','category','description','module','options','speed','headers','columns']:
                 self.currentData.pop(k)
 

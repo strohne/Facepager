@@ -1,5 +1,5 @@
-import urlparse
-import urllib
+import urllib.parse
+import urllib.request, urllib.parse, urllib.error
 import hashlib, hmac, base64
 from mimetypes import guess_all_extensions
 from datetime import datetime
@@ -9,9 +9,9 @@ import os, sys, time
 from collections import OrderedDict
 import threading
 
-from PySide.QtWebKit import QWebView, QWebPage
-from PySide.QtGui import QMessageBox, QHBoxLayout, QScrollArea
-from PySide.QtCore import QUrl
+from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
+from PySide2.QtWidgets import *
+from PySide2.QtCore import QUrl
 
 import requests
 from requests.exceptions import *
@@ -25,14 +25,10 @@ from folder import SelectFolderDialog
 from paramedit import *
 from utilities import *
 
-from credentials import *
-from pandas.core.config import is_instance_factory
-#import imp
-#try:
-#    imp.find_module('credentials')
-#    from credentials import *
-#except ImportError:
-#    credentials = {}
+try:
+    from credentials import *
+except ImportError:
+    credentials = {}
 
 class ApiTab(QScrollArea):
     """
@@ -53,7 +49,6 @@ class ApiTab(QScrollArea):
         self.connected = False
         self.lastrequest = None
         self.speed = None
-        self.loadDocs()
         self.lock_session = threading.Lock()
         self.progress = None
 
@@ -78,7 +73,7 @@ class ApiTab(QScrollArea):
         
         # Popup window for auth settings
         self.authWidget = QWidget()
-        
+
         # Default settings
         try:
             self.defaults = credentials.get(name.lower().replace(' ','_'),{})
@@ -89,7 +84,7 @@ class ApiTab(QScrollArea):
         """
          Return the Node-ID as a string
         """
-        return unicode(val).encode("utf-8")
+        return str(val).encode("utf-8")
 
     def parseURL(self, url):
         """
@@ -98,7 +93,7 @@ class ApiTab(QScrollArea):
         url = url.split('?', 1)
         path = url[0]
         query = url[1] if len(url) > 1 else ''
-        query = urlparse.parse_qsl(query)
+        query = urllib.parse.parse_qsl(query)
         query = OrderedDict((k, v) for k, v in query)
 
         return path, query
@@ -107,12 +102,12 @@ class ApiTab(QScrollArea):
         if not pattern:
             return pattern
         else:
-            pattern = unicode(pattern)
+            pattern = str(pattern)
 
         #matches = re.findall(ur"<([^>]*>", pattern)
         #matches = re.findall(ur"(?<!\\)<([^>]*?)(?<!\\)>", pattern)
         #Find placeholders in brackets, ignoring escaped brackets (escape character is backslash)
-        matches = re.findall(ur"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
+        matches = re.findall(r"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
 
         for match in matches:
             pipeline = match.split('|')
@@ -124,7 +119,7 @@ class ApiTab(QScrollArea):
             elif key == 'None':
                 value = ''
             elif key == 'Object ID':
-                value = unicode(nodedata['objectid'])
+                value = str(nodedata['objectid'])
             else:
                 value = getDictValue(nodedata['response'], key)
 
@@ -176,11 +171,11 @@ class ApiTab(QScrollArea):
             value = self.parsePlaceholders(params[name], nodedata, {},options)
 
             #check parameter name
-            match = re.match(ur"^<(.*)>$", unicode(name))
+            match = re.match(r"^<(.*)>$", str(name))
             if match:
                 templateparams[match.group(1)] = value
             else:
-                urlparams[name] = unicode(value).encode("utf-8")
+                urlparams[name] = str(value).encode("utf-8")
 
         #Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
@@ -336,6 +331,7 @@ class ApiTab(QScrollArea):
         try:
             self.basepathEdit.setEditText(options.get('basepath', self.defaults.get('basepath','')))
             self.resourceEdit.setEditText(options.get('resource', self.defaults.get('resource','')))
+            self.onChangedRelation()
             self.paramEdit.setParams(options.get('params',self.defaults.get('params','')))
         except AttributeError:
             pass
@@ -409,7 +405,7 @@ class ApiTab(QScrollArea):
         self.mainWindow.settings.beginGroup("ApiModule_" + self.name)
         options = self.getOptions('settings')
 
-        for key in options.keys():
+        for key in list(options.keys()):
             self.mainWindow.settings.setValue(key, options[key])
         self.mainWindow.settings.endGroup()
 
@@ -426,30 +422,45 @@ class ApiTab(QScrollArea):
     def logMessage(self,message):
         self.mainWindow.logmessage(message)
 
-    def loadDocs(self):
+    def loadDoc(self):
         '''
         Loads and prepares documentation
         '''
+        self.apidoc = self.mainWindow.apiWindow.getDocModule(self.name)
 
-        try:
-            folder = os.path.join(getResourceFolder(),'docs')
-            filename = u"{0}.json".format(self.__class__.__name__)
+        if self.apidoc and isinstance(self.apidoc,dict):
+            # Add base path
+            self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.url"))
 
-            with open(os.path.join(folder, filename),"r") as docfile:
-                if docfile:
-                    self.apidoc = json.load(docfile)
-                else:
-                    self.apidoc = None
-        except:
-            self.apidoc = None
+            # Add endpoints in reverse order
+            self.resourceEdit.clear()
+            endpoints = self.apidoc.get("paths",{})
+            paths = endpoints.keys()
+            for path in reversed(list(paths)):
+                operations = endpoints[path]
+                path = path.replace("{", "<").replace("}", ">")
+
+                self.resourceEdit.insertItem(0, path)
+                self.resourceEdit.setItemData(0, getDictValue(operations,"get.summary",""), Qt.ToolTipRole)
+
+                #store params for later use in onChangedRelation
+                self.resourceEdit.setItemData(0, operations, Qt.UserRole)
+
+            self.buttonApiHelp.setVisible(True)
+
+    def showDoc(self):
+        '''
+        Open window with documentation
+        '''
+        basepath = self.basepathEdit.currentText().strip()
+        path = self.resourceEdit.currentText().strip()
+        self.mainWindow.apiWindow.showDoc(self.name, basepath, path)
 
     def initInputs(self):
         '''
         Create base path edit, resource edit and param edit
         Set resource according to the APIdocs, if any docs are available
         '''
-
-
 
         #Base path
         self.basepathEdit = QComboBox(self)
@@ -459,28 +470,27 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Base path", self.basepathEdit)
 
         #Resource
+        self.resourceLayout = QHBoxLayout()
+        self.actionApiHelp = QAction('Open documentation if available.',self)
+        self.actionApiHelp.setText('?')
+        self.actionApiHelp.triggered.connect(self.showDoc)
+        self.buttonApiHelp =QToolButton(self)
+        self.buttonApiHelp.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.buttonApiHelp.setDefaultAction(self.actionApiHelp)
+        self.buttonApiHelp.setVisible(False)
+
         self.resourceEdit = QComboBox(self)
-        self.mainLayout.addRow("Resource", self.resourceEdit)
-
-        if self.apidoc:
-            #Insert one item for every endpoint
-            for endpoint in reversed(self.apidoc):
-                #store url as item text
-                self.resourceEdit.insertItem(0, endpoint["path"])
-                #store doc as tooltip
-                self.resourceEdit.setItemData(0, endpoint["doc"], Qt.ToolTipRole)
-                #store params-dict for later use in onChangedRelation
-                self.resourceEdit.setItemData(0, endpoint.get("params",[]), Qt.UserRole)
-
         self.resourceEdit.setEditable(True)
+
+        self.resourceLayout.addWidget(self.resourceEdit)
+        self.resourceLayout.addWidget(self.buttonApiHelp)
+
+        self.mainLayout.addRow("Resource", self.resourceLayout)
 
         #Parameters
         self.paramEdit = QParamEdit(self)
         self.mainLayout.addRow("Parameters", self.paramEdit)
-        self.resourceEdit.currentIndexChanged.connect(self.onchangedRelation)
-        self.onchangedRelation()
-        #layout.setStretch(0, 1);
-
+        self.resourceEdit.currentIndexChanged.connect(self.onChangedRelation)
 
     def initFolderInput(self):
         #Download folder
@@ -629,35 +639,19 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Key to extract", layout)
 
     @Slot()
-    def onchangedRelation(self,index=0):
+    def onChangedRelation(self, index = None):
         '''
         Handles the automated parameter suggestion for the current
-        selected API relation/endpoint
+        selected API relation/endpoint based on the OpenAPI specification 3.0.0
         '''
-        #retrieve param-dict stored in initInputs-method
-        params = self.resourceEdit.itemData(index,Qt.UserRole)
 
-        #Set name options and build value dict
-        values = {}
-        nameoptions = []
-        if params:
-            for param in params:
-                if param["required"]==True:
-                    nameoptions.append(param)
-                    values[param["name"]] = param["default"]
-                else:
-                    nameoptions.insert(0,param)
-        nameoptions.insert(0,{})
-        self.paramEdit.setNameOptions(nameoptions)
+        if index is None:
+            index = self.resourceEdit.findText(self.resourceEdit.currentText())
+            self.resourceEdit.setCurrentIndex(index)
 
-        #Set value options
-        self.paramEdit.setValueOptions([{'name':'',
-                                         'doc':"No Value"},
-                                         {'name':'<Object ID>',
-                                          'doc':"The value in the Object ID-column of the datatree."}])
-
-        #Set values
-        self.paramEdit.setParams(values)
+        operations = self.resourceEdit.itemData(index,Qt.UserRole)
+        params = getDictValue(operations,"get.parameters",False) if operations else []
+        self.paramEdit.setOptions(params)
 
     @Slot()
     def onChangedParam(self,index=0):
@@ -701,24 +695,24 @@ class ApiTab(QScrollArea):
             maxretries = 3
             while True:
                 try:
-                    response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout, verify=True)
+                    response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout)
                         
-                except (HTTPError, ConnectionError), e:
+                except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
                     if maxretries > 0:
                         time.sleep(0.1)
-                        self.logMessage(u"Automatic retry: Request Error: {0}".format(e.message))
+                        self.logMessage("Automatic retry: Request Error: {0}".format(str(e)))
                     else:
                         raise e
                 else:
                     break
 
-        except (HTTPError, ConnectionError), e:
-            raise Exception(u"Request Error: {0}".format(e.message))
+        except (HTTPError, ConnectionError) as e:
+            raise Exception("Request Error: {0}".format(str(e)))
         else:
             status = 'fetched' if response.ok else 'error'
             status = status + ' (' + str(response.status_code) + ')'
-            headers = dict(response.headers.items())
+            headers = dict(list(response.headers.items()))
             
             if jsonify == True and response.text == '':
                 return [], headers, status
@@ -774,8 +768,8 @@ class ApiTab(QScrollArea):
         window.setWindowTitle(caption)
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
-        self.login_webview = QWebView(window)
-        window.setCentralWidget(self.login_webview )
+        self.login_webview = QWebEngineView(window)
+        window.setCentralWidget(self.login_webview)
 
         # Use the custom- WebPage class
         webpage = QWebPageCustom(self)
@@ -815,8 +809,8 @@ class ApiTab(QScrollArea):
             if not filename:
                 filename = url_filename
 
-            filename = re.sub(ur'[^a-zA-Z0-9_.-]+', '', filename)
-            fileext = re.sub(ur'[^a-zA-Z0-9_.-]+', '', fileext)
+            filename = re.sub(r'[^a-zA-Z0-9_.-]+', '', filename)
+            fileext = re.sub(r'[^a-zA-Z0-9_.-]+', '', fileext)
 
             filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
             filenumber = 0
@@ -864,8 +858,8 @@ class ApiTab(QScrollArea):
                     data = {'sourcepath': path, 'sourcequery': args,'response':response.text}
 
                 status = 'error' + ' (' + str(response.status_code) + ')'
-        except Exception, e:
-            raise Exception(u"Download Error: {0}".format(e.message))
+        except Exception as e:
+            raise Exception("Download Error: {0}".format(str(e)))
         else:
             return data, dict(response.headers), status
 
@@ -910,6 +904,7 @@ class FacebookTab(ApiTab):
         self.initAuthSettingsInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
 
     def initLoginInputs(self):
@@ -985,8 +980,8 @@ class FacebookTab(ApiTab):
                 urlparams = options['params']
 
             if options['logrequests']:
-                logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                    urlpath + "?" + urllib.urlencode(
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                    urlpath + "?" + urllib.parse.urlencode(
                                                                                        urlparams)))
 
             # data
@@ -999,7 +994,7 @@ class FacebookTab(ApiTab):
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
                 code = getDictValue(data,"error.code")
-                logMessage(u"Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'], msg))
+                logMessage("Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'], msg))
 
                 # see https://developers.facebook.com/docs/graph-api/using-graph-api
                 # see https://developers.facebook.com/docs/graph-api/advanced/rate-limiting/
@@ -1044,13 +1039,13 @@ class FacebookTab(ApiTab):
             self.showLoginWindow(query, caption, url)
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            unicode(e.message),
+                                            str(e),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
     def getToken(self,url):
         if url.toString().startswith(self.defaults['redirect_uri']):
-            url = urlparse.parse_qs(url.toString())
+            url = urllib.parse.parse_qs(url.toString())
             token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
 
             self.tokenEdit.setText(token[0])
@@ -1075,6 +1070,7 @@ class TwitterStreamingTab(ApiTab):
         self.initAuthSettingsInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
@@ -1172,11 +1168,10 @@ class TwitterStreamingTab(ApiTab):
                             response = self.session.post(path, params=args,
                                                          headers=headers,
                                                          timeout=self.timeout,
-                                                         verify=False,
                                                          stream=True)
                         else:
                             response = self.session.get(path, params=args, timeout=self.timeout,
-                                                        verify=False, stream=True)
+                                                        stream=True)
 
                     except requests.exceptions.Timeout:
                         raise Exception('Request timed out.')
@@ -1194,7 +1189,7 @@ class TwitterStreamingTab(ApiTab):
                             else:
                                 self.connected = False
                                 raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
-                        print "good response"
+                        print("good response")
                         return response
 
 
@@ -1238,7 +1233,7 @@ class TwitterStreamingTab(ApiTab):
             urlparams = options["params"]
 
         if options['logrequests']:
-            logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+            logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
         # data
         headers = None
@@ -1259,26 +1254,24 @@ class TwitterStreamingTab(ApiTab):
                  raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
                 
             self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token(
-                verify=False)
+            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token()
     
             self.showLoginWindow(query, caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            unicode(e.message),
+                                            str(e),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot()
     def getToken(self):
-        url = urlparse.parse_qs(self.login_webview.url().toString())
+        url = urllib.parse.parse_qs(self.login_webview.url().toString())
         if 'oauth_verifier' in url:
             token = url['oauth_verifier']
             if token:
                 self.oauthdata['oauth_verifier'] = token[0]
                 self.session = self.twitter.get_auth_session(self.oauthdata['requesttoken'],
                                                              self.oauthdata['requesttoken_secret'], method='POST',
-                                                             data={'oauth_verifier': self.oauthdata['oauth_verifier']},
-                                                             verify=False)
+                                                             data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
                 self.tokenEdit.setText(self.session.access_token)
                 self.tokensecretEdit.setText(self.session.access_token_secret)
@@ -1424,7 +1417,6 @@ class AuthTab(ApiTab):
                 elif options.get('auth','disable') == 'header':
                     requestheaders["Authorization"] = "Bearer "+options['access_token']
 
-
                 method=options.get('verb','GET')
                 payload = self.getPayload(options.get('payload',None), templateparams, nodedata,options)
                 if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
@@ -1441,7 +1433,7 @@ class AuthTab(ApiTab):
                 headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
 
             if options['logrequests']:
-                logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
             # data
             options['querytime'] = str(datetime.now())
@@ -1513,8 +1505,7 @@ class AuthTab(ApiTab):
                 raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
 
             self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.oauth1service.get_request_token(
-                verify=False)
+            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.oauth1service.get_request_token()
 
             self.showLoginWindow(False,
                                  self.defaults.get('login_window_caption','Login'),
@@ -1524,20 +1515,19 @@ class AuthTab(ApiTab):
                                  )
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                 unicode(e.message),
+                                 str(e),
                                  QMessageBox.StandardButton.Ok)
 
     @Slot()
     def getOAuth1Token(self):
-        url = urlparse.parse_qs(self.login_webview.url().toString())
+        url = urllib.parse.parse_qs(self.login_webview.url().toString())
         if "oauth_verifier" in url:
             token = url["oauth_verifier"]
             if token:
                 self.oauthdata['oauth_verifier'] = token[0]
                 self.session = self.oauth1service.get_auth_session(self.oauthdata['requesttoken'],
                                                                    self.oauthdata['requesttoken_secret'], method="POST",
-                                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']},
-                                                                   verify=False)
+                                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
                 self.tokenEdit.setText(self.session.access_token)
                 self.tokensecretEdit.setText(self.session.access_token_secret)
@@ -1584,7 +1574,7 @@ class AuthTab(ApiTab):
             if scope is not None:
                 params['scope'] = scope
     
-            params = '&'.join('%s=%s' % (key, value) for key, value in params.iteritems())
+            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
             url = loginurl + "?"+params
 
             self.showLoginWindow(False,self.defaults.get('login_window_caption','Login'),
@@ -1594,7 +1584,7 @@ class AuthTab(ApiTab):
                                          )
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
-                                            unicode(e.message),
+                                            str(e),
                                             QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
@@ -1636,7 +1626,7 @@ class AuthTab(ApiTab):
             if clientsecret == '':
                 raise Exception('Client Secret is missing, please adjust settings!')
 
-            basicauth = urllib.quote_plus(clientid)+':'+urllib.quote_plus(clientsecret)
+            basicauth = urllib.parse.quote_plus(clientid)+':'+urllib.parse.quote_plus(clientsecret)
             basicauth = base64.b64encode(basicauth)
 
             path = 'https://api.twitter.com/oauth2/token/'
@@ -1658,7 +1648,7 @@ class AuthTab(ApiTab):
                 raise Exception("Check your settings, no token could be retrieved.")
         except Exception as e:
             QMessageBox.critical(self, "Login failed",
-                                 unicode(e.message),
+                                 str(e),
                                  QMessageBox.StandardButton.Ok)
 
 class AmazonTab(AuthTab):
@@ -1687,7 +1677,9 @@ class AmazonTab(AuthTab):
         # Login inputs
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
+
 
     def initLoginInputs(self):
         # token and login button
@@ -1774,7 +1766,7 @@ class AmazonTab(AuthTab):
         datestamp = timenow.strftime('%Y%m%d')  # Date w/o time, used in credential scope
 
         # Create canonical URI--the part of the URI from domain to query string
-        urlcomponents = urlparse.urlparse(urlpath)
+        urlcomponents = urllib.parse.urlparse(urlpath)
         canonical_uri = '/' if urlcomponents.path == '' else urlcomponents.path
 
         # Create the canonical query string. In this example (a GET request),
@@ -1783,7 +1775,7 @@ class AmazonTab(AuthTab):
         # For this example, the query string is pre-formatted in the request_parameters variable.
         urlparams = {} if urlparams is None else urlparams
         canonical_querystring = OrderedDict(sorted(urlparams.items()))
-        canonical_querystring = urllib.urlencode(canonical_querystring)
+        canonical_querystring = urllib.parse.urlencode(canonical_querystring)
 
         # Create the canonical headers and signed headers. Header names
         # must be trimmed and lowercase, and sorted in code point order from
@@ -1796,17 +1788,17 @@ class AmazonTab(AuthTab):
         if headers is not None:
             canonical_headers.update(headers)
 
-        canonical_headers = {k.lower(): v for k, v in canonical_headers.items()}
+        canonical_headers = {k.lower(): v for k, v in list(canonical_headers.items())}
         canonical_headers = OrderedDict(sorted(canonical_headers.items()))
         canonical_headers_str = "".join(
-            [key + ":" + value + '\n' for (key, value) in canonical_headers.iteritems()])
+            [key + ":" + value + '\n' for (key, value) in canonical_headers.items()])
 
         # Create the list of signed headers. This lists the headers
         # in the canonical_headers list, delimited with ";" and in alpha order.
         # Note: The request can include any headers; canonical_headers and
         # signed_headers lists those that you want to be included in the
         # hash of the request. "Host" and "x-amz-date" are always required.
-        signed_headers = ';'.join(canonical_headers.keys())
+        signed_headers = ';'.join(list(canonical_headers.keys()))
 
         # Create payload hash (hash of the request body content). For GET
         # requests, the payload is an empty string ("").
@@ -1877,6 +1869,7 @@ class TwitterTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
 
         # Twitter OAUTH consumer key and secret should be defined in credentials.py
@@ -1970,8 +1963,8 @@ class TwitterTab(AuthTab):
                 urlparams = options["params"]
 
             if options['logrequests']:
-                logMessage(u"Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                    urlpath + "?" + urllib.urlencode(
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                    urlpath + "?" + urllib.parse.urlencode(
                                                                         urlparams)))
             # App auth
             requestheaders = options.get('headers', {})
@@ -1985,7 +1978,7 @@ class TwitterTab(AuthTab):
 
             # rate limit info
             if 'x-rate-limit-remaining' in headers:
-                options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(
+                options['info'] = {'x-rate-limit-remaining': "{} requests remaining until rate limit".format(
                     headers['x-rate-limit-remaining'])}
 
             options['ratelimit'] = (status == "error (429)")
@@ -2053,6 +2046,7 @@ class YoutubeTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs(False)
 
+        self.loadDoc()
         self.loadSettings()
 
     def initAuthSetupInputs(self):
@@ -2091,6 +2085,7 @@ class GenericTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
+        self.loadDoc()
         self.loadSettings()
         self.timeout = 30
 
@@ -2119,7 +2114,7 @@ class FilesTab(AuthTab):
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
-
+        self.loadDoc()
         self.loadSettings()
         self.timeout = 30
 
@@ -2205,7 +2200,7 @@ class FilesTab(AuthTab):
 
         # Log
         if options['logrequests']:
-            logMessage(u"Downloading file for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.urlencode(urlparams)))
+            logMessage("Downloading file for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
         options['querytime'] = str(datetime.now())
         data, headers, status = self.download(urlpath, urlparams, requestheaders,method,payload,foldername,filename,fileext)
@@ -2214,33 +2209,41 @@ class FilesTab(AuthTab):
         logData(data, options, headers)
 
 
-class QWebPageCustom(QWebPage):
+class QWebPageCustom(QWebEnginePage):
     logmessage = Signal(str)
     urlNotFound = Signal(QUrl)
 
-    def __init__(self, *args, **kwargs):
-        super(QWebPageCustom, self).__init__(*args, **kwargs)
-        self.networkAccessManager().sslErrors.connect(self.onSslErrors)
+    def __init__(self, parent):
+        #super(QWebPageCustom, self).__init__(*args, **kwargs)
+        super(QWebPageCustom, self).__init__(parent)
+
+        profile = self.profile()
+        profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
+        profile.clearHttpCache()
+
+        cookies = profile.cookieStore()
+        profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
+        cookies.deleteAllCookies()
 
     def supportsExtension(self, extension):
-        if extension == QWebPage.ErrorPageExtension:
+        if extension == QWebEnginePage.ErrorPageExtension:
             return True
         else:
             return False
 
     def extension(self, extension, option=0, output=0):
-        if extension != QWebPage.ErrorPageExtension: return False
+        if extension != QWebEnginePage.ErrorPageExtension: return False
 
-        if option.domain == QWebPage.QtNetwork:
+        if option.domain == QWebEnginePage.QtNetwork:
             #msg = "Network error (" + str(option.error) + "): " + option.errorString
             #self.logmessage.emit(msg)
             self.urlNotFound.emit(option.url)
 
-        elif option.domain == QWebPage.Http:
+        elif option.domain == QWebEnginePage.Http:
             msg = "HTTP error (" + str(option.error) + "): " + option.errorString
             self.logmessage.emit(msg)
 
-        elif option.domain == QWebPage.WebKit:
+        elif option.domain == QWebEnginePage.WebKit:
             msg = "WebKit error (" + str(option.error) + "): " + option.errorString
             self.logmessage.emit(msg)
         else:
@@ -2249,8 +2252,8 @@ class QWebPageCustom(QWebPage):
 
         return True
 
-    def onSslErrors(self, reply, errors):
-        url = unicode(reply.url().toString())
-        reply.ignoreSslErrors()
-        self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
+    # def onSslErrors(self, reply, errors):
+    #     url = str(reply.url().toString())
+    #     reply.ignoreSslErrors()
+    #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
 

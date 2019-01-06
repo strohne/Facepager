@@ -1,14 +1,14 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 import json
 import re
 import os
 import sys
 
 class DictionaryTree(QTreeView):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, apiWindow = None):
         super(DictionaryTree, self).__init__(parent)
-
         #self.setSortingEnabled(True)
         #self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QTreeView.SelectRows)
@@ -18,7 +18,7 @@ class DictionaryTree(QTreeView):
         delegate = DictionaryTreeItemDelegate()
         self.setItemDelegate(delegate)
 
-        self.treemodel = DictionaryTreeModel(self)
+        self.treemodel = DictionaryTreeModel(self,apiWindow)
         self.setModel(self.treemodel)
 
         # enable righklick-context menu
@@ -65,23 +65,34 @@ class DictionaryTreeItemDelegate(QItemDelegate):
 
 
 class DictionaryTreeModel(QAbstractItemModel):
-    def __init__(self, parent=None, dic={}):
+    def __init__(self, parent=None, apiWindow = None):
         super(DictionaryTreeModel, self).__init__(parent)
-        self.documentation = {}
+        self.apiWindow = apiWindow
         self.itemtype = None
         self.rootItem = DictionaryTreeItem(('root', {}), None,self)
-        self.setdata(dic)
+        self.setdata()
 
     def reset(self):
+        self.beginResetModel()
         self.rootItem.clear()
-        super(DictionaryTreeModel, self).reset()
+        self.endResetModel()
 
-    def setdata(self, data,itemtype="Generic"):
+    def setdata(self, data = {}, itemtype=None):
         self.reset()
-        self.itemtype = itemtype
+
+        if itemtype is not None:
+            parts = itemtype.split(':', 1)
+            self.module = parts[0] if len(parts) > 0 else ""
+            self.path = parts[1] if len(parts) > 1 else ""
+            self.itemtype = itemtype
+        else:
+            self.itemtype = None
+            self.module = None
+            self.path = None
+
         if not isinstance(data, dict):
             data = {'': data}
-        items = data.items()
+        items = list(data.items())
         #items.sort()
         for item in items:
             newparent = DictionaryTreeItem(item, self.rootItem,self)
@@ -91,38 +102,18 @@ class DictionaryTreeModel(QAbstractItemModel):
         key, val = self.rootItem.getValue()
         return val
 
-    def getDocumentation(self,keypath):
-        # very experimental check for item-description on Twitter-Doc
+    def getDoc(self, field):
         try:
-            #Load documentation corresponding to itemtype
-            docid = self.itemtype.split(':')[0]
-            if not docid in self.documentation:
-                folder = os.path.join(getResourceFolder(),'docs')
-                filename = u"{}Fields.json".format(docid)
+            if (self.apiWindow is not None) and (self.itemtype is not None):
+                doc = self.apiWindow.getDocField(self.module, self.path, field)
+                doc = field if doc is None else doc
+            else:
+                doc = field
 
-                self.documentation[docid] = json.load(open(os.path.join(folder, filename),"r"))
-                self.documentation[docid] = {entity["Field"]:entity  for entity in self.documentation[docid]}
-
-            if docid in self.documentation:
-                doccontent = self.documentation[docid]
-                # replace ".*." or .9." in the kaypath
-                path = re.sub("\.[0-9,\*]\.",".",keypath)
-                #if the full path is in the key-list
-                if  path in doccontent:
-                    bestmatch = path
-                # if the full path is not in the list, try with the last part of the path
-                elif path.split(".")[-1] in doccontent:
-                    bestmatch = path.split(".")[-1]
-                else:
-                    bestmatch=None
-
-                if bestmatch:
-                    docstring = "<p>"+doccontent[bestmatch]["Description"].replace("Example:","<font color=#FF333D>Example:</font>")+"</p>"
-                    return(docstring)
-
-            return(keypath)
+            return doc
         except:
-            return(keypath)
+            return field
+
 
     def columnCount(self, parent):
         return 2
@@ -153,7 +144,7 @@ class DictionaryTreeModel(QAbstractItemModel):
             return item.itemDataKey
         elif index.column() == 1:
             value = item.itemDataValue
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 value = value.replace('\n', ' ').replace('\r', '')
 
             return value
@@ -210,10 +201,10 @@ class DictionaryTreeItem(object):
         self.itemDataValue = value
         self.itemDataType = 'atom'
 
-        self.itemToolTip = self.model.getDocumentation(self.keyPath())
+        self.itemToolTip = self.model.getDoc(self.keyPath())
 
         if isinstance(value, dict):
-            items = value.items()
+            items = list(value.items())
             self.itemDataValue = '{' + str(len(items)) + '}'
             self.itemDataType = 'dict'
             #items.sort()
@@ -226,7 +217,7 @@ class DictionaryTreeItem(object):
             for idx, item in enumerate(value):
                 self.appendChild(DictionaryTreeItem((idx, item), self,self.model))
 
-        elif isinstance(value, (int, long)):
+        elif isinstance(value, int):
             self.itemDataType = 'atom'
             self.itemDataValue = str(value)
 
@@ -235,7 +226,7 @@ class DictionaryTreeItem(object):
             self.itemDataValue = value
 
             try:
-                self.itemToolTip = self.itemToolTip + "<p>"+unicode(value)+"</p>"
+                self.itemToolTip = self.itemToolTip + "<p>"+str(value)+"</p>"
             except:
                 pass
 

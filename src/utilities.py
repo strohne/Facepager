@@ -4,7 +4,7 @@ import os,sys,platform
 import lxml
 import lxml.html
 
-import StringIO
+import io
 
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
@@ -97,7 +97,7 @@ def getDictValue(data,multikey,dump=True):
 
         if dump and (type(value) is dict or type(value) is list):
             return json.dumps(value)
-        elif dump and (isinstance(value, (int, long))):
+        elif dump and (isinstance(value, int)):
             return str(value)
         else:
             return value
@@ -109,7 +109,7 @@ def filterDictValue(data,multikey,dump=True):
         keys=multikey.split('.',1)
 
         if type(data) is dict and keys[0] != '':
-            value = { key: data[key] for key in data.keys() if key != keys[0]}
+            value = { key: data[key] for key in list(data.keys()) if key != keys[0]}
             if len(keys) > 1:
                 value[keys[0]] = filterDictValue(data[keys[0]],keys[1],False)
             if not len(value):
@@ -148,7 +148,7 @@ def filterDictValue(data,multikey,dump=True):
         return ""
 
 def recursiveIterKeys(value,prefix=None):
-    for key in value.iterkeys():
+    for key in value.keys():
         if type(value[key]) is dict:
             for subkey in recursiveIterKeys(value[key],key):
                 fullkey = subkey if prefix is None else ".".join([prefix,subkey])
@@ -166,7 +166,7 @@ def htmlToJson(data,csskey=None,type='lxml'):
         if context:
             #out['name'] = element.tag
             if element.text is not None:
-                out['text'] = unicode(element.text).strip("\n\t ")
+                out['text'] = str(element.text).strip("\n\t ")
                 
         attributes= {}
         if context:                
@@ -176,12 +176,12 @@ def htmlToJson(data,csskey=None,type='lxml'):
                         
         children = []
         for child in element:
-            if isinstance(child.tag, basestring):
+            if isinstance(child.tag, str):
                 id = str(child.get('id',''))
                 key = child.tag+'#'+id if id != '' else child.tag
                 children.append({key:parseSoup(child)})
             else:
-                value = unicode(child.text).strip("\n\t ")
+                value = str(child.text).strip("\n\t ")
                 if value != '':
                     children.append({'text':value})
 
@@ -228,7 +228,7 @@ class BufferReader():
         self._callback = callback
         self._progress = 0
         self._len = int(len(data))
-        self._io = StringIO.StringIO(data)
+        self._io = io.StringIO(data)
 
     def __len__(self):
         return self._len

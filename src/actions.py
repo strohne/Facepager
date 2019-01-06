@@ -1,3 +1,7 @@
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import QActionGroup
+
 import csv
 from copy import deepcopy
 from progressbar import ProgressBar
@@ -5,7 +9,7 @@ from database import *
 from apimodules import *
 from apithread import ApiThreadPool
 from collections import deque
-import StringIO
+import io
 import codecs
 import os
 import platform
@@ -56,6 +60,9 @@ class Actions(object):
         self.actionLoadPreset = self.dataActions.addAction(QIcon(":/icons/presets.png"), "Presets")
         self.actionLoadPreset.triggered.connect(self.loadPreset)
 
+        self.actionLoadAPIs = self.dataActions.addAction(QIcon(":/icons/apis.png"), "APIs")
+        self.actionLoadAPIs.triggered.connect(self.loadAPIs)
+
         self.actionShowColumns = self.dataActions.addAction("Show Columns")
         self.actionShowColumns.triggered.connect(self.showColumns)
 
@@ -79,6 +86,10 @@ class Actions(object):
         self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
         self.actionJsonCopy.setToolTip("Copy the selected JSON-data to the clipboard")
         self.actionJsonCopy.triggered.connect(self.jsonCopy)
+
+        self.actionFieldDoc = self.detailActions.addAction(QIcon(":/icons/help.png"),"")
+        self.actionFieldDoc.setToolTip("Open the documentation for the selected item if available.")
+        self.actionFieldDoc.triggered.connect(self.showFieldDoc)
 
         #Tree actions
         self.treeActions = QActionGroup(self.mainWindow)
@@ -108,10 +119,15 @@ class Actions(object):
         fldg.setFileMode(QFileDialog.ExistingFile)
         if fldg.exec_():
             self.mainWindow.timerWindow.cancelTimer()
+            self.mainWindow.tree.treemodel.clear()
             self.mainWindow.database.connect(fldg.selectedFiles()[0])
             self.mainWindow.settings.setValue("lastpath", fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
-            self.mainWindow.tree.treemodel.reset()
+
+            self.mainWindow.tree.loadData(self.mainWindow.database)
+            self.mainWindow.actions.actionShowColumns.trigger()
+
+
 
     @Slot()
     def openDBFolder(self):
@@ -135,10 +151,11 @@ class Actions(object):
 
         if fldg.exec_():
             self.mainWindow.timerWindow.cancelTimer()
+            self.mainWindow.tree.treemodel.clear()
             self.mainWindow.database.createconnect(fldg.selectedFiles()[0])
             self.mainWindow.settings.setValue("lastpath", fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
-            self.mainWindow.tree.treemodel.reset()
+
 
 
     @Slot()
@@ -171,13 +188,13 @@ class Actions(object):
         indexes = self.mainWindow.tree.selectionModel().selectedRows()
         progress.setMaximum(len(indexes))
 
-        output = StringIO.StringIO()
+        output = io.StringIO()
         try:
             writer = csv.writer(output, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
             #headers
-            row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowHeader()]
+            row = [str(val) for val in self.mainWindow.tree.treemodel.getRowHeader()]
             writer.writerow(row)
 
             #rows
@@ -185,20 +202,20 @@ class Actions(object):
                 if progress.wasCanceled:
                     break
 
-                row = [unicode(val).encode("utf-8") for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                row = [str(val) for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
                 writer.writerow(row)
 
                 progress.step()
 
             clipboard = QApplication.clipboard()
-            clipboard.setText(output.getvalue().decode("utf-8"))
+            clipboard.setText(output.getvalue())
         finally:
             output.close()
             progress.close()
 
     @Slot()
     def exportNodes(self):
-        fldg = ExportFileDialog(self.mainWindow)
+        fldg = ExportFileDialog(self.mainWindow, filter ="CSV Files (*.csv)")
 
 
     @Slot()
@@ -286,6 +303,10 @@ class Actions(object):
         self.mainWindow.presetWindow.showPresets()
 
     @Slot()
+    def loadAPIs(self):
+        self.mainWindow.apiWindow.showWindow()
+
+    @Slot()
     def jsonCopy(self):
         self.mainWindow.detailTree.copyToClipboard()
 
@@ -306,6 +327,17 @@ class Actions(object):
             self.mainWindow.logmessage(e)
 
     @Slot()
+    def showFieldDoc(self):
+        tree = self.mainWindow.detailTree
+        key = tree.selectedKey()
+        if key == '':
+            return False
+
+        if  tree.treemodel.itemtype is not None:
+            self.mainWindow.apiWindow.showDoc(tree.treemodel.module, None, tree.treemodel.path, key)
+
+
+    @Slot()
     def expandAll(self):
         self.mainWindow.tree.expandAll()
 
@@ -323,7 +355,7 @@ class Actions(object):
             return (False)
 
         #Show progress window
-        progress = ProgressBar(u"Fetching Data", parent=self.mainWindow)
+        progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
             #Get global options
@@ -346,7 +378,7 @@ class Actions(object):
                 return (False)
 
             #Update progress window
-            self.mainWindow.logmessage(u"Start fetching data for {} node(s).".format(len(indexes)))
+            self.mainWindow.logmessage("Start fetching data for {} node(s).".format(len(indexes)))
             progress.setMaximum(len(indexes))
             self.mainWindow.tree.treemodel.nodecounter = 0
 
@@ -410,10 +442,10 @@ class Actions(object):
                             # Update single progress
                             if 'current' in job:
                                 percent = int((job.get('current',0) * 100.0 / job.get('total',1))) 
-                                progress.showInfo(progresskey, u"{}% of current node processed.".format(percent))
+                                progress.showInfo(progresskey, "{}% of current node processed.".format(percent))
                             elif 'page' in job:
                                 if job.get('page', 0) > 1:
-                                    progress.showInfo(progresskey, u"{} page(s) of current node processed.".format(job.get('page',0)))
+                                    progress.showInfo(progresskey, "{} page(s) of current node processed.".format(job.get('page',0)))
 
                             # Update total progress
                             else:
@@ -476,19 +508,19 @@ class Actions(object):
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
                             # Show info
-                            progress.showInfo(status,u"{} response(s) with status: {}".format(statuscount[status],status))
-                            progress.showInfo('newnodes',u"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
-                            progress.showInfo('threads',u"{} active thread(s)".format(threadpool.getThreadCount()))
+                            progress.showInfo(status,"{} response(s) with status: {}".format(statuscount[status],status))
+                            progress.showInfo('newnodes',"{} new node(s) created".format(self.mainWindow.tree.treemodel.nodecounter))
+                            progress.showInfo('threads',"{} active thread(s)".format(threadpool.getThreadCount()))
                             progress.setRemaining(threadpool.getJobCount())
 
                             # Custom info from modules
                             info = job['options'].get('info', {})
-                            for name, value in info.iteritems():
+                            for name, value in info.items():
                                 progress.showInfo(name, value)
 
                         # Abort
                         elif progress.wasCanceled:
-                            progress.showInfo('cancel', u"Disconnecting from stream, may take some time.")
+                            progress.showInfo('cancel', "Disconnecting from stream, may take some time.")
                             threadpool.stopJobs()
 
                         # Retry
@@ -508,7 +540,7 @@ class Actions(object):
 
                         # Finished
                         if not threadpool.hasJobs():
-                            progress.showInfo('cancel', u"Work finished, shutting down threads.")
+                            progress.showInfo('cancel', "Work finished, shutting down threads.")
                             threadpool.stopJobs()
 
                         #-Waiting...
@@ -518,11 +550,11 @@ class Actions(object):
                         QApplication.processEvents()
 
             finally:
-                request_summary = [str(val)+" x "+key for key,val in statuscount.iteritems()]
+                request_summary = [str(val)+" x "+key for key,val in statuscount.items()]
                 request_summary = ", ".join(request_summary)
                 request_end = "Fetching completed" if not progress.wasCanceled else 'Fetching cancelled by user'
 
-                self.mainWindow.logmessage(u"{}, {} new node(s) created. Summary of responses: {}.".format(request_end, self.mainWindow.tree.treemodel.nodecounter,request_summary))
+                self.mainWindow.logmessage("{}, {} new node(s) created. Summary of responses: {}.".format(request_end, self.mainWindow.tree.treemodel.nodecounter,request_summary))
 
                 self.mainWindow.tree.treemodel.commitNewNodes()
         finally:

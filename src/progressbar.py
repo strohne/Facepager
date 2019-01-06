@@ -1,5 +1,6 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 from datetime import timedelta
 
 class ProgressBar(QDialog):
@@ -45,15 +46,15 @@ class ProgressBar(QDialog):
         layout.addStretch(1)
 
         buttons = QDialogButtonBox()
-        self.retryButton = QPushButton(u"Retry")
+        self.retryButton = QPushButton("Retry")
         self.retryButton.clicked.connect(self.doretry)
         buttons.addButton(self.retryButton, QDialogButtonBox.ActionRole)
 
-        self.skipButton = QPushButton(u"Skip")
+        self.skipButton = QPushButton("Skip")
         self.skipButton.clicked.connect(self.doskip)
         buttons.addButton(self.skipButton, QDialogButtonBox.ActionRole)
 
-        self.cancelButton = QPushButton(u"Cancel")
+        self.cancelButton = QPushButton("Cancel")
         self.cancelButton.clicked.connect(self.cancel)
         buttons.addButton(self.cancelButton,QDialogButtonBox.ActionRole)
         layout.addWidget(buttons)
@@ -77,10 +78,10 @@ class ProgressBar(QDialog):
             self.errorLabel.show()
 
             if self.retryoption:
-                self.retryButton.setText(u"Retry")
+                self.retryButton.setText("Retry")
                 self.retryButton.show()
 
-            self.skipButton.setText(u"Skip")
+            self.skipButton.setText("Skip")
             self.skipButton.show()
 
             self.startCountdown()
@@ -100,12 +101,12 @@ class ProgressBar(QDialog):
         if (self.timeout <= 0):
             self.doretry()
         elif self.retryoption:
-            self.retryButton.setText(u"Retry [{}]".format(self.timeout))
-            self.skipButton.setText(u"Skip")
+            self.retryButton.setText("Retry [{}]".format(self.timeout))
+            self.skipButton.setText("Skip")
             self.startCountdown()
         else:
-            self.skipButton.setText(u"Skip [{}]".format(self.timeout))
-            self.retryButton.setText(u"Retry")
+            self.skipButton.setText("Skip [{}]".format(self.timeout))
+            self.retryButton.setText("Retry")
             self.startCountdown()
 
     def startCountdown(self):
@@ -184,7 +185,7 @@ class ProgressBar(QDialog):
         QApplication.processEvents()
 
     def setRemaining(self ,n):
-        self.showInfo('remainingnodes',u"{} node(s) remaining.".format(n))
+        self.showInfo('remainingnodes',"{} node(s) remaining.".format(n))
         self.progressBar.setValue(self.progressBar.maximum() - n)
         self.computeRate()
 
@@ -223,8 +224,8 @@ class ProgressBar(QDialog):
                 remainingseconds = round((self.progressBar.maximum() - self.progressBar.value()) / float(rate) * 60)
                 remaining = timedelta(seconds=remainingseconds) if remainingseconds >= 0 else "lightyears"
 
-                self.showInfo('rate', u"Completing {} nodes per minute".format(int(round(rate))))
-                self.showInfo('remaining', u"Estimated remaining time is {}".format(str(remaining)))
+                self.showInfo('rate', "Completing {} nodes per minute".format(int(round(rate))))
+                self.showInfo('remaining', "Estimated remaining time is {}".format(str(remaining)))
 
             self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)
 

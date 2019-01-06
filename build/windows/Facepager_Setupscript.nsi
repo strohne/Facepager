@@ -1,11 +1,11 @@
 ; Start
 
-Name "Facepager 3"
+Name "Facepager 4"
 CRCCheck On
 
 ;General
 
-OutFile "Facepager_Setup_3_10.exe"
+OutFile "Facepager_Setup_4_0_0.exe"
 ShowInstDetails "nevershow"
 ShowUninstDetails "nevershow"
 
@@ -69,60 +69,7 @@ Section "Facepager" Install
 ;Add files
 SetOutPath "$INSTDIR"
 
-File "Facepager.exe"
-File "bz2.pyd"
-File "library.zip"
-File "mfc90.dll"
-File "pyexpat.pyd"
-File "pyside-python2.7.dll"
-File "PySide.QtCore.pyd"
-File "PySide.QtGui.pyd"
-File "PySide.QtNetwork.pyd"
-File "PySide.QtWebKit.pyd"
-File "python27.dll"
-File "pythoncom27.dll"
-File "pywintypes27.dll"
-File "QtCore4.dll"
-File "QtGui4.dll"
-File "QtNetwork4.dll"
-File "QtWebKit4.dll"
-File "shiboken-python2.7.dll"
-File "sqlite3.dll"
-File "unicodedata.pyd"
-;File "win32api.pyd"
-;File "win32pipe.pyd"
-;File "win32ui.pyd"
-;File "win32wnet.pyd"
-File "_ctypes.pyd"
-File "_hashlib.pyd"
-File "_socket.pyd"
-File "_sqlite3.pyd"
-File "_ssl.pyd"
-File "ssleay32.dll"
-File "libeay32.dll"
-File "libgcc_s_dw2-1.dll"
-File "matplotlib*"
-File "numpy*"
-File "pandas*"
-File "lxml*"
-
-SetOutPath "$INSTDIR\docs"
-File "docs\"
-CreateDirectory "$INSTDIR\docs"
-
-SetOutPath "$INSTDIR\ssl"
-File "ssl\"
-CreateDirectory "$INSTDIR\ssl"
-
-SetOutPath "$INSTDIR\imageformats"
-File "imageformats\"
-CreateDirectory "$INSTDIR\imageformats"       
-
-SetOutPath "$INSTDIR\mpl-data"
-File "mpl-data\"
-CreateDirectory "$INSTDIR\mpl-data"
-
-;CopyFiles "${NSISDIR}\Plugins\*.*" "C:\TEMP\test"
+File /r "Facepager\*"
 
 ;create desktop shortcut
 CreateShortCut "$DESKTOP\Facepager.lnk" "$INSTDIR\Facepager.exe" ""

@@ -1,4 +1,4 @@
-import Queue
+import queue
 import collections
 import threading
 import time
@@ -7,9 +7,9 @@ from copy import deepcopy
 class ApiThreadPool():
     def __init__(self, module):
         self.input = collections.deque()
-        self.errors = Queue.Queue()
-        self.output = Queue.Queue(100)
-        self.logs = Queue.Queue()
+        self.errors = queue.Queue()
+        self.output = queue.Queue(100)
+        self.logs = queue.Queue()
         self.module = module
         self.threads = []
         self.pool_lock = threading.Lock()
@@ -26,7 +26,7 @@ class ApiThreadPool():
             else:
                 msg = self.logs.get(True, 1)
                 self.logs.task_done()
-        except Queue.Empty as e:
+        except queue.Empty as e:
             msg = None
         finally:
             return msg
@@ -44,11 +44,11 @@ class ApiThreadPool():
     def getJob(self):
         try:
             if self.output.empty():
-                raise Queue.Empty()
+                raise queue.Empty()
 
             job = self.output.get(True, 1)
             self.output.task_done()
-        except Queue.Empty as e:
+        except queue.Empty as e:
             job = {'waiting': True}
         finally:
             return job

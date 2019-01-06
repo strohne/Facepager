@@ -12,8 +12,8 @@ from utilities import *
 from dateutil import parser
 import datetime
 import os
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtCore import *
 
 Base = declarative_base()
 
@@ -146,18 +146,8 @@ class Node(Base):
 
         def getResponseValue(self,key,encoding=None):
             value=getDictValue(self.response,key)
-            if encoding and isinstance(value, unicode):
+            if encoding and isinstance(value, str):
                 return value.encode(encoding)
             else:
                 return value
-
-        @property
-        def objectid_encoded(self):
-            return self.objectid.encode('utf-8')
-
-
-
-
-
-
 
