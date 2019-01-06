@@ -299,6 +299,9 @@ class ApiViewer(QDialog):
             with open(os.path.join(folder, filename), 'r') as input:
                 data = json.load(input)
 
+            if not isinstance(data,dict):
+                return None
+
             # Add file item
             itemData = {}
             itemData['type'] = 'file'
