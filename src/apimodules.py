@@ -426,18 +426,7 @@ class ApiTab(QScrollArea):
         '''
         Loads and prepares documentation
         '''
-
-        try:
-            folder = os.path.join(getResourceFolder(),'docs')
-            filename = "{0}.json".format(self.__class__.__name__)
-
-            with open(os.path.join(folder, filename),"r") as docfile:
-                if docfile:
-                    self.apidoc = json.load(docfile)
-                else:
-                    self.apidoc = None
-        except:
-            self.apidoc = None
+        self.apidoc = self.mainWindow.apiWindow.getDocumentation(self.name)
 
     def initInputs(self):
         '''

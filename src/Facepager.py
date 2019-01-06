@@ -23,9 +23,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
-#import yappi
-import cProfile
 import sys
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -38,6 +35,7 @@ from apimodules import *
 from help import *
 from presets import *
 from timer import *
+from apiviewer import *
 from selectnodes import *
 import logging
 import threading
@@ -89,6 +87,7 @@ class MainWindow(QMainWindow):
 
         self.helpwindow=HelpWindow(self)
         self.presetWindow=PresetWindow(self)
+        self.apiWindow = ApiViewer(self)
         self.timerWindow=TimerWindow(self)
         #self.selectNodesWindow=SelectNodesWindow(self,self.tree)
 
@@ -226,7 +225,7 @@ class MainWindow(QMainWindow):
         detailLayout.addWidget (detailtoolbar)
 
         #right sidebar - json viewer
-        self.detailTree=DictionaryTree(self.mainWidget)
+        self.detailTree=DictionaryTree(self.mainWidget,self.apiWindow)
         detailLayout.addWidget(self.detailTree)
 
         #right sidebar - column setup
@@ -502,6 +501,7 @@ class Toolbar(QToolBar):
         #self.addAction(self.mainWindow.actions.actionCollapseAll)
         #self.addAction(self.mainWindow.actions.actionSelectNodes)
         self.addAction(self.mainWindow.actions.actionLoadPreset)
+        self.addAction(self.mainWindow.actions.actionLoadAPIs)
         self.addAction(self.mainWindow.actions.actionHelp)
 
 

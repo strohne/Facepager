@@ -60,6 +60,9 @@ class Actions(object):
         self.actionLoadPreset = self.dataActions.addAction(QIcon(":/icons/presets.png"), "Presets")
         self.actionLoadPreset.triggered.connect(self.loadPreset)
 
+        self.actionLoadAPIs = self.dataActions.addAction(QIcon(":/icons/apis.png"), "APIs")
+        self.actionLoadAPIs.triggered.connect(self.loadAPIs)
+
         self.actionShowColumns = self.dataActions.addAction("Show Columns")
         self.actionShowColumns.triggered.connect(self.showColumns)
 
@@ -294,6 +297,10 @@ class Actions(object):
     @Slot()
     def loadPreset(self):
         self.mainWindow.presetWindow.showPresets()
+
+    @Slot()
+    def loadAPIs(self):
+        self.mainWindow.apiWindow.showWindow()
 
     @Slot()
     def jsonCopy(self):
