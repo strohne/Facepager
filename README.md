@@ -9,7 +9,7 @@ Installation packages for each version are available on the [releases page](http
 
 - Windows: Download and execute the latest exe-installer from the [releases page](https://github.com/strohne/Facepager/releases). If Windows complains about an unknown publisher and refuses to launch the app click "More info" and start anyway.
 - Mac OS X: Unzip the app.zip-file from the [releases page](https://github.com/strohne/Facepager/releases), drag & drop the app to your "Applications" folder. When a warning about the the source pops up you should allow the installation of non-app-store applications (go to "System Preferrences>Security & Privacy" and check "Anywhere"). If you do not want to change your security settings permanently, you may open the Facepager by CTRL+Click on the icon (each time on startup).
-- Linux: There is no binary release, see src/readme.txt for steps to run under linux.
+- Linux: There is no binary release, see [src/readme.md](https://github.com/strohne/Facepager/blob/master/src/readme.md) for steps to run under linux.
 
 ### Getting help
 
