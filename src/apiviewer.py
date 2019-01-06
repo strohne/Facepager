@@ -3,6 +3,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 import os
+import shutil
 import sys
 import re
 import json
@@ -109,12 +110,10 @@ class ApiViewer(QDialog):
         self.topNodes= {}
 
         self.allFilesLoaded = False
-        if getattr(sys, 'frozen', False):
-            self.folderDefault = os.path.join(os.path.expanduser("~"), 'Facepager', 'DefaultAPIs')
-            self.filesDownloaded = False
-        else:
-            self.folderDefault = os.path.join(getResourceFolder(), 'docs')
-            self.filesDownloaded = True
+
+        self.filesDownloaded = False
+        self.folderDefault = os.path.join(os.path.expanduser("~"), 'Facepager', 'DefaultAPIs')
+
 
 
     def folderClicked(self):
@@ -133,7 +132,7 @@ class ApiViewer(QDialog):
         QApplication.processEvents()
 
         # Load files
-        self.loadFiles()
+        self.loadAllFiles()
 
         # Select item
         if (self.lastSelected is None) or (self.lastSelected not in self.topNodes):
@@ -230,37 +229,45 @@ class ApiViewer(QDialog):
         self.clearDetails()
 
     def downloadDefaultFiles(self,silent=False):
-        return False
-        
-        # with self.loadingLock:
-        #     if self.presetsDownloaded:
-        #         return False
-        #
-        #     try:
-        #         #Create folder
-        #         if not os.path.exists(self.folderDefault):
-        #             os.makedirs(self.folderDefault)
-        #
-        #         #Clear folder
-        #         for filename in os.listdir(self.folderDefault):
-        #             os.remove(os.path.join(self.folderDefault, filename))
-        #
-        #         #Download
-        #         files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/docs").json()
-        #         files = [f['path'] for f in files if f['path'].endswith(tuple(self.filesSuffix))]
-        #         for filename in files:
-        #             response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
-        #             with open(os.path.join(self.folderDefault, os.path.basename(filename)), 'wb') as f:
-        #                 f.write(response.content)
-        #     except Exception as e:
-        #         if not silent:
-        #             QMessageBox.information(self,"Facepager","Error downloading default API specifications:"+str(e))
-        #         return False
-        #     else:
-        #         self.presetsDownloaded = True
-        #         return True
+        with self.loadingLock:
+            if self.filesDownloaded:
+                return False
 
-    def loadFiles(self):
+            try:
+                #Create folder
+                if not os.path.exists(self.folderDefault):
+                    os.makedirs(self.folderDefault)
+
+                #Clear folder
+                for filename in os.listdir(self.folderDefault):
+                    os.remove(os.path.join(self.folderDefault, filename))
+
+                # Copy
+                folder = os.path.join(getResourceFolder(), 'docs')
+                files = [f for f in os.listdir(folder) if f.endswith(tuple(self.filesSuffix))]
+                for filename in files:
+                    shutil.copy(os.path.join(folder,filename),self.folderDefault)
+
+                #Download
+                # files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/docs").json()
+                # files = [f['path'] for f in files if f['path'].endswith(tuple(self.filesSuffix))]
+                # for filename in files:
+                #     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
+                #     with open(os.path.join(self.folderDefault, os.path.basename(filename)), 'wb') as f:
+                #         f.write(response.content)
+
+
+                os.path.join(getResourceFolder(), 'docs')
+
+            except Exception as e:
+                if not silent:
+                    QMessageBox.information(self,"Facepager","Error downloading default API specifications:"+str(e))
+                return False
+            else:
+                self.filesDownloaded = True
+                return True
+
+    def loadAllFiles(self):
         if self.allFilesLoaded:
             return False
 
@@ -288,7 +295,6 @@ class ApiViewer(QDialog):
 
 
     def loadFile(self, folder, filename, default=False):
-
         if os.path.join(folder, filename) in self.topNodes:
             return self.topNodes[os.path.join(folder, filename)]
 
@@ -358,6 +364,7 @@ class ApiViewer(QDialog):
     def getDocumentation(self, module, path=None, field=None):
         try:
             # Documentation
+            self.downloadDefaultFiles(True)
             filename = module + 'Tab'+self.filesSuffix[0]
             self.loadFile(self.folderDefault, filename, True)
             data = self.moduleDoc.get(module, None)
