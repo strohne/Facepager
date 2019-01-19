@@ -9,6 +9,7 @@ src/*.pyo
 src/__pycache__
 src/credentials.py
 build/windows/PySide2
+pyenv
 .project
 .pydevproject
 .settings/
