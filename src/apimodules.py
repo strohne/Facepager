@@ -647,7 +647,8 @@ class ApiTab(QScrollArea):
 
         if index is None:
             index = self.resourceEdit.findText(self.resourceEdit.currentText())
-            self.resourceEdit.setCurrentIndex(index)
+            if index != -1:
+                self.resourceEdit.setCurrentIndex(index)
 
         operations = self.resourceEdit.itemData(index,Qt.UserRole)
         params = getDictValue(operations,"get.parameters",False) if operations else []
