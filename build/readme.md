@@ -55,6 +55,10 @@ Run build.pyinstaller.command by double clicking in Finder or execute in termina
 
 __Hints for solving errors:__
 
+
+-  When using pyenv: "You would need to specify PYTHON_CONFIGURE_OPTS="--enable-shared" when building a Python version for PyInstaller" (https://github.com/pyinstaller/pyinstaller/wiki/FAQ)
+
+
 - Grant execute permissions to build.pyinstallercommand by typing in terminal:  
   $chmod a+rwx build.pyinstaller.command
 

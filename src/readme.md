@@ -22,18 +22,17 @@ The right version of PySide2 matters. Not every version includes the WebEngineWi
 # Steps to runder under Windows 10
 
 Install Python3 64bit: https://www.python.org/downloads/windows/
-Make sure python.exe and pip.exe are in the path.
-See https://docs.python.org/3/using/windows.html#using-on-windows for further details
+Make sure python.exe are in the path. See https://docs.python.org/3/using/windows.html#using-on-windows for further details.
 
 Open the command line in a directory of your choice and execute the comments indicated by the $ sign
 
-- Clone Facepager
-  $ git clone https://github.com/strohne/Facepager
+- Clone Facepager  
+  $ git clone https://github.com/strohne/Facepager  
   $ cd Facepager
 
 - Setup Python environment  
   $ python -m venv pyenv  
-  $ pyenv\Scripts\activate.bat
+  $ pyenv\Scripts\activate
 
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
   $ pip install PySide2==5.11.1  

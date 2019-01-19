@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['Facepager.py'],
-             pathex=['D:\\Benutzer\\Jakob\\Baustelle\\GitReps\\Facepager\\src'],
+             pathex=['.'],
              binaries=[('../build/windows/PySide2', 'PySide2')],
              datas=[('docs', 'docs'), ('ssl', 'ssl')],
              hiddenimports=[],
