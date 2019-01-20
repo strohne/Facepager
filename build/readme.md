@@ -1,7 +1,7 @@
 # How to build Facepager
 ## Windows 10
 
-Setup Facepager to run in your environment, see src/readme.md
+Setup Facepager to run in your environment using venv, see src/readme.md
 
 Install software
 - Install NSIS (https://sourceforge.net/projects/nsis/)
@@ -19,8 +19,6 @@ Run build.bat
 
 __Hints for solving errors:__
 
-- See https://pyinstaller.readthedocs.io
-
 - Create the build from scr-directory in folder-mode and with console option:  
 
   pyinstaller --log-level=WARN --name "Facepager" --console --add-data "docs;docs" --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
@@ -29,12 +27,15 @@ __Hints for solving errors:__
   
   pyi-makespec --log-level=WARN --name "Facepager" --windowed --add-data "docs;docs" --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
   
- - Copy the following folders and files to dist folder:
+ - Copy the following folders and files to dist folder (or any other missing files):
 	PySide2/resources  
 	PySide2/translations  
 	PySide2/QtWebEngineProcess.exe  
 	PySide2/qt.conf	
-		
+
+- See https://pyinstaller.readthedocs.io
+
+    
 ## macOS High Sierra
 
 __Notice: this does not work yet, needs further testing__

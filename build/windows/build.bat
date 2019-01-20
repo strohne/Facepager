@@ -1,6 +1,8 @@
-setlocal
-;SET PATH=%PATH%;C:\AndereProgramme\Python37
-;set PYTHONPATH="C:\AndereProgramme\Python37\Lib;C:\AndereProgramme\Python37\DLLs"
+@rem setlocal
+@rem ;SET PATH=%PATH%;C:\AndereProgramme\Python37
+@rem ;set PYTHONPATH="C:\AndereProgramme\Python37\Lib;C:\AndereProgramme\Python37\DLLs"
+
+call "..\..\pyenv\Scripts\activate.bat"
 
 cd ../../src
 rmdir /s / q build
