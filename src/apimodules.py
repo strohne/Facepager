@@ -764,13 +764,14 @@ class ApiTab(QScrollArea):
         """
 
         self.doQuery = query
-        window = QMainWindow(self.mainWindow)
-        window.resize(width, height)
-        window.setWindowTitle(caption)
+        self.loginWindow = QMainWindow(self.mainWindow)
+        self.loginWindow.resize(width, height)
+        self.loginWindow.setWindowTitle(caption)
+        self.loginWindow.stopped = False
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
-        self.login_webview = QWebEngineView(window)
-        window.setCentralWidget(self.login_webview)
+        self.login_webview = QWebEngineView(self.loginWindow)
+        self.loginWindow.setCentralWidget(self.login_webview)
 
         # Use the custom- WebPage class
         webpage = QWebPageCustom(self)
@@ -784,17 +785,23 @@ class ApiTab(QScrollArea):
         # Connect to the loadFinished-Slot for an error message
         self.login_webview.loadFinished.connect(self.loadFinished)
 
+
         self.login_webview.load(QUrl(url))
         #self.login_webview.resize(window.size())
         self.login_webview.show()
 
-        window.show()
+        self.loginWindow.show()
+
+    @Slot()
+    def closeLoginWindow(self):
+        self.loginWindow.stopped = True
+        self.login_webview.stop()
+        self.loginWindow.close()
 
     @Slot()
     def loadFinished(self, success):
-        if (not success):
+        if (not success and not self.loginWindow.stopped):
             self.logMessage('Error loading web page')
-
 
     def download(self, path, args=None, headers=None, method="GET", payload=None, foldername=None, filename=None, fileext=None):
         """
@@ -1050,7 +1057,7 @@ class FacebookTab(ApiTab):
             token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
 
             self.tokenEdit.setText(token[0])
-            self.login_webview.parent().close()
+            self.closeLoginWindow()
 
 
 class TwitterStreamingTab(ApiTab):
@@ -1277,9 +1284,7 @@ class TwitterStreamingTab(ApiTab):
                 self.tokenEdit.setText(self.session.access_token)
                 self.tokensecretEdit.setText(self.session.access_token_secret)
 
-                self.login_webview.parent().close()
-
-
+                self.closeLoginWindow()
 
 
 class AuthTab(ApiTab):
@@ -1533,7 +1538,7 @@ class AuthTab(ApiTab):
                 self.tokenEdit.setText(self.session.access_token)
                 self.tokensecretEdit.setText(self.session.access_token_secret)
 
-                self.login_webview.parent().close()
+                self.closeLoginWindow()
 
 
     def initOAuth1Session(self):
@@ -1608,7 +1613,7 @@ class AuthTab(ApiTab):
                     pass
 
             finally:
-                self.login_webview.parent().close()
+                self.closeLoginWindow()
 
     def initOAuth2Session(self):
         return super(AuthTab, self).initSession()
