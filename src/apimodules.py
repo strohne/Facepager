@@ -426,6 +426,8 @@ class ApiTab(QScrollArea):
         '''
         Loads and prepares documentation
         '''
+
+        self.resourceEdit.clear()
         self.apidoc = self.mainWindow.apiWindow.getDocModule(self.name)
 
         if self.apidoc and isinstance(self.apidoc,dict):
@@ -433,7 +435,6 @@ class ApiTab(QScrollArea):
             self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.url"))
 
             # Add endpoints in reverse order
-            self.resourceEdit.clear()
             endpoints = self.apidoc.get("paths",{})
             paths = endpoints.keys()
             for path in reversed(list(paths)):
@@ -447,6 +448,10 @@ class ApiTab(QScrollArea):
                 self.resourceEdit.setItemData(0, operations, Qt.UserRole)
 
             self.buttonApiHelp.setVisible(True)
+
+        self.resourceEdit.insertItem(0, "<Object ID>")
+
+
 
     def showDoc(self):
         '''

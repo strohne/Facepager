@@ -12,11 +12,11 @@
     },
     "servers": [
         {
-            "url":"https://graph.facebook.com/v3.2"
+            "url":"https://graph.facebook.com/v3.2/"
         }
     ],
     "paths":{
-        "/{page-id}": {
+        "{page-id}": {
             "get" : {
                 "summary" : "This represents a Facebook Page. The /{page-id} node returns a single page.",
                 "externalDocs": {
@@ -351,7 +351,7 @@
                 }
             }
         },
-        "/{page-id}/feed": {
+        "{page-id}/feed": {
             "get" : {
                 "summary" : "The feed of posts (including status updates) and links published by this page, or by others on this page. There are other edges which provide more specific sets of posts.",
                 "externalDocs": {
@@ -511,7 +511,7 @@
                 }
             }  
         },
-        "/pages/search": {
+        "pages/search": {
             "get" : {
                 "summary" : "Search for Pages on Facebook. Find Pages to @Mention, manage Page locations, and tag a Page to show branded content.",
                 "externalDocs": {
