@@ -1,6 +1,6 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QFileDialog
+from PySide2.QtWidgets import QFileDialog, QCheckBox, QHBoxLayout, QLabel
 
 class SelectFolderDialog(QFileDialog):
     """
@@ -8,7 +8,8 @@ class SelectFolderDialog(QFileDialog):
     """
 
     def __init__(self,*args,**kwargs):
-        super(SelectFolderDialog,self).__init__(*args,**kwargs)        
+        super(SelectFolderDialog,self).__init__(*args,**kwargs)
+        self.setOption(QFileDialog.DontUseNativeDialog)
         self.setFileMode(QFileDialog.Directory)
 
 

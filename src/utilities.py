@@ -228,7 +228,7 @@ class BufferReader():
         self._callback = callback
         self._progress = 0
         self._len = int(len(data))
-        self._io = io.StringIO(data)
+        self._io = io.BytesIO(data)
 
     def __len__(self):
         return self._len
