@@ -228,6 +228,10 @@ class BufferReader():
         self._callback = callback
         self._progress = 0
         self._len = int(len(data))
+
+        if type(data) == str:
+            data = data.encode()
+
         self._io = io.BytesIO(data)
 
     def __len__(self):
