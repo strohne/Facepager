@@ -207,8 +207,9 @@ class ProgressBar(QDialog):
 
         elif QDateTime.currentDateTime() > self.rate_update_next:
             #Remove old values
-            if len(self.rate_values) > (self.rate_interval / self.rate_update_frequency):
-                self.rate_values = self.rate_values[:((self.rate_interval / self.rate_update_frequency) +1)]
+            if len(self.rate_values) > (self.rate_interval // self.rate_update_frequency):
+                keep = ((self.rate_interval // self.rate_update_frequency) + 1)
+                self.rate_values = self.rate_values[:keep]
                 #self.rate_values = [v for v in self.rate_values if v['time'].secsTo(currenttime) <= self.rate_interval]
 
             #Add new value
