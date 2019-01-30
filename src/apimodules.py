@@ -175,7 +175,7 @@ class ApiTab(QScrollArea):
             if match:
                 templateparams[match.group(1)] = value
             else:
-                urlparams[name] = str(value).encode("utf-8")
+                urlparams[name] = str(value) #.encode("utf-8")
 
         #Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
