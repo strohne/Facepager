@@ -47,7 +47,7 @@ InstallDir "$PROGRAMFILES\Facepager"
 ;Data
 
 ;——————————E
-;Unistall Previous Section
+;Uninstall Previous Section
 ; The "" makes the section hidden.
 Section "" SecUninstallPrevious
 
