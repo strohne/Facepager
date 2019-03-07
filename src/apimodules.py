@@ -207,6 +207,7 @@ class ApiTab(QScrollArea):
                     
                 # Strings
                 else:
+                    value = payload[name]
                     payload[name] = self.parsePlaceholders(value, nodedata, params,options)
             
             payload = MultipartEncoder(fields=payload)
