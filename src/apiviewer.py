@@ -485,6 +485,10 @@ class ApiViewer(QDialog):
                     'resource' : path
                 }
                 tab.setOptions(options)
+
+                params = getDictValue(data, "operations.get.parameters", [])
+                tab.paramEdit.setOptions(params)
+
                 self.mainWindow.RequestTabs.setCurrentWidget(tab)
 
                 break
