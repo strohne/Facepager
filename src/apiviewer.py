@@ -167,7 +167,7 @@ class ApiViewer(QDialog):
                         selectedItem = pathItem
                         break
 
-                break
+                #break
         self.itemList.setCurrentItem(selectedItem)
         self.itemList.setFocus()
 
@@ -257,14 +257,28 @@ class ApiViewer(QDialog):
                                 paramname = '<'+paramname+'>'
                             self.addDetailRow(paramname,param.get('description'))
 
-                    response = getDictValue(operation, 'responses.200.content.application/json.schema.properties', False)
-                    if not response:
-                        response = getDictValue(operation, 'responses.200.content.application/json.schema.items.properties',False)
+                    self.addDetailTable('Response')
+                    def addDetailProperties(schema, key = ''):
+                        if not isinstance(schema, dict):
+                            return False
 
-                    if response and isinstance(response,dict):
-                        self.addDetailTable('Response')
-                        for name, value in response.items():
-                            self.addDetailRow(name,value.get('description'))
+                        if schema.get('type', None) == 'object':
+                            properties = schema.get('properties',None)
+                            if isinstance(properties, dict):
+                                for name, value in properties.items():
+                                    self.addDetailRow(key + name, value.get('description', ''))
+                                    if value.get("type",None) == "object":
+                                        addDetailProperties(value,key+name+".")
+                                    elif value.get("type",None) == "array":
+                                        addDetailProperties(value,key+name+".")
+
+                        elif schema.get('type', None) == 'array':
+                            items = schema.get('items',{})
+                            addDetailProperties(items, key+'*.')
+
+                    schema = getDictValue(operation, 'responses.200.content.application/json.schema', None)
+                    addDetailProperties(schema)
+
 
             self.detailWidget.show()
 

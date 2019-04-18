@@ -76,7 +76,8 @@ class QParamEdit(QTableWidget):
         #Set param values
         values = {}
         for param in params:
-            if param.get("required", False):
+            # Default values for required params or if example is provided
+            if param.get("required", False) or "example" in param:
                 name = param.get("name","")
                 name = "<" + name + ">" if param.get("in", "query") == "path" else name
                 value = param.get("example","<Object ID>")
@@ -188,6 +189,9 @@ class QParamEdit(QTableWidget):
 
 
         # Default options
+        if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
+            combo.insertItem(0, '0')
+            combo.insertItem(0, '1')
         if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
             combo.insertItem(0, '0')
             combo.insertItem(0, '1')

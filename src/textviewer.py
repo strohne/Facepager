@@ -20,6 +20,7 @@ class TextViewer(QTextBrowser):
         self.setMinimumHeight(docHeight)
         
     def setText(self,text):
+        text = '' if text is None else text
         text = cgi.escape(text)
         text = self.autoLinkText(text)
         text = self.autoBrText(text)
