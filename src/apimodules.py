@@ -955,10 +955,6 @@ class FacebookTab(ApiTab):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FacebookTab, self).getOptions(purpose)
 
-        # options for data handling
-        if purpose == 'fetch':
-            options['nodedata'] = 'data' if ('/' in options['resource']) or (options['resource'] == 'search') else None
-
         return options
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
@@ -1014,6 +1010,13 @@ class FacebookTab(ApiTab):
                 # see https://developers.facebook.com/docs/graph-api/advanced/rate-limiting/
                 if (code in [4,17,32,613]) and (status == "error (400)"):
                     options['ratelimit'] = True
+
+            # options for data handling
+
+            if hasDictValue(data, 'data'):
+                options['nodedata'] = 'data'
+            else:
+                options['nodedata'] = None
 
             logData(data, options, headers)
             if self.progress is not None:
