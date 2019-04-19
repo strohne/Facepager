@@ -31,8 +31,8 @@ class DictionaryTree(QTreeView):
         contextmenu.addAction(actionCopy)
         contextmenu.exec_(self.viewport().mapToGlobal(event))
 
-    def showDict(self, data={},itemtype='Generic'):
-        self.treemodel.setdata(data,itemtype)
+    def showDict(self, data={},itemtype='Generic', options= {}):
+        self.treemodel.setdata(data, itemtype, options)
         self.expandAll()
 
     def clear(self):
@@ -69,6 +69,7 @@ class DictionaryTreeModel(QAbstractItemModel):
         super(DictionaryTreeModel, self).__init__(parent)
         self.apiWindow = apiWindow
         self.itemtype = None
+        self.options = None
         self.rootItem = DictionaryTreeItem(('root', {}), None,self)
         self.setdata()
 
@@ -77,18 +78,16 @@ class DictionaryTreeModel(QAbstractItemModel):
         self.rootItem.clear()
         self.endResetModel()
 
-    def setdata(self, data = {}, itemtype=None):
+    def setdata(self, data = {}, itemtype='', options={}):
         self.reset()
 
-        if itemtype is not None:
-            parts = itemtype.split(':', 1)
-            self.module = parts[0] if len(parts) > 0 else ""
-            self.path = parts[1] if len(parts) > 1 else ""
-            self.itemtype = itemtype
-        else:
-            self.itemtype = None
-            self.module = None
-            self.path = None
+        self.itemtype = itemtype
+        self.options = options
+
+        self.module = itemtype.split(':', 1)[0] if itemtype is not None else ''
+        self.basepath = options.get('basepath','')
+        self.path = options.get('resource', '')
+        self.fieldprefix = options.get('nodedata') + '.' if options.get('nodedata', None) is not None else ''
 
         if not isinstance(data, dict):
             data = {'': data}
@@ -105,7 +104,8 @@ class DictionaryTreeModel(QAbstractItemModel):
     def getDoc(self, field):
         try:
             if (self.apiWindow is not None) and (self.itemtype is not None):
-                doc = self.apiWindow.getDocField(self.module, self.path, field)
+                field = self.fieldprefix+field
+                doc = self.apiWindow.getDocField(self.module,self.basepath, self.path, field)
                 doc = field if doc is None else doc
             else:
                 doc = field

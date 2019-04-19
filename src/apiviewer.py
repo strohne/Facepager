@@ -257,7 +257,9 @@ class ApiViewer(QDialog):
                                 paramname = '<'+paramname+'>'
                             self.addDetailRow(paramname,param.get('description'))
 
+                    # Response
                     self.addDetailTable('Response')
+
                     def addDetailProperties(schema, key = ''):
                         if not isinstance(schema, dict):
                             return False
@@ -442,7 +444,7 @@ class ApiViewer(QDialog):
         except:
             return None
 
-    def getDocField(self, module, path=None, field=None):
+    def getDocField(self, module = '', basepath = '', path='', field=''):
         try:
             data = self.getDocModule(module)
             if data is not None:
@@ -451,6 +453,7 @@ class ApiViewer(QDialog):
                 paths = data.get('paths',{}) if data is not None else None
 
                 # Operation response
+                path = path.replace("<", "{").replace(">", "}")
                 if path in paths:
                     operation = paths.get(path)
                 elif path.replace(basepath,"") in paths:
@@ -469,7 +472,7 @@ class ApiViewer(QDialog):
                     response = getDictValue(operation, 'content.application/json.schema.items.properties', False)
 
                 if response and isinstance(response, dict):
-                    if  not field in response:
+                    if not field in response:
                         parts = field.split(".")
                         field = parts[0] if len(parts) > 0 else None
 
