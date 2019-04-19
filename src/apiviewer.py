@@ -174,7 +174,11 @@ class ApiViewer(QDialog):
         # Focus field
         if field is not None:
             params = self.detailWidgets.get('Response',{})
-            field = field.split('.',1)[0]
+
+            while (not field in params) and (field != ''):
+                field = field.rsplit('.', 1)
+                field = field[0] if len(field) > 1 else ''
+
             if field in params:
                 valuewidget = params.get(field)
                 valuewidget.setStyleSheet("border: 2px solid blue;font-weight:bold;")
@@ -409,7 +413,9 @@ class ApiViewer(QDialog):
             topItem.setData(0,Qt.UserRole,itemData)
 
             self.itemList.addTopLevelItem(topItem)
-            self.moduleDoc[itemData['module']] = data
+            if (not itemData['module'] in self.moduleDoc) or (not default):
+                self.moduleDoc[itemData['module']] = data
+
             self.topNodes[os.path.join(folder, filename)] = topItem
 
             # Path nodes
@@ -434,22 +440,27 @@ class ApiViewer(QDialog):
              QMessageBox.information(self,"Facepager","Error loading items:"+str(e))
              return None
 
-    def getDocModule(self, module):
+    def getDocModule(self, module, basepath = ''):
         try:
             # Documentation
             self.downloadDefaultFiles(True)
             filename = module + 'Tab'+self.filesSuffix[0]
-            self.loadFile(self.folderDefault, filename, True)
+
+            if os.path.isfile(os.path.join(self.folder, filename)):
+                self.loadFile(self.folder, filename, False)
+            else:
+                self.loadFile(self.folderDefault, filename, True)
+
             return self.moduleDoc.get(module, None)
         except:
             return None
 
     def getDocField(self, module = '', basepath = '', path='', field=''):
         try:
-            data = self.getDocModule(module)
+            data = self.getDocModule(module, basepath)
             if data is not None:
 
-                basepath = getDictValue(data,"servers.0.url") if data is not None else None
+                basepath = getDictValue(data,"servers.0.url") if data is not None else basepath
                 paths = data.get('paths',{}) if data is not None else None
 
                 # Operation response
@@ -467,17 +478,51 @@ class ApiViewer(QDialog):
                     return operation.get('description',None)
 
                 # Field
-                response = getDictValue(operation, 'content.application/json.schema.properties', False)
-                if not response:
-                    response = getDictValue(operation, 'content.application/json.schema.items.properties', False)
+                def findFieldProperties(key, schema):
+                    if not isinstance(schema, dict):
+                        return schema
 
-                if response and isinstance(response, dict):
-                    if not field in response:
-                        parts = field.split(".")
-                        field = parts[0] if len(parts) > 0 else None
+                    keys = key.split('.', 1)
+                    if keys[0] == '':
+                        return schema
 
-                    if field is not None and field in response:
-                        return response.get(field).get('description')
+                    if schema.get('type', None) == 'object':
+                        properties = schema.get('properties', None)
+                        if isinstance(properties, dict):
+                            value = properties.get(keys[0],{})
+
+                            if len(keys) == 1:
+                                return value
+                            else:
+                                return findFieldProperties(keys[1], value)
+
+                    elif (schema.get('type', None) == 'array') and (keys[0] == '*'):
+                        value = schema.get('items', {})
+
+                        if len(keys) == 1:
+                            return value
+                        else:
+                            return findFieldProperties(keys[1], value)
+
+                    return schema
+
+                schema = getDictValue(operation, 'content.application/json.schema', None)
+                fieldprops = findFieldProperties(field, schema)
+                if fieldprops is not None:
+                    return fieldprops.get('description','')
+
+
+                # response = getDictValue(operation, 'content.application/json.schema.properties', False)
+                # if not response:
+                #     response = getDictValue(operation, 'content.application/json.schema.items.properties', False)
+                #
+                # if response and isinstance(response, dict):
+                #     if not field in response:
+                #         parts = field.split(".")
+                #         field = parts[0] if len(parts) > 0 else None
+                #
+                #     if field is not None and field in response:
+                #         return response.get(field).get('description')
 
             return None
         except:
