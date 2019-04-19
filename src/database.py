@@ -138,7 +138,7 @@ class Node(Base):
             if (self.queryparams_raw == None):
                 return {}
             else:
-                return  json.loads(self.queryparams_raw)
+                return json.loads(self.queryparams_raw)
 
         @queryparams.setter
         def queryparams(self, queryparams_raw):

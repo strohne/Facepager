@@ -247,18 +247,26 @@ class TreeItem(object):
 
         if not (type(nodes) is list):
             nodes = [nodes]
+            fieldsuffix = ''
+        else:
+            fieldsuffix = '.*'
 
         newnodes = []
 
-        def appendNode(objecttype, objectid, response):
+        def appendNode(objecttype, objectid, response, fieldsuffix = ''):
             new = Node(objectid, dbnode.id)
             new.objecttype = objecttype
             new.response = response if isinstance(response,dict) else {subkey : response}
+
             new.level = dbnode.level + 1
             new.querystatus = options.get("querystatus", "")
             new.querytime = str(options.get("querytime", ""))
             new.querytype = options.get('querytype', '')
-            #new.queryparams=options
+
+            queryparams = {key : options.get(key,'') for key in  ['nodedata','basepath','resource']}
+            queryparams['nodedata'] = queryparams['nodedata'] + fieldsuffix if queryparams is not None else queryparams['nodedata']
+            new.queryparams = queryparams
+
             newnodes.append(new)
 
 
@@ -268,7 +276,7 @@ class TreeItem(object):
 
         #extracted nodes
         for n in nodes:
-            appendNode('data', getDictValue(n, options.get('objectid', "")), n)
+            appendNode('data', getDictValue(n, options.get('objectid', "")), n, fieldsuffix)
 
             #Offcut
         if offcut is not None:

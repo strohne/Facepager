@@ -335,9 +335,10 @@ class Actions(object):
         key = tree.selectedKey()
         if key == '':
             return False
+        key = tree.treemodel.fieldprefix +  key
 
-        if  tree.treemodel.itemtype is not None:
-            self.mainWindow.apiWindow.showDoc(tree.treemodel.module, None, tree.treemodel.path, key)
+        if tree.treemodel.itemtype is not None:
+            self.mainWindow.apiWindow.showDoc(tree.treemodel.module, tree.treemodel.basepath, tree.treemodel.path, key)
 
 
     @Slot()
@@ -607,7 +608,7 @@ class Actions(object):
         self.mainWindow.detailTree.clear()
         if current.isValid():
             item = current.internalPointer()
-            self.mainWindow.detailTree.showDict(item.data['response'],item.data['querytype'])
+            self.mainWindow.detailTree.showDict(item.data['response'],item.data['querytype'], item.data['queryparams'])
 
         #select level
         level = 0
