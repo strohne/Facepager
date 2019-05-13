@@ -264,7 +264,7 @@ class TreeItem(object):
             new.querytype = options.get('querytype', '')
 
             queryparams = {key : options.get(key,'') for key in  ['nodedata','basepath','resource']}
-            queryparams['nodedata'] = queryparams['nodedata'] + fieldsuffix if queryparams is not None else queryparams['nodedata']
+            queryparams['nodedata'] = queryparams['nodedata'] + fieldsuffix if queryparams['nodedata'] is not None else queryparams['nodedata']
             new.queryparams = queryparams
 
             newnodes.append(new)

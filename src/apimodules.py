@@ -1195,7 +1195,7 @@ class TwitterStreamingTab(ApiTab):
                     else:
                         if response.status_code != 200:
                             if self.retry_counter<=5:
-                                self.logMessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+response.content)
+                                self.logMessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+ str(response.content))
                                 time.sleep(3)
                                 if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
                                     self.retry_counter = 0
@@ -1204,8 +1204,9 @@ class TwitterStreamingTab(ApiTab):
                                     self.retry_counter+=1
                                     _send()
                             else:
-                                self.connected = False
-                                raise Exception("Request Error: " + str(response.status_code) + ". Message: "+response.content)
+                                #self.connected = False
+                                self.disconnectSocket()
+                                raise Exception("Request Error: " + str(response.status_code) + ". Message: "+str(response.content))
                         print("good response")
                         return response
 
