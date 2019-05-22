@@ -264,6 +264,12 @@ class ApiViewer(QDialog):
                     # Response
                     self.addDetailTable('Response')
 
+                    def getSchemaComponent(key):
+                        #eg "#components/schema/user/properties
+
+                        key = key.replace("#", "").replace("/", ".")
+                        return getDictValue(data,key,False)
+
                     def addDetailProperties(schema, key = ''):
                         if not isinstance(schema, dict):
                             return False
@@ -271,7 +277,15 @@ class ApiViewer(QDialog):
                         if schema.get('type', None) == 'object':
                             properties = schema.get('properties',None)
                             if isinstance(properties, dict):
+                                ref = properties.get("$ref",None)
+                                if ref is not None:
+                                    properties = getSchemaComponent(ref)
+
+                            if isinstance(properties, dict):
                                 for name, value in properties.items():
+                                    if not isinstance(value,dict):
+                                        return False
+
                                     self.addDetailRow(key + name, value.get('description', ''))
                                     if value.get("type",None) == "object":
                                         addDetailProperties(value,key+name+".")
@@ -426,6 +440,8 @@ class ApiViewer(QDialog):
                 pathItemData['caption'] = path
                 pathItemData['path'] = path
                 pathItemData['operations'] = operations
+                pathItemData['components'] = data.get('components',{})
+
 
                 newItem = ApiWidgetItem()
                 newItem.setText(0,path)
