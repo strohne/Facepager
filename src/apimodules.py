@@ -2015,6 +2015,10 @@ class TwitterTab(AuthTab):
                 options['url'] = urlpath
                 options['params'] = params
 
+                # Workaround for Twitter bug (carry on tweet_mode=extended)
+                if 'tweet_mode' in urlparams:
+                    options['params']['tweet_mode'] = urlparams['tweet_mode']
+
             # manual paging with max-id
             # if there are still statuses in the response, use the last ID-1 for further pagination
             elif isinstance(data, list) and (len(data) >= urlparams.get('count',1)):
