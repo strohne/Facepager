@@ -231,7 +231,7 @@ class Actions(object):
         dialog.setWindowTitle("Add Nodes")
         layout = QVBoxLayout()
 
-        label = QLabel("<b>Object IDs (one ID per line):</b>")
+        label = QLabel("<b>Object IDs (one ID per line, you can provide additional JSON data after a pipe |):</b>")
         layout.addWidget(label)
 
         input = QPlainTextEdit()
@@ -249,7 +249,7 @@ class Actions(object):
         def createNodes():
             newnodes = [node.strip() for node in input.toPlainText().splitlines()]
             
-            self.mainWindow.tree.treemodel.addNodes(newnodes)
+            self.mainWindow.tree.treemodel.addNodes(newnodes, True)
             self.mainWindow.tree.selectLastRow()
             dialog.close()
 
@@ -417,9 +417,11 @@ class Actions(object):
                         if msg is not None:
                             self.mainWindow.logmessage(msg)
 
-                        #Jobs in
-                        if (len(indexes) > 0):
+                        #Jobs in (packages of 100 at a time)
+                        jobsin = 0
+                        while (len(indexes) > 0) and (jobsin < 100):
                             index = indexes.popleft()
+                            jobsin += 1
                             if index.isValid():
                                 treenode = index.internalPointer()
                                 job = {'nodeindex': index,

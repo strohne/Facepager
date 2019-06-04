@@ -364,20 +364,34 @@ class TreeModel(QAbstractItemModel):
         item.remove(True)
         self.endRemoveRows()
 
-    def addNodes(self, objectids):
+    def addNodes(self, nodesdata, extended = False):
 
         try:
             if not self.database.connected:
                 return False
 
             newnodes = []
-            for objectid in objectids:
+            for nodedata in nodesdata:
+                if extended:
+                    nodedata = nodedata.split('|',1)
+                else:
+                    nodedata = [nodedata]
+
+                objectid = nodedata[0]
+                try:
+                  response = json.loads(nodedata[1]) if len(nodedata) > 1 else None
+                except:
+                    response = None
+
                 new = Node(objectid)
+                if isinstance(response, dict):
+                    new.response = response
+
                 newnodes.append(new)
 
             self.database.session.add_all(newnodes)
             self.database.session.commit()
-            self.rootItem._childcountall += len(objectids)
+            self.rootItem._childcountall += len(nodesdata)
 
             self.layoutChanged.emit()
         except Exception as e:
