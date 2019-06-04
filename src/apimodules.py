@@ -1467,7 +1467,7 @@ class AuthTab(ApiTab):
             # paging
             if (options.get('key_paging','') is not None) and (options.get('param_paging','') is not None):
                 if isinstance(data,dict) and hasDictValue(data, options['key_paging']): # and data.get(options['key_paging'],"0") != "0":
-                    options['params'][options['param_paging']] = data[options['key_paging']]
+                    options['params'][options['param_paging']] = getDictValue(data,options['key_paging'])
                 else:
                     break
             else:
