@@ -200,6 +200,15 @@ class ApiViewer(QDialog):
         caption.setStyleSheet("QLabel  {font-size:12pt;margin-top:1em;margin-bottom:0.5em;font-weight:bold;}")
         detailForm.addRow(caption)
 
+    def addDetailText(self,value):
+        detailCaption, detailForm = list(self.detailTables.items())[-1]
+
+        caption = QLabel(value)
+        caption.setStyleSheet("QLabel  {padding-left:0.4em;}")
+        caption.setWordWrap(True)
+        detailForm.addRow(caption)
+
+
     def addDetailRow(self,name,value):
         detailCaption, detailForm = list(self.detailTables.items())[-1]
 
@@ -263,6 +272,7 @@ class ApiViewer(QDialog):
 
                     # Response
                     self.addDetailTable('Response')
+                    self.addDetailText(getDictValue(operation, 'responses.200.description', ''))
 
                     def getSchemaComponent(key):
                         #eg "#components/schema/user/properties
@@ -295,6 +305,7 @@ class ApiViewer(QDialog):
                         elif schema.get('type', None) == 'array':
                             items = schema.get('items',{})
                             addDetailProperties(items, key+'*.')
+
 
                     schema = getDictValue(operation, 'responses.200.content.application/json.schema', None)
                     addDetailProperties(schema)
