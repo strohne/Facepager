@@ -36,5 +36,5 @@ coll = COLLECT(exe,
                name='Facepager')
 app = BUNDLE(coll,
              name='Facepager.app',
-             icon='icon_facepager.icns',
+             icon='../icons/icon_facepager.icns',
              bundle_identifier=None)
