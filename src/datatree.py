@@ -4,7 +4,7 @@ from database import *
 
 class DataTree(QTreeView):
 
-    nodeSelected = Signal(list, list)
+    nodeSelected = Signal(list)
 
     def __init__(self, parent=None):
         super(DataTree, self).__init__(parent)
@@ -22,13 +22,13 @@ class DataTree(QTreeView):
     @Slot()
     def currentChanged(self, current, previous):
         super(DataTree, self).currentChanged(current, previous)
-        self.nodeSelected.emit(current,self.selectionModel().selectedRows())
+        self.nodeSelected.emit(current) #,self.selectionModel().selectedRows()
 
     @Slot()
     def selectionChanged(self, selected, deselected):
         super(DataTree, self).selectionChanged(selected, deselected)
         current = self.currentIndex()
-        self.nodeSelected.emit(current,self.selectionModel().selectedRows())
+        self.nodeSelected.emit(current)  # ,self.selectionModel().selectedRows()
 
     def selectedCount(self):
         indexes = self.selectionModel().selectedRows()
@@ -57,16 +57,14 @@ class DataTree(QTreeView):
             return len(indexes) == model.rootItem.childCount()
 
 
-    def selectedIndexesAndChildren(self, persistent=False, filter={}):
+    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False): #, emptyonly = False
 
         #emptyonly=filter.get('childcount',None)
         level = filter.get('level', None)
 
-        filtered = []
-
         def getLevel(index):
             if not index.isValid():
-                return 0
+                return -1
 
             treeitem = index.internalPointer()
             if treeitem.data is not None and treeitem.data['level'] is not None:
@@ -87,39 +85,39 @@ class DataTree(QTreeView):
 
             return True
 
-        def addIndex(index):
-            if index not in filtered:
-            #child=index.child(0,0)
-
-
+        def addIndex(index, selected = False):
+            if self.selectionModel().isSelected(index):
+                selected = True
 
             #if emptyonly:
             #    child=index.child(0,0)
             #    append = not child.isValid()
-            #else:
-            #    append=True
 
-                if checkFilter(index):
-                    if persistent:
-                        filtered.append(QPersistentModelIndex(index))
+            if checkFilter(index) and selected:
+                if persistent:
+                    index_persistent = QPersistentModelIndex(index)
+                    yield (index_persistent)
+                else:
+                    yield (index)
+
+            if (level is None) or (level > getLevel(index)):
+                self.model().fetchMore(index)
+
+                row = 0
+                while True:
+                    if not index.isValid():
+                        child = self.model().index(row, 0, index)
                     else:
-                        filtered.append(index)
+                        child = index.child(row, 0)
 
-                if level is None or level > getLevel(index):
-                    self.model().fetchMore(index)
-                    child = index.child(0, 0)
-                    while child.isValid():
-                        addIndex(child)
-                        child = index.child(child.row() + 1, 0)
+                    if child.isValid():
+                        yield from addIndex(child, selected)
+                    else:
+                        break
 
+                    row += 1
 
-        #self.selectionModel().select(self.selectionModel().selection(), QItemSelectionModel.Rows | QItemSelectionModel.Current)
-        
-        for index in self.selectionModel().selectedRows():
-            addIndex(index)
-
-        return filtered
-
+        yield from addIndex(QModelIndex(), selectall)
 
 class TreeItem(object):
     def __init__(self, model=None, parent=None, id=None, data=None):

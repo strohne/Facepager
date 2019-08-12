@@ -355,8 +355,8 @@ class Actions(object):
 
 
     def queryNodes(self, indexes=None, apimodule=False, options=False):
-        if not self.actionQuery.isEnabled() or not ((self.mainWindow.tree.selectedCount() > 0) or (indexes is not None)):
-            return (False)
+        if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (indexes is not None)):
+            return(False)
 
         #Show progress window
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
@@ -370,20 +370,25 @@ class Actions(object):
             globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
+            globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
             level = self.mainWindow.levelEdit.value() - 1
 
             #Get selected nodes
             if indexes is None:
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, {'level': level,
-                                                                                  'objecttype':objecttypes})
+                select_all = globaloptions['allnodes']
+                select_filter = {'level': level, 'objecttype': objecttypes}
+                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all)
 
-            if (len(indexes) == 0):
-                return (False)
+            # if (len(indexes) == 0):
+            #     return (False)
 
             #Update progress window
-            self.mainWindow.logmessage("Start fetching data for {} node(s).".format(len(indexes)))
-            progress.setMaximum(len(indexes))
+            #self.mainWindow.logmessage("Start fetching data for {} node(s).".format(len(indexes)))
+            self.mainWindow.logmessage("Start fetching data.")
+            totalnodes = 0
+            hasindexes = True
+            progress.setMaximum(totalnodes)
             self.mainWindow.tree.treemodel.nodecounter = 0
 
             #Init status messages
@@ -406,7 +411,7 @@ class Actions(object):
                 threadpool.spawnThreads(options.get("threads", 1))
 
                 #Init input Queue
-                indexes = deque(indexes)
+                #indexes = deque(list(indexes))
 
 
                 #Process Logging/Input/Output Queue
@@ -417,22 +422,29 @@ class Actions(object):
                         if msg is not None:
                             self.mainWindow.logmessage(msg)
 
-                        #Jobs in (packages of 100 at a time)
+                        # Jobs in: packages of 100 at a time
                         jobsin = 0
-                        while (len(indexes) > 0) and (jobsin < 100):
-                            index = indexes.popleft()
-                            jobsin += 1
-                            if index.isValid():
-                                treenode = index.internalPointer()
-                                job = {'nodeindex': index,
-                                       'nodedata': deepcopy(treenode.data),
-                                       'options': deepcopy(options)}
-                                threadpool.addJob(job)
+                        while (hasindexes and (jobsin < 100)):
 
-                            if len(indexes) == 0:
+                            index = next(indexes, False)
+                            if index:
+                                jobsin += 1
+                                totalnodes += 1
+                                if index.isValid():
+                                    treenode = index.internalPointer()
+                                    job = {'nodeindex': index,
+                                           'nodedata': deepcopy(treenode.data),
+                                           'options': deepcopy(options)}
+                                    threadpool.addJob(job)
+                            else:
                                 threadpool.applyJobs()
                                 progress.setRemaining(threadpool.getJobCount())
                                 progress.resetRate()
+                                hasindexes = False
+                                self.mainWindow.logmessage("Added {} node(s) to queue.".format(totalnodes))
+
+                        if jobsin > 0:
+                            progress.setMaximum(totalnodes)
 
                         #Jobs out
                         job = threadpool.getJob()
@@ -535,6 +547,8 @@ class Actions(object):
                                 threadpool.retryJobs()
                             else:
                                 threadpool.clearRetry()
+                                errorcount = 0
+                                ratelimitcount = 0
                                 threadpool.resumeJobs()
 
                             progress.setRemaining(threadpool.getJobCount())
@@ -605,7 +619,7 @@ class Actions(object):
         self.queryNodes(data.get('indexes', []), data.get('module', None), data.get('options', {}).copy())
 
     @Slot()
-    def treeNodeSelected(self, current, selected):
+    def treeNodeSelected(self, current):
         #show details
         self.mainWindow.detailTree.clear()
         if current.isValid():
@@ -622,7 +636,7 @@ class Actions(object):
         self.mainWindow.levelEdit.setValue(level)
 
         #show node count
-        self.mainWindow.selectionStatus.setText(str(len(selected)) + ' node(s) selected ')
-
-        self.actionQuery.setDisabled(len(selected) == 0)
+        selcount = self.mainWindow.tree.selectedCount()
+        self.mainWindow.selectionStatus.setText(str(selcount) + ' node(s) selected ')
+        self.actionQuery.setDisabled(selcount == 0)
 

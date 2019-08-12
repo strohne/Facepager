@@ -288,6 +288,11 @@ class MainWindow(QMainWindow):
                 break
 
         #Fetch settings
+        #-Selected nodes
+        self.allnodesCheckbox = QCheckBox(self)
+        self.allnodesCheckbox.setCheckState(Qt.Unchecked)
+        self.allnodesCheckbox.setToolTip("Check if you want to fetch data for all nodes. This helps with large datasets because manually selecting all nodes slows down Facepager.")
+        fetchsettings.addRow("All nodes and children", self.allnodesCheckbox)
 
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
@@ -318,7 +323,7 @@ class MainWindow(QMainWindow):
         #Error Box
         self.errorEdit = QSpinBox(self)
         self.errorEdit.setMinimum(1)
-        self.errorEdit.setMaximum(15)
+        self.errorEdit.setMaximum(150)
         self.errorEdit.setValue(10)
         self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
         fetchsettings.addRow("Maximum errors", self.errorEdit)
