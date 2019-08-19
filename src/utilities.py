@@ -1,8 +1,10 @@
 import json
 import os,sys,platform
-
 import lxml
 import lxml.html
+from collections import OrderedDict
+from collections import Mapping
+from xmljson import BadgerFish
 
 import io
 
@@ -20,7 +22,7 @@ def hasDictValue(data,multikey):
     try:
         keys=multikey.split('.',1)
 
-        if type(data) is dict and keys[0] != '':
+        if isinstance(data, Mapping) and keys[0] != '':
             if len(keys) > 1:
                 value=data.get(keys[0],"")
                 value = hasDictValue(value,keys[1])
@@ -51,7 +53,7 @@ def getDictValue(data,multikey,dump=True):
     try:
         keys=multikey.split('.',1)
 
-        if type(data) is dict and keys[0] != '':
+        if isinstance(data, Mapping) and keys[0] != '':
             #value=data.get(keys[0],"")
 
             try:
@@ -108,7 +110,7 @@ def filterDictValue(data,multikey,dump=True):
     try:
         keys=multikey.split('.',1)
 
-        if type(data) is dict and keys[0] != '':
+        if isinstance(data, Mapping) and keys[0] != '':
             value = { key: data[key] for key in list(data.keys()) if key != keys[0]}
             if len(keys) > 1:
                 value[keys[0]] = filterDictValue(data[keys[0]],keys[1],False)
@@ -205,6 +207,14 @@ def htmlToJson(data,csskey=None,type='lxml'):
         output = {soup.tag : parseSoup(soup,True)}
 
     return output
+
+
+def xmlToJson(data):
+    bf = BadgerFish(dict_type=OrderedDict)
+    xml = lxml.html.fromstring(data)
+    data = bf.data(xml)
+    return data
+
 
 # See http://foobarnbaz.com/2012/12/31/file-upload-progressbar-in-pyqt/
 # See http://code.activestate.com/recipes/578669-wrap-a-string-in-a-file-like-object-that-calls-a-u/

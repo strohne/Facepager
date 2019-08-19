@@ -252,9 +252,9 @@ class TreeItem(object):
         newnodes = []
 
         def appendNode(objecttype, objectid, response, fieldsuffix = ''):
-            new = Node(objectid, dbnode.id)
+            new = Node(str(objectid), dbnode.id)
             new.objecttype = objecttype
-            new.response = response if isinstance(response,dict) else {subkey : response}
+            new.response = response if isinstance(response,Mapping) else {subkey : response}
 
             new.level = dbnode.level + 1
             new.querystatus = options.get("querystatus", "")
@@ -309,7 +309,7 @@ class TreeItem(object):
         for n in nodes:
             new = Node(dbnode.objectid, dbnode.id)
             new.objecttype = 'unpacked'
-            new.response = n if isinstance(n,dict) else {subkey : n}
+            new.response = n if isinstance(n, Mapping) else {subkey : n}
             new.level = dbnode.level + 1
             new.querystatus = dbnode.querystatus
             new.querytime = dbnode.querytime
@@ -382,7 +382,7 @@ class TreeModel(QAbstractItemModel):
                     response = None
 
                 new = Node(objectid)
-                if isinstance(response, dict):
+                if isinstance(response,  Mapping):
                     new.response = response
 
                 newnodes.append(new)

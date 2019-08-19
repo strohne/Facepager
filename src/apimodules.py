@@ -243,6 +243,12 @@ class ApiTab(QScrollArea):
         except AttributeError:
             pass
 
+        #format
+        try:
+            options['format'] = self.formatEdit.currentText().strip()
+        except AttributeError:
+            pass
+
         #payload        
         try:
             if options.get('verb','GET') in ['POST','PUT','PATCH']:
@@ -351,7 +357,13 @@ class ApiTab(QScrollArea):
             self.verbChanged()
         except AttributeError:
             pass
-        
+
+        # Format
+        try:
+            self.formatEdit.setCurrentIndex(self.formatEdit.findText(options.get('format', 'json')))
+        except AttributeError:
+            pass
+
         #Folder
         try:
             if 'folder' in options:
@@ -680,7 +692,7 @@ class ApiTab(QScrollArea):
         if self.progress is not None:
             self.progress({'current':current,'total':total})
 
-    def request(self, path, args=None, headers=None, method="GET", payload=None, files = None,jsonify=True):
+    def request(self, path, args=None, headers=None, method="GET", payload=None, files = None, format='json'):
         """
         Start a new threadsafe session and request
         """
@@ -720,12 +732,11 @@ class ApiTab(QScrollArea):
             status = 'fetched' if response.ok else 'error'
             status = status + ' (' + str(response.status_code) + ')'
             headers = dict(list(response.headers.items()))
-            
-            if jsonify == True and response.text == '':
-                return [], headers, status
-            elif jsonify == True:    
-                try:                    
-                    data = response.json()
+
+            # JSON
+            if format == 'json' :
+                try:
+                    data = response.json() if response.text != '' else []
                 except:
                     try:
                         #.encode('utf-8').encode('ascii')
@@ -734,6 +745,29 @@ class ApiTab(QScrollArea):
                         data = {'error': 'Data could not be converted to JSON','response':response.text}
 
                 return data, headers, status
+
+            # Text
+            elif format == 'text':
+                try:
+                    data = {'text': str(response.text)}
+                except:
+                    data = {'error': 'Data could not be converted to text', 'response': response.text}
+
+                return data, headers, status
+
+            # XML
+            elif format == 'xml':
+                try:
+                    xml = bytes(str(response.text), encoding='utf-8')
+                    data = xmlToJson(xml)
+                except Exception as  e:
+                    data = {'error': 'XML could not be converted to JSON.',
+                            'message': str(e),
+                            'response': response.text
+                            }
+
+                return data, headers, status
+
             else:
                 return response
 
@@ -847,7 +881,7 @@ class ApiTab(QScrollArea):
             return fullfilename
 
         try:
-            response = self.request(path, args, headers,method,payload, jsonify=False)
+            response = self.request(path, args, headers,method,payload, format='response')
 
             # Handle the response of the generic, non-json-returning response
             if response.status_code == 200:
@@ -1452,8 +1486,9 @@ class AuthTab(ApiTab):
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
             # data
+            format = options.get('format','json')
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,requestheaders,method,payload)
+            data, headers, status = self.request(urlpath, urlparams,requestheaders,method,payload,format=format)
             options['querystatus'] = status
 
             # rate limit info
@@ -2109,9 +2144,40 @@ class GenericTab(AuthTab):
         self.loadSettings()
         self.timeout = 30
 
+    def initExtractInputs(self):
+        layout = QHBoxLayout()
+
+        #Format
+        self.formatEdit = QComboBox(self)
+        self.formatEdit.addItems(['text','json','xml'])
+        layout.addWidget(self.formatEdit)
+        layout.setStretch(0, 0)
+        #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
+
+        # Extract
+        layout.addWidget(QLabel("Key to extract"))
+        self.extractEdit = QComboBox(self)
+        self.extractEdit.setEditable(True)
+        layout.addWidget(self.extractEdit)
+        layout.setStretch(1, 1)
+        layout.setStretch(2, 2)
+
+        layout.addWidget(QLabel("Key for Object ID"))
+        self.objectidEdit = QComboBox(self)
+        self.objectidEdit.setEditable(True)
+        layout.addWidget(self.objectidEdit)
+        layout.setStretch(3, 1)
+        layout.setStretch(4, 2)
+
+        # Add layout
+        self.mainLayout.addRow("Response", layout)
+
+        #super(GenericTab, self).initExtractInputs()
+
+
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(GenericTab, self).getOptions(purpose)
-        
+
         if purpose != 'preset':
             options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
