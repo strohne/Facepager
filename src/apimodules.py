@@ -854,7 +854,7 @@ class ApiTab(QScrollArea):
             url_filename, url_fileext = os.path.splitext(os.path.basename(path))
             if fileext is None:
                 fileext = url_fileext
-            if not filename:
+            if filename is None:
                 filename = url_filename
 
             filename = re.sub(r'[^a-zA-Z0-9_.-]+', '', filename)
@@ -2206,13 +2206,13 @@ class FilesTab(AuthTab):
 
     def initFileInputs(self):
         self.filenameEdit = QComboBox(self)
-        self.filenameEdit.insertItems(0, ['<None>'])
+        self.filenameEdit.insertItems(0, ['<None>','<Object ID>'])
         self.filenameEdit.setEditable(True)
         #self.mainLayout.addRow("Custom filename", self.filenameEdit)
 
         #fileext
         self.fileextEdit = QComboBox(self)
-        self.fileextEdit.insertItems(0, ['<None>'])
+        self.fileextEdit.insertItems(0, ['<None>','.html','.txt'])
         self.fileextEdit.setEditable(True)
         #self.mainLayout.addRow("Custom file extension", self.fileextEdit)
 
@@ -2257,8 +2257,15 @@ class FilesTab(AuthTab):
         foldername = options.get('folder', None)
         if (foldername is None) or (not os.path.isdir(foldername)):
             raise Exception("Folder does not exists, select download folder, please!")
+
         filename = options.get('filename', None)
-        filename = self.parsePlaceholders(filename,nodedata)
+        if (filename is not None) and (filename  == '<None>'):
+            filename = None
+        else:
+            filename = self.parsePlaceholders(filename,nodedata)
+
+        if filename == '':
+            raise Exception("Filename is empty, please provide a placeholder or <None> to automatically obtain filenames!")
 
         fileext = options.get('fileext', None)
 
