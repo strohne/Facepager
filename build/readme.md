@@ -38,12 +38,10 @@ __Hints for solving errors:__
     
 ## macOS High Sierra
 
-__Notice: this does not work yet, needs further testing__
-
 At first, setup Facepager to run with venv, see src/readme.md. 
 
 Install software:
-- Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version.
+- Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version.  
   $ source ../pyenv/bin/activate
   $ pip -V
   
@@ -56,7 +54,10 @@ Install software:
 The following steps can alternatively be executed with build/osx/build.pyinstaller.command. Double click build.pyinstaller.command in Finder or execute in terminal.
 
 - Copy Facepager.spec to src folder:  
-  cp ../build/osx/Facepager.spec Facepager.spec
+  $ cp ../build/osx/Facepager.spec Facepager.spec
+
+- Fix pyinstaller problem with PySide2: Copy hooks folder to src folder 
+  $ cp ../build/osx/hooks hooks
 
 - Remove old build files:  
   $ rm -rf build  
@@ -64,6 +65,9 @@ The following steps can alternatively be executed with build/osx/build.pyinstall
 
 - Run pyinstaller:  
   $ pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec  
+
+- Check if Facepager starts and fix errors:  
+  $ ./dist/Facepager/Facepager
 
 - Create package  
   $ cd dist  
@@ -78,7 +82,10 @@ __Hints for solving errors:__
   $ pip uninstall pyside2 shiboken2 -y  
   $ pip3 uninstall pyside2 shiboken2 -y  
 
-- PyInstaller may not be up to date with PySide2. Manually adjust hooks, or use the hook provided at https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/
+- PyInstaller may not be up to date with PySide2. At the time of this writing the following worked: https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/  
+  In src/hooks you find a manually adjusted hook. This hook was adapted from the default PyQt-hook of pyinstaller (replace PyQt with PySide2).
+  In Facepager.py you find a hack to get QtWebEngineProcess working. 
+  Maybe in the meantime it works without these hacks. Then remove.
 
 -  When using pyenv: "You would need to specify PYTHON_CONFIGURE_OPTS="--enable-shared" when building a Python version for PyInstaller" (https://github.com/pyinstaller/pyinstaller/wiki/FAQ)
 
