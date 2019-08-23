@@ -596,7 +596,7 @@ class Actions(object):
 
         #show timer window
         self.mainWindow.timerWindow.setupTimer(
-            {'indexes': indexes, 'nodecount': len(indexes), 'module': module, 'options': options})
+            {'indexes': indexes,  'module': module, 'options': options})
 
     @Slot()
     def timerStarted(self, time):

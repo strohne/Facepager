@@ -1,0 +1,35 @@
+{
+  "category": "arxiv",
+  "columns": [
+    "author.name.$",
+    "published.$",
+    "title.$",
+    "link.0.@href"
+  ],
+  "description": "This presets demonstrates how to fetch XML data, e.g. RSS feeds. Add search term as node, for example \"abs:network\" to search the term \"network\" in all abstracts. \n\nDocumentation of the API: https://arxiv.org/help/api/user-manual",
+  "headers": false,
+  "module": "Generic",
+  "name": "Get publications from arxiv.org",
+  "options": {
+    "auth": "disable",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "basepath": "http://export.arxiv.org/api/query",
+    "format": "xml",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "feed.entry",
+    "objectid": "id.$",
+    "pages": 1,
+    "param_paging": null,
+    "params": {
+      "search_query": "<Object ID>"
+    },
+    "redirect_uri": "https://localhost",
+    "resource": "",
+    "scope": "https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/devstorage.read_write https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloud-language",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "verb": "GET"
+  },
+  "speed": 200
+}

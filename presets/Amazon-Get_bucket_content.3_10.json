@@ -1,0 +1,25 @@
+{
+  "category": "Amazon",
+  "columns": [
+    "listbucketresult.items.0.name",
+    "listbucketresult.items.5.contents",
+    "contents.0.key"
+  ],
+  "description": "Add bucket name as node or fetch buckets with another preset. You can see yout buckets in the web browser as well: https://s3.console.aws.amazon.com\n\nBe aware oif region settings. You get an error if the wrong region is set.\n\nRegister at Amazon AWS to obtain access key and secret. Reference: https://docs.aws.amazon.com/de_de/AmazonS3/latest/API/Welcome.html\n\n\n\n",
+  "module": "Amazon",
+  "name": "Get bucket content",
+  "options": {
+    "basepath": "http://<Object ID>.s3.amazonaws.com",
+    "headers": {},
+    "nodedata": "listbucketresult.items.5",
+    "objectid": "contents.0.key",
+    "params": {
+      "list-type": "2"
+    },
+    "region": "eu-central-1",
+    "resource": "",
+    "service": "s3",
+    "verb": "GET"
+  },
+  "speed": 200
+}
