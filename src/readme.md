@@ -14,6 +14,7 @@ Facepager depends on the following packages:
 - rauth: pip install rauth (MIT licence)
 - numpy and pandas: pip install numpy pandas
 - lxml: pip install lxml
+- xmljson pip install xmljson
 
 Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
@@ -37,9 +38,8 @@ Open the command line in a directory of your choice and execute the comments ind
   $ virtualenv pyenv  
   $ pyenv\Scripts\activate
 
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
   $ pip install PySide2==5.11.1  
-  $ pip install numpy pandas  
 
 - Start Facepager
   $ cd src
@@ -54,14 +54,13 @@ Open terminal in a directory of your choice and execute the commands indicated b
    $ cd Facepager  
 
 - Setup Python environment  
-  $ python3 -m venv .  
-  $ source bin/activate  
+  $ python3 -m venv pyenv  
+  $ source pyenv/bin/activate  
   
-  $ bin/pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
-  $ bin/pip install PySide2==5.11.1  
-  $ bin/pip install numpy pandas  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas
+  $ pip install PySide2==5.11.1  
 
-- Start Facepager  
+- Start Facepager
   $ cd src  
   $ python Facepager.py  
 
@@ -78,14 +77,13 @@ Open terminal in a directory of your choice and execute the commands indicated b
    $ cd Facepager  
 
 - Setup Python environment  
-  $ python3 -m venv .  
-  $ source bin/activate  
+  $ python3 -m venv pyenv
+  $ source pyenv/bin/activate  
   
-  $ bin/pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml  
-  $ bin/pip3 install PySide2==5.11.1  
-  $ bin/pip3 install numpy pandas  
+  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
+  $ pip3 install PySide2==5.11.1  
 
-- Start Facepager  
+- Start Facepager
   $ cd src  
   $ python3 Facepager.py  
   

@@ -40,31 +40,53 @@ __Hints for solving errors:__
 
 __Notice: this does not work yet, needs further testing__
 
-Setup Facepager to run in your environment, see src/readme.md
-When using venv make sure to use `bin/pip` instead of `pip` in the following steps.  
+At first, setup Facepager to run with venv, see src/readme.md. 
 
 Install software:
+- Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version.
+  $ source ../pyenv/bin/activate
+  $ pip -V
+  
 - Install pyinstaller  
   $ pip install pyinstaller
 	
 - Install upx (optional)  
   $ brew install upx  
 
-Adjust paths and version numbers in build.pyinstaller.command
+The following steps can alternatively be executed with build/osx/build.pyinstaller.command. Double click build.pyinstaller.command in Finder or execute in terminal.
 
-Run build.pyinstaller.command by double clicking in Finder or execute in terminal
+- Copy Facepager.spec to src folder:
+  cp ../build/osx/Facepager.spec Facepager.spec
+
+- Remove old build files:
+  $ rm -rf build
+  $ rm -rf dist
+
+- Run pyinstaller:
+  $ pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
+
+- Create package
+  $ cd dist
+  $ zip -r Facepager.app.zip Facepager.app
+  $ cp Facepager.app.zip ../../build/osx/Facepager_4.app.zip
+
 
 __Hints for solving errors:__
 
+- Remove all system wide installations of PySide2: "PyInstaller will pick a system installation of PySide2 or Shiboken2 instead of your virtualenv version without notice, if it exists" (https://doc.qt.io/qtforpython/deployment-pyinstaller.html).
+  Make sure to uninstall with pip as well as pip3: 
+  $ pip uninstall pyside2 shiboken2 -y
+  $ pip3 uninstall pyside2 shiboken2 -y
+
+- PyInstaller may not be up to date with PySide2. Manually adjust hooks, or use the hook provided at https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/
 
 -  When using pyenv: "You would need to specify PYTHON_CONFIGURE_OPTS="--enable-shared" when building a Python version for PyInstaller" (https://github.com/pyinstaller/pyinstaller/wiki/FAQ)
-
 
 - Grant execute permissions to build.pyinstallercommand by typing in terminal:  
   $chmod a+rwx build.pyinstaller.command
 
 - If dyld-error comes up (check and adjust path if necessary):  
-  $ export DYLD_LIBRARY_PATH=/usr/local/lib/python2.7/site-packages/PySide
+  $ export DYLD_LIBRARY_PATH=/usr/local/lib/python3.7/site-packages/PySide2
 
 - Create the build from scr-directory in folder-mode:  
 
