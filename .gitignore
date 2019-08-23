@@ -4,6 +4,7 @@ private/
 misc/
 src/build
 src/dist
+src/hooks
 src/*.pyc
 src/*.pyo
 src/__pycache__
