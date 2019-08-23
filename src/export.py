@@ -93,6 +93,7 @@ class ExportFileDialog(QFileDialog):
         #indexes = self.mainWindow.tree.selectionModel().selectedRows()
         #if child nodes should be exported as well, uncomment this line an comment the previous one
         indexes = self.mainWindow.tree.selectedIndexesAndChildren()
+        indexes = list(indexes)
         progress.setMaximum(len(indexes))
 
         try:

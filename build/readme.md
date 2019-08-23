@@ -139,8 +139,8 @@ If drafting a new version adjust version numbers in:
 
 _Don't forget to adjust the tag name and message below_
 
-- Create a git tag on the command line with `git tag -a v3.9.2 -m 'Version 3.9.2'`
-  (if this fails, try wothout -m option)
+- Create a git tag on the command line with `git tag -a v3.9.2 -m "Version 3.9.2"`
+  (if this fails, try without -m option)
 - Upload the tag to GitHib with `git push origin v3.9.2`
 - For major releases draft a new release on GitHub, for minor releases edit the last release.
 - Enter the tag into the corresponding field, edit release notes, upload binary files.
