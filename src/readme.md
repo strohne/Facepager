@@ -57,7 +57,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
   $ pip install PySide2==5.11.1  
 
 - Start Facepager
