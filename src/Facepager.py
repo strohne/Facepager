@@ -3,7 +3,7 @@
 
 # MIT License
 
-# Copyright (c) 2016 Jakob Jünger and Till Keyling
+# Copyright (c) 2019 Jakob Jünger and Till Keyling
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
             myappid = 'Facepager.4.0' # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-        self.setMinimumSize(800,600)
+        self.setMinimumSize(1100,700)
         #self.setMinimumSize(1400,710)
         #self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
         #self.setStyleSheet("* {font-size:21px;}")
@@ -297,20 +297,20 @@ class MainWindow(QMainWindow):
                 break
 
         #Fetch settings
-        #-Selected nodes
-        self.allnodesCheckbox = QCheckBox(self)
-        self.allnodesCheckbox.setCheckState(Qt.Unchecked)
-        self.allnodesCheckbox.setToolTip("Check if you want to fetch data for all nodes. This helps with large datasets because manually selecting all nodes slows down Facepager.")
-        fetchsettings.addRow("All nodes and children", self.allnodesCheckbox)
-
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
         self.levelEdit.setMinimum(1)
         self.levelEdit.setToolTip("Based on the selected nodes, only fetch data for nodes and subnodes of the specified level (base level is 1)")
         fetchsettings.addRow("Node level",self.levelEdit)
 
+        #-Selected nodes
+        self.allnodesCheckbox = QCheckBox(self)
+        self.allnodesCheckbox.setCheckState(Qt.Unchecked)
+        self.allnodesCheckbox.setToolTip("Check if you want to fetch data for all nodes. This helps with large datasets because manually selecting all nodes slows down Facepager.")
+        fetchsettings.addRow("Select all nodes", self.allnodesCheckbox)
+
         #Object types
-        self.typesEdit = QLineEdit('seed,data,unpacked')
+        self.typesEdit = QLineEdit('seed,data')
         self.typesEdit.setToolTip("Based on the selected nodes, only fetch data for nodes with one of the listed object types (normally should not be changed)")
         fetchsettings.addRow("Object types",self.typesEdit)
 
@@ -332,10 +332,17 @@ class MainWindow(QMainWindow):
         #Error Box
         self.errorEdit = QSpinBox(self)
         self.errorEdit.setMinimum(1)
-        self.errorEdit.setMaximum(150)
+        self.errorEdit.setMaximum(100)
         self.errorEdit.setValue(10)
         self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
         fetchsettings.addRow("Maximum errors", self.errorEdit)
+
+
+        #Add headers
+        self.headersCheckbox = QCheckBox(self)
+        #self.headersCheckbox.setCheckState(Qt.Checked)
+        self.headersCheckbox.setToolTip("Check if you want to create nodes containing headers of the response.")
+        fetchsettings.addRow("Header nodes", self.headersCheckbox)
 
         #Expand Box
         self.autoexpandCheckbox = QCheckBox(self)
@@ -348,12 +355,6 @@ class MainWindow(QMainWindow):
         self.logCheckbox.setCheckState(Qt.Checked)
         self.logCheckbox.setToolTip("Check to see every request in status window; uncheck to hide request messages.")
         fetchsettings.addRow("Log all requests", self.logCheckbox)
-
-        #Add headers
-        self.headersCheckbox = QCheckBox(self)
-        #self.headersCheckbox.setCheckState(Qt.Checked)
-        self.headersCheckbox.setToolTip("Check if you want to create nodes containing headers of the response.")
-        fetchsettings.addRow("Header nodes", self.headersCheckbox)
 
         #Clear setttings
         self.clearCheckbox = QCheckBox(self)

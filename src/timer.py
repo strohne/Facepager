@@ -62,8 +62,8 @@ class TimerWindow(QDialog):
         settingsLayout.addRow("Interval (hh:mm)",self.intervalTimeEdit)
 
         #Nodes
-        self.nodeCount = QLabel("0")
-        settingsLayout.addRow("Node Count",self.nodeCount)
+        #self.nodeCount = QLabel("0")
+        #settingsLayout.addRow("Node Count",self.nodeCount)
         
         #buttons
         buttons=QDialogButtonBox()
@@ -81,12 +81,12 @@ class TimerWindow(QDialog):
 
     def setupTimer(self,data):                
         self.nextdata = data
-        self.nodeCount.setText(str(data.get('nodecount',0)))
+        #self.nodeCount.setText(str(data.get('nodecount',0)))
         time = QTime.currentTime()        
         self.startTimeEdit.setTime(QTime(time.hour(),time.minute()))
         
         self.stopTimerButton.setEnabled(self.state != TIMER_INACTIVE)
-        self.startTimerButton.setEnabled(data.get('nodecount',0) > 0)
+        #self.startTimerButton.setEnabled(data.get('nodecount',0) > 0)
               
         self.exec_()
         
@@ -96,15 +96,15 @@ class TimerWindow(QDialog):
         self.timerstopped.emit()
         
     def startTimerClicked(self):
-        if self.nextdata.get('nodecount',0) > 0:
-            self.cancelTimer()
-            self.data = self.nextdata
-            self.interval = self.intervalTimeEdit.time().minute() * 60 + self.intervalTimeEdit.time().second()
-            self.firetime = QDateTime.currentDateTime()
-            self.firetime.setTime(self.startTimeEdit.time())
-            #self.calcFiretime()
-            self.updateTimer()
-            self.close()
+        #if self.nextdata.get('nodecount',0) > 0:
+        self.cancelTimer()
+        self.data = self.nextdata
+        self.interval = self.intervalTimeEdit.time().minute() * 60 + self.intervalTimeEdit.time().second()
+        self.firetime = QDateTime.currentDateTime()
+        self.firetime.setTime(self.startTimeEdit.time())
+        #self.calcFiretime()
+        self.updateTimer()
+        self.close()
 
     def stopTimerClicked(self):
         self.cancelTimer()        
