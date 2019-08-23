@@ -57,7 +57,7 @@ The following steps can alternatively be executed with build/osx/build.pyinstall
   $ cp ../build/osx/Facepager.spec Facepager.spec
 
 - Fix pyinstaller problem with PySide2 (copy hooks folder to src folder):  
-  $ cp ../build/osx/hooks hooks
+  $ cp -r ../build/osx/hooks hooks
 
 - Remove old build files:  
   $ rm -rf build  
