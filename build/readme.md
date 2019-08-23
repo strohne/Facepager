@@ -55,28 +55,28 @@ Install software:
 
 The following steps can alternatively be executed with build/osx/build.pyinstaller.command. Double click build.pyinstaller.command in Finder or execute in terminal.
 
-- Copy Facepager.spec to src folder:
+- Copy Facepager.spec to src folder:  
   cp ../build/osx/Facepager.spec Facepager.spec
 
-- Remove old build files:
-  $ rm -rf build
-  $ rm -rf dist
+- Remove old build files:  
+  $ rm -rf build  
+  $ rm -rf dist  
 
-- Run pyinstaller:
-  $ pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
+- Run pyinstaller:  
+  $ pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec  
 
-- Create package
-  $ cd dist
-  $ zip -r Facepager.app.zip Facepager.app
-  $ cp Facepager.app.zip ../../build/osx/Facepager_4.app.zip
+- Create package  
+  $ cd dist  
+  $ zip -r Facepager.app.zip Facepager.app  
+  $ cp Facepager.app.zip ../../build/osx/Facepager_4.app.zip  
 
 
 __Hints for solving errors:__
 
 - Remove all system wide installations of PySide2: "PyInstaller will pick a system installation of PySide2 or Shiboken2 instead of your virtualenv version without notice, if it exists" (https://doc.qt.io/qtforpython/deployment-pyinstaller.html).
   Make sure to uninstall with pip as well as pip3: 
-  $ pip uninstall pyside2 shiboken2 -y
-  $ pip3 uninstall pyside2 shiboken2 -y
+  $ pip uninstall pyside2 shiboken2 -y  
+  $ pip3 uninstall pyside2 shiboken2 -y  
 
 - PyInstaller may not be up to date with PySide2. Manually adjust hooks, or use the hook provided at https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/
 
