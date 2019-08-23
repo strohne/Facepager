@@ -42,7 +42,7 @@ At first, setup Facepager to run with venv, see src/readme.md.
 
 Install software:
 - Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version.  
-  $ source ../pyenv/bin/activate
+  $ source ../pyenv/bin/activate  
   $ pip -V
   
 - Install pyinstaller  
@@ -56,7 +56,7 @@ The following steps can alternatively be executed with build/osx/build.pyinstall
 - Copy Facepager.spec to src folder:  
   $ cp ../build/osx/Facepager.spec Facepager.spec
 
-- Fix pyinstaller problem with PySide2: Copy hooks folder to src folder 
+- Fix pyinstaller problem with PySide2 (copy hooks folder to src folder):  
   $ cp ../build/osx/hooks hooks
 
 - Remove old build files:  
