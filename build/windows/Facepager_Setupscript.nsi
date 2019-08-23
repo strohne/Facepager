@@ -5,7 +5,7 @@ CRCCheck On
 
 ;General
 
-OutFile "Facepager_Setup_4_0_0.exe"
+OutFile "Facepager_Setup_4.exe"
 ShowInstDetails "nevershow"
 ShowUninstDetails "nevershow"
 

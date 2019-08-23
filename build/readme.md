@@ -9,13 +9,9 @@ Install software
   `$ pip install pyinstaller`  
   `$ pip install pywin32`  
 
-Adjust paths and version numbers in
-- src/Facepager.py
-- Facepager.spec
-- Facepager_Setupscript.nsi
-- build.bat
+- Run build/windows/build.bat
 
-Run build.bat
+- Rename resulting installer file
 
 __Hints for solving errors:__
 
@@ -38,17 +34,15 @@ __Hints for solving errors:__
     
 ## macOS High Sierra
 
-At first, setup Facepager to run with venv, see src/readme.md. 
+Setup Facepager to run with venv, see src/readme.md. 
 
 Install software:
 - Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version.  
   $ source ../pyenv/bin/activate  
   $ pip -V
   
-- Install pyinstaller  
-  $ pip install pyinstaller
-	
-- Install upx (optional)  
+- Install pyinstaller  and upx (optional)
+  $ pip install pyinstaller  
   $ brew install upx  
 
 The following steps can alternatively be executed with build/osx/build.pyinstaller.command. Double click build.pyinstaller.command in Finder or execute in terminal.
@@ -57,7 +51,7 @@ The following steps can alternatively be executed with build/osx/build.pyinstall
   $ cp ../build/osx/Facepager.spec Facepager.spec
 
 - Fix pyinstaller problem with PySide2 (copy hooks folder to src folder):  
-  $ cp ../build/osx/hooks hooks
+  $ cp -r ../build/osx/hooks hooks
 
 - Remove old build files:  
   $ rm -rf build  
@@ -117,10 +111,6 @@ When using venv make sure to use `bin/pip` instead of `pip` in the following ste
   `$ pip install pyinstaller`
   `$ sudo apt-get install python3-dev` 
 
-- Adjust paths and version numbers in  
-  src/Facepager.py  
-  Facepager.spec  
-
 __Hints for solving errors:__
 
 - See https://pyinstaller.readthedocs.io
@@ -135,6 +125,16 @@ __Hints for solving errors:__
 
 - Manually copy PySide2 folder into dist folder 
 	
+# Version numbers
+
+If drafting a new version adjust version numbers in:  
+- src/Facepager.py
+- build/windows/Facepager.spec
+- build/windows/Facepager_Setupscript.nsi
+- build/windows/build.bat
+- build/osx/Facepager.spec
+- build/osx/build.pyinstaller.command
+
 # How to deploy builds
 
 _Don't forget to adjust the tag name and message below_

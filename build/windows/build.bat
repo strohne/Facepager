@@ -2,9 +2,9 @@
 @rem ;SET PATH=%PATH%;C:\AndereProgramme\Python37
 @rem ;set PYTHONPATH="C:\AndereProgramme\Python37\Lib;C:\AndereProgramme\Python37\DLLs"
 
-call "..\..\pyenv\Scripts\activate.bat"
-
 cd ../../src
+call "..\pyenv\Scripts\activate.bat"
+
 rmdir /s / q build
 rmdir /s / q dist
 
@@ -14,7 +14,7 @@ pyinstaller --windowed --noconfirm Facepager.spec
 cd dist
 copy ..\..\build\windows\Facepager_Setupscript.nsi Facepager_Setupscript.nsi
 "C:\Program Files (x86)\NSIS\makensis.exe" Facepager_Setupscript.nsi
-copy Facepager_Setup_4_0_0.exe ..\..\build\windows\Facepager_Setup_4_0_1.exe 
+copy Facepager_Setup_4.exe ..\..\build\windows\Facepager_Setup_4.exe 
 
 endlocal
 pause
