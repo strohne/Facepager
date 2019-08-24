@@ -276,7 +276,7 @@ class TreeItem(object):
         for n in nodes:
             appendNode('data', getDictValue(n, options.get('objectid', "")), n, fieldsuffix)
 
-            #Offcut
+        #Offcut
         if offcut is not None:
             appendNode('offcut', dbnode.objectid, offcut)
 
