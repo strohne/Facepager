@@ -27,17 +27,14 @@ Make sure python.exe are in the path. See https://docs.python.org/3/using/window
 
 Open the command line in a directory of your choice and execute the comments indicated by the $ sign
 
-- Install additional software
-  $ pip install virtualenv  
-  
 - Clone Facepager  
   $ git clone https://github.com/strohne/Facepager  
   $ cd Facepager
 
 - Setup Python environment  
-  $ virtualenv pyenv  
-  $ pyenv\Scripts\activate
-
+  $ python -m venv pyenv  
+  $ source pyenv\Scripts\activate.bat  
+  
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
   $ pip install PySide2==5.11.1  
 
