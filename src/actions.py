@@ -380,6 +380,8 @@ class Actions(object):
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
                 indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all)
+            elif isinstance(indexes,list):
+                indexes = iter(indexes)
 
             # if (len(indexes) == 0):
             #     return (False)
@@ -596,7 +598,7 @@ class Actions(object):
 
         #show timer window
         self.mainWindow.timerWindow.setupTimer(
-            {'indexes': indexes,  'module': module, 'options': options})
+            {'indexes': list(indexes),  'module': module, 'options': options})
 
     @Slot()
     def timerStarted(self, time):
