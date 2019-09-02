@@ -5,11 +5,11 @@
   "speed": 200,
   "options": {
     "redirect_uri": "https://localhost",
-    "resource": "b/<Object ID>/o",
+    "resource": "/b/<Object ID>/o",
     "objectid": "name",
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://accounts.google.com/o/oauth2/token",
-    "basepath": "https://www.googleapis.com/storage/v1/",
+    "basepath": "https://www.googleapis.com/storage/v1",
     "auth": "header",
     "headers": {},
     "verb": "GET",
