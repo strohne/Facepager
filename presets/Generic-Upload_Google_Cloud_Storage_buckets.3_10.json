@@ -5,11 +5,11 @@
   "speed": 200,
   "options": {
     "redirect_uri": "https://localhost",
-    "resource": "b/<bucket>/o",
+    "resource": "/b/<bucket>/o",
     "objectid": "name",
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://accounts.google.com/o/oauth2/token",
-    "basepath": "https://www.googleapis.com/upload/storage/v1/",
+    "basepath": "https://www.googleapis.com/upload/storage/v1",
     "auth": "header",
     "querytype": "Generic:https://www.googleapis.com/upload/storage/v1/b/<bucket>/o",
     "headers": {
