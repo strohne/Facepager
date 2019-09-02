@@ -3,8 +3,8 @@
   "module": "Twitter",
   "speed": 200,
   "options": {
-    "resource": "users/show",
-    "basepath": "https://api.twitter.com/1.1/",
+    "resource": "/users/show",
+    "basepath": "https://api.twitter.com/1.1",
     "params": {
       "screen_name": "<Object ID>"
     },
