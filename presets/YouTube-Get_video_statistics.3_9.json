@@ -4,8 +4,8 @@
   "module": "YouTube",
   "speed": 200,
   "options": {
-    "resource": "videos",
-    "basepath": "https://www.googleapis.com/youtube/v3/",
+    "resource": "/videos",
+    "basepath": "https://www.googleapis.com/youtube/v3",
     "params": {
       "part": "snippet,contentDetails,statistics",
       "id": "<Object ID>"

@@ -3,8 +3,8 @@
   "module": "YouTube",
   "speed": 200,
   "options": {
-    "resource": "channels",
-    "basepath": "https://www.googleapis.com/youtube/v3/",
+    "resource": "/channels",
+    "basepath": "https://www.googleapis.com/youtube/v3",
     "params": {
       "part": "snippet,contentDetails,statistics,brandingSettings,topicDetails,status",
       "id": "<Object ID>",

@@ -4,9 +4,9 @@
   "category": "DBPedia",
   "speed": 200,
   "options": {
-    "resource": "sparql",
+    "resource": "/sparql",
     "objectid": "scientist.value",
-    "basepath": "http://dbpedia.org/",
+    "basepath": "http://dbpedia.org",
     "headers": {},
     "params": {
       "default-graph-uri": "http://dbpedia.org",

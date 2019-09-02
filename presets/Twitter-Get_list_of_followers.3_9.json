@@ -7,8 +7,8 @@
       "count": "100",
       "screen_name": "<Object ID>"
     },
-    "basepath": "https://api.twitter.com/1.1/",
-    "resource": "followers/list",
+    "basepath": "https://api.twitter.com/1.1",
+    "resource": "/followers/list",
     "pages": 10
   },
   "columns": [

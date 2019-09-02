@@ -3,8 +3,8 @@
   "module": "Facebook",
   "speed": 200,
   "options": {
-    "resource": "<page>",
-    "basepath": "https://graph.facebook.com/v2.12/",
+    "resource": "/<page>",
+    "basepath": "https://graph.facebook.com/v2.12",
     "params": {
       "fields": "name, about, location, category, talking_about_count",
       "<page>": "<Object ID>"

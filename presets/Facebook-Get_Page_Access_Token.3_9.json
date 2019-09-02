@@ -7,8 +7,8 @@
       "fields": "access_token",
       "<page>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v2.12/",
-    "resource": "<page>",
+    "basepath": "https://graph.facebook.com/v2.12",
+    "resource": "/<page>",
     "pages": 1,
     "scope": "pages_show_list"
   },
