@@ -7,8 +7,8 @@
       "fields": "message, created_time, parent, comment_count, like_count",
       "<post>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v2.12/",
-    "resource": "<post>/comments",
+    "basepath": "https://graph.facebook.com/v2.12",
+    "resource": "/<post>/comments",
     "pages": 1,
     "scope": ""
   },
