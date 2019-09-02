@@ -4,9 +4,9 @@
   "category": "Google Maps",
   "speed": 200,
   "options": {
-    "resource": "maps/api/geocode/json",
+    "resource": "/maps/api/geocode/json",
     "objectid": "formatted_address",
-    "basepath": "https://maps.googleapis.com/",
+    "basepath": "https://maps.googleapis.com",
     "headers": {},
     "params": {
       "key": "YOUR_GOOGLE_API_KEY_HERE",
