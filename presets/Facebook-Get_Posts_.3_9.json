@@ -3,8 +3,8 @@
   "module": "Facebook",
   "speed": 200,
   "options": {
-    "resource": "<page>/feed",
-    "basepath": "https://graph.facebook.com/v2.12/",
+    "resource": "/<page>/feed",
+    "basepath": "https://graph.facebook.com/v2.12",
     "params": {
       "limit": "20",
       "fields": "message, from, created_time, updated_time",
