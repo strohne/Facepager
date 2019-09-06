@@ -286,6 +286,7 @@ class Actions(object):
         columns = self.mainWindow.fieldList.toPlainText().splitlines()
         try:
             indexes = self.mainWindow.tree.selectedIndexesAndChildren()
+            indexes = list(indexes)
             progress.setMaximum(len(indexes))
 
             for no in range(len(indexes)):
