@@ -5,11 +5,11 @@
   "speed": 200,
   "options": {
     "verb": "GET",
-    "resource": "storage/v1/b/<bucket>/o/<Object ID>",
+    "resource": "/storage/v1/b/<bucket>/o/<Object ID>",
     "objectid": "filename",
     "headers": {},
     "token_uri": "https://accounts.google.com/o/oauth2/token",
-    "basepath": "https://www.googleapis.com/",
+    "basepath": "https://www.googleapis.com",
     "auth": "param",
     "filename": "<Object ID>",
     "fileext": "",

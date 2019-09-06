@@ -9,8 +9,8 @@
       "videoId": "<Object ID>",
       "maxResults": "10"
     },
-    "basepath": "https://www.googleapis.com/youtube/v3/",
-    "resource": "commentThreads",
+    "basepath": "https://www.googleapis.com/youtube/v3",
+    "resource": "/commentThreads",
     "pages": 1,
     "scope": "https://www.googleapis.com/auth/youtube.force-ssl"
   },

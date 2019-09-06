@@ -3,8 +3,8 @@
   "module": "YouTube",
   "speed": 200,
   "options": {
-    "resource": "search",
-    "basepath": "https://www.googleapis.com/youtube/v3/",
+    "resource": "/search",
+    "basepath": "https://www.googleapis.com/youtube/v3",
     "params": {
       "q": "<Object ID>",
       "part": "snippet",

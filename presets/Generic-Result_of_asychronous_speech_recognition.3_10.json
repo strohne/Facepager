@@ -5,11 +5,11 @@
   "speed": 200,
   "options": {
     "redirect_uri": "https://localhost",
-    "resource": "operations/<Object ID>",
+    "resource": "/operations/<Object ID>",
     "objectid": "alternatives.0.transcript",
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://accounts.google.com/o/oauth2/token",
-    "basepath": "https://speech.googleapis.com/v1/",
+    "basepath": "https://speech.googleapis.com/v1",
     "auth": "header",
     "headers": {},
     "verb": "GET",

@@ -38,8 +38,8 @@ Open the command line in a directory of your choice and execute the comments ind
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
   $ pip install PySide2==5.11.1  
 
-- Start Facepager
-  $ cd src
+- Start Facepager  
+  $ cd src  
   $ python Facepager.py  
 
 # Steps to runder under macOS High Sierra
@@ -74,13 +74,13 @@ Open terminal in a directory of your choice and execute the commands indicated b
    $ cd Facepager  
 
 - Setup Python environment  
-  $ python3 -m venv pyenv
+  $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
   $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
   $ pip3 install PySide2==5.11.1  
 
-- Start Facepager
+- Start Facepager  
   $ cd src  
   $ python3 Facepager.py  
   
