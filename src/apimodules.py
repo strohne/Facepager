@@ -2373,12 +2373,16 @@ class FilesTab(AuthTab):
         options['filename'] = self.filenameEdit.currentText()
         options['fileext'] = self.fileextEdit.currentText()
         options['format'] = "file"
+        options['paging_type'] = 'count'
+
 
         return options
 
     def setOptions(self, options):
         self.filenameEdit.setEditText(options.get('filename', '<None>'))
         self.fileextEdit.setEditText(options.get('fileext', '<None>'))
+        options['format'] = 'file'
+        options['paging_type'] = 'count'
 
         super(FilesTab, self).setOptions(options)
 
