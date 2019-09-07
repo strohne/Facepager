@@ -249,7 +249,7 @@ class ApiTab(QScrollArea):
         except AttributeError:
             pass
 
-        #payload        
+        #payload
         try:
             if options.get('verb','GET') in ['POST','PUT','PATCH']:
                 options['encoding'] = self.encodingEdit.currentText().strip()
@@ -268,11 +268,19 @@ class ApiTab(QScrollArea):
             pass
 
         try:
+            options['paging_type'] = self.pagingTypeEdit.currentText().strip() if self.pagingTypeEdit.currentText() != "" else self.defaults.get('paging_type', '')
             options['key_paging'] = self.pagingkeyEdit.currentText() if self.pagingkeyEdit.currentText() != "" else self.defaults.get('key_paging',None)
             options['param_paging'] = self.pagingparamEdit.currentText() if self.pagingparamEdit.currentText() != "" else self.defaults.get('param_paging',None)
+            options['offset_start'] = self.offsetStartEdit.value()
+            options['offset_step'] = self.offsetStepEdit.value()
+
         except AttributeError:
+            options['paging_type'] = self.defaults.get('paging_type',None)
             options['key_paging'] = self.defaults.get('key_paging',None)
             options['param_paging'] = self.defaults.get('param_paging',None)
+            options['offset_start'] = 1
+            options['offset_step'] = 1
+
                     
         #options for data handling
         try:
@@ -378,8 +386,12 @@ class ApiTab(QScrollArea):
             pass
         
         try:
+            self.pagingTypeEdit.setCurrentIndex(self.pagingTypeEdit.findText(options.get('paging_type', self.defaults.get('paging_type', 'key'))))
             self.pagingkeyEdit.setEditText(options.get('key_paging', ''))
-            self.pagingparamEdit.setEditText(options.get('param_paging', ''))            
+            self.pagingparamEdit.setEditText(options.get('param_paging', ''))
+            self.offsetStartEdit.setValue(int(options.get('offset_start', 1)))
+            self.offsetStepEdit.setValue(int(options.get('offset_stop', 1)))
+            self.pagingChanged()
         except AttributeError:
             pass
         
@@ -510,6 +522,30 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Parameters", self.paramEdit)
         self.resourceEdit.currentIndexChanged.connect(self.onChangedRelation)
 
+    def getFileFolderName(self,options, nodedata):
+        # Folder and file
+        foldername = options.get('folder', None)
+        if (foldername is None) or (not os.path.isdir(foldername)):
+            raise Exception("Folder does not exists, select download folder, please!")
+
+        filename = options.get('filename', None)
+        if (filename is not None) and (filename  == '<None>'):
+            filename = None
+        else:
+            filename = self.parsePlaceholders(filename,nodedata)
+
+        if filename == '':
+            raise Exception("Filename is empty, please provide a placeholder or <None> to automatically obtain filenames!")
+
+        fileext = options.get('fileext', None)
+
+        if fileext is not None and fileext == '<None>':
+            fileext = None
+        elif fileext is not None and fileext != '':
+            fileext = self.parsePlaceholders(fileext,nodedata)
+
+        return (foldername,filename,fileext)
+
     def initFolderInput(self):
         #Download folder
         self.folderwidget = QWidget()
@@ -526,42 +562,109 @@ class ApiTab(QScrollArea):
 
         self.mainLayout.addRow("Folder", self.folderwidget)
 
-    def initPagingInputs(self,keys = False):
+    def pagingChanged(self):
+        if self.pagingTypeEdit.currentText() == "count":
+            self.pagingStepsWidget.show()
+            self.pagingKeyWidget.hide()
+        else:
+            self.pagingStepsWidget.hide()
+            self.pagingKeyWidget.show()
+
+        if self.pagingTypeEdit.count() < 2:
+            self.pagingTypeEdit.hide()
+
+
+    def initPagingInputs(self,keys = False, count = False):
         layout= QHBoxLayout()
         
-        if keys:
-            # Paging settings
-            
-            self.pagingkeyEdit = QComboBox(self)
-            self.pagingkeyEdit.setEditable(True)
-            layout.addWidget(self.pagingkeyEdit)
-            layout.setStretch(0, 1)        
-    
-            layout.addWidget(QLabel("Paging Param"))
+        if keys or count:
+            # Paging type
+
+            self.pagingTypeEdit = QComboBox(self)
+
+            if keys:
+                self.pagingTypeEdit.addItem('key')
+            if count:
+                self.pagingTypeEdit.addItem('count')
+
+            self.pagingTypeEdit.setToolTip("Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount.")
+            self.pagingTypeEdit.currentIndexChanged.connect(self.pagingChanged)
+            layout.addWidget(self.pagingTypeEdit)
+            layout.setStretch(0, 0)
+
+            layout.addWidget(QLabel("Param"))
             self.pagingparamEdit = QComboBox(self)
             self.pagingparamEdit.setEditable(True)
+            self.pagingparamEdit.setToolTip("This parameter will be added to the query and filled with the page value.")
             layout.addWidget(self.pagingparamEdit)
+            layout.setStretch(1, 0)
             layout.setStretch(2, 1)
-            
+
+            # Paging key
+
+            self.pagingKeyWidget = QWidget()
+            self.pagingKeyLayout = QHBoxLayout()
+            self.pagingKeyLayout .setContentsMargins(0, 0, 0, 0)
+            self.pagingKeyWidget.setLayout(self.pagingKeyLayout)
+
+            self.pagingKeyLayout.addWidget(QLabel("Paging key"))
+            self.pagingkeyEdit = QComboBox(self)
+            self.pagingkeyEdit.setEditable(True)
+            self.pagingkeyEdit.setToolTip("If the respsonse contains data about the next page, set the key. The value will be added as paging parameter.")
+            self.pagingKeyLayout.addWidget(self.pagingkeyEdit)
+            self.pagingKeyLayout.setStretch(0, 0)
+            self.pagingKeyLayout.setStretch(1, 1)
+
+            layout.addWidget(self.pagingKeyWidget)
+            layout.setStretch(3, 2)
+
+            # Page steps
+            self.pagingStepsWidget = QWidget()
+            self.pagingStepsLayout = QHBoxLayout()
+            self.pagingStepsLayout.setContentsMargins(0, 0, 0, 0)
+            self.pagingStepsWidget.setLayout(self.pagingStepsLayout)
+
+            self.pagingStepsLayout.addWidget(QLabel("Start value"))
+            self.offsetStartEdit = QSpinBox(self)
+            self.offsetStartEdit.setValue(1)
+            self.offsetStartEdit.setToolTip("First page or offset number, defaults to 1")
+            self.pagingStepsLayout.addWidget(self.offsetStartEdit)
+            self.pagingStepsLayout.setStretch(0, 0)
+            self.pagingStepsLayout.setStretch(1, 1)
+
+            self.pagingStepsLayout.addWidget(QLabel("Step"))
+            self.offsetStepEdit = QSpinBox(self)
+            self.offsetStepEdit.setValue(1)
+            self.offsetStepEdit.setToolTip("Amount to increase for each page, defaults to 1")
+            self.pagingStepsLayout.addWidget(self.offsetStepEdit)
+            self.pagingStepsLayout.setStretch(2, 0)
+            self.pagingStepsLayout.setStretch(3, 1)
+
+            layout.addWidget(self.pagingStepsWidget)
+            layout.setStretch(4, 1)
+
             #Page count
-            layout.addWidget(QLabel("Maximum Pages"))
+            layout.addWidget(QLabel("Maximum pages"))
             self.pagesEdit = QSpinBox(self)
             self.pagesEdit.setMinimum(1)
             self.pagesEdit.setMaximum(50000)
+            self.pagesEdit.setToolTip("Number of maximum pages.")
             layout.addWidget(self.pagesEdit)
-            layout.setStretch(4, 1)
+            layout.setStretch(5, 0)
+            layout.setStretch(6, 0)
 
-            self.mainLayout.addRow("Paging Key", layout)
+            rowcaption = "Paging"
+
         else:
-            layout= QHBoxLayout()
-            
             #Page count
             self.pagesEdit = QSpinBox(self)
             self.pagesEdit.setMinimum(1)
             self.pagesEdit.setMaximum(50000)
             layout.addWidget(self.pagesEdit)            
             
-            self.mainLayout.addRow("Maximum pages", layout)            
+            rowcaption = "Maximum pages"
+
+        self.mainLayout.addRow(rowcaption, layout)
 
     def initHeaderInputs(self):
         self.headerEdit = QParamEdit(self)
@@ -1378,16 +1481,20 @@ class AuthTab(ApiTab):
         loginlayout.setContentsMargins(0,0,0,0)
         loginwidget.setLayout(loginlayout)
 
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokenEdit)
-
         if toggle:
-            loginlayout.addWidget(QLabel("Auth"))
             self.authEdit = QComboBox(self)
             self.authEdit.addItems(['disable','param','header'])
             loginlayout.addWidget(self.authEdit)
 
+            rowcaption = "Auth"
+            loginlayout.addWidget(QLabel("Access token"))
+        else:
+            rowcaption = "Access token"
+
+
+        self.tokenEdit = QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
 
         self.authButton = QPushButton('Settings', self)
         self.authButton.clicked.connect(self.editAuthSettings)
@@ -1397,7 +1504,7 @@ class AuthTab(ApiTab):
         self.loginButton.clicked.connect(self.doLogin)
         loginlayout.addWidget(self.loginButton)
 
-        self.mainLayout.addRow("Access Token", loginwidget)
+        self.mainLayout.addRow(rowcaption, loginwidget)
         
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(AuthTab, self).getOptions(purpose)
@@ -1444,8 +1551,18 @@ class AuthTab(ApiTab):
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         self.closeSession()
         self.connected = True
-        self.speed = options.get('speed',None)
+        self.speed = options.get('speed', None)
         self.progress = logProgress
+
+        # paging by auto count
+        if (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
+            offset = options.get('offset_start', 1)
+            options['params'][options.get('param_paging', '')] = offset
+
+        # file or json
+        format = options.get('format', 'json')
+        if format == 'file':
+            foldername, filename, fileext = self.getFileFolderName(options, nodedata)
 
         # Abort condition: maximum page count
         for page in range(options.get('currentpage', 0), options.get('pages', 1)):
@@ -1458,22 +1575,22 @@ class AuthTab(ApiTab):
                 urlparams = {}
                 urlparams.update(options['params'])
 
-                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata,options)
+                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
 
-                requestheaders = options.get('headers',{})
+                requestheaders = options.get('headers', {})
 
-                if options.get('auth','disable') == 'param':
+                if options.get('auth', 'disable') == 'param':
                     urlparams["access_token"] = options['access_token']
-                elif options.get('auth','disable') == 'header':
-                    requestheaders["Authorization"] = "Bearer "+options['access_token']
+                elif options.get('auth', 'disable') == 'header':
+                    requestheaders["Authorization"] = "Bearer " + options['access_token']
 
-                method=options.get('verb','GET')
-                payload = self.getPayload(options.get('payload',None), templateparams, nodedata,options)
-                if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
+                method = options.get('verb', 'GET')
+                payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options)
+                if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
                     requestheaders["Content-Type"] = payload.content_type
-                    
+
             else:
-                #requestheaders = {}
+                # requestheaders = {}
                 payload = None
                 urlpath = options['url']
                 urlparams = options['params']
@@ -1483,31 +1600,42 @@ class AuthTab(ApiTab):
                 headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
 
             if options['logrequests']:
-                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                   urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
             # data
-            format = options.get('format','json')
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams,requestheaders,method,payload,format=format)
+            if format == 'file':
+                data, headers, status = self.download(urlpath, urlparams, requestheaders, method, payload, foldername,
+                                                      filename, fileext)
+            else:
+                data, headers, status = self.request(urlpath, urlparams, requestheaders, method, payload, format=format)
             options['querystatus'] = status
+            logData(data, options, headers)
 
             # rate limit info
             # if 'x-rate-limit-remaining' in headers:
             #     options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
 
-            logData(data, options, headers)
             if self.progress is not None:
-                self.progress({'page':page+1})
+                self.progress({'page': page + 1})
 
-            # paging
-            if (options.get('key_paging','') is not None) and (options.get('param_paging','') is not None):
-                if isinstance(data,dict) and hasDictValue(data, options['key_paging']): # and data.get(options['key_paging'],"0") != "0":
-                    options['params'][options['param_paging']] = getDictValue(data,options['key_paging'])
+            # paging by key
+            if (options.get('paging_type', 'key') == "key"):
+                if (options.get('key_paging', '') is not None) and (
+                        options.get('param_paging', '') is not None) and isinstance(data, dict) and hasDictValue(data,
+                                                                                                                 options[
+                                                                                                                     'key_paging']):
+                    options['params'][options['param_paging']] = getDictValue(data, options['key_paging'])
                 else:
                     break
+
+            # paging by auto count
+            elif (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
+                offset = offset + options.get('offset_step', 1)
+                options['params'][options['param_paging']] = offset
             else:
                 break
-
             if not self.connected:
                 break
 
@@ -1723,7 +1851,7 @@ class AmazonTab(AuthTab):
         self.initExtractInputs()
 
         # Pages Box
-        self.initPagingInputs(True)
+        self.initPagingInputs(True, True)
 
         # Login inputs
         self.initLoginInputs()
@@ -2134,7 +2262,7 @@ class GenericTab(AuthTab):
 
         # Extract input
         self.initExtractInputs()
-        self.initPagingInputs(True)
+        self.initPagingInputs(True, True)
 
         # Login inputs
         self.initAuthSetupInputs()
@@ -2150,6 +2278,7 @@ class GenericTab(AuthTab):
         #Format
         self.formatEdit = QComboBox(self)
         self.formatEdit.addItems(['text','json','xml'])
+        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON. Text: data will not be parsed and embedded in JSON. XML: data will be converted from XML to JSON.")
         layout.addWidget(self.formatEdit)
         layout.setStretch(0, 0)
         #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
@@ -2158,15 +2287,17 @@ class GenericTab(AuthTab):
         layout.addWidget(QLabel("Key to extract"))
         self.extractEdit = QComboBox(self)
         self.extractEdit.setEditable(True)
+        self.extractEdit.setToolTip("If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node.")
         layout.addWidget(self.extractEdit)
-        layout.setStretch(1, 1)
+        layout.setStretch(1, 0)
         layout.setStretch(2, 2)
 
         layout.addWidget(QLabel("Key for Object ID"))
         self.objectidEdit = QComboBox(self)
         self.objectidEdit.setEditable(True)
+        self.objectidEdit.setToolTip("If your data contains unique IDs for every node, define the corresponding key.")
         layout.addWidget(self.objectidEdit)
-        layout.setStretch(3, 1)
+        layout.setStretch(3, 0)
         layout.setStretch(4, 2)
 
         # Add layout
@@ -2186,17 +2317,25 @@ class GenericTab(AuthTab):
 class FilesTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(FilesTab, self).__init__(mainWindow, "Files")
-        self.defaults['basepath'] = '<url>'
 
+        self.defaults['basepath'] = '<url>'
         self.defaults['key_objectid'] = 'filename'
         self.defaults['key_nodedata'] = None        
-        
-        #Basic inputs
+
+        # Standard inputs
         self.initInputs()
+
+        # Header, Verbs
         self.initHeaderInputs()
         self.initVerbInputs()
         self.initFolderInput()
+
+        # Extract input
+        #self.initExtractInputs()
+        self.initPagingInputs(False,True)
         self.initFileInputs()
+
+        # Login inputs
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
@@ -2233,6 +2372,7 @@ class FilesTab(AuthTab):
 
         options['filename'] = self.filenameEdit.currentText()
         options['fileext'] = self.fileextEdit.currentText()
+        options['format'] = "file"
 
         return options
 
@@ -2247,59 +2387,7 @@ class FilesTab(AuthTab):
 
         self.folderwidget.show()
         self.mainLayout.labelForField(self.folderwidget).show()
-            
-    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
-        self.closeSession()
-        self.connected = True
-        self.speed = options.get('speed',None)
 
-        # Folder and file
-        foldername = options.get('folder', None)
-        if (foldername is None) or (not os.path.isdir(foldername)):
-            raise Exception("Folder does not exists, select download folder, please!")
-
-        filename = options.get('filename', None)
-        if (filename is not None) and (filename  == '<None>'):
-            filename = None
-        else:
-            filename = self.parsePlaceholders(filename,nodedata)
-
-        if filename == '':
-            raise Exception("Filename is empty, please provide a placeholder or <None> to automatically obtain filenames!")
-
-        fileext = options.get('fileext', None)
-
-        if fileext is not None and fileext == '<None>':
-            fileext = None
-        elif fileext is not None and fileext != '':
-            fileext = self.parsePlaceholders(fileext,nodedata)
-
-        # Request
-        urlpath = options["basepath"] + options['resource']
-        urlparams = {}
-        urlparams.update(options['params'])
-
-        urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata,options)
-
-        if options.get('auth','disable') != 'disable':
-            urlparams["access_token"] = options['access_token']
-
-        requestheaders = options.get('headers',{})
-
-        method=options.get('verb','GET')
-        payload = self.getPayload(options.get('payload',None), templateparams, nodedata,options)
-        if isinstance(payload,MultipartEncoder) or isinstance(payload,MultipartEncoderMonitor):
-            requestheaders["Content-Type"] = payload.content_type
-
-        # Log
-        if options['logrequests']:
-            logMessage("Downloading file for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
-
-        options['querytime'] = str(datetime.now())
-        data, headers, status = self.download(urlpath, urlparams, requestheaders,method,payload,foldername,filename,fileext)
-        options['querystatus'] = status
-
-        logData(data, options, headers)
 
 
 class QWebPageCustom(QWebEnginePage):
