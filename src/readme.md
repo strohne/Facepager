@@ -33,7 +33,7 @@ Open the command line in a directory of your choice and execute the comments ind
 
 - Setup Python environment  
   $ python -m venv pyenv  
-  $ source pyenv\Scripts\activate.bat  
+  $ pyenv\Scripts\activate.bat  
   
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
   $ pip install PySide2==5.11.1  
