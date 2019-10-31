@@ -144,7 +144,6 @@ class ApiViewer(QDialog):
 
     def showWindow(self):
         self.show()
-        self.activateWindow()
         QApplication.processEvents()
 
         # Load files
@@ -164,7 +163,6 @@ class ApiViewer(QDialog):
     def showDoc(self, module, basepath, path, field = None):
         # Show
         self.show()
-        self.activateWindow()
         QApplication.processEvents()
         self.initDocs()
 
@@ -363,7 +361,7 @@ class ApiViewer(QDialog):
                 return False
 
             # Progress
-            progress = ProgressBar("Downloading default API definitions from GitHub...", self.mainWindow) if not silent else None
+            progress = ProgressBar("Downloading default API definitions from GitHub...", self) if not silent else None
             QApplication.processEvents()
 
             try:

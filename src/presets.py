@@ -303,7 +303,7 @@ class PresetWindow(QDialog):
                 return False
 
             # Progress
-            progress = ProgressBar("Downloading default presets from GitHub...", self.mainWindow) if not silent else None
+            progress = ProgressBar("Downloading default presets from GitHub...", self) if not silent else None
             QApplication.processEvents()
 
             try:
