@@ -281,11 +281,11 @@ class MainWindow(QMainWindow):
         #Requests/Apimodules
         self.RequestTabs=QTabWidget()
         moduleslayout.addWidget(self.RequestTabs)
-        self.RequestTabs.addTab(FacebookTab(self),"Facebook")
         self.RequestTabs.addTab(YoutubeTab(self),"YouTube")
         self.RequestTabs.addTab(TwitterTab(self),"Twitter")
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
         self.RequestTabs.addTab(AmazonTab(self),"Amazon")
+        self.RequestTabs.addTab(FacebookTab(self),"Facebook")
         self.RequestTabs.addTab(GenericTab(self),"Generic")
         self.RequestTabs.addTab(FilesTab(self),"Files")
 
