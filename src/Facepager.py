@@ -71,6 +71,7 @@ class MainWindow(QMainWindow):
         self.lock_logging = threading.Lock()
         self.readSettings()
         self.createActions()
+
         self.createUI()
         self.createDB()
         self.updateUI()
@@ -425,10 +426,15 @@ class MainWindow(QMainWindow):
             #self.statusBar().showMessage('No database connection')
             self.databaseLabel.setText('No database connection')
 
-    # Downloads default presets in the background
+    # Downloads default presets and api definitions in the background
     def updateResources(self):
+
+        self.apiWindow.checkDefaultFiles()
+        self.presetWindow.checkDefaultFiles()
+
         def getter():
-            self.presetWindow.downloadDefaultPresets(True)
+            self.apiWindow.downloadDefaultFiles(True)
+            self.presetWindow.downloadDefaultFiles(True)
 
         t = threading.Thread(target=getter)
         t.start()

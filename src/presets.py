@@ -11,6 +11,7 @@ import threading
 import webbrowser
 import platform
 from dictionarytree import *
+from progressbar import ProgressBar
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
@@ -125,7 +126,11 @@ class PresetWindow(QDialog):
 
         buttons.addStretch()
 
-        #buttons=QDialogButtonBox()
+        self.reloadButton=QPushButton('Reload')
+        self.reloadButton.clicked.connect(self.reloadPresets)
+        self.reloadButton.setToolTip("Reload all preset files.")
+        buttons.addWidget(self.reloadButton)
+
         self.rejectButton=QPushButton('Cancel')
         self.rejectButton.clicked.connect(self.close)
         self.rejectButton.setToolTip("Close the preset dialog.")
@@ -286,10 +291,20 @@ class PresetWindow(QDialog):
         self.detailWidget.hide()
         self.loadingIndicator.show()
 
-    def downloadDefaultPresets(self,silent=False):
+    def checkDefaultFiles(self):
+        if not os.path.exists(self.presetFolderDefault):
+            self.downloadDefaultFiles()
+        elif len(os.listdir(self.presetFolderDefault)) == 0:
+            self.downloadDefaultFiles()
+
+    def downloadDefaultFiles(self, silent=False):
         with self.loadingLock:
             if self.presetsDownloaded:
                 return False
+
+            # Progress
+            progress = ProgressBar("Downloading default presets from GitHub...", self.mainWindow) if not silent else None
+            QApplication.processEvents()
 
             try:
                 #Create folder
@@ -303,10 +318,15 @@ class PresetWindow(QDialog):
                 #Download
                 files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
                 files = [f['path'] for f in files if f['path'].endswith(tuple(self.presetSuffix))]
+                if progress is not None:
+                    progress.setMaximum(len(files))
+
                 for filename in files:
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
                     with open(os.path.join(self.presetFolderDefault, os.path.basename(filename)), 'wb') as f:
                         f.write(response.content)
+                    if progress is not None:
+                        progress.step()
             except Exception as e:
                 if not silent:
                     QMessageBox.information(self,"Facepager","Error downloading default presets:"+str(e))
@@ -314,9 +334,17 @@ class PresetWindow(QDialog):
             else:
                 self.presetsDownloaded = True
                 return True
+            finally:
+                if progress is not None:
+                    progress.close()
+
+    def reloadPresets(self):
+        self.presetsDownloaded = False
+        self.initPresets()
 
     def initPresets(self):
         self.loadingIndicator.show()
+        QApplication.processEvents()
 
         #self.defaultPresetFolder
         self.categoryNodes = {}
@@ -324,7 +352,7 @@ class PresetWindow(QDialog):
         self.detailWidget.hide()
         selectitem = None
 
-        self.downloadDefaultPresets()
+        #self.downloadDefaultPresets()
         if os.path.exists(self.presetFolderDefault):
             files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
@@ -399,7 +427,8 @@ class PresetWindow(QDialog):
             return False
 
         reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply != QMessageBox.Yes: return
+        if reply != QMessageBox.Yes:
+            return False
 
         os.remove(os.path.join(self.presetFolder, data.get('filename')))
         self.initPresets()
