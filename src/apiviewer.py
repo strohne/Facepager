@@ -142,6 +142,8 @@ class ApiViewer(QDialog):
             tab = self.mainWindow.RequestTabs.widget(i)
             tab.reloadDoc()
 
+        self.activateWindow()
+
     def showWindow(self):
         self.show()
         QApplication.processEvents()
