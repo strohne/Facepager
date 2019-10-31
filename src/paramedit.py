@@ -46,7 +46,15 @@ class QParamEdit(QTableWidget):
 
         row = 0
         for name in vals:
+            # Set name
             self.setValue(row,0, name)
+
+            # Set options
+            combobox = self.getNameComboBox(row)
+            options = combobox.itemData(combobox.currentIndex(), Qt.UserRole)
+            self.setValueComboBox(row, options)
+
+            # Set value
             self.setValue(row,1, vals[name])
             row = row+1
 
@@ -69,6 +77,9 @@ class QParamEdit(QTableWidget):
         self.setValueComboBox(row, self.valueoptions)
         self.setValue(row, 1, '')
 
+    # Fills left comboboxes with parameter names
+    # Adds default options
+    # @params OpenAPI dict with get parameters (operations.get.parameters)
     def setOptions(self, params):
         #Set param names
         self.setNameOptions(params)
@@ -169,6 +180,9 @@ class QParamEdit(QTableWidget):
         combo = self.getValueComboBox(row)
         combo.clear()
 
+        if not options:
+            options = self.valueoptions
+
         schema = options.get("schema",{})
 
         # Get options
@@ -200,6 +214,14 @@ class QParamEdit(QTableWidget):
             combo.setItemData(0,'The value in the Object ID-column in the data view.',Qt.ToolTipRole)
             combo.insertItem(0, '')
 
+        # Select default value
+        if options.get('required', False) and not ('example' in options):
+            value = '<Object ID>'
+        else:
+            value = options.get('example', '')
+
+        self.setValue(row, 1, value)
+
         return (combo)
 
     def setValue(self,row,col,val):
@@ -213,8 +235,12 @@ class QParamEdit(QTableWidget):
                 val = json.dumps(val)
         except:
             val = ''
-            
-        combo.setEditText(val)
+
+        index = combo.findText(val)
+        if index != -1:
+            combo.setCurrentIndex(index)
+        else:
+            combo.setEditText(val)
 
     def getValue(self,row,col):
         if col == 0:
@@ -238,20 +264,8 @@ class QParamEdit(QTableWidget):
         if hasattr(sender,'col') and hasattr(sender,'row') and (sender.col == 0):
             # Get options
             options = sender.itemData(index, Qt.UserRole)
-            if not options:
-                options = self.valueoptions
-
             # Set options
             self.setValueComboBox(sender.row, options)
-
-            # Select value
-
-            if options.get('required', False) and not ('example' in options):
-                value = '<Object ID>'
-            else:
-                value = options.get('example', '')
-
-            self.setValue(sender.row, 1,value)
 
 
     def calcRows(self):
