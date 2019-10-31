@@ -18,7 +18,7 @@ class QParamEdit(QTableWidget):
         self.setColumnCount(2)
         self.setHorizontalHeaderLabels(['Name','Value'])
         self.horizontalHeader().setVisible(False)
-        self.setColumnWidth(0,150)
+        self.setColumnWidth(0,200)
         self.setColumnWidth(1,150)
         self.horizontalHeader().setStretchLastSection(True)
 
@@ -221,10 +221,7 @@ class QParamEdit(QTableWidget):
             combo = self.getNameComboBox(row)
         else:
             combo = self.getValueComboBox(row)
-
         return(combo.currentText())
-
-
 
     def rowEmpty(self,row):
         col0 = self.getValue(row,0).strip()
@@ -279,6 +276,7 @@ class QParamEdit(QTableWidget):
         self.initParamName(row)
         self.initParamValue(row)
 
+        #self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self.verticalResizeTableViewToContents()
         self.isCalculating = False
@@ -332,7 +330,7 @@ class ValueEdit(QWidget):
 
 
         input = QPlainTextEdit()
-        input.setMinimumWidth(400)
+        input.setMinimumWidth(50)
         input.setPlainText(self.comboBox.currentText())
         #input.LineWrapMode = QPlainTextEdit.NoWrap
         #input.acceptRichText=False
