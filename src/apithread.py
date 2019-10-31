@@ -214,10 +214,12 @@ class ApiThread(threading.Thread):
                     job['threadnumber'] = self.number
 
                     # Fetch data
-                    self.module.fetchData(job['nodedata'], job['options'], logData, logMessage, logProgress)
+                    try:
+                        self.module.fetchData(job['nodedata'], job['options'], logData, logMessage, logProgress)
+                    finally:
+                        # Progress
+                        self.output.put({'progress': job.get('number', 0), 'threadnumber': self.number})
 
-                    # Progress
-                    self.output.put({'progress': job.get('number', 0), 'threadnumber': self.number})
 
                 # queue empty
                 except IndexError:
@@ -230,6 +232,7 @@ class ApiThread(threading.Thread):
                 # error
                 except Exception as e:
                     logMessage(e)
+
 
                 # wait for signal
                 self.process.clear()
