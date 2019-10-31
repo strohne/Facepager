@@ -142,10 +142,9 @@ class ApiViewer(QDialog):
             tab = self.mainWindow.RequestTabs.widget(i)
             tab.reloadDoc()
 
-        self.activateWindow()
-
     def showWindow(self):
         self.show()
+        self.activateWindow()
         QApplication.processEvents()
 
         # Load files
@@ -165,6 +164,7 @@ class ApiViewer(QDialog):
     def showDoc(self, module, basepath, path, field = None):
         # Show
         self.show()
+        self.activateWindow()
         QApplication.processEvents()
         self.initDocs()
 

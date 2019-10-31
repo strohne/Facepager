@@ -340,6 +340,7 @@ class PresetWindow(QDialog):
 
     def reloadPresets(self):
         self.presetsDownloaded = False
+        self.downloadDefaultFiles()
         self.initPresets()
 
     def initPresets(self):
