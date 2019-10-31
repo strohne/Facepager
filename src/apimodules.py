@@ -447,6 +447,11 @@ class ApiTab(QScrollArea):
     def logMessage(self,message):
         self.mainWindow.logmessage(message)
 
+    def reloadDoc(self):
+        self.saveSettings()
+        self.loadDoc()
+        self.loadSettings()
+
     def loadDoc(self):
         '''
         Loads and prepares documentation
@@ -1082,6 +1087,9 @@ class FacebookTab(ApiTab):
         authlayout.setContentsMargins(0,0,0,0)
         self.authWidget.setLayout(authlayout)
 
+        self.pageIdEdit = QLineEdit()
+        authlayout.addRow("Page Id", self.pageIdEdit)
+
         self.clientIdEdit = QLineEdit()
         self.clientIdEdit.setEchoMode(QLineEdit.Password)
         authlayout.addRow("Client Id", self.clientIdEdit)
@@ -1092,7 +1100,16 @@ class FacebookTab(ApiTab):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FacebookTab, self).getOptions(purpose)
 
+        if purpose != 'preset':
+            options['pageid'] = self.pageIdEdit.text().strip()
+
         return options
+
+    def setOptions(self, options):
+        if 'pageid' in options:
+            self.pageIdEdit.setText(options.get('pageid'))
+
+        super(FacebookTab, self).setOptions(options)
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         # Preconditions
@@ -1184,7 +1201,6 @@ class FacebookTab(ApiTab):
             clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
             scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
             
-            
             if clientid  == '':
                  raise Exception('Client ID missing, please adjust settings!')
             
@@ -1192,17 +1208,32 @@ class FacebookTab(ApiTab):
     
             self.showLoginWindow(query, caption, url)
         except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                            str(e),
-                                            QMessageBox.StandardButton.Ok)
+            QMessageBox.critical(self, "Login canceled",str(e),QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
     def getToken(self,url):
         if url.toString().startswith(self.defaults['redirect_uri']):
-            url = urllib.parse.parse_qs(url.toString())
-            token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
+            try:
+                url = urllib.parse.parse_qs(url.toString())
+                token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
+                self.closeSession()
+                self.tokenEdit.setText(token[0])
 
-            self.tokenEdit.setText(token[0])
+                # Get page access token
+                pageid = self.pageIdEdit.text().strip()
+                if  pageid != '':
+                    data, headers, status = self.request(self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token[0])
+                    if status != 'fetched (200)':
+                        raise Exception("Could not authorize for page. Check page ID in the settings.")
+
+                    token = data['access_token']
+                    self.tokenEdit.setText(token)
+
+                else:
+                    self.tokenEdit.setText(token[0])
+            except Exception as e:
+                QMessageBox.critical(self,"Login error",
+                                     str(e),QMessageBox.StandardButton.Ok)
             self.closeLoginWindow()
 
 
