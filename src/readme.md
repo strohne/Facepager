@@ -12,9 +12,9 @@ Facepager depends on the following packages:
 - requests[security]: pip install -U requests[security]==2.7.0
 - requests-toolbelt pip install requests-toolbelt (Licence: Apache 2.0)
 - rauth: pip install rauth (MIT licence)
-- numpy and pandas: pip install numpy pandas
-- lxml: pip install lxml
-- xmljson pip install xmljson
+- numpy and pandas: pip install numpy pandas (licensed under BSD and 3-clause BSD license) 
+- lxml: pip install lxml (BSD licence)
+- xmljson pip install xmljson (MIT licence)
 
 Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
