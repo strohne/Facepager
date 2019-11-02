@@ -3,9 +3,6 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import QFileDialog, QCheckBox, QComboBox, QLabel, QHBoxLayout
 import csv
 from progressbar import ProgressBar
-import codecs
-from pandas import merge,read_csv
-
 from database import *
 
 class ExportFileDialog(QFileDialog):
@@ -33,11 +30,6 @@ class ExportFileDialog(QFileDialog):
         self.optionSeparator.insertItems(0, [";","\\t",","])
         self.optionSeparator.setEditable(True)
 
-        #self.optionLinebreaks.setCheckState(Qt.CheckState.Checked)
-
-        self.optionWide = QCheckBox("Convert to wide format (experimental feature)",self)
-        self.optionWide.setCheckState(Qt.CheckState.Unchecked)
-
         # if none or all are selected, export all
         # if one or more are selected, export selective
         self.optionAll = QComboBox(self)
@@ -60,9 +52,6 @@ class ExportFileDialog(QFileDialog):
 
         layout.addLayout(options,row,1,1,2)
 
-        layout.addWidget(QLabel('Post processing'),row+1,0)
-        layout.addWidget(self.optionWide,row+1,1,1,2)
-
         layout.addWidget(QLabel('Export mode'),row+2,0)
         layout.addWidget(self.optionAll,row+2,1,1,2)
         self.setLayout(layout)
@@ -72,7 +61,7 @@ class ExportFileDialog(QFileDialog):
             if os.path.isfile(self.selectedFiles()[0]):
                 os.remove(self.selectedFiles()[0])
             output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
-            if self.optionBOM.isChecked() and not self.optionWide.isChecked():
+            if self.optionBOM.isChecked():
                 output.write('\ufeff')
 
             try:
@@ -82,10 +71,6 @@ class ExportFileDialog(QFileDialog):
                     self.exportSelectedNodes(output)
             finally:
                 output.close()
-
-            if self.optionWide.isChecked():
-                self.convertToWideFormat(self.selectedFiles()[0])
-
 
     def exportSelectedNodes(self,output):
         progress = ProgressBar("Exporting data...", self.mainWindow)
@@ -174,69 +159,5 @@ class ExportFileDialog(QFileDialog):
                 else:
                     page += 1
 
-        finally:
-            progress.close()
-
-    def convertToWideFormat(self,filename):
-        progress = ProgressBar("Converting data...", self.mainWindow)
-        try:
-            #Separate levels
-            def flattenTable(fulltable,levelcol,idcol,parentidcol,countchildren,removeempty):
-                fulltable[[levelcol]] = fulltable[[levelcol]].astype(int)
-
-                levels = dict(list(fulltable.groupby(levelcol)))
-                minlevel = fulltable.level.min()
-                for level, data in sorted(levels.items()):
-                    #First level is the starting point for the following merges
-                    if level == minlevel:
-                        #data = data[[idcol,'object_id','object_type']]
-                        data = data.add_prefix('level_{}-'.format(level))
-                        flattable = data
-                    else:
-                        #Aggregate object types and join them
-                        for col_countchildren in countchildren:
-                            children = data[parentidcol].groupby([data[parentidcol],data[col_countchildren]]).count()
-                            children = children.unstack(col_countchildren)
-                            children['total'] = children.sum(axis=1)
-                            children = children.add_prefix('level_{}-children-{}-'.format(level-1,col_countchildren))
-
-                            leftkey = 'level_{}-id'.format(level-1)
-                            flattable = merge(flattable,children,how='left',left_on=leftkey,right_index=True)
-                            flattable[children.columns.values.tolist()] = flattable[children.columns.values.tolist()].fillna(0).astype(int)
-
-                        #Join data
-                        data['childnumber'] = data.groupby(parentidcol).cumcount()
-                        leftkey = 'level_{}-{}'.format(level-1,idcol)
-                        rightkey = 'level_{}-{}'.format(level,parentidcol)
-                        data = data.drop([levelcol],axis=1)
-                        data = data.add_prefix('level_{}-'.format(level))
-                        flattable = merge(flattable,data,how="outer",left_on=leftkey,right_on=rightkey)
-
-                if removeempty:
-                    flattable = flattable.dropna(axis=1,how='all')
-                return flattable
-
-            try:
-                #delimiter
-                delimiter = self.optionSeparator.currentText()
-                delimiter = delimiter.encode('utf-8').decode('unicode_escape')
-
-                #open
-                data = read_csv(filename, sep=delimiter,encoding='utf-8',dtype=str)
-
-                #convert
-                newdata = flattenTable(data,'level','id','parent_id',['object_type','query_status','query_type'],False)
-
-
-                #save
-                outfile = open(filename, 'w',newline='',encoding='utf8')
-                try:
-                    if self.optionBOM.isChecked():
-                        outfile.write('\ufeff') #UTF8 BOM
-                    newdata.to_csv(outfile,sep=delimiter,index=False,encoding="utf-8")
-                finally:
-                    outfile.close()
-            except Exception as e:
-                self.mainWindow.logmessage(e)
         finally:
             progress.close()
