@@ -391,7 +391,7 @@ class PresetWindow(QDialog):
             for i in range(0, self.mainWindow.RequestTabs.count()):
                 if self.mainWindow.RequestTabs.widget(i).name == data.get('module',''):
                     tab = self.mainWindow.RequestTabs.widget(i)
-                    tab.setOptions(data.get('options',{}))
+                    tab.setOpenAPIOptions(data.get('options', {}))
                     self.mainWindow.RequestTabs.setCurrentWidget(tab)
                     break
 

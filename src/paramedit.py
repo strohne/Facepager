@@ -41,8 +41,8 @@ class QParamEdit(QTableWidget):
             vals = {}
         
         self.setRowCount(len(vals))
-        self.setValueOptions(self.valueoptions)
-        self.setNameOptions(self.nameoptions)
+        self.setValueOptionsAll(self.valueoptions)
+        self.setNameOptionsAll(self.nameoptions)
 
         row = 0
         for name in vals:
@@ -52,7 +52,7 @@ class QParamEdit(QTableWidget):
             # Set options
             combobox = self.getNameComboBox(row)
             options = combobox.itemData(combobox.currentIndex(), Qt.UserRole)
-            self.setValueComboBox(row, options)
+            self.setValueOptions(row, options)
 
             # Set value
             self.setValue(row,1, vals[name])
@@ -69,20 +69,13 @@ class QParamEdit(QTableWidget):
                 params[self.getValue(row,0).strip()] = self.getValue(row,1).strip()
         return params
 
-    def initParamName(self, row):
-        self.setNameComboBox(row, self.nameoptions)
-        self.setValue(row, 0, '')
-
-    def initParamValue(self, row):
-        self.setValueComboBox(row, self.valueoptions)
-        self.setValue(row, 1, '')
 
     # Fills left comboboxes with parameter names
     # Adds default options
     # @params OpenAPI dict with get parameters (operations.get.parameters)
-    def setOptions(self, params):
+    def setOpenAPIOptions(self, params):
         #Set param names
-        self.setNameOptions(params)
+        self.setNameOptionsAll(params)
 
         #Set param values
         values = {}
@@ -96,7 +89,7 @@ class QParamEdit(QTableWidget):
 
         self.setParams(values)
 
-    def setNameOptions(self, options):
+    def setNameOptionsAll(self, options):
         '''
         Sets the items in the left comboboxes
         options should be a list of dicts
@@ -107,22 +100,97 @@ class QParamEdit(QTableWidget):
         self.nameoptions = options
 
         for row in range(0, self.rowCount()):
-            self.setNameComboBox(row,options)
+            self.setNameOptions(row, options)
         self.isCalculating = False
 
-    def setValueOptions(self, options):
+    def setNameOptions(self, row, options):
+        combo = self.getNameComboBox(row)
+        combo.clear()
+
+        # Insert items and set tooltips
+        for o in reversed(options):
+            # Add name
+            name = o.get("name", "")
+            name = "<" + name + ">" if o.get("in", "query") == "path" else name
+            combo.insertItem(0, name)
+
+            # this one sets the tooltip
+            combo.setItemData(0, o.get("description", None), Qt.ToolTipRole)
+
+            # set color
+            if (o.get("required", False)):
+                combo.setItemData(0, QColor("#FF333D"), Qt.BackgroundColorRole)
+
+            # save options as suggestion for value box
+            combo.setItemData(0, o, Qt.UserRole)
+
+        # Insert empty item
+        combo.insertItem(0, "")
+
+        return (combo)
+
+    def setValueOptionsAll(self, options):
         self.isCalculating = True
         self.valueoptions=options
 
         for row in range(0, self.rowCount()):
-            self.setValueComboBox(row,options)
+            self.setValueOptions(row, options)
         self.isCalculating = False
+
+    def setValueOptions(self, row, options):
+        combo = self.getValueComboBox(row)
+        combo.clear()
+
+        if not options:
+            options = self.valueoptions
+
+        schema = options.get("schema", {})
+
+        # Get options
+        if schema.get('type') == 'array':
+            items = schema.get('items', {})
+            enum = items.get('enum', [])
+            oneof = items.get('oneOf', [])
+        else:
+            enum = schema.get('enum', [])
+            oneof = schema.get('oneOf', [])
+
+        for value in reversed(enum):
+            combo.insertItem(0, value)
+
+        for value in reversed(oneof):
+            combo.insertItem(0, value.get('const', ''))
+            combo.setItemData(0, value.get('description', ''), Qt.ToolTipRole)
+
+        # Default options
+        if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
+            combo.insertItem(0, '0')
+            combo.insertItem(0, '1')
+        if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
+            combo.insertItem(0, '0')
+            combo.insertItem(0, '1')
+        else:
+            combo.insertItem(0, '<Object ID>')
+            combo.setItemData(0, 'The value in the Object ID-column in the data view.', Qt.ToolTipRole)
+            combo.insertItem(0, '')
+
+        # Select default value
+        if options.get('required', False) and not ('example' in options):
+            value = '<Object ID>'
+        else:
+            value = options.get('example', '')
+
+        self.setValue(row, 1, value)
+
+        return (combo)
 
     def getNameComboBox(self, row):
         combo = self.cellWidget(row,0)
         if combo is None:
             combo=QComboBox(self)
             combo.setEditable(True)
+            combo.setMinimumContentsLength(25)
+            combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLength)
             combo.row = row
             combo.col = 0
             combo.editTextChanged.connect(self.calcRows)
@@ -132,12 +200,13 @@ class QParamEdit(QTableWidget):
         return (combo)
 
     def getValueComboBox(self, row):
-
         value = self.cellWidget(row,1)
 
         if value is None:
             value = ValueEdit(self)
             combo = value.comboBox
+            combo.setMinimumContentsLength(20)
+            combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLength)
 
             combo.row = row
             combo.col = 1
@@ -150,79 +219,7 @@ class QParamEdit(QTableWidget):
 
         return (combo)
 
-    def setNameComboBox(self,row,options):
-        combo = self.getNameComboBox(row)
-        combo.clear()
 
-        # Insert items and set tooltips
-        for o in reversed(options):
-            # Add name
-            name = o.get("name","")
-            name = "<"+name+">" if o.get("in","query") == "path" else name
-            combo.insertItem(0,name)
-
-            # this one sets the tooltip
-            combo.setItemData(0,o.get("description",None),Qt.ToolTipRole)
-
-            #set color
-            if (o.get("required",False)):
-                combo.setItemData(0,QColor("#FF333D"),Qt.BackgroundColorRole)
-
-            #save options as suggestion for value box
-            combo.setItemData(0,o,Qt.UserRole)
-
-        # Insert empty item
-        combo.insertItem(0, "")
-
-        return (combo)
-
-    def setValueComboBox(self,row,options):
-        combo = self.getValueComboBox(row)
-        combo.clear()
-
-        if not options:
-            options = self.valueoptions
-
-        schema = options.get("schema",{})
-
-        # Get options
-        if schema.get('type') == 'array':
-            items = schema.get('items',{})
-            enum = items.get('enum',[])
-            oneof = items.get('oneOf',[])
-        else:
-            enum = schema.get('enum',[])
-            oneof = schema.get('oneOf',[])
-
-        for value in reversed(enum):
-            combo.insertItem(0, value)
-
-        for value in reversed(oneof):
-            combo.insertItem(0, value.get('const','') )
-            combo.setItemData(0,value.get('description','') , Qt.ToolTipRole)
-
-
-        # Default options
-        if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
-            combo.insertItem(0, '0')
-            combo.insertItem(0, '1')
-        if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
-            combo.insertItem(0, '0')
-            combo.insertItem(0, '1')
-        else:
-            combo.insertItem(0, '<Object ID>')
-            combo.setItemData(0,'The value in the Object ID-column in the data view.',Qt.ToolTipRole)
-            combo.insertItem(0, '')
-
-        # Select default value
-        if options.get('required', False) and not ('example' in options):
-            value = '<Object ID>'
-        else:
-            value = options.get('example', '')
-
-        self.setValue(row, 1, value)
-
-        return (combo)
 
     def setValue(self,row,col,val):
         if col == 0:
@@ -255,17 +252,12 @@ class QParamEdit(QTableWidget):
 
         return (((col0 == '<None>') | (col0 == '')) & ((col1 == '<None>') | (col1 == '')))
 
-    @Slot()
-    def onItemSelected(self,index=0):
-        '''
-        Value suggestions for right side
-        '''
-        sender = self.sender()
-        if hasattr(sender,'col') and hasattr(sender,'row') and (sender.col == 0):
-            # Get options
-            options = sender.itemData(index, Qt.UserRole)
-            # Set options
-            self.setValueComboBox(sender.row, options)
+
+    def initRow(self, row):
+        self.setNameOptions(row, self.nameoptions)
+        self.setValue(row, 0, '')
+        self.setValueOptions(row, self.valueoptions)
+        self.setValue(row, 1, '')
 
 
     def calcRows(self):
@@ -287,13 +279,26 @@ class QParamEdit(QTableWidget):
         row = self.rowCount()
         self.setRowCount(row+1)
 
-        self.initParamName(row)
-        self.initParamValue(row)
+        self.initRow(row)
 
-        #self.resizeColumnsToContents()
+        self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self.verticalResizeTableViewToContents()
         self.isCalculating = False
+
+    @Slot()
+    def onItemSelected(self,index=0):
+        '''
+        Value suggestions for right side
+        '''
+        sender = self.sender()
+        if hasattr(sender,'col') and hasattr(sender,'row') and (sender.col == 0):
+            # Get options
+            options = sender.itemData(index, Qt.UserRole)
+            # Set options
+            self.setValueOptions(sender.row, options)
+
+
 
     def verticalResizeTableViewToContents(self):
 
@@ -319,7 +324,7 @@ class ValueEdit(QWidget):
         super(ValueEdit, self).__init__(parent)
 
         self.mainLayout = QHBoxLayout(self)
-        self.mainLayout.setContentsMargins(0,0,0,0)
+        self.mainLayout.setContentsMargins(5,0,0,0)
         self.setLayout(self.mainLayout)
 
         self.comboBox = QComboBox(self)

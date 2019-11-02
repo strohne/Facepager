@@ -608,10 +608,10 @@ class ApiViewer(QDialog):
                     'basepath' : getDictValue(data, 'info.servers.0.url',''),
                     'resource' : path
                 }
-                tab.setOptions(options)
+                tab.setOpenAPIOptions(options)
 
                 params = getDictValue(data, "operations.get.parameters", [])
-                tab.paramEdit.setOptions(params)
+                tab.paramEdit.setOpenAPIOptions(params)
 
                 self.mainWindow.RequestTabs.setCurrentWidget(tab)
 

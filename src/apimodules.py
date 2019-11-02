@@ -778,7 +778,7 @@ class ApiTab(QScrollArea):
 
         operations = self.resourceEdit.itemData(index,Qt.UserRole)
         params = getDictValue(operations,"get.parameters",False) if operations else []
-        self.paramEdit.setOptions(params)
+        self.paramEdit.setOpenAPIOptions(params)
 
     @Slot()
     def onChangedParam(self,index=0):
