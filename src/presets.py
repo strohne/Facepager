@@ -345,7 +345,6 @@ class PresetWindow(QDialog):
 
     def initPresets(self):
         self.loadingIndicator.show()
-        QApplication.processEvents()
 
         #self.defaultPresetFolder
         self.categoryNodes = {}
@@ -353,7 +352,9 @@ class PresetWindow(QDialog):
         self.detailWidget.hide()
         selectitem = None
 
-        #self.downloadDefaultPresets()
+        while not self.presetsDownloaded:
+            QApplication.processEvents()
+
         if os.path.exists(self.presetFolderDefault):
             files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
