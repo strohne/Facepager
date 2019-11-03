@@ -2166,18 +2166,8 @@ class TwitterTab(AuthTab):
 
         # options for data handling
         if purpose == 'fetch':
-            if options["resource"] == '/search/tweets':
-                options['nodedata'] = 'statuses'
-            elif options["resource"] == '/followers/list':
-                options['nodedata'] = 'users'
-            elif options["resource"] == '/followers/ids':
-                options['nodedata'] = 'ids'
-            elif options["resource"] == '/friends/list':
-                options['nodedata'] = 'users'
-            elif options["resource"] == '/friends/ids':
-                options['nodedata'] = 'ids'
-            else:
-                options['nodedata'] = None
+            doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.x-facepager-extract'
+            options['nodedata'] = getDictValue(self.apidoc,doc)
 
         return options
 
