@@ -139,14 +139,15 @@ class ApiThreadPool():
         if threadcount is not None:
             self.maxthreads = threadcount
 
-        if len(self.input) > 100:
-            threadcount = min(10,self.maxthreads)
-        elif len(self.input) > 50:
-            threadcount = min(5,self.maxthreads)
-        elif len(self.input) > 10:
-            threadcount = min(1,self.maxthreads)
-        else:
-            threadcount = 1
+        #if len(self.input) > 100:
+        #    threadcount = min(10,self.maxthreads)
+        #elif len(self.input) > 50:
+        #    threadcount = min(5,self.maxthreads)
+        #elif len(self.input) > 10:
+        #    threadcount = min(1,self.maxthreads)
+        #else:
+        #    threadcount = 1
+        threadcount = min(len(self.input), self.maxthreads)
 
         self.setThreadCount(threadcount)
 
