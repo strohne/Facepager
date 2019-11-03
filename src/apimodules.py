@@ -2074,6 +2074,7 @@ class TwitterTab(AuthTab):
 
         # Query and Parameter Box
         self.initInputs()
+        #self.initExtractInputs()
         self.initPagingInputs()
 
         self.initAuthSetupInputs()
@@ -2092,6 +2093,30 @@ class TwitterTab(AuthTab):
             authorize_url=self.defaults.get('authorize_url'),
             request_token_url=self.defaults.get('request_token_url'),
             base_url=self.defaults.get('basepath'))
+
+    def initExtractInputs(self):
+        layout = QHBoxLayout()
+
+        # Extract
+        self.extractEdit = QComboBox(self)
+        self.extractEdit.setEditable(True)
+        self.extractEdit.setToolTip(
+            "If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node.")
+
+        layout.addWidget(self.extractEdit)
+        layout.setStretch(0, 0)
+
+
+        layout.addWidget(QLabel("Key for Object ID"))
+        self.objectidEdit = QComboBox(self)
+        self.objectidEdit.setEditable(True)
+        self.objectidEdit.setToolTip("If your data contains unique IDs for every node, define the corresponding key.")
+        layout.addWidget(self.objectidEdit)
+        layout.setStretch(1, 0)
+        layout.setStretch(2, 2)
+
+        # Add layout
+        self.mainLayout.addRow("Key to extract", layout)
 
     def initLoginInputs(self):
         # Login-Boxes
@@ -2141,14 +2166,16 @@ class TwitterTab(AuthTab):
 
         # options for data handling
         if purpose == 'fetch':
-            if options["resource"] == 'search/tweets':
+            if options["resource"] == '/search/tweets':
                 options['nodedata'] = 'statuses'
-            elif options["resource"] == 'followers/list':
+            elif options["resource"] == '/followers/list':
                 options['nodedata'] = 'users'
-            elif options["resource"] == 'followers/ids':
+            elif options["resource"] == '/followers/ids':
                 options['nodedata'] = 'ids'
-            elif options["resource"] == 'friends/list':
+            elif options["resource"] == '/friends/list':
                 options['nodedata'] = 'users'
+            elif options["resource"] == '/friends/ids':
+                options['nodedata'] = 'ids'
             else:
                 options['nodedata'] = None
 
