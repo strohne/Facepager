@@ -2167,7 +2167,8 @@ class TwitterTab(AuthTab):
         # options for data handling
         if purpose == 'fetch':
             doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.x-facepager-extract'
-            options['nodedata'] = getDictValue(self.apidoc,doc)
+            nodedata = getDictValue(self.apidoc,doc,dump=False)
+            options['nodedata'] = nodedata if nodedata != '' else None
 
         return options
 
