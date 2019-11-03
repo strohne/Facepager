@@ -285,6 +285,7 @@
 						"application/json": {
                                 "schema": {
                                     "type": "object",
+                                    "x-facepager-extract" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array"
@@ -349,6 +350,7 @@
 						"application/json": {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "users",
 									"properties": {
 										"users" : {
 											"type": "array"
@@ -407,6 +409,7 @@
                             "application/json" : {
                                 "schema": {
                                     "type": "object",
+                                    "x-facepager-extract" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array",
@@ -476,6 +479,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "users",
 									"properties": {
 										"users" : {
 											"type": "array",
@@ -521,6 +525,7 @@
                             "application/json" : {
                                 "schema": {
                                     "type": "object",
+                                    "x-facepager-extract" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array",
@@ -630,6 +635,7 @@
                             "application/json" : {
                                 "schema": {
                                     "type": "object",
+                                    "x-facepager-extract" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array"
@@ -770,6 +776,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "places",
 									"properties": {
 										"places" : {
 											"type": "array",
@@ -859,6 +866,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "places",
 									"properties": {
 										"places" : {
 											"type": "array",
@@ -1104,6 +1112,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "users",
 									"properties": {
 										"users" : {
 											"type": "array",
@@ -1168,6 +1177,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "lists",
 									"properties": {
 										"lists" : {
 											"type": "array",
@@ -1223,6 +1233,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "lists",
 									"properties": {
 										"lists" : {
 											"type": "array",
@@ -1436,6 +1447,7 @@
                           "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "users",
 									"properties": {
 										"users" : {
 											"type": "array",
@@ -1569,6 +1581,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "lists",
 									"properties": {
 										"lists" : {
 											"type": "array",
@@ -1797,6 +1810,7 @@
                             "application/json" : {
                                 "schema": {
                                     "type": "object",
+                                    "x-facepager-extract" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array"
@@ -1947,6 +1961,7 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract" : "statuses",
                                     "properties" : {
                                         "statuses" : {
                                             "type" : "array",
