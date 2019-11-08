@@ -6,6 +6,7 @@ from datetime import datetime
 from copy import deepcopy
 import re
 import os, sys, time
+import io
 from collections import OrderedDict
 import threading
 
@@ -876,6 +877,19 @@ class ApiTab(QScrollArea):
 
                 return data, headers, status
 
+            # Scrape links
+            elif format == 'links':
+                try:
+                    content = bytes(str(response.text), encoding='utf-8')
+                    data = extractLinks(content)
+                except Exception as  e:
+                    data = {'error': 'Links could not be extracted.',
+                            'message': str(e),
+                            'response': response.text
+                            }
+
+                return data, headers, status
+
             else:
                 return response
 
@@ -1001,11 +1015,15 @@ class ApiTab(QScrollArea):
                 with open(fullfilename, 'wb') as f:
                     for chunk in response.iter_content(1024):
                         f.write(chunk)
+
                 data = {'filename': os.path.basename(fullfilename),
                         'filepath': fullfilename,
+                        'content-type': response.headers["content-type"],
                         'sourcepath': path,
                         'sourcequery': args,
-                        'finalurl':response.url}
+                        'finalurl': response.url
+                        }
+
                 status = 'downloaded' + ' (' + str(response.status_code) + ')'
             else:
                 try:
@@ -1639,6 +1657,7 @@ class AuthTab(ApiTab):
             if format == 'file':
                 data, headers, status = self.download(urlpath, urlparams, requestheaders, method, payload, foldername,
                                                       filename, fileext)
+
             else:
                 data, headers, status = self.request(urlpath, urlparams, requestheaders, method, payload, format=format)
             options['querystatus'] = status
@@ -2326,8 +2345,8 @@ class GenericTab(AuthTab):
 
         #Format
         self.formatEdit = QComboBox(self)
-        self.formatEdit.addItems(['text','json','xml'])
-        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON. Text: data will not be parsed and embedded in JSON. XML: data will be converted from XML to JSON.")
+        self.formatEdit.addItems(['text','json','xml','links'])
+        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON. Text: data will not be parsed and embedded in JSON. XML: data will be converted from XML to JSON. Links: data will be parsed as xml and links will be extracted.")
         layout.addWidget(self.formatEdit)
         layout.setStretch(0, 0)
         #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
@@ -2367,7 +2386,7 @@ class FilesTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(FilesTab, self).__init__(mainWindow, "Files")
 
-        self.defaults['basepath'] = '<url>'
+        self.defaults['basepath'] = '<Object ID>'
         self.defaults['key_objectid'] = 'filename'
         self.defaults['key_nodedata'] = None        
 

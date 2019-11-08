@@ -202,11 +202,61 @@ def htmlToJson(data,csskey=None,type='lxml'):
     output = []
     if csskey is not None:
         for part in soup.cssselect(csskey):
-            output.extend(parseSoup(part,True))
+            output.append(parseSoup(part,True))
     else:
         output = {soup.tag : parseSoup(soup,True)}
 
     return output
+
+
+def extractLinks(data):
+    # type='html5'
+    soup = lxml.html.fromstring(data)
+
+    def parseSoup(element, context=True):
+        out = {}
+        if context:
+            out['name'] = element.tag
+            if element.text is not None:
+                out['text'] = str(element.text).strip("\n\t ")
+
+        attributes = {}
+        if context:
+            for name, value in sorted(element.items()):
+                attributes['@' + name] = value
+        out.update(attributes)
+
+        children = []
+        for child in element:
+            if isinstance(child.tag, str):
+                id = str(child.get('id', ''))
+                key = child.tag + '#' + id if id != '' else child.tag
+                children.append({key: parseSoup(child)})
+            else:
+                value = str(child.text).strip("\n\t ")
+                if value != '':
+                    children.append({'text': value})
+
+        if len(children) > 0:
+            out['items'] = children
+
+        # simplify:
+        if len(children) == 0 and len(attributes) == 0:
+            out = out.get('text', None)
+        elif len(children) > 0 and len(attributes) == 0 and out.get('text', None) is None:
+            del out['items']
+            out = children
+
+        return out
+
+    output = []
+
+    #base = soup.cssselect('base')
+    for part in soup.cssselect('a'):
+        output.append(parseSoup(part, True))
+
+    return output
+
 
 
 def xmlToJson(data):
