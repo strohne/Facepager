@@ -214,7 +214,7 @@ def elementToJson(element, context=True):
     out = {}
     if context:
         out['name'] = element.tag
-        out['text'] = element.get_text(strip=True)
+        out['text'] = element.text_content().strip("\r\n\t ")
         #if element.text is not None:
         #    out['text'] = str(element.text).strip("\n\t ")
 
@@ -250,20 +250,19 @@ def elementToJson(element, context=True):
 
 
 def extractLinks(data,baseurl):
-    # type='html5'
-
     output = []
     soup = lxml.html.fromstring(data)
 
     base = soup.find('base')
-    base = base['href'] if base is not None else None
-    baseurl = base if base is not None else baseurl
-
+    base = base.get('href') if base is not None else None
+    baseurl = urllib.parse.urljoin(baseurl,base)
 
     for part in soup.cssselect('a'):
         link = elementToJson(part, True)
-        link['base'] = base
-        link['url'] = urllib.parse.urljoin(baseurl, link)
+        if base is not None:
+            link['base'] = base
+        if link.get('@href',None) is not None:
+            link['url'] = urllib.parse.urljoin(baseurl, link.get('@href',None))
         output.append(link)
 
     return output

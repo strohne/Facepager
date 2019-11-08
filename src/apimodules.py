@@ -531,8 +531,6 @@ class ApiTab(QScrollArea):
     def getFileFolderName(self,options, nodedata):
         # Folder and file
         foldername = options.get('folder', None)
-        if (foldername is None) or (not os.path.isdir(foldername)):
-            raise Exception("Folder does not exists, select download folder, please!")
 
         filename = options.get('filename', None)
         if (filename is not None) and (filename  == '<None>'):
@@ -540,8 +538,6 @@ class ApiTab(QScrollArea):
         else:
             filename = self.parsePlaceholders(filename,nodedata)
 
-        if filename == '':
-            raise Exception("Filename is empty, please provide a placeholder or <None> to automatically obtain filenames!")
 
         fileext = options.get('fileext', None)
 
@@ -908,7 +904,7 @@ class ApiTab(QScrollArea):
 
             # Scrape links
             elif format == 'links':
-                content = io.StringIO()
+                content = io.BytesIO()
                 try:
                     for chunk in response.iter_content(1024):
                         content.write(chunk)
@@ -918,8 +914,10 @@ class ApiTab(QScrollArea):
                             'sourcequery': args,
                             'finalurl': response.url
                             }
+
                     #content = bytes(str(response.text), encoding='utf-8')
-                    data['links'] = extractLinks(content,response.url)
+                    xml = str(content.getvalue())
+                    data['links'] = extractLinks(xml,response.url)
                 except Exception as  e:
                     data = {'error': 'Links could not be extracted.',
                             'message': str(e),
@@ -1576,10 +1574,17 @@ class AuthTab(ApiTab):
             offset = options.get('offset_start', 1)
             options['params'][options.get('param_paging', '')] = offset
 
-        # file or json
+        # file settings
+        foldername, filename, fileext = self.getFileFolderName(options, nodedata)
+
         format = options.get('format', 'json')
         if format == 'file':
-            foldername, filename, fileext = self.getFileFolderName(options, nodedata)
+            if (foldername is None) or (not os.path.isdir(foldername)):
+                raise Exception("Folder does not exists, select download folder, please!")
+
+            if filename == '':
+                raise Exception(
+                    "Filename is empty, please provide a placeholder or <None> to automatically obtain filenames!")
 
         # Abort condition: maximum page count
         for page in range(options.get('currentpage', 0), options.get('pages', 1)):
