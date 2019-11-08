@@ -262,6 +262,12 @@ class ApiTab(QScrollArea):
         except AttributeError:
             pass
 
+        try:
+            options['filename'] = self.filenameEdit.currentText()
+            options['fileext'] = self.fileextEdit.currentText()
+        except AttributeError:
+            pass
+
         #paging
         try:
             options['pages'] = self.pagesEdit.value()
@@ -302,13 +308,18 @@ class ApiTab(QScrollArea):
             # query type
             options['querytype'] = self.name + ':' + self.resourceEdit.currentText()            
 
-            # folder
+            # uploadfolder
             try:
                 options['folder'] = self.folderEdit.text()
             except AttributeError:
-                pass            
-            
-            # Credentials from input fields (not from defaults)
+                pass
+
+            # download folder
+            try:
+                options['downloadfolder'] = self.downloadfolderEdit.text()
+            except AttributeError:
+                pass
+
             try:
                 options['access_token'] = self.tokenEdit.text()
             except AttributeError:
@@ -373,13 +384,27 @@ class ApiTab(QScrollArea):
         except AttributeError:
             pass
 
-        #Folder
+        # Upload folder
         try:
             if 'folder' in options:
                 self.folderEdit.setText(options.get('folder'))
         except AttributeError:
             pass
-                
+
+        # Download folder
+        try:
+            if 'downloadfolder' in options:
+                self.downloadfolderEdit.setText(options.get('downloadfolder'))
+        except AttributeError:
+            pass
+
+        try:
+            self.filenameEdit.setEditText(options.get('filename', '<None>'))
+            self.fileextEdit.setEditText(options.get('fileext', '<None>'))
+        except AttributeError:
+            pass
+
+
         # Paging
         try:
             self.pagesEdit.setValue(int(options.get('pages', 1)))
@@ -529,16 +554,22 @@ class ApiTab(QScrollArea):
         self.resourceEdit.currentIndexChanged.connect(self.onChangedRelation)
 
     def getFileFolderName(self,options, nodedata):
-        # Folder and file
-        foldername = options.get('folder', None)
+        # Folder
+        foldername = options.get('downloadfolder', None)
+        if foldername == '':
+            foldername = None
 
+        # File
         filename = options.get('filename', None)
         if (filename is not None) and (filename  == '<None>'):
             filename = None
         else:
             filename = self.parsePlaceholders(filename,nodedata)
 
+        if filename == '':
+            filename = None
 
+        # Extension
         fileext = options.get('fileext', None)
 
         if fileext is not None and fileext == '<None>':
@@ -548,8 +579,8 @@ class ApiTab(QScrollArea):
 
         return (foldername,filename,fileext)
 
-    def initFolderInput(self):
-        #Download folder
+    # Upload folder
+    def initUploadFolderInput(self):
         self.folderwidget = QWidget()
         folderlayout = QHBoxLayout()
         folderlayout.setContentsMargins(0,0,0,0)
@@ -562,7 +593,44 @@ class ApiTab(QScrollArea):
         self.folderButton.clicked.connect(self.selectFolder)
         folderlayout.addWidget(self.folderButton)
 
-        self.mainLayout.addRow("Folder", self.folderwidget)
+        self.mainLayout.addRow("Upload folder", self.folderwidget)
+
+    # Download folder
+    def initFileInputs(self):
+
+        self.downloadfolderwidget = QWidget()
+        folderlayout = QHBoxLayout()
+        folderlayout.setContentsMargins(0,0,0,0)
+        self.downloadfolderwidget.setLayout(folderlayout)
+
+        self.downloadfolderEdit = QLineEdit()
+        self.downloadfolderEdit.setToolTip("Select a folder if you want to save the responses to files.")
+        folderlayout.addWidget(self.downloadfolderEdit,1)
+
+        self.downloadfolderButton = QPushButton("...", self)
+        self.downloadfolderButton.clicked.connect(self.selectDownloadFolder)
+        folderlayout.addWidget(self.downloadfolderButton,0)
+
+        # filename
+        folderlayout.addWidget(QLabel("Custom filename"),0)
+        self.filenameEdit = QComboBox(self)
+        self.filenameEdit .setToolTip("Set the filename, if you want to save the responses to files. <Object ID> usually is a good choice.")
+        self.filenameEdit.insertItems(0, ['<Object ID>','<None>'])
+        self.filenameEdit.setEditable(True)
+        folderlayout.addWidget(self.filenameEdit,1)
+
+
+        #fileext
+        folderlayout.addWidget(QLabel("Custom file extension"),0)
+        self.fileextEdit = QComboBox(self)
+        self.fileextEdit  .setToolTip("Set the extension of the files, for example .json, .txt or .html. Set to <None> to automatically guess from the response.")
+        self.fileextEdit.insertItems(0, ['<None>','.html','.txt'])
+        self.fileextEdit.setEditable(True)
+        folderlayout.addWidget(self.fileextEdit,1)
+        #layout.setStretch(2, 1)
+
+        self.mainLayout.addRow("Download", self.downloadfolderwidget)
+
 
     def pagingChanged(self):
         if self.pagingTypeEdit.currentText() == "count":
@@ -603,7 +671,6 @@ class ApiTab(QScrollArea):
             layout.setStretch(2, 1)
 
             # Paging key
-
             self.pagingKeyWidget = QWidget()
             self.pagingKeyLayout = QHBoxLayout()
             self.pagingKeyLayout .setContentsMargins(0, 0, 0, 0)
@@ -798,10 +865,39 @@ class ApiTab(QScrollArea):
             self.progress({'current':current,'total':total})
 
     def request(self, path, args=None, headers=None, method="GET", payload=None,foldername=None,
-                                                      filename=None, fileext=None, files = None, format='json'):
+                                                      filename=None, fileext=None, format='json'):
         """
         Start a new threadsafe session and request
         """
+
+        def download(response,foldername=None,filename=None,fileext=None):
+            if foldername is not None:
+                if fileext is None:
+                    guessed_ext = guess_all_extensions(response.headers["content-type"])
+                    fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+
+                fullfilename = makefilename(path,foldername, filename, fileext)
+                file = open(fullfilename, 'wb')
+            else:
+                fullfilename = None
+                file = None
+
+            try:
+                content = io.BytesIO()
+                try:
+                    for chunk in response.iter_content(1024):
+                        content.write(chunk)
+                        if file is not None:
+                            file.write(chunk)
+
+                    out = str(content.getvalue())
+                finally:
+                    content.close()
+            finally:
+                if file is not None:
+                    file.close()
+
+            return (fullfilename,out)
 
         #Throttle speed
         if (self.speed is not None) and (self.lastrequest is not None):
@@ -820,7 +916,7 @@ class ApiTab(QScrollArea):
             maxretries = 3
             while True:
                 try:
-                    response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout)
+                    response = session.request(method,path, params=args,headers=headers,data=payload, timeout=self.timeout)
 
                 except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
@@ -841,29 +937,23 @@ class ApiTab(QScrollArea):
 
             # File
             if format == 'file':
+                data = {
+                        'content-type': response.headers["content-type"],
+                        'sourcepath': path,
+                        'sourcequery': args,
+                        'finalurl': response.url
+                        }
 
                 if response.status_code == 200:
-                    if fileext is None:
-                        guessed_ext = guess_all_extensions(response.headers["content-type"])
-                        fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
-
-                    fullfilename = makefilename(foldername, filename, fileext)
-                    with open(fullfilename, 'wb') as f:
-                        for chunk in response.iter_content(1024):
-                            f.write(chunk)
-
-                    data = {'filename': os.path.basename(fullfilename),
-                            'filepath': fullfilename,
-                            'content-type': response.headers["content-type"],
-                            'sourcepath': path,
-                            'sourcequery': args,
-                            'finalurl': response.url
-                            }
+                    fullfilename, content = download(response,foldername,filename,fileext)
+                    data['filename'] = os.path.basename(fullfilename)
+                    data['filepath'] = fullfilename
                 else:
                     try:
-                        data = {'sourcepath': path, 'sourcequery': args, 'response': response.json()}
+                        data['response'] = response.json()
                     except:
-                        data = {'sourcepath': path, 'sourcequery': args, 'response': response.text}
+                        data['response'] = response.text
+
 
                 return data, headers, status
 
@@ -904,27 +994,24 @@ class ApiTab(QScrollArea):
 
             # Scrape links
             elif format == 'links':
-                content = io.BytesIO()
+                data = {'content-type': response.headers["content-type"],
+                        'sourcepath': path,
+                        'sourcequery': args,
+                        'finalurl': response.url
+                        }
+
+                fullfilename, content = download(response,foldername,filename,fileext)
+
+                if fullfilename is not None:
+                    data['filename'] = os.path.basename(fullfilename)
+                    data['filepath'] = fullfilename
+
                 try:
-                    for chunk in response.iter_content(1024):
-                        content.write(chunk)
-
-                    data = {'content-type': response.headers["content-type"],
-                            'sourcepath': path,
-                            'sourcequery': args,
-                            'finalurl': response.url
-                            }
-
-                    #content = bytes(str(response.text), encoding='utf-8')
-                    xml = str(content.getvalue())
-                    data['links'] = extractLinks(xml,response.url)
+                    data['links'] = extractLinks(content,response.url)
                 except Exception as  e:
-                    data = {'error': 'Links could not be extracted.',
-                            'message': str(e),
-                            'response': response.text
-                            }
-                finally:
-                    content.close()
+                    data['error'] = 'Links could not be extracted.'
+                    data['message'] = str(e)
+                    data['response'] = response.text
 
                 return data, headers, status
 
@@ -1008,10 +1095,9 @@ class ApiTab(QScrollArea):
         datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', '')) if datadir == '' else datadir 
         datadir = os.path.expanduser('~') if datadir == '' else datadir        
         
-        dlg = SelectFolderDialog(self, 'Select Download Folder', datadir)
+        dlg = SelectFolderDialog(self, 'Select Upload Folder', datadir)
         if dlg.exec_():
             if dlg.optionNodes.isChecked():
-                #newnodes = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
                 newnodes = [os.path.basename(f)  for f in dlg.selectedFiles()]
                 self.mainWindow.tree.treemodel.addNodes(newnodes)
                 folder = os.path.dirname(dlg.selectedFiles()[0])
@@ -1020,7 +1106,22 @@ class ApiTab(QScrollArea):
                 folder = dlg.selectedFiles()[0]
                 self.folderEdit.setText(folder)
 
-            
+    def selectDownloadFolder(self):
+        datadir = self.downloadfolderEdit.text()
+        datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', '')) if datadir == '' else datadir
+        datadir = os.path.expanduser('~') if datadir == '' else datadir
+
+        dlg = SelectFolderDialog(self, 'Select Download Folder', datadir)
+        if dlg.exec_():
+            if dlg.optionNodes.isChecked():
+                newnodes = [os.path.basename(f) for f in dlg.selectedFiles()]
+                self.mainWindow.tree.treemodel.addNodes(newnodes)
+                folder = os.path.dirname(dlg.selectedFiles()[0])
+                self.downloadfolderEdit.setText(folder)
+            else:
+                folder = dlg.selectedFiles()[0]
+                self.downloadfolderEdit.setText(folder)
+
 
 class FacebookTab(ApiTab):
     def __init__(self, mainWindow=None):
@@ -1582,10 +1683,6 @@ class AuthTab(ApiTab):
             if (foldername is None) or (not os.path.isdir(foldername)):
                 raise Exception("Folder does not exists, select download folder, please!")
 
-            if filename == '':
-                raise Exception(
-                    "Filename is empty, please provide a placeholder or <None> to automatically obtain filenames!")
-
         # Abort condition: maximum page count
         for page in range(options.get('currentpage', 0), options.get('pages', 1)):
             # Save page
@@ -1864,7 +1961,7 @@ class AmazonTab(AuthTab):
         # Header, Verbs
         self.initHeaderInputs()
         self.initVerbInputs()
-        self.initFolderInput()
+        self.initUploadFolderInput()
 
         # Extract input
         self.initExtractInputs()
@@ -2295,11 +2392,13 @@ class GenericTab(AuthTab):
         # Header, Verbs
         self.initHeaderInputs()
         self.initVerbInputs()
-        self.initFolderInput()
+        self.initUploadFolderInput()
 
         # Extract input
-        self.initExtractInputs()
         self.initPagingInputs(True, True)
+        self.initExtractInputs()
+
+        self.initFileInputs()
 
         # Login inputs
         self.initAuthSetupInputs()
@@ -2365,7 +2464,7 @@ class FilesTab(AuthTab):
         # Header, Verbs
         self.initHeaderInputs()
         self.initVerbInputs()
-        self.initFolderInput()
+        self.initUploadFolderInput()
 
         # Extract input
         #self.initExtractInputs()
@@ -2380,26 +2479,7 @@ class FilesTab(AuthTab):
         self.loadSettings()
         self.timeout = 30
 
-    def initFileInputs(self):
-        self.filenameEdit = QComboBox(self)
-        self.filenameEdit.insertItems(0, ['<None>','<Object ID>'])
-        self.filenameEdit.setEditable(True)
-        #self.mainLayout.addRow("Custom filename", self.filenameEdit)
 
-        #fileext
-        self.fileextEdit = QComboBox(self)
-        self.fileextEdit.insertItems(0, ['<None>','.html','.txt'])
-        self.fileextEdit.setEditable(True)
-        #self.mainLayout.addRow("Custom file extension", self.fileextEdit)
-
-        layout= QHBoxLayout()
-        self.mainLayout.addRow("Custom filename", layout)
-
-        layout.addWidget(self.filenameEdit)
-        layout.setStretch(0, 1);
-        layout.addWidget(QLabel("Custom file extension"))
-        layout.addWidget(self.fileextEdit)
-        layout.setStretch(2, 1);
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FilesTab, self).getOptions(purpose)
@@ -2407,8 +2487,6 @@ class FilesTab(AuthTab):
         if purpose != 'preset':
             options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
-        options['filename'] = self.filenameEdit.currentText()
-        options['fileext'] = self.fileextEdit.currentText()
         options['format'] = "file"
         options['paging_type'] = 'count'
 
@@ -2416,20 +2494,10 @@ class FilesTab(AuthTab):
         return options
 
     def setOptions(self, options):
-        self.filenameEdit.setEditText(options.get('filename', '<None>'))
-        self.fileextEdit.setEditText(options.get('fileext', '<None>'))
         options['format'] = 'file'
         options['paging_type'] = 'count'
 
         super(FilesTab, self).setOptions(options)
-
-    def verbChanged(self):
-        super(FilesTab, self).verbChanged()
-
-        self.folderwidget.show()
-        self.mainLayout.labelForField(self.folderwidget).show()
-
-
 
 class QWebPageCustom(QWebEnginePage):
     logmessage = Signal(str)

@@ -1,5 +1,6 @@
 import json
-import os,sys,platform
+import os,sys,platform,time
+import re
 import lxml
 import lxml.html
 import urllib.parse
@@ -276,8 +277,8 @@ def xmlToJson(data):
     return data
 
 
-def makefilename(foldername=None, filename=None, fileext=None, appendtime=False):  # Create file name
-    url_filename, url_fileext = os.path.splitext(os.path.basename(path))
+def makefilename(url = None, foldername=None, filename=None, fileext=None, appendtime=False):  # Create file name
+    url_filename, url_fileext = os.path.splitext(os.path.basename(url))
     if fileext is None:
         fileext = url_fileext
     if filename is None:
