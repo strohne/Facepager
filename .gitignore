@@ -15,6 +15,7 @@ pyenv
 .pydevproject
 .settings/
 .idea/
+.idea/*
 .settings/org.eclipse.core.resources.prefs
 *.DS_Store
 src/.eggs
