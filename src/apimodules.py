@@ -801,7 +801,8 @@ class ApiTab(QScrollArea):
         if self.progress is not None:
             self.progress({'current':current,'total':total})
 
-    def request(self, path, args=None, headers=None, method="GET", payload=None, files = None, format='json'):
+    def request(self, path, args=None, headers=None, method="GET", payload=None,foldername=None,
+                                                      filename=None, fileext=None, files = None, format='json'):
         """
         Start a new threadsafe session and request
         """
@@ -824,7 +825,7 @@ class ApiTab(QScrollArea):
             while True:
                 try:
                     response = session.request(method,path, params=args,headers=headers,data=payload,files=files, timeout=self.timeout)
-                        
+
                 except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
                     if maxretries > 0:
@@ -842,8 +843,36 @@ class ApiTab(QScrollArea):
             status = status + ' (' + str(response.status_code) + ')'
             headers = dict(list(response.headers.items()))
 
+            # File
+            if format == 'file':
+
+                if response.status_code == 200:
+                    if fileext is None:
+                        guessed_ext = guess_all_extensions(response.headers["content-type"])
+                        fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+
+                    fullfilename = makefilename(foldername, filename, fileext)
+                    with open(fullfilename, 'wb') as f:
+                        for chunk in response.iter_content(1024):
+                            f.write(chunk)
+
+                    data = {'filename': os.path.basename(fullfilename),
+                            'filepath': fullfilename,
+                            'content-type': response.headers["content-type"],
+                            'sourcepath': path,
+                            'sourcequery': args,
+                            'finalurl': response.url
+                            }
+                else:
+                    try:
+                        data = {'sourcepath': path, 'sourcequery': args, 'response': response.json()}
+                    except:
+                        data = {'sourcepath': path, 'sourcequery': args, 'response': response.text}
+
+                return data, headers, status
+
             # JSON
-            if format == 'json' :
+            elif format == 'json' :
                 try:
                     data = response.json() if response.text != '' else []
                 except:
@@ -879,14 +908,25 @@ class ApiTab(QScrollArea):
 
             # Scrape links
             elif format == 'links':
+                content = io.StringIO()
                 try:
-                    content = bytes(str(response.text), encoding='utf-8')
-                    data = extractLinks(content)
+                    for chunk in response.iter_content(1024):
+                        content.write(chunk)
+
+                    data = {'content-type': response.headers["content-type"],
+                            'sourcepath': path,
+                            'sourcequery': args,
+                            'finalurl': response.url
+                            }
+                    #content = bytes(str(response.text), encoding='utf-8')
+                    data['links'] = extractLinks(content,response.url)
                 except Exception as  e:
                     data = {'error': 'Links could not be extracted.',
                             'message': str(e),
                             'response': response.text
                             }
+                finally:
+                    content.close()
 
                 return data, headers, status
 
@@ -964,78 +1004,6 @@ class ApiTab(QScrollArea):
     def loadFinished(self, success):
         if (not success and not self.loginWindow.stopped):
             self.logMessage('Error loading web page')
-
-    def download(self, path, args=None, headers=None, method="GET", payload=None, foldername=None, filename=None, fileext=None):
-        """
-        Download files ...
-        Uses the request-method without converting to json
-        (argument jsonify==True)
-        """
-
-        def makefilename(foldername=None, filename=None, fileext=None,appendtime = False):  # Create file name
-            url_filename, url_fileext = os.path.splitext(os.path.basename(path))
-            if fileext is None:
-                fileext = url_fileext
-            if filename is None:
-                filename = url_filename
-
-            filename = re.sub(r'[^a-zA-Z0-9_.-]+', '', filename)
-            fileext = re.sub(r'[^a-zA-Z0-9_.-]+', '', fileext)
-
-            filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            filenumber = 0
-
-            while True:
-                newfilename = filename[:100]
-                if appendtime:
-                    newfilename += '.' + filetime
-                if filenumber > 0:
-                    newfilename += '-' + str(filenumber)
-
-                newfilename += str(fileext)
-                fullfilename = os.path.join(foldername,newfilename)
-
-                if (os.path.isfile(fullfilename)):
-                    filenumber = filenumber + 1
-                else:
-                    break
-
-            return fullfilename
-
-        try:
-            response = self.request(path, args, headers,method,payload, format='response')
-
-            # Handle the response of the generic, non-json-returning response
-            if response.status_code == 200:
-                if fileext is None:
-                    guessed_ext = guess_all_extensions(response.headers["content-type"])
-                    fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
-
-                fullfilename = makefilename(foldername, filename, fileext)
-                with open(fullfilename, 'wb') as f:
-                    for chunk in response.iter_content(1024):
-                        f.write(chunk)
-
-                data = {'filename': os.path.basename(fullfilename),
-                        'filepath': fullfilename,
-                        'content-type': response.headers["content-type"],
-                        'sourcepath': path,
-                        'sourcequery': args,
-                        'finalurl': response.url
-                        }
-
-                status = 'downloaded' + ' (' + str(response.status_code) + ')'
-            else:
-                try:
-                    data = {'sourcepath': path, 'sourcequery': args,'response':response.json()}
-                except:
-                    data = {'sourcepath': path, 'sourcequery': args,'response':response.text}
-
-                status = 'error' + ' (' + str(response.status_code) + ')'
-        except Exception as e:
-            raise Exception("Download Error: {0}".format(str(e)))
-        else:
-            return data, dict(response.headers), status
 
     def selectFolder(self):
         datadir = self.folderEdit.text()
@@ -1654,12 +1622,8 @@ class AuthTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            if format == 'file':
-                data, headers, status = self.download(urlpath, urlparams, requestheaders, method, payload, foldername,
-                                                      filename, fileext)
-
-            else:
-                data, headers, status = self.request(urlpath, urlparams, requestheaders, method, payload, format=format)
+            data, headers, status = self.request(urlpath, urlparams, requestheaders, method, payload,
+                                                     foldername, filename, fileext, format=format)
             options['querystatus'] = status
             logData(data, options, headers)
 

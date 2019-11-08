@@ -2,6 +2,7 @@ import json
 import os,sys,platform
 import lxml
 import lxml.html
+import urllib.parse
 from collections import OrderedDict
 from collections import Mapping
 from xmljson import BadgerFish
@@ -209,51 +210,61 @@ def htmlToJson(data,csskey=None,type='lxml'):
     return output
 
 
-def extractLinks(data):
+def elementToJson(element, context=True):
+    out = {}
+    if context:
+        out['name'] = element.tag
+        out['text'] = element.get_text(strip=True)
+        #if element.text is not None:
+        #    out['text'] = str(element.text).strip("\n\t ")
+
+    attributes = {}
+    if context:
+        for name, value in sorted(element.items()):
+            attributes['@' + name] = value
+    out.update(attributes)
+
+    # children = []
+    # for child in element:
+    #     if isinstance(child.tag, str):
+    #         id = str(child.get('id', ''))
+    #         key = child.tag + '#' + id if id != '' else child.tag
+    #         children.append({key: parseSoup(child)})
+    #     else:
+    #         value = str(child.text).strip("\n\t ")
+    #         if value != '':
+    #             children.append({'text': value})
+    #
+    # if len(children) > 0:
+    #     out['items'] = children
+
+    # simplify:
+    # if len(children) == 0 and len(attributes) == 0:
+    #     out = out.get('text', None)
+    # elif len(children) > 0 and len(attributes) == 0 and out.get('text', None) is None:
+    #     del out['items']
+    #     out = children
+
+    return out
+
+
+
+def extractLinks(data,baseurl):
     # type='html5'
-    soup = lxml.html.fromstring(data)
-
-    def parseSoup(element, context=True):
-        out = {}
-        if context:
-            out['name'] = element.tag
-            if element.text is not None:
-                out['text'] = str(element.text).strip("\n\t ")
-
-        attributes = {}
-        if context:
-            for name, value in sorted(element.items()):
-                attributes['@' + name] = value
-        out.update(attributes)
-
-        children = []
-        for child in element:
-            if isinstance(child.tag, str):
-                id = str(child.get('id', ''))
-                key = child.tag + '#' + id if id != '' else child.tag
-                children.append({key: parseSoup(child)})
-            else:
-                value = str(child.text).strip("\n\t ")
-                if value != '':
-                    children.append({'text': value})
-
-        if len(children) > 0:
-            out['items'] = children
-
-        # simplify:
-        if len(children) == 0 and len(attributes) == 0:
-            out = out.get('text', None)
-        elif len(children) > 0 and len(attributes) == 0 and out.get('text', None) is None:
-            del out['items']
-            out = children
-
-        return out
 
     output = []
+    soup = lxml.html.fromstring(data)
 
-    #base = soup.cssselect('base')
+    base = soup.find('base')
+    base = base['href'] if base is not None else None
+    baseurl = base if base is not None else baseurl
+
+
     for part in soup.cssselect('a'):
-        output.append(parseSoup(part, True))
+        link = elementToJson(part, True)
+        link['base'] = base
+        link['url'] = urllib.parse.urljoin(baseurl, link)
+        output.append(link)
 
     return output
 
@@ -264,6 +275,37 @@ def xmlToJson(data):
     xml = lxml.html.fromstring(data)
     data = bf.data(xml)
     return data
+
+
+def makefilename(foldername=None, filename=None, fileext=None, appendtime=False):  # Create file name
+    url_filename, url_fileext = os.path.splitext(os.path.basename(path))
+    if fileext is None:
+        fileext = url_fileext
+    if filename is None:
+        filename = url_filename
+
+    filename = re.sub(r'[^a-zA-Z0-9_.-]+', '', filename)
+    fileext = re.sub(r'[^a-zA-Z0-9_.-]+', '', fileext)
+
+    filetime = time.strftime("%Y-%m-%d-%H-%M-%S")
+    filenumber = 0
+
+    while True:
+        newfilename = filename[:100]
+        if appendtime:
+            newfilename += '.' + filetime
+        if filenumber > 0:
+            newfilename += '-' + str(filenumber)
+
+        newfilename += str(fileext)
+        fullfilename = os.path.join(foldername, newfilename)
+
+        if (os.path.isfile(fullfilename)):
+            filenumber = filenumber + 1
+        else:
+            break
+
+    return fullfilename
 
 
 # See http://foobarnbaz.com/2012/12/31/file-upload-progressbar-in-pyqt/
