@@ -327,9 +327,11 @@ class PresetWindow(QDialog):
                         f.write(response.content)
                     if progress is not None:
                         progress.step()
+                self.mainWindow.logmessage("Default presets downloaded from GitHub.")
             except Exception as e:
                 if not silent:
                     QMessageBox.information(self,"Facepager","Error downloading default presets:"+str(e))
+                self.mainWindow.logmessage("Error downloading default presets:" + str(e))
                 return False
             else:
                 self.presetsDownloaded = True
