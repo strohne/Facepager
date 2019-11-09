@@ -287,8 +287,8 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
         self.RequestTabs.addTab(AmazonTab(self),"Amazon")
         self.RequestTabs.addTab(FacebookTab(self),"Facebook")
-        self.RequestTabs.addTab(GenericTab(self),"Generic")
         self.RequestTabs.addTab(FilesTab(self),"Files")
+        self.RequestTabs.addTab(GenericTab(self),"Generic")
 
         module = self.settings.value('module',False)
         for i in range(0, self.RequestTabs.count()):
