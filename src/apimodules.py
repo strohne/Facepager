@@ -964,7 +964,9 @@ class ApiTab(QScrollArea):
                 except:
                     try:
                         #.encode('utf-8').encode('ascii')
-                        data = htmlToJson(str(response.text))
+                        # str(response.text)
+                        xml = bytes(str(response.text), encoding='utf-8')
+                        data = xmlToJson(xml)
                     except:
                         data = {'error': 'Data could not be converted to JSON','response':response.text}
 
@@ -976,19 +978,6 @@ class ApiTab(QScrollArea):
                     data = {'text': str(response.text)}
                 except:
                     data = {'error': 'Data could not be converted to text', 'response': response.text}
-
-                return data, headers, status
-
-            # XML
-            elif format == 'xml':
-                try:
-                    xml = bytes(str(response.text), encoding='utf-8')
-                    data = xmlToJson(xml)
-                except Exception as  e:
-                    data = {'error': 'XML could not be converted to JSON.',
-                            'message': str(e),
-                            'response': response.text
-                            }
 
                 return data, headers, status
 
@@ -1007,9 +996,11 @@ class ApiTab(QScrollArea):
                     data['filepath'] = fullfilename
 
                 try:
-                    data['links'] = extractLinks(content,response.url)
+                    links, base = extractLinks(content, response.url)
+                    data['links'] = links
+                    data['base'] = base
                 except Exception as  e:
-                    data['error'] = 'Links could not be extracted.'
+                    data['error'] = 'Could not extract Links.'
                     data['message'] = str(e)
                     data['response'] = response.text
 
@@ -2413,7 +2404,7 @@ class GenericTab(AuthTab):
 
         #Format
         self.formatEdit = QComboBox(self)
-        self.formatEdit.addItems(['text','json','xml','links'])
+        self.formatEdit.addItems(['json','text','links','file'])
         self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON. Text: data will not be parsed and embedded in JSON. XML: data will be converted from XML to JSON. Links: data will be parsed as xml and links will be extracted.")
         layout.addWidget(self.formatEdit)
         layout.setStretch(0, 0)

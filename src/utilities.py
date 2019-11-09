@@ -251,7 +251,7 @@ def elementToJson(element, context=True):
 
 
 def extractLinks(data,baseurl):
-    output = []
+    links = []
     soup = lxml.html.fromstring(data)
 
     base = soup.find('base')
@@ -260,13 +260,11 @@ def extractLinks(data,baseurl):
 
     for part in soup.cssselect('a'):
         link = elementToJson(part, True)
-        if base is not None:
-            link['base'] = base
         if link.get('@href',None) is not None:
             link['url'] = urllib.parse.urljoin(baseurl, link.get('@href',None))
-        output.append(link)
+        links.append(link)
 
-    return output
+    return links, base
 
 
 
