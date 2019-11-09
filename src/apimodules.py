@@ -603,12 +603,18 @@ class ApiTab(QScrollArea):
         folderlayout.setContentsMargins(0,0,0,0)
         self.downloadfolderwidget.setLayout(folderlayout)
 
+        # Folder edit
         self.downloadfolderEdit = QLineEdit()
         self.downloadfolderEdit.setToolTip("Select a folder if you want to save the responses to files.")
-        folderlayout.addWidget(self.downloadfolderEdit,1)
+        folderlayout.addWidget(self.downloadfolderEdit,2)
 
-        self.downloadfolderButton = QPushButton("...", self)
-        self.downloadfolderButton.clicked.connect(self.selectDownloadFolder)
+        # Select folder button
+        self.actionDownloadFolder = QAction('...',self)
+        self.actionDownloadFolder.setText('..')
+        self.actionDownloadFolder.triggered.connect(self.selectDownloadFolder)
+        self.downloadfolderButton =QToolButton(self)
+        self.downloadfolderButton.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.downloadfolderButton.setDefaultAction(self.actionDownloadFolder)
         folderlayout.addWidget(self.downloadfolderButton,0)
 
         # filename
@@ -620,7 +626,7 @@ class ApiTab(QScrollArea):
         folderlayout.addWidget(self.filenameEdit,1)
 
 
-        #fileext
+        # fileext
         folderlayout.addWidget(QLabel("Custom file extension"),0)
         self.fileextEdit = QComboBox(self)
         self.fileextEdit  .setToolTip("Set the extension of the files, for example .json, .txt or .html. Set to <None> to automatically guess from the response.")
@@ -935,27 +941,32 @@ class ApiTab(QScrollArea):
             status = status + ' (' + str(response.status_code) + ')'
             headers = dict(list(response.headers.items()))
 
-            # File
-            if format == 'file':
-                data = {
-                        'content-type': response.headers["content-type"],
-                        'sourcepath': path,
-                        'sourcequery': args,
-                        'finalurl': response.url
-                        }
+            # Download data
+            data = {
+                'content-type': response.headers["content-type"],
+                'sourcepath': path,'sourcequery': args,'finalurl': response.url
+            }
 
-                if response.status_code == 200:
-                    fullfilename, content = download(response,foldername,filename,fileext)
-                    data['filename'] = os.path.basename(fullfilename)
-                    data['filepath'] = fullfilename
-                else:
-                    try:
-                        data['response'] = response.json()
-                    except:
-                        data['response'] = response.text
+            fullfilename, content = download(response, foldername, filename, fileext)
 
+            if fullfilename is not None:
+                data['filename'] = os.path.basename(fullfilename)
+                data['filepath'] = fullfilename
 
-                return data, headers, status
+            # Text
+            if format == 'text':
+                    data['text'] = content  # str(response.text)
+
+             # Scrape links
+            elif format == 'links':
+                try:
+                    links, base = extractLinks(content, response.url)
+                    data['links'] = links
+                    data['base'] = base
+                except Exception as  e:
+                    data['error'] = 'Could not extract Links.'
+                    data['message'] = str(e)
+                    data['response'] = response.text
 
             # JSON
             elif format == 'json' :
@@ -970,44 +981,8 @@ class ApiTab(QScrollArea):
                     except:
                         data = {'error': 'Data could not be converted to JSON','response':response.text}
 
-                return data, headers, status
+            return data, headers, status
 
-            # Text
-            elif format == 'text':
-                try:
-                    data = {'text': str(response.text)}
-                except:
-                    data = {'error': 'Data could not be converted to text', 'response': response.text}
-
-                return data, headers, status
-
-            # Scrape links
-            elif format == 'links':
-                data = {'content-type': response.headers["content-type"],
-                        'sourcepath': path,
-                        'sourcequery': args,
-                        'finalurl': response.url
-                        }
-
-                fullfilename, content = download(response,foldername,filename,fileext)
-
-                if fullfilename is not None:
-                    data['filename'] = os.path.basename(fullfilename)
-                    data['filepath'] = fullfilename
-
-                try:
-                    links, base = extractLinks(content, response.url)
-                    data['links'] = links
-                    data['base'] = base
-                except Exception as  e:
-                    data['error'] = 'Could not extract Links.'
-                    data['message'] = str(e)
-                    data['response'] = response.text
-
-                return data, headers, status
-
-            else:
-                return response
 
     def disconnectSocket(self):
         """Used to disconnect when canceling requests"""
@@ -2405,7 +2380,7 @@ class GenericTab(AuthTab):
         #Format
         self.formatEdit = QComboBox(self)
         self.formatEdit.addItems(['json','text','links','file'])
-        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON. Text: data will not be parsed and embedded in JSON. XML: data will be converted from XML to JSON. Links: data will be parsed as xml and links will be extracted.")
+        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON or converted from XML to JSON. Text: data will not be parsed and embedded in JSON. Links: data will be parsed as xml and links will be extracted.")
         layout.addWidget(self.formatEdit)
         layout.setStretch(0, 0)
         #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
