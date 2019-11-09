@@ -214,7 +214,7 @@ def htmlToJson(data,csskey=None,type='lxml'):
 def elementToJson(element, context=True):
     out = {}
     if context:
-        out['name'] = element.tag
+        out['tag'] = element.tag
         out['text'] = element.text_content().strip("\r\n\t ")
         #if element.text is not None:
         #    out['text'] = str(element.text).strip("\n\t ")
