@@ -969,7 +969,7 @@ class ApiTab(QScrollArea):
                     data['response'] = response.text
 
             # JSON
-            elif format == 'json' :
+            elif format == 'json':
                 try:
                     data = response.json() if response.text != '' else []
                 except:
@@ -1566,6 +1566,7 @@ class AuthTab(ApiTab):
         if toggle:
             self.authEdit = QComboBox(self)
             self.authEdit.addItems(['disable','param','header'])
+            self.authEdit.setToolTip("Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a bearer token header containing the access token will be sent.")
             loginlayout.addWidget(self.authEdit)
 
             rowcaption = "Auth"
@@ -1583,6 +1584,7 @@ class AuthTab(ApiTab):
         loginlayout.addWidget(self.authButton)
 
         self.loginButton = QPushButton(self.defaults.get('login_buttoncaption',"Login"), self)
+        self.loginButton.setToolTip("Sometimes you need to register your own app at the platform of the API provider. Adjust the settings and login,")
         self.loginButton.clicked.connect(self.doLogin)
         loginlayout.addWidget(self.loginButton)
 
@@ -2152,7 +2154,7 @@ class TwitterTab(AuthTab):
         self.extractEdit = QComboBox(self)
         self.extractEdit.setEditable(True)
         self.extractEdit.setToolTip(
-            "If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node.")
+            "If your data contains a list of objects, set the key of the list. Every list element will be added as a single node. Remaining data will be added as offcut node.")
 
         layout.addWidget(self.extractEdit)
         layout.setStretch(0, 0)
@@ -2380,7 +2382,7 @@ class GenericTab(AuthTab):
         #Format
         self.formatEdit = QComboBox(self)
         self.formatEdit.addItems(['json','text','links','file'])
-        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON or converted from XML to JSON. Text: data will not be parsed and embedded in JSON. Links: data will be parsed as xml and links will be extracted.")
+        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON or converted from XML to JSON. Text: data will not be parsed and embedded in JSON. Links: data will be parsed as xml and links will be extracted. File: data will only be downloaded to files, specify download folder and filename.")
         layout.addWidget(self.formatEdit)
         layout.setStretch(0, 0)
         #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
