@@ -11,7 +11,7 @@
       "id": "<Object ID>"
     },
     "pages": 1,
-    "scope": ""
+    "scope": "https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube"
   },
   "columns": [
     "snippet.title",
