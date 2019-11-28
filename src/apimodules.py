@@ -1024,6 +1024,7 @@ class ApiTab(QScrollArea):
 
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
+        self.loginStatus = self.loginWindow.statusBar()
         self.login_webview = QWebEngineView(self.loginWindow)
         self.loginWindow.setCentralWidget(self.login_webview)
 
@@ -1738,6 +1739,8 @@ class AuthTab(ApiTab):
 
     @Slot()
     def getToken(self, url = False):
+        if url is not False:
+            self.loginStatus.showMessage(url.toDisplayString() )
         if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
             return False
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
