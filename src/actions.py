@@ -33,15 +33,15 @@ class Actions(object):
         #Database actions
         self.databaseActions = QActionGroup(self.mainWindow)
         self.actionExport = self.databaseActions.addAction(QIcon(":/icons/export.png"), "Export Data")
-        self.actionExport.setToolTip("Export selected node(s) and their children to a .csv file. \n If no or all node(s) are selected inside the data-view, a complete export of all data in the DB is performed")
+        self.actionExport.setToolTip(wraptip("Export selected node(s) and their children to a .csv file. \n If no or all node(s) are selected inside the data-view, a complete export of all data in the DB is performed"))
         self.actionExport.triggered.connect(self.exportNodes)
 
         self.actionAdd = self.databaseActions.addAction(QIcon(":/icons/add.png"), "Add Nodes")
-        self.actionAdd.setToolTip("Add new node(s) as a starting point for further data collection")
+        self.actionAdd.setToolTip(wraptip("Add new node(s) as a starting point for further data collection"))
         self.actionAdd.triggered.connect(self.addNodes)
 
         self.actionDelete = self.databaseActions.addAction(QIcon(":/icons/delete.png"), "Delete Nodes")
-        self.actionDelete.setToolTip("Delete nodes(s) and their children")
+        self.actionDelete.setToolTip(wraptip("Delete nodes(s) and their children"))
         self.actionDelete.triggered.connect(self.deleteNodes)
 
 
@@ -51,7 +51,7 @@ class Actions(object):
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
         self.actionTimer = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Time")
-        self.actionTimer.setToolTip("Time your data collection with a timer. Fetches the data for the selected node(s) in user-defined intervalls")
+        self.actionTimer.setToolTip(wraptip("Time your data collection with a timer. Fetches the data for the selected node(s) in user-defined intervalls"))
         self.actionTimer.triggered.connect(self.setupTimer)
 
         self.actionHelp = self.dataActions.addAction(QIcon(":/icons/help.png"), "Help")
@@ -72,23 +72,23 @@ class Actions(object):
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
         self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
-        self.actionAddColumn.setToolTip("Add the current JSON-key as a column in the data view")
+        self.actionAddColumn.setToolTip(wraptip("Add the current JSON-key as a column in the data view"))
         self.actionAddColumn.triggered.connect(self.addColumn)
 
         self.actionAddAllolumns = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add All Columns")
-        self.actionAddAllolumns.setToolTip("Analyzes all selected nodes in the data view and adds all found keys as columns")
+        self.actionAddAllolumns.setToolTip(wraptip("Analyzes all selected nodes in the data view and adds all found keys as columns"))
         self.actionAddAllolumns.triggered.connect(self.addAllColumns)
 
         self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
-        self.actionUnpack.setToolTip("Unpacks a list in the JSON-data and creates a new node containing the list content")
+        self.actionUnpack.setToolTip(wraptip("Unpacks a list in the JSON-data and creates a new node containing the list content"))
         self.actionUnpack.triggered.connect(self.unpackList)
 
         self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
-        self.actionJsonCopy.setToolTip("Copy the selected JSON-data to the clipboard")
+        self.actionJsonCopy.setToolTip(wraptip("Copy the selected JSON-data to the clipboard"))
         self.actionJsonCopy.triggered.connect(self.jsonCopy)
 
         self.actionFieldDoc = self.detailActions.addAction(QIcon(":/icons/help.png"),"")
-        self.actionFieldDoc.setToolTip("Open the documentation for the selected item if available.")
+        self.actionFieldDoc.setToolTip(wraptip("Open the documentation for the selected item if available."))
         self.actionFieldDoc.triggered.connect(self.showFieldDoc)
 
         #Tree actions
@@ -103,7 +103,7 @@ class Actions(object):
         #self.actionSelectNodes.triggered.connect(self.selectNodes)
 
         self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/toclip.png"), "Copy Node(s) to Clipboard")
-        self.actionClipboard.setToolTip("Copy the selected nodes(s) to the clipboard")
+        self.actionClipboard.setToolTip(wraptip("Copy the selected nodes(s) to the clipboard"))
         self.actionClipboard.triggered.connect(self.clipboardNodes)
 
 

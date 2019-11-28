@@ -3,6 +3,7 @@ import os,sys,platform,time
 import re
 import lxml
 import lxml.html
+import html
 import urllib.parse
 from collections import OrderedDict
 from collections import Mapping
@@ -350,3 +351,7 @@ class BufferReader():
                 raise CancelledError('The upload was cancelled.')
 
         return chunk
+
+def wraptip(value):
+    value = '<qt>{}</qt>'.format(html.escape(value)) if value is not None else value
+    return value

@@ -498,7 +498,7 @@ class ApiTab(QScrollArea):
                 path = path.replace("{", "<").replace("}", ">")
 
                 self.resourceEdit.insertItem(0, path)
-                self.resourceEdit.setItemData(0, getDictValue(operations,"get.summary",""), Qt.ToolTipRole)
+                self.resourceEdit.setItemData(0, wraptip(getDictValue(operations,"get.summary","")), Qt.ToolTipRole)
 
                 #store params for later use in onChangedRelation
                 self.resourceEdit.setItemData(0, operations, Qt.UserRole)
@@ -605,7 +605,7 @@ class ApiTab(QScrollArea):
 
         # Folder edit
         self.downloadfolderEdit = QLineEdit()
-        self.downloadfolderEdit.setToolTip("Select a folder if you want to save the responses to files.")
+        self.downloadfolderEdit.setToolTip(wraptip("Select a folder if you want to save the responses to files."))
         folderlayout.addWidget(self.downloadfolderEdit,2)
 
         # Select folder button
@@ -620,7 +620,7 @@ class ApiTab(QScrollArea):
         # filename
         folderlayout.addWidget(QLabel("Custom filename"),0)
         self.filenameEdit = QComboBox(self)
-        self.filenameEdit .setToolTip("Set the filename, if you want to save the responses to files. <Object ID> usually is a good choice.")
+        self.filenameEdit .setToolTip(wraptip("Set the filename, if you want to save the responses to files. <Object ID> usually is a good choice."))
         self.filenameEdit.insertItems(0, ['<Object ID>','<None>'])
         self.filenameEdit.setEditable(True)
         folderlayout.addWidget(self.filenameEdit,1)
@@ -629,7 +629,7 @@ class ApiTab(QScrollArea):
         # fileext
         folderlayout.addWidget(QLabel("Custom file extension"),0)
         self.fileextEdit = QComboBox(self)
-        self.fileextEdit  .setToolTip("Set the extension of the files, for example .json, .txt or .html. Set to <None> to automatically guess from the response.")
+        self.fileextEdit  .setToolTip(wraptip("Set the extension of the files, for example .json, .txt or .html. Set to <None> to automatically guess from the response."))
         self.fileextEdit.insertItems(0, ['<None>','.html','.txt'])
         self.fileextEdit.setEditable(True)
         folderlayout.addWidget(self.fileextEdit,1)
@@ -663,7 +663,7 @@ class ApiTab(QScrollArea):
             if count:
                 self.pagingTypeEdit.addItem('count')
 
-            self.pagingTypeEdit.setToolTip("Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount.")
+            self.pagingTypeEdit.setToolTip(wraptip("Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount."))
             self.pagingTypeEdit.currentIndexChanged.connect(self.pagingChanged)
             layout.addWidget(self.pagingTypeEdit)
             layout.setStretch(0, 0)
@@ -671,7 +671,7 @@ class ApiTab(QScrollArea):
             layout.addWidget(QLabel("Param"))
             self.pagingparamEdit = QComboBox(self)
             self.pagingparamEdit.setEditable(True)
-            self.pagingparamEdit.setToolTip("This parameter will be added to the query and filled with the page value.")
+            self.pagingparamEdit.setToolTip(wraptip("This parameter will be added to the query and filled with the page value."))
             layout.addWidget(self.pagingparamEdit)
             layout.setStretch(1, 0)
             layout.setStretch(2, 1)
@@ -685,7 +685,7 @@ class ApiTab(QScrollArea):
             self.pagingKeyLayout.addWidget(QLabel("Paging key"))
             self.pagingkeyEdit = QComboBox(self)
             self.pagingkeyEdit.setEditable(True)
-            self.pagingkeyEdit.setToolTip("If the respsonse contains data about the next page, set the key. The value will be added as paging parameter.")
+            self.pagingkeyEdit.setToolTip(wraptip("If the respsonse contains data about the next page, set the key. The value will be added as paging parameter."))
             self.pagingKeyLayout.addWidget(self.pagingkeyEdit)
             self.pagingKeyLayout.setStretch(0, 0)
             self.pagingKeyLayout.setStretch(1, 1)
@@ -702,7 +702,7 @@ class ApiTab(QScrollArea):
             self.pagingStepsLayout.addWidget(QLabel("Start value"))
             self.offsetStartEdit = QSpinBox(self)
             self.offsetStartEdit.setValue(1)
-            self.offsetStartEdit.setToolTip("First page or offset number, defaults to 1")
+            self.offsetStartEdit.setToolTip(wraptip("First page or offset number, defaults to 1"))
             self.pagingStepsLayout.addWidget(self.offsetStartEdit)
             self.pagingStepsLayout.setStretch(0, 0)
             self.pagingStepsLayout.setStretch(1, 1)
@@ -710,7 +710,7 @@ class ApiTab(QScrollArea):
             self.pagingStepsLayout.addWidget(QLabel("Step"))
             self.offsetStepEdit = QSpinBox(self)
             self.offsetStepEdit.setValue(1)
-            self.offsetStepEdit.setToolTip("Amount to increase for each page, defaults to 1")
+            self.offsetStepEdit.setToolTip(wraptip("Amount to increase for each page, defaults to 1"))
             self.pagingStepsLayout.addWidget(self.offsetStepEdit)
             self.pagingStepsLayout.setStretch(2, 0)
             self.pagingStepsLayout.setStretch(3, 1)
@@ -723,7 +723,7 @@ class ApiTab(QScrollArea):
             self.pagesEdit = QSpinBox(self)
             self.pagesEdit.setMinimum(1)
             self.pagesEdit.setMaximum(50000)
-            self.pagesEdit.setToolTip("Number of maximum pages.")
+            self.pagesEdit.setToolTip(wraptip("Number of maximum pages."))
             layout.addWidget(self.pagesEdit)
             layout.setStretch(5, 0)
             layout.setStretch(6, 0)
@@ -1021,6 +1021,7 @@ class ApiTab(QScrollArea):
         self.loginWindow.resize(width, height)
         self.loginWindow.setWindowTitle(caption)
         self.loginWindow.stopped = False
+
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
         self.login_webview = QWebEngineView(self.loginWindow)
@@ -1566,7 +1567,7 @@ class AuthTab(ApiTab):
         if toggle:
             self.authEdit = QComboBox(self)
             self.authEdit.addItems(['disable','param','header'])
-            self.authEdit.setToolTip("Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a bearer token header containing the access token will be sent.")
+            self.authEdit.setToolTip(wraptip("Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a bearer token header containing the access token will be sent."))
             loginlayout.addWidget(self.authEdit)
 
             rowcaption = "Auth"
@@ -1584,7 +1585,7 @@ class AuthTab(ApiTab):
         loginlayout.addWidget(self.authButton)
 
         self.loginButton = QPushButton(self.defaults.get('login_buttoncaption',"Login"), self)
-        self.loginButton.setToolTip("Sometimes you need to register your own app at the platform of the API provider. Adjust the settings and login,")
+        self.loginButton.setToolTip(wraptip("Sometimes you need to register your own app at the platform of the API provider. Adjust the settings and login,"))
         self.loginButton.clicked.connect(self.doLogin)
         loginlayout.addWidget(self.loginButton)
 
@@ -2153,8 +2154,7 @@ class TwitterTab(AuthTab):
         # Extract
         self.extractEdit = QComboBox(self)
         self.extractEdit.setEditable(True)
-        self.extractEdit.setToolTip(
-            "If your data contains a list of objects, set the key of the list. Every list element will be added as a single node. Remaining data will be added as offcut node.")
+        self.extractEdit.setToolTip(wraptip("If your data contains a list of objects, set the key of the list. Every list element will be added as a single node. Remaining data will be added as offcut node."))
 
         layout.addWidget(self.extractEdit)
         layout.setStretch(0, 0)
@@ -2163,7 +2163,7 @@ class TwitterTab(AuthTab):
         layout.addWidget(QLabel("Key for Object ID"))
         self.objectidEdit = QComboBox(self)
         self.objectidEdit.setEditable(True)
-        self.objectidEdit.setToolTip("If your data contains unique IDs for every node, define the corresponding key.")
+        self.objectidEdit.setToolTip(wraptip("If your data contains unique IDs for every node, define the corresponding key."))
         layout.addWidget(self.objectidEdit)
         layout.setStretch(1, 0)
         layout.setStretch(2, 2)
@@ -2382,7 +2382,7 @@ class GenericTab(AuthTab):
         #Format
         self.formatEdit = QComboBox(self)
         self.formatEdit.addItems(['json','text','links','file'])
-        self.formatEdit.setToolTip("JSON: default option, data will be parsed as JSON or converted from XML to JSON. Text: data will not be parsed and embedded in JSON. Links: data will be parsed as xml and links will be extracted. File: data will only be downloaded to files, specify download folder and filename.")
+        self.formatEdit.setToolTip(wraptip("JSON: default option, data will be parsed as JSON or converted from XML to JSON. Text: data will not be parsed and embedded in JSON. Links: data will be parsed as xml and links will be extracted. File: data will only be downloaded to files, specify download folder and filename."))
         layout.addWidget(self.formatEdit)
         layout.setStretch(0, 0)
         #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
@@ -2391,7 +2391,7 @@ class GenericTab(AuthTab):
         layout.addWidget(QLabel("Key to extract"))
         self.extractEdit = QComboBox(self)
         self.extractEdit.setEditable(True)
-        self.extractEdit.setToolTip("If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node.")
+        self.extractEdit.setToolTip(wraptip("If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
         layout.addWidget(self.extractEdit)
         layout.setStretch(1, 0)
         layout.setStretch(2, 2)
@@ -2399,7 +2399,7 @@ class GenericTab(AuthTab):
         layout.addWidget(QLabel("Key for Object ID"))
         self.objectidEdit = QComboBox(self)
         self.objectidEdit.setEditable(True)
-        self.objectidEdit.setToolTip("If your data contains unique IDs for every node, define the corresponding key.")
+        self.objectidEdit.setToolTip(wraptip("If your data contains unique IDs for every node, define the corresponding key."))
         layout.addWidget(self.objectidEdit)
         layout.setStretch(3, 0)
         layout.setStretch(4, 2)

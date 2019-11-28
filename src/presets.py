@@ -12,6 +12,7 @@ import webbrowser
 import platform
 from dictionarytree import *
 from progressbar import ProgressBar
+from utilities import wraptip
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
@@ -105,19 +106,19 @@ class PresetWindow(QDialog):
         buttons= QHBoxLayout() #QDialogButtonBox()
         self.saveButton = QPushButton('New preset')
         self.saveButton.clicked.connect(self.newPreset)
-        self.saveButton.setToolTip("Create a new preset using the current tab and parameters")
+        self.saveButton.setToolTip(wraptip("Create a new preset using the current tab and parameters"))
         #buttons.addButton(self.saveButton,QDialogButtonBox.ActionRole)
         buttons.addWidget(self.saveButton)
 
         self.overwriteButton = QPushButton('Edit preset')
         self.overwriteButton.clicked.connect(self.overwritePreset)
-        self.overwriteButton.setToolTip("Edit the selected preset.")
+        self.overwriteButton.setToolTip(wraptip("Edit the selected preset."))
         #buttons.addButton(self.overwriteButton,QDialogButtonBox.ActionRole)
         buttons.addWidget(self.overwriteButton)
 
         self.deleteButton = QPushButton('Delete preset')
         self.deleteButton.clicked.connect(self.deletePreset)
-        self.deleteButton.setToolTip("Delete the selected preset. Default presets can not be deleted.")
+        self.deleteButton.setToolTip(wraptip("Delete the selected preset. Default presets can not be deleted."))
         #buttons.addButton(self.deleteButton,QDialogButtonBox.ActionRole)
         buttons.addWidget(self.deleteButton)
 
@@ -128,18 +129,18 @@ class PresetWindow(QDialog):
 
         self.reloadButton=QPushButton('Reload')
         self.reloadButton.clicked.connect(self.reloadPresets)
-        self.reloadButton.setToolTip("Reload all preset files.")
+        self.reloadButton.setToolTip(wraptip("Reload all preset files."))
         buttons.addWidget(self.reloadButton)
 
         self.rejectButton=QPushButton('Cancel')
         self.rejectButton.clicked.connect(self.close)
-        self.rejectButton.setToolTip("Close the preset dialog.")
+        self.rejectButton.setToolTip(wraptip("Close the preset dialog."))
         buttons.addWidget(self.rejectButton)
 
         self.applyButton=QPushButton('Apply')
         self.applyButton.setDefault(True)
         self.applyButton.clicked.connect(self.loadPreset)
-        self.applyButton.setToolTip("Load the selected preset.")
+        self.applyButton.setToolTip(wraptip("Load the selected preset."))
         #buttons.addButton(self.applyButton,QDialogButtonBox.AcceptRole)
         buttons.addWidget(self.applyButton)
 

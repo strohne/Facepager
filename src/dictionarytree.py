@@ -226,7 +226,7 @@ class DictionaryTreeItem(object):
             self.itemDataValue = value
 
             try:
-                self.itemToolTip = self.itemToolTip + "<p>"+str(value)+"</p>"
+                self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(value))+"</p>"
             except:
                 pass
 

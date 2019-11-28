@@ -24,8 +24,13 @@
 # SOFTWARE.
 
 import sys
+import html
+
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
+from PySide2.QtWidgets import QWidget
+
 from icons import *
 from datatree import *
 from dictionarytree import *
@@ -269,12 +274,12 @@ class MainWindow(QMainWindow):
         groupLayout.addLayout(columnlayout)
 
         button=QPushButton("Apply Column Setup")
-        button.setToolTip("Apply the columns to the central data view. New columns may be hidden and are appended on the right side")
+        button.setToolTip(wraptip("Apply the columns to the central data view. New columns may be hidden and are appended on the right side"))
         button.clicked.connect(self.actions.actionShowColumns.trigger)
         columnlayout.addWidget(button)
 
         button=QPushButton("Clear Column Setup")
-        button.setToolTip("Remove all columns to get space for a new setup.")
+        button.setToolTip(wraptip("Remove all columns to get space for a new setup."))
         button.clicked.connect(self.actions.actionClearColumns.trigger)
         columnlayout.addWidget(button)
 
@@ -301,25 +306,25 @@ class MainWindow(QMainWindow):
         #-Level
         self.levelEdit=QSpinBox(self.mainWidget)
         self.levelEdit.setMinimum(1)
-        self.levelEdit.setToolTip("Based on the selected nodes, only fetch data for nodes and subnodes of the specified level (base level is 1)")
+        self.levelEdit.setToolTip(wraptip("Based on the selected nodes, only fetch data for nodes and subnodes of the specified level (base level is 1)"))
         fetchsettings.addRow("Node level",self.levelEdit)
 
         #-Selected nodes
         self.allnodesCheckbox = QCheckBox(self)
         self.allnodesCheckbox.setCheckState(Qt.Unchecked)
-        self.allnodesCheckbox.setToolTip("Check if you want to fetch data for all nodes. This helps with large datasets because manually selecting all nodes slows down Facepager.")
+        self.allnodesCheckbox.setToolTip(wraptip("Check if you want to fetch data for all nodes. This helps with large datasets because manually selecting all nodes slows down Facepager."))
         fetchsettings.addRow("Select all nodes", self.allnodesCheckbox)
 
         #Object types
         self.typesEdit = QLineEdit('seed,data')
-        self.typesEdit.setToolTip("Based on the selected nodes, only fetch data for nodes with one of the listed object types (normally should not be changed)")
+        self.typesEdit.setToolTip(wraptip("Based on the selected nodes, only fetch data for nodes with one of the listed object types (normally should not be changed)"))
         fetchsettings.addRow("Object types",self.typesEdit)
 
         # Thread Box
         self.threadsEdit = QSpinBox(self)
         self.threadsEdit.setMinimum(1)
         self.threadsEdit.setMaximum(10)
-        self.threadsEdit.setToolTip("The number of concurrent threads performing the requests. Higher values increase the speed, but may result in API-Errors/blocks")
+        self.threadsEdit.setToolTip(wraptip("The number of concurrent threads performing the requests. Higher values increase the speed, but may result in API-Errors/blocks"))
         fetchsettings.addRow("Parallel Threads", self.threadsEdit)
 
         # Speed Box
@@ -327,7 +332,7 @@ class MainWindow(QMainWindow):
         self.speedEdit.setMinimum(1)
         self.speedEdit.setMaximum(60000)
         self.speedEdit.setValue(200)
-        self.speedEdit.setToolTip("Limit the total amount of requests per minute (calm down to avoid API blocking)")
+        self.speedEdit.setToolTip(wraptip("Limit the total amount of requests per minute (calm down to avoid API blocking)"))
         fetchsettings.addRow("Requests per minute", self.speedEdit)
 
         #Error Box
@@ -335,26 +340,26 @@ class MainWindow(QMainWindow):
         self.errorEdit.setMinimum(1)
         self.errorEdit.setMaximum(100)
         self.errorEdit.setValue(10)
-        self.errorEdit.setToolTip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers.")
+        self.errorEdit.setToolTip(wraptip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers."))
         fetchsettings.addRow("Maximum errors", self.errorEdit)
 
 
         #Add headers
         self.headersCheckbox = QCheckBox(self)
         #self.headersCheckbox.setCheckState(Qt.Checked)
-        self.headersCheckbox.setToolTip("Check if you want to create nodes containing headers of the response.")
+        self.headersCheckbox.setToolTip(wraptip("Check if you want to create nodes containing headers of the response."))
         fetchsettings.addRow("Header nodes", self.headersCheckbox)
 
         #Expand Box
         self.autoexpandCheckbox = QCheckBox(self)
         self.autoexpandCheckbox.setCheckState(Qt.Unchecked)
-        self.autoexpandCheckbox.setToolTip("Check to automatically expand new nodes when fetching data. Disable for big queries to speed up the process.")
+        self.autoexpandCheckbox.setToolTip(wraptip("Check to automatically expand new nodes when fetching data. Disable for big queries to speed up the process."))
         fetchsettings.addRow("Expand new nodes", self.autoexpandCheckbox)
 
         #Log Settings
         self.logCheckbox = QCheckBox(self)
         self.logCheckbox.setCheckState(Qt.Checked)
-        self.logCheckbox.setToolTip("Check to see every request in status window; uncheck to hide request messages.")
+        self.logCheckbox.setToolTip(wraptip("Check to see every request in status window; uncheck to hide request messages."))
         fetchsettings.addRow("Log all requests", self.logCheckbox)
 
         #Clear setttings
@@ -364,7 +369,7 @@ class MainWindow(QMainWindow):
         self.clearCheckbox.setChecked(str(clear)=="true")
         self.settings.endGroup()
 
-        self.clearCheckbox.setToolTip("Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials.")
+        self.clearCheckbox.setToolTip(wraptip("Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials."))
         fetchsettings.addRow("Clear settings when closing", self.clearCheckbox)
 
 
@@ -375,7 +380,7 @@ class MainWindow(QMainWindow):
         f=QFont()
         f.setPointSize(11)
         button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
-        button.setToolTip("Fetch data from the API with the current settings")
+        button.setToolTip(wraptip("Fetch data from the API with the current settings"))
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.actions.actionQuery.trigger)
@@ -527,9 +532,86 @@ class Toolbar(QToolBar):
 
 
 
+# See https://stackoverflow.com/questions/4795757/is-there-a-better-way-to-wordwrap-text-in-qtooltip-than-just-using-regexp
+class QAwesomeTooltipEventFilter(QObject):
+    '''
+    Tooltip-specific event filter dramatically improving the tooltips of all
+    widgets for which this filter is installed.
+
+    Motivation
+    ----------
+    **Rich text tooltips** (i.e., tooltips containing one or more HTML-like
+    tags) are implicitly wrapped by Qt to the width of their parent windows and
+    hence typically behave as expected.
+
+    **Plaintext tooltips** (i.e., tooltips containing no such tags), however,
+    are not. For unclear reasons, plaintext tooltips are implicitly truncated to
+    the width of their parent windows. The only means of circumventing this
+    obscure constraint is to manually inject newlines at the appropriate
+    80-character boundaries of such tooltips -- which has the distinct
+    disadvantage of failing to scale to edge-case display and device
+    environments (e.g., high-DPI). Such tooltips *cannot* be guaranteed to be
+    legible in the general case and hence are blatantly broken under *all* Qt
+    versions to date. This is a `well-known long-standing issue <issue_>`__ for
+    which no official resolution exists.
+
+    This filter globally addresses this issue by implicitly converting *all*
+    intercepted plaintext tooltips into rich text tooltips in a general-purpose
+    manner, thus wrapping the former exactly like the latter. To do so, this
+    filter (in order):
+
+    #. Auto-detects whether the:
+
+       * Current event is a :class:`QEvent.ToolTipChange` event.
+       * Current widget has a **non-empty plaintext tooltip**.
+
+    #. When these conditions are satisfied:
+
+       #. Escapes all HTML syntax in this tooltip (e.g., converting all ``&``
+          characters to ``&amp;`` substrings).
+       #. Embeds this tooltip in the Qt-specific ``<qt>...</qt>`` tag, thus
+          implicitly converting this plaintext tooltip into a rich text tooltip.
+
+    .. _issue:
+        https://bugreports.qt.io/browse/QTBUG-41051
+    '''
+
+
+    def eventFilter(self, widget: QObject, event: QEvent) -> bool:
+        '''
+        Tooltip-specific event filter handling the passed Qt object and event.
+        '''
+
+
+        # If this is a tooltip event...
+        if event.type() == QEvent.ToolTipChange:
+            # If the target Qt object containing this tooltip is *NOT* a widget,
+            # raise a human-readable exception. While this should *NEVER* be the
+            # case, edge cases are edge cases because they sometimes happen.
+            if not isinstance(widget, QWidget):
+                raise ValueError('QObject "{}" not a widget.'.format(widget))
+
+            # Tooltip for this widget if any *OR* the empty string otherwise.
+            tooltip = widget.toolTip()
+
+            # If this tooltip is both non-empty and not already rich text...
+            if tooltip and not tooltip.startswith('<'): #not Qt.mightBeRichText(tooltip):
+                tooltip = '<qt>{}</qt>'.format(html.escape(tooltip))
+                widget.setToolTip(tooltip)
+
+                # Notify the parent event handler this event has been handled.
+                return True
+
+        # Else, defer to the default superclass handling of this event.
+        return super().eventFilter(widget, event)
 
 def startMain():
     app = QApplication(sys.argv)
+
+
+    # Word wrap tooltips (does not work yet, chrashes app)
+    #tooltipfilter = QAwesomeTooltipEventFilter(app)
+    #app.installEventFilter(tooltipfilter)
 
     main=MainWindow()
     main.show()

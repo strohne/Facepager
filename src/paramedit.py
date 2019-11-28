@@ -3,6 +3,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from collections import OrderedDict
 import json
+from utilities import *
 
 class QParamEdit(QTableWidget):
 
@@ -113,9 +114,7 @@ class QParamEdit(QTableWidget):
             name = o.get("name", "")
             name = "<" + name + ">" if o.get("in", "query") == "path" else name
             combo.insertItem(0, name)
-
-            # this one sets the tooltip
-            combo.setItemData(0, o.get("description", None), Qt.ToolTipRole)
+            combo.setItemData(0,wraptip(o.get("description", None)), Qt.ToolTipRole)
 
             # set color
             if (o.get("required", False)):
@@ -160,7 +159,7 @@ class QParamEdit(QTableWidget):
 
         for value in reversed(oneof):
             combo.insertItem(0, value.get('const', ''))
-            combo.setItemData(0, value.get('description', ''), Qt.ToolTipRole)
+            combo.setItemData(0, wraptip(value.get("description", None)), Qt.ToolTipRole)
 
         # Default options
         if not len(enum) and not len(oneof) and schema.get('type') == 'boolean':
@@ -171,7 +170,7 @@ class QParamEdit(QTableWidget):
             combo.insertItem(0, '1')
         else:
             combo.insertItem(0, '<Object ID>')
-            combo.setItemData(0, 'The value in the Object ID-column in the data view.', Qt.ToolTipRole)
+            combo.setItemData(0, wraptip('The value in the Object ID-column in the data view.'), Qt.ToolTipRole)
             combo.insertItem(0, '')
 
         # Select default value
