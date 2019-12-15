@@ -2,6 +2,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import json
+from utilities import *
 import re
 import os
 import sys
@@ -225,10 +226,10 @@ class DictionaryTreeItem(object):
             self.itemDataType = 'atom'
             self.itemDataValue = value
 
-            try:
-                self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(value))+"</p>"
-            except:
-                pass
+            #try:
+            self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(value))+"</p>"
+            #except:
+            #    pass
 
 
     def clear(self):
