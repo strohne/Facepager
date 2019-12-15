@@ -2,7 +2,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QTextBrowser
 import re
-import cgi
+import html
 
 class TextViewer(QTextBrowser):
 
@@ -21,7 +21,7 @@ class TextViewer(QTextBrowser):
         
     def setText(self,text):
         text = '' if text is None else text
-        text = cgi.escape(text)
+        text = html.escape(text)
         text = self.autoLinkText(text)
         text = self.autoBrText(text)
         self.setHtml(text)

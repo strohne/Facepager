@@ -86,17 +86,13 @@ class PresetWindow(QDialog):
         #Options
         self.detailOptionsLabel = QLabel('<b>Options</b>')        
         self.detailOptionsLabel.setStyleSheet("QLabel {height:25px;}")
-        self.detailOptions = QLabel()
-        self.detailOptions.setWordWrap(True)
-        self.detailOptions.setStyleSheet("QLabel {margin-top:5px;}")
+        self.detailOptions = TextViewer()
         self.detailForm.addRow(self.detailOptionsLabel,self.detailOptions)
 
         # Columns
         self.detailColumnsLabel = QLabel('<b>Columns</b>')        
         self.detailColumnsLabel.setStyleSheet("QLabel {height:25px;}")
-        self.detailColumns = QLabel()
-        self.detailColumns.setWordWrap(True)        
-        self.detailColumns.setStyleSheet("QLabel {margin-top:5px;}")
+        self.detailColumns = TextViewer()
         self.detailForm.addRow(self.detailColumnsLabel,self.detailColumns)
 
         # Speed
@@ -210,11 +206,10 @@ class PresetWindow(QDialog):
                 self.detailName.setText(data.get('name'))
                 self.detailModule.setText(data.get('module'))
                 self.detailDescription.setText(data.get('description')+"\n")
-                #self.detailOptions.showDict(data.get('options',[]))
-                self.detailOptions.setText(formatdict(data.get('options',[])))
+                self.detailOptions.setHtml(formatdict(data.get('options',[])))
+                self.detailColumns.setText("\r\n".join(data.get('columns', [])))
                 self.detailSpeed.setText(str(data.get('speed','')))
-                self.detailHeaders.setText(str(data.get('headers','')))                
-                self.detailColumns.setText("\r\n".join(data.get('columns',[])))
+
 
                 self.detailWidget.show()
 
