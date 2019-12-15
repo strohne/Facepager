@@ -226,10 +226,10 @@ class DictionaryTreeItem(object):
             self.itemDataType = 'atom'
             self.itemDataValue = value
 
-            #try:
-            self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(value))+"</p>"
-            #except:
-            #    pass
+            try:
+                self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(value))+"</p>"
+            except:
+                pass
 
 
     def clear(self):
