@@ -1,0 +1,33 @@
+{
+  "category": "Scraping",
+  "columns": [],
+  "description": "This preset gets the HTML source code from a website and extracts all the links.\n\nAdd the URL of a website as a node. Adjust the download folder in the Query Setup. When you fetch the data, the file with the HTML source code of the webpage will be stored in this folder. Simultaneously, the links from that website appear in the Data View as new nodes. ",
+  "headers": false,
+  "module": "Generic",
+  "name": "Extract links from webpage",
+  "options": {
+    "auth": "disable",
+    "auth_type": "OAuth2",
+    "auth_uri": "",
+    "basepath": "<Object ID>",
+    "fileext": ".html",
+    "filename": "<Object ID>",
+    "format": "links",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "links",
+    "objectid": "url",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 1,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {},
+    "redirect_uri": "",
+    "resource": "",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200
+}
