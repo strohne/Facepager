@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
         dataLayout.setContentsMargins(0,0,0,0)
         dataWidget.setLayout(dataLayout)
         dataSplitter.addWidget(dataWidget)
-        dataSplitter.setStretchFactor(0, 1);
+        dataSplitter.setStretchFactor(0, 1)
 
         #top right
         detailSplitter=QSplitter(self)

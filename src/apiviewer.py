@@ -50,8 +50,8 @@ class ApiViewer(QDialog):
         layout.addWidget(self.loadingIndicator)
 
         #Middle
-        central = QHBoxLayout()
-        layout.addLayout(central,1)
+        central = QSplitter(self)
+        layout.addWidget(central,1)
 
         #list view
         self.itemList = QTreeWidget(self)
@@ -59,7 +59,8 @@ class ApiViewer(QDialog):
         self.itemList.setColumnCount(1)
         self.itemList.setIndentation(15)
         self.itemList.itemSelectionChanged.connect(self.currentChanged)
-        central.addWidget(self.itemList,1)
+        central.addWidget(self.itemList)
+        central.setStretchFactor(0, 0)
 
         #detail view
         self.detailView=QScrollArea()
@@ -72,7 +73,8 @@ class ApiViewer(QDialog):
         self.detailWidget.setLayout(self.detailLayout)
         self.detailView.setWidget(self.detailWidget)
 
-        central.addWidget(self.detailView,3)
+        central.addWidget(self.detailView)
+        central.setStretchFactor(1, 2)
 
         self.detailName = QLabel('')
         self.detailName.setWordWrap(True)

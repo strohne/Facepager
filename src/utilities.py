@@ -355,3 +355,19 @@ class BufferReader():
 def wraptip(value):
     value = '<qt>{}</qt>'.format(html.escape(value)) if value is not None else value
     return value
+
+def formatdict(data):
+    def getdictvalues(data, parentkeys = []):
+        out = []
+        for key, value in data.items():
+            if isinstance(value, Mapping):
+                children = getdictvalues(value, parentkeys + [key])
+                out.extend(children)
+            else:
+                child = ".".join(parentkeys + [key]) + " = " + str(value)
+                child= "<p>"+wraptip(child)+"</p>"
+                out.extend([child])
+        return out
+
+    return "\n".join(getdictvalues(data))
+

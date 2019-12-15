@@ -12,7 +12,7 @@ import webbrowser
 import platform
 from dictionarytree import *
 from progressbar import ProgressBar
-from utilities import wraptip
+from utilities import wraptip, formatdict
 
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
@@ -34,8 +34,8 @@ class PresetWindow(QDialog):
         layout.addWidget(self.loadingIndicator)
 
         #Middle
-        central = QHBoxLayout()
-        layout.addLayout(central,1)
+        central = QSplitter(self)
+        layout.addWidget(central,1)
 
         #list view
         self.presetList = QTreeWidget(self)
@@ -43,7 +43,8 @@ class PresetWindow(QDialog):
         self.presetList.setColumnCount(1)
         self.presetList.setIndentation(15)
         self.presetList.itemSelectionChanged.connect(self.currentChanged)
-        central.addWidget(self.presetList,2)
+        central.addWidget(self.presetList)
+        central.setStretchFactor(0, 0)
 
         #detail view
         self.detailView=QScrollArea()
@@ -57,7 +58,8 @@ class PresetWindow(QDialog):
         self.detailWidget.setLayout(self.detailLayout)
         self.detailView.setWidget(self.detailWidget)
 
-        central.addWidget(self.detailView,3)
+        central.addWidget(self.detailView)
+        central.setStretchFactor(1, 2)
 
         self.detailName = QLabel('')
         self.detailName.setWordWrap(True)
@@ -75,34 +77,36 @@ class PresetWindow(QDialog):
         self.detailForm.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
         self.detailForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
         self.detailForm.setLabelAlignment(Qt.AlignLeft);
-
-        self.detailOptions = DictionaryTree()
-        self.detailOptions.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.detailOptions.setFrameShape(QFrame.NoFrame)
-        #self.detailLayout.addWidget(self.detailViewer)
-
         self.detailLayout.addLayout(self.detailForm,1)
 
+        # Module
         self.detailModule = QLabel('')
         self.detailForm.addRow('<b>Module</b>',self.detailModule)
 
-        self.detailForm.addRow('<b>Options</b>',self.detailOptions)
-        self.detailColumns = QLabel()
-        self.detailColumns.setWordWrap(True)
-        #self.detailColumns.setStyleSheet("background: rgba(0,0,0,0);border:0px;")
-        detailColumnsLabel = QLabel('<b>Columns</b>')
-        #detailColumnsLabel.setStyleSheet("QLabel { background-color : red;margin-top:0px;padding-top:0px;line-height:1em;vertical-align:top;border-top:0px;}")
-        self.detailColumns.setStyleSheet("QLabel {margin-top:5px;}")
-        detailColumnsLabel.setStyleSheet("QLabel {height:25px;}")
-        self.detailForm.addRow(detailColumnsLabel,self.detailColumns)
+        #Options
+        self.detailOptionsLabel = QLabel('<b>Options</b>')        
+        self.detailOptionsLabel.setStyleSheet("QLabel {height:25px;}")
+        self.detailOptions = QLabel()
+        self.detailOptions.setWordWrap(True)
+        self.detailOptions.setStyleSheet("QLabel {margin-top:5px;}")
+        self.detailForm.addRow(self.detailOptionsLabel,self.detailOptions)
 
+        # Columns
+        self.detailColumnsLabel = QLabel('<b>Columns</b>')        
+        self.detailColumnsLabel.setStyleSheet("QLabel {height:25px;}")
+        self.detailColumns = QLabel()
+        self.detailColumns.setWordWrap(True)        
+        self.detailColumns.setStyleSheet("QLabel {margin-top:5px;}")
+        self.detailForm.addRow(self.detailColumnsLabel,self.detailColumns)
+
+        # Speed
         self.detailSpeed = QLabel('')
         self.detailForm.addRow('<b>Speed</b>',self.detailSpeed)
 
         self.detailHeaders = QLabel('')
         self.detailForm.addRow('<b>Header nodes</b>',self.detailHeaders)
         
-        #buttons
+        # Buttons
         buttons= QHBoxLayout() #QDialogButtonBox()
         self.saveButton = QPushButton('New preset')
         self.saveButton.clicked.connect(self.newPreset)
@@ -192,7 +196,7 @@ class PresetWindow(QDialog):
         self.detailName.setText("")
         self.detailModule.setText("")
         self.detailDescription.setText("")
-        self.detailOptions.clear()
+        self.detailOptions.setText("")
         self.detailColumns.setText("")
         self.detailWidget.hide()
 
@@ -206,7 +210,8 @@ class PresetWindow(QDialog):
                 self.detailName.setText(data.get('name'))
                 self.detailModule.setText(data.get('module'))
                 self.detailDescription.setText(data.get('description')+"\n")
-                self.detailOptions.showDict(data.get('options',[]))
+                #self.detailOptions.showDict(data.get('options',[]))
+                self.detailOptions.setText(formatdict(data.get('options',[])))
                 self.detailSpeed.setText(str(data.get('speed','')))
                 self.detailHeaders.setText(str(data.get('headers','')))                
                 self.detailColumns.setText("\r\n".join(data.get('columns',[])))
