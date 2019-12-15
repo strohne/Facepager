@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
             myappid = 'Facepager.4.0' # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-        self.setMinimumSize(1100,700)
+        self.setMinimumSize(1100,680)
         #self.setMinimumSize(1400,710)
         #self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center()-QPoint(0,100))
         #self.setStyleSheet("* {font-size:21px;}")
