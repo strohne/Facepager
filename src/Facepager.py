@@ -229,6 +229,7 @@ class MainWindow(QMainWindow):
 
         self.tree=DataTree(self.mainWidget)
         self.tree.nodeSelected.connect(self.actions.treeNodeSelected)
+        self.tree.logmessage.connect(self.logmessage)
         dataLayout.addWidget(self.tree)
 
 

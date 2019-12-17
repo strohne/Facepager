@@ -232,8 +232,9 @@ class Actions(object):
         dialog.setWindowTitle("Add Nodes")
         layout = QVBoxLayout()
 
-        label = QLabel("<b>Object IDs (one ID per line, you can provide additional JSON data after a pipe |):</b>")
+        label = QLabel("One <b>Object ID</b> per line. You can provide additional JSON data after a pipe |")
         layout.addWidget(label)
+
 
         input = QPlainTextEdit()
         input.setMinimumWidth(500)
@@ -243,6 +244,7 @@ class Actions(object):
         layout.addWidget(input)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        loadbutton = buttons.addButton("Load CSV", QDialogButtonBox.ResetRole)
         layout.addWidget(buttons)
 
         dialog.setLayout(layout)
@@ -254,12 +256,30 @@ class Actions(object):
             self.mainWindow.tree.selectLastRow()
             dialog.close()
 
+        def loadCSV():
+            datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
+            datadir = os.path.expanduser('~') if datadir == '' else datadir
+
+            filename, filetype = QFileDialog.getOpenFileName(dialog, "Load CSV", datadir, "CSV files (*.csv)")
+            if filename != "":
+                with open(filename, encoding="UTF-8-sig") as csvfile:
+                    csvreader = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
+                    rows = [row for row in csvreader]
+                    self.mainWindow.tree.treemodel.addNodes(rows)
+                    self.mainWindow.tree.selectLastRow()
+                    dialog.close()
+
+                self.mainWindow.tree.selectLastRow()
+                dialog.close()
+
+
         def close():
             dialog.close()
 
         #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(createNodes)
         buttons.rejected.connect(close)
+        loadbutton.clicked.connect(loadCSV)
         dialog.exec_()
 
 

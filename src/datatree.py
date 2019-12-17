@@ -1,10 +1,12 @@
 from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 from database import *
+import json
 
 class DataTree(QTreeView):
 
     nodeSelected = Signal(list)
+    logmessage = Signal(str)
 
     def __init__(self, parent=None):
         super(DataTree, self).__init__(parent)
@@ -17,6 +19,7 @@ class DataTree(QTreeView):
 
     def loadData(self, database):
         self.treemodel = TreeModel(database)
+        self.treemodel.logmessage.connect(self.logmessage)
         self.setModel(self.treemodel)
 
     @Slot()
@@ -327,6 +330,8 @@ class TreeItem(object):
         return self.id
 
 class TreeModel(QAbstractItemModel):
+    logmessage = Signal(str)
+
     def __init__(self, database, parent=None):
         super(TreeModel, self).__init__(parent)
 
@@ -370,15 +375,20 @@ class TreeModel(QAbstractItemModel):
 
             newnodes = []
             for nodedata in nodesdata:
-                if extended:
-                    nodedata = nodedata.split('|',1)
-                else:
-                    nodedata = [nodedata]
+                if isinstance(nodedata, Mapping):
+                    objectid = list(nodedata.values())[0]
+                    response = nodedata
 
-                objectid = nodedata[0]
-                try:
-                  response = json.loads(nodedata[1]) if len(nodedata) > 1 else None
-                except:
+                elif extended:
+                    nodedata = nodedata.split('|',1)
+                    objectid = nodedata[0]
+                    try:
+                        response = json.loads(nodedata[1]) if len(nodedata) > 1 else None
+                    except Exception as e:
+                        response = {'error':str(e)}
+
+                else:
+                    objectid = nodedata
                     response = None
 
                 new = Node(objectid)
@@ -393,7 +403,7 @@ class TreeModel(QAbstractItemModel):
 
             self.layoutChanged.emit()
         except Exception as e:
-            QMessageBox.critical(self, "Facepager", str(e))
+            self.logmessage.emit(str(e))
 
     def commitNewNodes(self, delaycommit=False):
         if (not delaycommit and self.newnodes > 0) or (self.newnodes > 500):
