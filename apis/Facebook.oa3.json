@@ -1745,7 +1745,7 @@
 								 {"const": "targeting", "description": "Object that limits the audience for this content. Only audiences in the specified demographics can view this content. The demographics are additive. Each additional value adds its audience to the cumulative targeted audience. These values do not override any Page-level demographic restrictions that may be in place."}, 
 								 {"const": "to", "description": "Profiles mentioned or targeted in this post. If you read this field with a user access token, it returns only the current user."}, 
 								 {"const": "type", "description": "A string indicating the object type of this post."}, 
-								 {"const": "updated_time", "description": "This field's behavior depends on the type of object the Post is on: Group Post - Time when the Post was created or commented upon. Page Posts — Time when the Post was created, edited, or commented upon. User Posts — Time when the Post was created, edited, or commented upon."}, 
+								 {"const": "updated_time", "description": "This field's behavior depends on the type of object the Post is on: Group Post - Time when the Post was created or commented upon. Page Posts - Time when the Post was created, edited, or commented upon. User Posts - Time when the Post was created, edited, or commented upon."}, 
 								 {"const": "with_tags", "description": "Profiles tagged as being 'with' the publisher of the post. If you read this field with a user access token, it returns only the current user."}
 								 ]
 							}
@@ -2090,7 +2090,7 @@
 								 {"const": "targeting", "description": "Object that limits the audience for this content. Only audiences in the specified demographics can view this content. The demographics are additive. Each additional value adds its audience to the cumulative targeted audience. These values do not override any Page-level demographic restrictions that may be in place."}, 
 								 {"const": "to", "description": "Profiles mentioned or targeted in this post. If you read this field with a user access token, it returns only the current user."}, 
 								 {"const": "type", "description": "A string indicating the object type of this post."}, 
-								 {"const": "updated_time", "description": "This field's behavior depends on the type of object the Post is on: Group Post - Time when the Post was created or commented upon. Page Posts — Time when the Post was created, edited, or commented upon. User Posts — Time when the Post was created, edited, or commented upon."}, 
+								 {"const": "updated_time", "description": "This field's behavior depends on the type of object the Post is on: Group Post - Time when the Post was created or commented upon. Page Posts - Time when the Post was created, edited, or commented upon. User Posts - Time when the Post was created, edited, or commented upon."}, 
 								 {"const": "with_tags", "description": "Profiles tagged as being 'with' the publisher of the post. If you read this field with a user access token, it returns only the current user."}
 								 ]
 							}

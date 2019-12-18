@@ -445,7 +445,7 @@ class ApiViewer(QDialog):
             return None
 
         try:
-            with open(os.path.join(folder, filename), 'r') as input:
+            with open(os.path.join(folder, filename), 'r',encoding="utf-8") as input:
                 data = json.load(input)
 
             if not isinstance(data,dict):
