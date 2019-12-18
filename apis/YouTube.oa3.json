@@ -186,17 +186,17 @@
 														"properties": {
 															"videoId": {"description": "The ID that YouTube uses to uniquely identify the video associated with the caption track."},
 															"lastUpdated": {"description": "The date and time when the caption track was last updated. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
-															"trackKind": {"description": "The caption track's type. Valid values for this property are: ASR – A caption track generated using automatic speech recognition, forced – A caption track that plays when no other track is selected in the player. For example, a video that shows aliens speaking in an alien language might have a forced caption track to only show subtitles for the alien language, standard – A regular caption track. This is the default value."},
+															"trackKind": {"description": "The caption track's type. Valid values for this property are: ASR - A caption track generated using automatic speech recognition, forced - A caption track that plays when no other track is selected in the player. For example, a video that shows aliens speaking in an alien language might have a forced caption track to only show subtitles for the alien language, standard - A regular caption track. This is the default value."},
 															"language": {"description": "The language of the caption track. The property value is a BCP-47 language tag."},
 															"name": {"description": "The name of the caption track. The name is intended to be visible to the user as an option during playback."},
-															"audioTrackType": {"description": "The type of audio track associated with the caption track. Valid values for this property are: commentary – The caption track corresponds to an alternate audio track that includes commentary, such as directory commentary, descriptive – The caption track corresponds to an alternate audio track that includes additional descriptive audio, primary – The caption track corresponds to the primary audio track for the video, which is the audio track normally associated with the video, unknown – This is the default value."},
+															"audioTrackType": {"description": "The type of audio track associated with the caption track. Valid values for this property are: commentary - The caption track corresponds to an alternate audio track that includes commentary, such as directory commentary, descriptive - The caption track corresponds to an alternate audio track that includes additional descriptive audio, primary - The caption track corresponds to the primary audio track for the video, which is the audio track normally associated with the video, unknown - This is the default value."},
 															"isCC": {"description": "Indicates whether the track contains closed captions for the deaf and hard of hearing. The default value is false."},
 															"isLarge": {"description": "Indicates whether the caption track uses large text for the vision-impaired. The default value is false."},
 															"isEasyReader": {"description": "Indicates whether caption track is formatted for 'easy reader,' meaning it is at a third-grade level for language learners. The default value is false."},
 															"isDraft": {"description": "Indicates whether the caption track is a draft. If the value is true, then the track is not publicly visible. The default value is false."},
 															"isAutoSynced": {"description": "Indicates whether YouTube synchronized the caption track to the audio track in the video. The value will be true if a sync was explicitly requested when the caption track was uploaded. For example, when calling the captions.insert or captions.update methods, you can set the sync parameter to true to instruct YouTube to sync the uploaded track to the video. If the value is false, YouTube uses the time codes in the uploaded caption track to determine when to display captions."},
 															"status": {"description": "The caption track's status. Valid values for this property are: failed, serving, syncing"},
-															"failureReason": {"description": "The reason that YouTube failed to process the caption track. This property is only present if the state property's value is failed. Valid values for this property are: processingFailed – YouTube failed to process the uploaded caption track, unknownFormat – The caption track's format was not recognized, unsupportedFormat – The caption track's format is not supported."}
+															"failureReason": {"description": "The reason that YouTube failed to process the caption track. This property is only present if the state property's value is failed. Valid values for this property are: processingFailed - YouTube failed to process the uploaded caption track, unknownFormat - The caption track's format was not recognized, unsupportedFormat - The caption track's format is not supported."}
 														}
 													}
 												}
@@ -462,7 +462,7 @@
 					{
 						"name": "textFormat",
 						"in": "query",
-						"description": "This parameter indicates whether the API should return comments formatted as HTML or as plain text. The default value is html. Acceptable values are: html – Returns the comments in HTML format. This is the default value. plainText – Returns the comments in plain text format.",
+						"description": "This parameter indicates whether the API should return comments formatted as HTML or as plain text. The default value is html. Acceptable values are: html - Returns the comments in HTML format. This is the default value. plainText - Returns the comments in plain text format.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -563,7 +563,7 @@
 					{
 						"name": "moderationStatus",
 						"in": "query",
-						"description": "This parameter can only be used in a properly authorized request. Set this parameter to limit the returned comment threads to a particular moderation state. Note: This parameter is not supported for use in conjunction with the id parameter. The default value is published. Acceptable values are: heldForReview – Retrieve comment threads that are awaiting review by a moderator. A comment thread can be included in the response if the top-level comment or at least one of the replies to that comment are awaiting review. likelySpam – Retrieve comment threads classified as likely to be spam. A comment thread can be included in the response if the top-level comment or at least one of the replies to that comment is considered likely to be spam. published – Retrieve threads of published comments. This is the default value. A comment thread can be included in the response if its top-level comment has been published.",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter to limit the returned comment threads to a particular moderation state. Note: This parameter is not supported for use in conjunction with the id parameter. The default value is published. Acceptable values are: heldForReview - Retrieve comment threads that are awaiting review by a moderator. A comment thread can be included in the response if the top-level comment or at least one of the replies to that comment are awaiting review. likelySpam - Retrieve comment threads classified as likely to be spam. A comment thread can be included in the response if the top-level comment or at least one of the replies to that comment is considered likely to be spam. published - Retrieve threads of published comments. This is the default value. A comment thread can be included in the response if its top-level comment has been published.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -599,7 +599,7 @@
 					{
 						"name": "textFormat",
 						"in": "query",
-						"description": "Set this parameter's value to html or plainText to instruct the API to return the comments left by users in html formatted or in plain text. The default value is html. Acceptable values are: html – Returns the comments in HTML format. This is the default value. plainText – Returns the comments in plain text format.",
+						"description": "Set this parameter's value to html or plainText to instruct the API to return the comments left by users in html formatted or in plain text. The default value is html. Acceptable values are: html - Returns the comments in HTML format. This is the default value. plainText - Returns the comments in plain text format.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1081,7 +1081,7 @@
 					{
 						"name": "channelType",
 						"in": "query",
-						"description": "The channelType parameter lets you restrict a search to a particular type of channel. Acceptable values are: any – Return all channels, show – Only retrieve shows.",
+						"description": "The channelType parameter lets you restrict a search to a particular type of channel. Acceptable values are: any - Return all channels, show - Only retrieve shows.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1093,7 +1093,7 @@
 					{
 						"name": "eventType",
 						"in": "query",
-						"description": "The eventType parameter restricts a search to broadcast events. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are:completed – Only include completed broadcasts, live – Only include active broadcasts, upcoming – Only include upcoming broadcasts.",
+						"description": "The eventType parameter restricts a search to broadcast events. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are:completed - Only include completed broadcasts, live - Only include active broadcasts, upcoming - Only include upcoming broadcasts.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1129,7 +1129,7 @@
 					{
 						"name": "order",
 						"in": "query",
-						"description": "The order parameter specifies the method that will be used to order resources in the API response. The default value is relevance. Acceptable values are: date – Resources are sorted in reverse chronological order based on the date they were created, rating – Resources are sorted from highest to lowest rating, relevance – Resources are sorted based on their relevance to the search query. This is the default value for this parameter, title – Resources are sorted alphabetically by title, videoCount – Channels are sorted in descending order of their number of uploaded videos, viewCount – Resources are sorted from highest to lowest number of views. For live broadcasts, videos are sorted by number of concurrent viewers while the broadcasts are ongoing.",
+						"description": "The order parameter specifies the method that will be used to order resources in the API response. The default value is relevance. Acceptable values are: date - Resources are sorted in reverse chronological order based on the date they were created, rating - Resources are sorted from highest to lowest rating, relevance - Resources are sorted based on their relevance to the search query. This is the default value for this parameter, title - Resources are sorted alphabetically by title, videoCount - Channels are sorted in descending order of their number of uploaded videos, viewCount - Resources are sorted from highest to lowest number of views. For live broadcasts, videos are sorted by number of concurrent viewers while the broadcasts are ongoing.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1178,7 +1178,7 @@
 					{
 						"name": "safeSearch",
 						"in": "query",
-						"description": "The safeSearch parameter indicates whether the search results should include restricted content as well as standard content. Acceptable values are: moderate – YouTube will filter some content from search results and, at the least, will filter content that is restricted in your locale. Based on their content, search results could be removed from search results or demoted in search results. This is the default parameter value, none – YouTube will not filter the search result set, strict – YouTube will try to exclude all restricted content from the search result set. Based on their content, search results could be removed from search results or demoted in search results.",
+						"description": "The safeSearch parameter indicates whether the search results should include restricted content as well as standard content. Acceptable values are: moderate - YouTube will filter some content from search results and, at the least, will filter content that is restricted in your locale. Based on their content, search results could be removed from search results or demoted in search results. This is the default parameter value, none - YouTube will not filter the search result set, strict - YouTube will try to exclude all restricted content from the search result set. Based on their content, search results could be removed from search results or demoted in search results.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1208,7 +1208,7 @@
 					{
 						"name": "videoCaption",
 						"in": "query",
-						"description": "The videoCaption parameter indicates whether the API should filter video search results based on whether they have captions. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any – Do not filter results based on caption availability, closedCaption – Only include videos that have captions, none – Only include videos that do not have captions.",
+						"description": "The videoCaption parameter indicates whether the API should filter video search results based on whether they have captions. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Do not filter results based on caption availability, closedCaption - Only include videos that have captions, none - Only include videos that do not have captions.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1226,7 +1226,7 @@
 					{
 						"name": "videoDefinition",
 						"in": "query",
-						"description": "The videoDefinition parameter lets you restrict a search to only include either high definition (HD) or standard definition (SD) videos. HD videos are available for playback in at least 720p, though higher resolutions, like 1080p, might also be available. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any – Return all videos, regardless of their resolution, high – Only retrieve HD videos, standard – Only retrieve videos in standard definition.",
+						"description": "The videoDefinition parameter lets you restrict a search to only include either high definition (HD) or standard definition (SD) videos. HD videos are available for playback in at least 720p, though higher resolutions, like 1080p, might also be available. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, regardless of their resolution, high - Only retrieve HD videos, standard - Only retrieve videos in standard definition.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1238,7 +1238,7 @@
 					{
 						"name": "videoDimension",
 						"in": "query",
-						"description": "The videoDimension parameter lets you restrict a search to only retrieve 2D or 3D videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: 2d – Restrict search results to exclude 3D videos, 3d – Restrict search results to only include 3D videos., any – Include both 3D and non-3D videos in returned results. This is the default value.",
+						"description": "The videoDimension parameter lets you restrict a search to only retrieve 2D or 3D videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: 2d - Restrict search results to exclude 3D videos, 3d - Restrict search results to only include 3D videos., any - Include both 3D and non-3D videos in returned results. This is the default value.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1250,7 +1250,7 @@
 					{
 						"name": "videoDuration",
 						"in": "query",
-						"description": "The videoDuration parameter filters video search results based on their duration. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any – Do not filter video search results based on their duration. This is the default value, long – Only include videos longer than 20 minutes, medium – Only include videos that are between four and 20 minutes long (inclusive), short – Only include videos that are less than four minutes long.",
+						"description": "The videoDuration parameter filters video search results based on their duration. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Do not filter video search results based on their duration. This is the default value, long - Only include videos longer than 20 minutes, medium - Only include videos that are between four and 20 minutes long (inclusive), short - Only include videos that are less than four minutes long.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1262,7 +1262,7 @@
 					{
 						"name": "videoEmbeddable",
 						"in": "query",
-						"description": "The videoEmbeddable parameter lets you to restrict a search to only videos that can be embedded into a webpage. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any – Return all videos, embeddable or not, true – Only retrieve embeddable videos.",
+						"description": "The videoEmbeddable parameter lets you to restrict a search to only videos that can be embedded into a webpage. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, embeddable or not, true - Only retrieve embeddable videos.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1274,7 +1274,7 @@
 					{
 						"name": "videoLicense",
 						"in": "query",
-						"description": "The videoLicense parameter filters search results to only include videos with a particular license. YouTube lets video uploaders choose to attach either the Creative Commons license or the standard YouTube license to each of their videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any – Return all videos, regardless of which license they have, that match the query parameters, creativeCommon – Only return videos that have a Creative Commons license. Users can reuse videos with this license in other videos that they create. Learn more, youtube – Only return videos that have the standard YouTube license.",
+						"description": "The videoLicense parameter filters search results to only include videos with a particular license. YouTube lets video uploaders choose to attach either the Creative Commons license or the standard YouTube license to each of their videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, regardless of which license they have, that match the query parameters, creativeCommon - Only return videos that have a Creative Commons license. Users can reuse videos with this license in other videos that they create. Learn more, youtube - Only return videos that have the standard YouTube license.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1286,7 +1286,7 @@
 					{
 						"name": "videoSyndicated",
 						"in": "query",
-						"description": "The videoSyndicated parameter lets you to restrict a search to only videos that can be played outside youtube.com. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any – Return all videos, syndicated or not, true – Only retrieve syndicated videos.",
+						"description": "The videoSyndicated parameter lets you to restrict a search to only videos that can be played outside youtube.com. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, syndicated or not, true - Only retrieve syndicated videos.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1298,7 +1298,7 @@
 					{
 						"name": "videoType",
 						"in": "query",
-						"description": "The videoType parameter lets you restrict a search to a particular type of videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any – Return all videos, episode – Only retrieve episodes of shows, movie – Only retrieve movies.",
+						"description": "The videoType parameter lets you restrict a search to a particular type of videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, episode - Only retrieve episodes of shows, movie - Only retrieve movies.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1434,7 +1434,7 @@
 					{
 						"name": "order",
 						"in": "query",
-						"description": "The order parameter specifies the method that will be used to sort resources in the API response. The default value is SUBSCRIPTION_ORDER_RELEVANCE. Acceptable values are: alphabetical – Sort alphabetically. relevance – Sort by relevance. unread – Sort by order of activity.",
+						"description": "The order parameter specifies the method that will be used to sort resources in the API response. The default value is SUBSCRIPTION_ORDER_RELEVANCE. Acceptable values are: alphabetical - Sort alphabetically. relevance - Sort by relevance. unread - Sort by order of activity.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -1662,7 +1662,7 @@
 					{
 						"name": "chart",
 						"in": "query",
-						"description": "The chart parameter identifies the chart that you want to retrieve. Acceptable values are: mostPopular – Return the most popular videos for the specified content region and video category.",
+						"description": "The chart parameter identifies the chart that you want to retrieve. Acceptable values are: mostPopular - Return the most popular videos for the specified content region and video category.",
 						"schema":  {
 								"type": "string",
 								"enum": ["mostPopular"]
@@ -1678,7 +1678,7 @@
 					{
 						"name": "myRating",
 						"in": "query",
-						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to like or dislike to instruct the API to only return videos liked or disliked by the authenticated user. Acceptable values are: dislike – Returns only videos disliked by the authenticated user. like – Returns only video liked by the authenticated user.",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to like or dislike to instruct the API to only return videos liked or disliked by the authenticated user. Acceptable values are: dislike - Returns only videos disliked by the authenticated user. like - Returns only video liked by the authenticated user.",
 						"schema":
 							{"type":"array",
 							"items": {
@@ -2473,7 +2473,7 @@
 						"properties": {
 							"fileName": {"description":"The uploaded file's name. This field is present whether a video file or another type of file was uploaded."},
 							"fileSize": {"description":"The uploaded file's size in bytes. This field is present whether a video file or another type of file was uploaded."},
-							"fileType": {"description":"The uploaded file's type as detected by YouTube's video processing engine. Currently, YouTube only processes video files, but this field is present whether a video file or another type of file was uploaded. Valid values for this property are: archive – The file is an archive file, such as a .zip archive, audio – The file is a known audio file type, such as an .mp3 file, document – The file is a document or text file, such as a MS Word document, image – The file is an image file, such as a .jpeg image, other – The file is another non-video file type, project – The file is a video project file, such as a Microsoft Windows Movie Maker project, that does not contain actual video data, video – The file is a known video file type, such as an .mp4 file."},
+							"fileType": {"description":"The uploaded file's type as detected by YouTube's video processing engine. Currently, YouTube only processes video files, but this field is present whether a video file or another type of file was uploaded. Valid values for this property are: archive - The file is an archive file, such as a .zip archive, audio - The file is a known audio file type, such as an .mp3 file, document - The file is a document or text file, such as a MS Word document, image - The file is an image file, such as a .jpeg image, other - The file is another non-video file type, project - The file is a video project file, such as a Microsoft Windows Movie Maker project, that does not contain actual video data, video - The file is a known video file type, such as an .mp4 file."},
 							"container": {"description":"The uploaded video file's container format."},
 							"videoStreams": {
 								"description":"A list of video streams contained in the uploaded video file. Each item in the list contains detailed metadata about a video stream.",
@@ -2492,13 +2492,13 @@
 						"description": "The processingDetails object encapsulates information about YouTube's progress in processing the uploaded video file. The properties in the object identify the current processing status and an estimate of the time remaining until YouTube finishes processing the video. This part also indicates whether different types of data or content, such as file details or thumbnail images, are available for the video. The processingProgress object is designed to be polled so that the video uploaded can track the progress that YouTube has made in processing the uploaded video file. This data can only be retrieved by the video owner.",
 						"type": "object", 
 						"properties": {
-							"processingStatus": {"description": "The video's processing status. This value indicates whether YouTube was able to process the video or if the video is still being processed. Valid values for this property are: failed – Video processing has failed. See ProcessingFailureReason, processing – Video is currently being processed. See ProcessingProgress, succeeded – Video has been successfully processed, terminated – Processing information is no longer available."},
+							"processingStatus": {"description": "The video's processing status. This value indicates whether YouTube was able to process the video or if the video is still being processed. Valid values for this property are: failed - Video processing has failed. See ProcessingFailureReason, processing - Video is currently being processed. See ProcessingProgress, succeeded - Video has been successfully processed, terminated - Processing information is no longer available."},
 							"processingProgress": {
 								"description": "The processingProgress object contains information about the progress YouTube has made in processing the video. The values are really only relevant if the video's processing status is processing.",
 								"type": "object", 
 								"properties": {}
 							},
-							"processingFailureReason": {"description":"The reason that YouTube failed to process the video. This property will only have a value if the processingStatus property's value is failed. Valid values for this property are: other – Some other processing component has failed, streamingFailed – Video could not be sent to streamers, transcodeFailed – Content transcoding has failed, uploadFailed – File delivery has failed."},
+							"processingFailureReason": {"description":"The reason that YouTube failed to process the video. This property will only have a value if the processingStatus property's value is failed. Valid values for this property are: other - Some other processing component has failed, streamingFailed - Video could not be sent to streamers, transcodeFailed - Content transcoding has failed, uploadFailed - File delivery has failed."},
 							"fileDetailsAvailability": {"description":"This value indicates whether file details are available for the uploaded video. You can retrieve a video's file details by requesting the fileDetails part in your videos.list() request."},
 							"processingIssuesAvailability": {"description":"This value indicates whether the video processing engine has generated suggestions that might improve YouTube's ability to process the the video, warnings that explain video processing problems, or errors that cause video processing problems. You can retrieve these suggestions by requesting the suggestions part in your videos.list() request."},
 							"tagSuggestionsAvailability": {"description":"This value indicates whether keyword (tag) suggestions are available for the video. Tags can be added to a video's metadata to make it easier for other users to find the video. You can retrieve these suggestions by requesting the suggestions part in your videos.list() request."},
@@ -2511,15 +2511,15 @@
 						"type": "object", 
 						"properties": {
 							"processingErrors": {
-								"description": "A list of errors that will prevent YouTube from successfully processing the uploaded video. These errors indicate that, regardless of the video's current processing status, eventually, that status will almost certainly be failed. Valid values for this property are: archiveFile – An archive file (e.g., a ZIP archive), audioFile – File contains audio only (e.g., an MP3 file), docFile – Document or text file (e.g., MS Word document), imageFile – Image file (e.g., a JPEG image), notAVideoFile – Other non-video file, projectFile – Movie project file (e.g., Microsoft Windows Movie Maker project).",
+								"description": "A list of errors that will prevent YouTube from successfully processing the uploaded video. These errors indicate that, regardless of the video's current processing status, eventually, that status will almost certainly be failed. Valid values for this property are: archiveFile - An archive file (e.g., a ZIP archive), audioFile - File contains audio only (e.g., an MP3 file), docFile - Document or text file (e.g., MS Word document), imageFile - Image file (e.g., a JPEG image), notAVideoFile - Other non-video file, projectFile - Movie project file (e.g., Microsoft Windows Movie Maker project).",
 								"type": "array"
 							},
 							"processingWarnings": {
-								"description": "A list of reasons why YouTube may have difficulty transcoding the uploaded video or that might result in an erroneous transcoding. These warnings are generated before YouTube actually processes the uploaded video file. In addition, they identify issues that do not necessarily indicate that video processing will fail but that still might cause problems such as sync issues, video artifacts, or a missing audio track. Valid values for this property are: hasEditlist – Edit lists are not currently supported, inconsistentResolution – Conflicting container and stream resolutions, problematicAudioCodec – Audio codec that is known to cause problems was used, problematicVideoCodec – Video codec that is known to cause problems was used, unknownAudioCodec – Unrecognized audio codec, transcoding is likely to fail, unknownContainer – Unrecognized file format, transcoding is likely to fail, unknownVideoCodec – Unrecognized video codec, transcoding is likely to fail.",
+								"description": "A list of reasons why YouTube may have difficulty transcoding the uploaded video or that might result in an erroneous transcoding. These warnings are generated before YouTube actually processes the uploaded video file. In addition, they identify issues that do not necessarily indicate that video processing will fail but that still might cause problems such as sync issues, video artifacts, or a missing audio track. Valid values for this property are: hasEditlist - Edit lists are not currently supported, inconsistentResolution - Conflicting container and stream resolutions, problematicAudioCodec - Audio codec that is known to cause problems was used, problematicVideoCodec - Video codec that is known to cause problems was used, unknownAudioCodec - Unrecognized audio codec, transcoding is likely to fail, unknownContainer - Unrecognized file format, transcoding is likely to fail, unknownVideoCodec - Unrecognized video codec, transcoding is likely to fail.",
 								"type": "array"
 							},
 							"processingHints": {
-								"description": "A list of suggestions that may improve YouTube's ability to process the video. Valid values for this property are: nonStreamableMov – The MP4 file is not streamable, this will slow down the processing, sendBestQualityVideo – Probably a better quality version of the video exists.",
+								"description": "A list of suggestions that may improve YouTube's ability to process the video. Valid values for this property are: nonStreamableMov - The MP4 file is not streamable, this will slow down the processing, sendBestQualityVideo - Probably a better quality version of the video exists.",
 								"type": "array"
 							},
 							"tagSuggestions": {
@@ -2527,7 +2527,7 @@
 								"type": "array"
 							},
 							"editorSuggestions": {
-								"description": "A list of video editing operations that might improve the video quality or playback experience of the uploaded video. Valid values for this property are: audioQuietAudioSwap – The audio track appears silent and could be swapped with a better quality one, videoAutoLevels – Picture brightness levels seem off and could be corrected, videoCrop – Margins (mattes) detected around the picture could be cropped, videoStabilize – The video appears shaky and could be stabilized.",
+								"description": "A list of video editing operations that might improve the video quality or playback experience of the uploaded video. Valid values for this property are: audioQuietAudioSwap - The audio track appears silent and could be swapped with a better quality one, videoAutoLevels - Picture brightness levels seem off and could be corrected, videoCrop - Margins (mattes) detected around the picture could be cropped, videoStabilize - The video appears shaky and could be stabilized.",
 								"type": "array"
 							}
 						}
