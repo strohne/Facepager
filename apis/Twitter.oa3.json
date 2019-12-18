@@ -2406,8 +2406,8 @@
 						"description": "Represents hashtags which have been parsed out of the Tweet text.",
 						"type": "object",
 						"properties": {
-							"indices":{"description": "An array of integers indicating the offsets within the Tweet text where the hashtag begins and ends. The first integer represents the location of the # character in the Tweet text string. The second integer represents the location of the first character after the hashtag. Therefore the difference between the two numbers will be the length of the hashtag name plus one (for the ‘#' character)."},
-							"text":{"description": "Name of the hashtag, minus the leading ‘#' character."}
+							"indices":{"description": "An array of integers indicating the offsets within the Tweet text where the hashtag begins and ends. The first integer represents the location of the # character in the Tweet text string. The second integer represents the location of the first character after the hashtag. Therefore the difference between the two numbers will be the length of the hashtag name plus one (for the '#' character)."},
+							"text":{"description": "Name of the hashtag, minus the leading '#' character."}
 							}
 					},			
 					"media":{
@@ -2486,7 +2486,7 @@
 						"properties": {
 							"id":{"description": "ID of the mentioned user, as an integer."},
 							"id_str":{"description": "If of the mentioned user, as a string."},
-							"indices":{"description": "An array of integers representing the offsets within the Tweet text where the user reference begins and ends. The first integer represents the location of the ‘@' character of the user mention. The second integer represents the location of the first non-screenname character following the user mention."},
+							"indices":{"description": "An array of integers representing the offsets within the Tweet text where the user reference begins and ends. The first integer represents the location of the '@' character of the user mention. The second integer represents the location of the first non-screenname character following the user mention."},
 							"name":{"description": "Display name of the referenced user."},
 							"screen_name":{"description": "Screen name of the referenced user."}
 						}
@@ -2495,8 +2495,8 @@
 						"description": "Represents symbols, i.e. $cashtags, included in the text of the Tweet.",
 						"type": "object",
 						"properties": {
-							"indices":{"description": "An array of integers indicating the offsets within the Tweet text where the symbol/cashtag begins and ends. The first integer represents the location of the $ character in the Tweet text string. The second integer represents the location of the first character after the cashtag. Therefore the difference between the two numbers will be the length of the hashtag name plus one (for the ‘$' character)."},
-							"text":{"description": "Name of the cashhtag, minus the leading ‘$' character."}
+							"indices":{"description": "An array of integers indicating the offsets within the Tweet text where the symbol/cashtag begins and ends. The first integer represents the location of the $ character in the Tweet text string. The second integer represents the location of the first character after the cashtag. Therefore the difference between the two numbers will be the length of the hashtag name plus one (for the '$' character)."},
+							"text":{"description": "Name of the cashhtag, minus the leading '$' character."}
 						}
 					},
 					"polls":{
