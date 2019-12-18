@@ -241,7 +241,7 @@
 		},
 		"/followers/ids": {
             "get" : {
-                "summary" : "Returns a cursored collection of user IDs for every user following the specified user. At this time, results are ordered with the most recent following first — however, this ordering is subject to unannounced change and eventual consistency issues. Results are given in groups of 5,000 user IDs and multiple 'pages' of results can be navigated through using the next_cursor value in subsequent requests. See Using cursors to navigate collections for more information. This method is especially powerful when used in conjunction with GET users / lookup, a method that allows you to convert user IDs into full user objects in bulk.",
+                "summary" : "Returns a cursored collection of user IDs for every user following the specified user. At this time, results are ordered with the most recent following first - however, this ordering is subject to unannounced change and eventual consistency issues. Results are given in groups of 5,000 user IDs and multiple 'pages' of results can be navigated through using the next_cursor value in subsequent requests. See Using cursors to navigate collections for more information. This method is especially powerful when used in conjunction with GET users / lookup, a method that allows you to convert user IDs into full user objects in bulk.",
                 "externalDocs": {
                     "url":"https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-followers-ids"
                 },  
@@ -365,7 +365,7 @@
 		},
 		"/friends/ids": {
 			"get" : {
-				"summary": "Returns a cursored collection of user IDs for every user the specified user is following (otherwise known as their 'friends'). At this time, results are ordered with the most recent following first — however, this ordering is subject to unannounced change and eventual consistency issues. Results are given in groups of 5,000 user IDs and multiple 'pages' of results can be navigated through using the next_cursor value in subsequent requests. See Using cursors to navigate collections for more information. This method is especially powerful when used in conjunction with GET users / lookup, a method that allows you to convert user IDs into full user objects in bulk.",
+				"summary": "Returns a cursored collection of user IDs for every user the specified user is following (otherwise known as their 'friends'). At this time, results are ordered with the most recent following first - however, this ordering is subject to unannounced change and eventual consistency issues. Results are given in groups of 5,000 user IDs and multiple 'pages' of results can be navigated through using the next_cursor value in subsequent requests. See Using cursors to navigate collections for more information. This method is especially powerful when used in conjunction with GET users / lookup, a method that allows you to convert user IDs into full user objects in bulk.",
 				"externalDocs": {
 					"url": "https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-friends-ids"
 				},
@@ -429,7 +429,7 @@
 		},
 		"/friends/list": {
 			"get" : {
-				"summary": "Returns a cursored collection of user objects for every user the specified user is following (otherwise known as their 'friends'). At this time, results are ordered with the most recent following first — however, this ordering is subject to unannounced change and eventual consistency issues. Results are given in groups of 20 users and multiple 'pages' of results can be navigated through using the next_cursor value in subsequent requests. See Using cursors to navigate collections for more information.",
+				"summary": "Returns a cursored collection of user objects for every user the specified user is following (otherwise known as their 'friends'). At this time, results are ordered with the most recent following first - however, this ordering is subject to unannounced change and eventual consistency issues. Results are given in groups of 20 users and multiple 'pages' of results can be navigated through using the next_cursor value in subsequent requests. See Using cursors to navigate collections for more information.",
 				"externalDocs": {
 					"url": "https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-friends-list"
 				},
@@ -1632,7 +1632,7 @@
 					{
                       "name" : "exclude_replies",
                       "in" : "path",
-                      "description" : "This parameter will prevent replies from appearing in the returned timeline. Using exclude_replies with the count parameter will mean you will receive up-to count Tweets — this is because the count parameter retrieves that many Tweets before filtering out retweets and replies.",
+                      "description" : "This parameter will prevent replies from appearing in the returned timeline. Using exclude_replies with the count parameter will mean you will receive up-to count Tweets - this is because the count parameter retrieves that many Tweets before filtering out retweets and replies.",
                       "schema":{"type":"string"}					
 					},
                     {
@@ -2027,7 +2027,7 @@
                     {
                       "name" : "exclude_replies",
                       "in" : "query",
-                      "description" : "This parameter will prevent replies from appearing in the returned timeline. Using exclude_replies with the count parameter will mean you will receive up-to count tweets — this is because the count parameter retrieves that many Tweets before filtering out retweets and replies.",
+                      "description" : "This parameter will prevent replies from appearing in the returned timeline. Using exclude_replies with the count parameter will mean you will receive up-to count tweets - this is because the count parameter retrieves that many Tweets before filtering out retweets and replies.",
                       "schema":{"type":"string"}
 					  },
                     {
