@@ -624,7 +624,7 @@ class ApiTab(QScrollArea):
         folderlayout.addWidget(self.downloadfolderButton,0)
 
         # filename
-        folderlayout.addWidget(QLabel("Custom filename"),0)
+        folderlayout.addWidget(QLabel("Filename"),0)
         self.filenameEdit = QComboBox(self)
         self.filenameEdit .setToolTip(wraptip("Set the filename, if you want to save the responses to files. <Object ID> usually is a good choice."))
         self.filenameEdit.insertItems(0, ['<Object ID>','<None>'])
@@ -885,7 +885,7 @@ class ApiTab(QScrollArea):
         """
 
         def download(response,foldername=None,filename=None,fileext=None):
-            if foldername is not None:
+            if foldername is not None and filename is not None:
                 if fileext is None:
                     guessed_ext = guess_all_extensions(response.headers["content-type"])
                     fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
