@@ -40,6 +40,8 @@ class ApiThreadPool():
 
     def applyJobs(self):
         self.jobsadded = True
+        if not self.jobcount:
+            self.stopJobs()
 
     def getJob(self):
         try:
@@ -140,7 +142,7 @@ class ApiThreadPool():
             self.maxthreads = threadcount
 
         threadcount = min(len(self.input), self.maxthreads)
-        threadcount = min(1, threadcount)
+        threadcount = max(1, threadcount)
 
         self.setThreadCount(threadcount)
 
