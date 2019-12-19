@@ -226,7 +226,7 @@ class PresetWindow(QDialog):
             if online:
                 data= requests.get(folder+filename).json()
             else:
-                with open(os.path.join(folder, filename), 'r') as input:
+                with open(os.path.join(folder, filename), 'r', encoding="utf-8") as input:
                     data = json.load(input)
 
             data['filename'] = filename

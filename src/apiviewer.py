@@ -23,8 +23,8 @@ class ApiViewer(QDialog):
         # Main window
         self.mainWindow = parent
         self.setWindowTitle("API Viewer")
-        self.setMinimumWidth(700);
-        self.setMinimumHeight(600);
+        self.setMinimumWidth(700)
+        self.setMinimumHeight(600)
 
         # Properties
         self.folder = os.path.join(os.path.expanduser("~"), 'Facepager', 'APIs')
