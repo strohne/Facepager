@@ -66,12 +66,23 @@ class ApiTab(QScrollArea):
         self.mainLayout.setLabelAlignment(Qt.AlignLeft)
         self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)    
         self.mainLayout.setSizeConstraint(QLayout.SetMaximumSize) #QLayout.SetMinimumSize
-        
+
+        # Extra layout
+        self.extraLayout = QFormLayout()
+        self.extraLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        self.extraLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.extraLayout.setLabelAlignment(Qt.AlignLeft)
+        self.extraLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+
+        # Container
+        pagelayout = QVBoxLayout()
+        pagelayout.addLayout(self.mainLayout)
+        pagelayout.addStretch(0)
+        pagelayout.addLayout(self.extraLayout)
+
         # For scrolling
         page = QWidget(self)
-        page.setLayout(self.mainLayout)
-        
-        
+        page.setLayout(pagelayout)
         self.setWidget(page)
         self.setStyleSheet("QScrollArea {border:0px;background-color:transparent;}")
         page.setAutoFillBackground(False) #import: place after setStyleSheet
@@ -641,7 +652,7 @@ class ApiTab(QScrollArea):
         folderlayout.addWidget(self.fileextEdit,1)
         #layout.setStretch(2, 1)
 
-        self.mainLayout.addRow("Download", self.downloadfolderwidget)
+        self.extraLayout.addRow("Download", self.downloadfolderwidget)
 
 
     def pagingChanged(self):
@@ -745,7 +756,7 @@ class ApiTab(QScrollArea):
             
             rowcaption = "Maximum pages"
 
-        self.mainLayout.addRow(rowcaption, layout)
+        self.extraLayout.addRow(rowcaption, layout)
 
     def initHeaderInputs(self):
         self.headerEdit = QParamEdit(self)
@@ -838,7 +849,7 @@ class ApiTab(QScrollArea):
         layout.setStretch(2, 1)
                     
         #Add layout                
-        self.mainLayout.addRow("Key to extract", layout)
+        self.extraLayout.addRow("Key to extract", layout)
 
     @Slot()
     def onChangedRelation(self, index = None):
@@ -1099,7 +1110,421 @@ class ApiTab(QScrollArea):
                 self.downloadfolderEdit.setText(folder)
 
 
-class FacebookTab(ApiTab):
+class AuthTab(ApiTab):
+
+    # see YoutubeTab for keys in the options-parameter
+    def __init__(self, mainWindow=None, name='NoName'):
+        super(AuthTab, self).__init__(mainWindow, name)
+
+        self.defaults['login_buttoncaption'] = " Login "
+        self.defaults['login_window_caption'] = "Login Page"
+        self.defaults['auth_type'] = "OAuth2"
+
+    def initAuthSetupInputs(self):
+        authlayout = QFormLayout()
+        authlayout.setContentsMargins(0, 0, 0, 0)
+        self.authWidget.setLayout(authlayout)
+
+        self.authTypeEdit = QComboBox()
+        self.authTypeEdit.addItems(['OAuth2', 'Twitter App-only'])
+        authlayout.addRow("Authentication type", self.authTypeEdit)
+
+        self.authURIEdit = QLineEdit()
+        authlayout.addRow("Login URI", self.authURIEdit)
+
+        self.redirectURIEdit = QLineEdit()
+        authlayout.addRow("Redirect URI", self.redirectURIEdit)
+
+        self.tokenURIEdit = QLineEdit()
+        authlayout.addRow("Token URI", self.tokenURIEdit)
+
+        self.clientIdEdit = QLineEdit()
+        self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Client Id", self.clientIdEdit)
+
+        self.clientSecretEdit = QLineEdit()
+        self.clientSecretEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Client Secret", self.clientSecretEdit)
+
+        self.scopeEdit = QLineEdit()
+        authlayout.addRow("Scopes", self.scopeEdit)
+
+    def initLoginInputs(self, toggle=True):
+        # token and login button
+        loginlayout = QHBoxLayout()
+
+        if toggle:
+            self.authEdit = QComboBox(self)
+            self.authEdit.addItems(['disable', 'param', 'header'])
+            self.authEdit.setToolTip(wraptip(
+                "Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a bearer token header containing the access token will be sent."))
+            loginlayout.addWidget(self.authEdit)
+
+            rowcaption = "Authorization"
+            loginlayout.addWidget(QLabel("Access token"))
+        else:
+            rowcaption = "Access token"
+
+        self.tokenEdit = QLineEdit()
+        self.tokenEdit.setEchoMode(QLineEdit.Password)
+        loginlayout.addWidget(self.tokenEdit)
+
+        self.authButton = QPushButton('Settings', self)
+        self.authButton.clicked.connect(self.editAuthSettings)
+        loginlayout.addWidget(self.authButton)
+
+        self.loginButton = QPushButton(self.defaults.get('login_buttoncaption', "Login"), self)
+        self.loginButton.setToolTip(wraptip(
+            "Sometimes you need to register your own app at the platform of the API provider. Adjust the settings and login,"))
+        self.loginButton.clicked.connect(self.doLogin)
+        loginlayout.addWidget(self.loginButton)
+
+        #self.mainLayout.addRow(rowcaption, loginwidget)
+        self.extraLayout.addRow(rowcaption, loginlayout)
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(AuthTab, self).getOptions(purpose)
+
+        # Auth type
+        try:
+            options[
+                'auth_type'] = self.authTypeEdit.currentText().strip() if self.authTypeEdit.currentText() != "" else self.defaults.get(
+                'auth_type', '')
+        except AttributeError:
+            pass
+
+        # OAUTH URIs
+        try:
+            options[
+                'auth_uri'] = self.authURIEdit.text().strip() if self.authURIEdit.text() != "" else self.defaults.get(
+                'auth_uri', '')
+            options[
+                'redirect_uri'] = self.redirectURIEdit.text().strip() if self.redirectURIEdit.text() != "" else self.defaults.get(
+                'redirect_uri', '')
+            options[
+                'token_uri'] = self.tokenURIEdit.text().strip() if self.tokenURIEdit.text() != "" else self.defaults.get(
+                'token_uri', '')
+        except AttributeError:
+            options['auth_uri'] = self.defaults.get('auth_uri', '')
+            options['redirect_uri'] = self.defaults.get('redirect_uri', '')
+            options['token_uri'] = self.defaults.get('token_uri', '')
+
+        try:
+            options[
+                'auth'] = self.authEdit.currentText().strip() if self.authEdit.currentText() != "" else self.defaults.get(
+                'auth', 'disable')
+        except AttributeError:
+            options['auth'] = self.defaults.get('auth', 'disable')
+
+        return options
+
+    def setOptions(self, options):
+        try:
+            self.authTypeEdit.setCurrentIndex(
+                self.authTypeEdit.findText(options.get('auth_type', self.defaults.get('auth_type', 'OAuth2'))))
+            self.authURIEdit.setText(options.get('auth_uri'))
+            self.redirectURIEdit.setText(options.get('redirect_uri'))
+            self.tokenURIEdit.setText(options.get('token_uri'))
+        except AttributeError:
+            pass
+
+        try:
+            self.authEdit.setCurrentIndex(self.authEdit.findText(options.get('auth', 'disable')))
+        except AttributeError:
+            pass
+
+        super(AuthTab, self).setOptions(options)
+
+    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        self.closeSession()
+        self.connected = True
+        self.speed = options.get('speed', None)
+        self.progress = logProgress
+
+        # paging by auto count
+        if (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
+            offset = options.get('offset_start', 1)
+            options['params'][options.get('param_paging', '')] = offset
+
+        # file settings
+        foldername, filename, fileext = self.getFileFolderName(options, nodedata)
+
+        format = options.get('format', 'json')
+        if format == 'file':
+            if (foldername is None) or (not os.path.isdir(foldername)):
+                raise Exception("Folder does not exists, select download folder, please!")
+
+        # Abort condition: maximum page count
+        for page in range(options.get('currentpage', 0), options.get('pages', 1)):
+            # Save page
+            options['currentpage'] = page
+
+            # build url
+            if not ('url' in options):
+                urlpath = options["basepath"] + options['resource']
+                urlparams = {}
+                urlparams.update(options['params'])
+
+                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
+
+                requestheaders = options.get('headers', {})
+
+                if options.get('auth', 'disable') == 'param':
+                    urlparams["access_token"] = options['access_token']
+                elif options.get('auth', 'disable') == 'header':
+                    requestheaders["Authorization"] = "Bearer " + options['access_token']
+
+                method = options.get('verb', 'GET')
+                payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options)
+                if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
+                    requestheaders["Content-Type"] = payload.content_type
+
+            else:
+                # requestheaders = {}
+                payload = None
+                urlpath = options['url']
+                urlparams = options['params']
+
+            # sign request (for Amazon tab)
+            if hasattr(self, "signRequest"):
+                headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
+
+            if options['logrequests']:
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
+                                                                   urlpath + "?" + urllib.parse.urlencode(urlparams)))
+
+            # data
+            options['querytime'] = str(datetime.now())
+            data, headers, status = self.request(urlpath, urlparams, requestheaders, method, payload,
+                                                 foldername, filename, fileext, format=format)
+            options['querystatus'] = status
+            logData(data, options, headers)
+
+            # rate limit info
+            # if 'x-rate-limit-remaining' in headers:
+            #     options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
+
+            if self.progress is not None:
+                self.progress({'page': page + 1})
+
+            # paging by key
+            if (options.get('paging_type', 'key') == "key"):
+                if (options.get('key_paging', '') is not None) and (
+                        options.get('param_paging', '') is not None) and isinstance(data, dict) and hasDictValue(data,
+                                                                                                                 options[
+                                                                                                                     'key_paging']):
+                    options['params'][options['param_paging']] = getDictValue(data, options['key_paging'])
+                else:
+                    break
+
+            # paging by auto count
+            elif (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
+                offset = offset + options.get('offset_step', 1)
+                options['params'][options['param_paging']] = offset
+            else:
+                break
+            if not self.connected:
+                break
+
+    @Slot()
+    def doLogin(self):
+        if hasattr(self, "session"):
+            del self.session
+
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
+            self.doTwitterAppLogin()
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
+            self.doOAuth1Login()
+        else:
+            self.doOAuth2Login()
+
+    @Slot()
+    def getToken(self, url=False):
+        # if url is not False:
+        #    self.loginStatus.showMessage(url.toDisplayString() )
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
+            return False
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
+            self.getOAuth1Token()
+        else:
+            self.getOAuth2Token(url)
+
+    @Slot()
+    def initSession(self):
+        if hasattr(self, "session"):
+            return self.session
+
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
+            return self.initOAuth2Session()
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
+            return self.initOAuth1Session()
+        else:
+            return self.initOAuth2Session()
+
+    @Slot()
+    def doOAuth1Login(self):
+        try:
+            self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get(
+                'consumer_key')
+            self.oauth1service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get(
+                'consumer_secret')
+
+            if self.oauth1service.consumer_key == '' or self.oauth1service.consumer_secret == '':
+                raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
+
+            self.oauthdata.pop('oauth_verifier', None)
+            self.oauthdata['requesttoken'], self.oauthdata[
+                'requesttoken_secret'] = self.oauth1service.get_request_token()
+
+            self.showLoginWindow(False,
+                                 self.defaults.get('login_window_caption', 'Login'),
+                                 self.oauth1service.get_authorize_url(self.oauthdata['requesttoken']),
+                                 self.defaults.get('login_window_width', 600),
+                                 self.defaults.get('login_window_height', 600)
+                                 )
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+    @Slot()
+    def getOAuth1Token(self):
+        url = urllib.parse.parse_qs(self.login_webview.url().toString())
+        if "oauth_verifier" in url:
+            token = url["oauth_verifier"]
+            if token:
+                self.oauthdata['oauth_verifier'] = token[0]
+                self.session = self.oauth1service.get_auth_session(self.oauthdata['requesttoken'],
+                                                                   self.oauthdata['requesttoken_secret'], method="POST",
+                                                                   data={'oauth_verifier': self.oauthdata[
+                                                                       'oauth_verifier']})
+
+                self.tokenEdit.setText(self.session.access_token)
+                self.tokensecretEdit.setText(self.session.access_token_secret)
+
+                self.closeLoginWindow()
+
+    def initOAuth1Session(self):
+        if (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
+            self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else \
+                self.defaults['consumer_key']
+            self.oauth1service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else \
+                self.defaults['consumer_secret']
+            self.oauth1service.base_url = self.basepathEdit.currentText().strip() if self.basepathEdit.currentText().strip() != "" else \
+                self.defaults['basepath']
+
+            self.session = self.oauth1service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
+            return self.session
+
+        else:
+            raise Exception("No access, login please!")
+
+    @Slot()
+    def doOAuth2Login(self):
+        try:
+            options = self.getOptions()
+
+            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id',
+                                                                                                         '')
+            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
+            loginurl = options.get('auth_uri', '')
+
+            if loginurl == '':
+                raise Exception('Login URL is missing, please adjust settings!')
+
+            if clientid == '':
+                raise Exception('Client Id is missing, please adjust settings!')
+
+            self.session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'], scope=scope)
+            params = {'client_id': clientid,
+                      'redirect_uri': options['redirect_uri'],
+                      'response_type': options.get('response_type', 'code')}
+
+            if scope is not None:
+                params['scope'] = scope
+
+            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
+            url = loginurl + "?" + params
+
+            self.showLoginWindow(False, self.defaults.get('login_window_caption', 'Login'),
+                                 url,
+                                 self.defaults.get('login_window_width', 600),
+                                 self.defaults.get('login_window_height', 600)
+                                 )
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+    @Slot(QUrl)
+    def getOAuth2Token(self, url):
+        options = self.getOptions()
+
+        if url.toString().startswith(options['redirect_uri']):
+            try:
+                clientsecret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get(
+                    'client_secret', '')
+
+                token = self.session.fetch_token(options['token_uri'],
+                                                 authorization_response=str(url.toString()),
+                                                 client_secret=clientsecret)
+
+                self.tokenEdit.setText(token['access_token'])
+
+                try:
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                except AttributeError:
+                    pass
+
+            finally:
+                self.closeLoginWindow()
+
+    def initOAuth2Session(self):
+        return super(AuthTab, self).initSession()
+
+    @Slot()
+    def doTwitterAppLogin(self):
+        try:
+            # See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
+            options = self.getOptions()
+
+            clientid = self.clientIdEdit.text()  # if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+            if clientid == '':
+                raise Exception('Client Id is missing, please adjust settings!')
+
+            clientsecret = self.clientSecretEdit.text()  # if self.clientSecretEdit.text() != "" else self.defaults.get('client_secret', '')
+            if clientsecret == '':
+                raise Exception('Client Secret is missing, please adjust settings!')
+
+            basicauth = urllib.parse.quote_plus(clientid) + ':' + urllib.parse.quote_plus(clientsecret)
+            basicauth = base64.b64encode(basicauth)
+
+            path = 'https://api.twitter.com/oauth2/token/'
+            payload = 'grant_type=client_credentials'
+            headers = {'Authorization': 'Basic ' + basicauth,
+                       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+            data, headers, status = self.request(path, payload=payload, headers=headers, method="POST")
+
+            token = data.get('access_token', '')
+            self.tokenEdit.setText(token)
+
+            try:
+                self.tokensecretEdit.setText('')
+            except AttributeError:
+                pass
+
+            if token != '':
+                QMessageBox.information(self, "Login", "Login succeeded, got new access token.",
+                                        QMessageBox.StandardButton.Ok)
+            else:
+                raise Exception("Check your settings, no token could be retrieved.")
+        except Exception as e:
+            QMessageBox.critical(self, "Login failed",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+
+class FacebookTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
@@ -1111,6 +1536,7 @@ class FacebookTab(ApiTab):
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = 'data'
+        self.defaults['login_buttoncaption'] = " Login to Facebook "
             
         # Query Box
         self.initInputs()
@@ -1119,29 +1545,10 @@ class FacebookTab(ApiTab):
         self.initPagingInputs()
 
         self.initAuthSettingsInputs()
-        self.initLoginInputs()
+        self.initLoginInputs(toggle=False)
 
         self.loadDoc()
         self.loadSettings()
-
-    def initLoginInputs(self):
-        # Login-Boxes
-        loginlayout = QHBoxLayout()
-
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokenEdit)
-
-        self.authButton = QPushButton('Settings', self)
-        self.authButton.clicked.connect(self.editAuthSettings)
-        loginlayout.addWidget(self.authButton)
-
-        self.loginButton = QPushButton(" Login to Facebook ", self)
-        self.loginButton.clicked.connect(self.doLogin)
-        loginlayout.addWidget(self.loginButton)
-
-        # Add to main-Layout
-        self.mainLayout.addRow("Access Token", loginlayout)
 
     def initAuthSettingsInputs(self):
         authlayout = QFormLayout()
@@ -1354,7 +1761,7 @@ class TwitterStreamingTab(ApiTab):
         loginlayout.addWidget(self.loginButton)
 
         # Add to main-Layout
-        self.mainLayout.addRow("Access Token", loginlayout)
+        self.extraLayout.addRow("Access Token", loginlayout)
 
 
     def initAuthSettingsInputs(self):
@@ -1525,407 +1932,6 @@ class TwitterStreamingTab(ApiTab):
 
                 self.closeLoginWindow()
 
-
-class AuthTab(ApiTab):
-
-    # see YoutubeTab for keys in the options-parameter
-    def __init__(self, mainWindow=None,name='NoName'):
-        super(AuthTab, self).__init__(mainWindow, name)
-
-        self.defaults['login_buttoncaption'] = " Login "
-        self.defaults['login_window_caption'] = "Login Page"
-        self.defaults['auth_type'] = "OAuth2"
-
-
-    def initAuthSetupInputs(self):
-        authlayout = QFormLayout()
-        authlayout.setContentsMargins(0,0,0,0)
-        self.authWidget.setLayout(authlayout)
-
-        self.authTypeEdit= QComboBox()
-        self.authTypeEdit.addItems(['OAuth2', 'Twitter App-only'])
-        authlayout.addRow("Authentication type", self.authTypeEdit)
-
-        self.authURIEdit = QLineEdit()
-        authlayout.addRow("Login URI",self.authURIEdit)
-
-        self.redirectURIEdit = QLineEdit()
-        authlayout.addRow("Redirect URI",self.redirectURIEdit)
-
-        self.tokenURIEdit = QLineEdit()
-        authlayout.addRow("Token URI",self.tokenURIEdit)
-
-        self.clientIdEdit = QLineEdit()
-        self.clientIdEdit.setEchoMode(QLineEdit.Password)
-        authlayout.addRow("Client Id", self.clientIdEdit)
-
-        self.clientSecretEdit = QLineEdit()
-        self.clientSecretEdit.setEchoMode(QLineEdit.Password)
-        authlayout.addRow("Client Secret",self.clientSecretEdit)
-
-        self.scopeEdit = QLineEdit()
-        authlayout.addRow("Scopes",self.scopeEdit)
-
-    def initLoginInputs(self,toggle = True):
-        # token and login button
-        loginwidget = QWidget()
-        loginlayout = QHBoxLayout()
-        loginlayout.setContentsMargins(0,0,0,0)
-        loginwidget.setLayout(loginlayout)
-
-        if toggle:
-            self.authEdit = QComboBox(self)
-            self.authEdit.addItems(['disable','param','header'])
-            self.authEdit.setToolTip(wraptip("Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a bearer token header containing the access token will be sent."))
-            loginlayout.addWidget(self.authEdit)
-
-            rowcaption = "Auth"
-            loginlayout.addWidget(QLabel("Access token"))
-        else:
-            rowcaption = "Access token"
-
-
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokenEdit)
-
-        self.authButton = QPushButton('Settings', self)
-        self.authButton.clicked.connect(self.editAuthSettings)
-        loginlayout.addWidget(self.authButton)
-
-        self.loginButton = QPushButton(self.defaults.get('login_buttoncaption',"Login"), self)
-        self.loginButton.setToolTip(wraptip("Sometimes you need to register your own app at the platform of the API provider. Adjust the settings and login,"))
-        self.loginButton.clicked.connect(self.doLogin)
-        loginlayout.addWidget(self.loginButton)
-
-        self.mainLayout.addRow(rowcaption, loginwidget)
-        
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(AuthTab, self).getOptions(purpose)
-
-        # Auth type
-        try:
-            options['auth_type'] = self.authTypeEdit.currentText().strip() if self.authTypeEdit.currentText() != "" else self.defaults.get('auth_type', '')
-        except AttributeError:
-            pass
-
-        # OAUTH URIs
-        try:
-            options['auth_uri'] = self.authURIEdit.text().strip() if self.authURIEdit.text() != "" else self.defaults.get('auth_uri','')
-            options['redirect_uri'] = self.redirectURIEdit.text().strip() if self.redirectURIEdit.text() != "" else self.defaults.get('redirect_uri','')
-            options['token_uri'] = self.tokenURIEdit.text().strip() if self.tokenURIEdit.text() != "" else self.defaults.get('token_uri','')
-        except AttributeError:
-            options['auth_uri'] = self.defaults.get('auth_uri','')
-            options['redirect_uri'] = self.defaults.get('redirect_uri','')
-            options['token_uri'] = self.defaults.get('token_uri','')
-
-        try:
-            options['auth'] =  self.authEdit.currentText().strip() if self.authEdit.currentText() != "" else self.defaults.get('auth','disable')
-        except AttributeError:
-            options['auth'] = self.defaults.get('auth','disable')
-
-        return options
-
-    def setOptions(self, options):
-        try:
-            self.authTypeEdit.setCurrentIndex(self.authTypeEdit.findText(options.get('auth_type', self.defaults.get('auth_type','OAuth2'))))
-            self.authURIEdit.setText(options.get('auth_uri'))
-            self.redirectURIEdit.setText(options.get('redirect_uri'))
-            self.tokenURIEdit.setText(options.get('token_uri'))
-        except AttributeError:
-            pass
-
-        try:
-            self.authEdit.setCurrentIndex(self.authEdit.findText(options.get('auth', 'disable')))
-        except AttributeError:
-            pass
-
-        super(AuthTab, self).setOptions(options)
-
-    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
-        self.closeSession()
-        self.connected = True
-        self.speed = options.get('speed', None)
-        self.progress = logProgress
-
-        # paging by auto count
-        if (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
-            offset = options.get('offset_start', 1)
-            options['params'][options.get('param_paging', '')] = offset
-
-        # file settings
-        foldername, filename, fileext = self.getFileFolderName(options, nodedata)
-
-        format = options.get('format', 'json')
-        if format == 'file':
-            if (foldername is None) or (not os.path.isdir(foldername)):
-                raise Exception("Folder does not exists, select download folder, please!")
-
-        # Abort condition: maximum page count
-        for page in range(options.get('currentpage', 0), options.get('pages', 1)):
-            # Save page
-            options['currentpage'] = page
-
-            # build url
-            if not ('url' in options):
-                urlpath = options["basepath"] + options['resource']
-                urlparams = {}
-                urlparams.update(options['params'])
-
-                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
-
-                requestheaders = options.get('headers', {})
-
-                if options.get('auth', 'disable') == 'param':
-                    urlparams["access_token"] = options['access_token']
-                elif options.get('auth', 'disable') == 'header':
-                    requestheaders["Authorization"] = "Bearer " + options['access_token']
-
-                method = options.get('verb', 'GET')
-                payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options)
-                if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
-                    requestheaders["Content-Type"] = payload.content_type
-
-            else:
-                # requestheaders = {}
-                payload = None
-                urlpath = options['url']
-                urlparams = options['params']
-
-            # sign request (for Amazon tab)
-            if hasattr(self, "signRequest"):
-                headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
-
-            if options['logrequests']:
-                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                   urlpath + "?" + urllib.parse.urlencode(urlparams)))
-
-            # data
-            options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams, requestheaders, method, payload,
-                                                     foldername, filename, fileext, format=format)
-            options['querystatus'] = status
-            logData(data, options, headers)
-
-            # rate limit info
-            # if 'x-rate-limit-remaining' in headers:
-            #     options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
-
-            if self.progress is not None:
-                self.progress({'page': page + 1})
-
-            # paging by key
-            if (options.get('paging_type', 'key') == "key"):
-                if (options.get('key_paging', '') is not None) and (
-                        options.get('param_paging', '') is not None) and isinstance(data, dict) and hasDictValue(data,
-                                                                                                                 options[
-                                                                                                                     'key_paging']):
-                    options['params'][options['param_paging']] = getDictValue(data, options['key_paging'])
-                else:
-                    break
-
-            # paging by auto count
-            elif (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
-                offset = offset + options.get('offset_step', 1)
-                options['params'][options['param_paging']] = offset
-            else:
-                break
-            if not self.connected:
-                break
-
-    @Slot()
-    def doLogin(self):
-        if hasattr(self, "session"):
-            del self.session
-
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
-            self.doTwitterAppLogin()
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
-            self.doOAuth1Login()
-        else:
-            self.doOAuth2Login()
-
-    @Slot()
-    def getToken(self, url = False):
-        #if url is not False:
-        #    self.loginStatus.showMessage(url.toDisplayString() )
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
-            return False
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
-            self.getOAuth1Token()
-        else:
-            self.getOAuth2Token(url)
-
-    @Slot()
-    def initSession(self):
-        if hasattr(self, "session"):
-            return self.session
-
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
-            return self.initOAuth2Session()
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
-            return self.initOAuth1Session()
-        else:
-            return self.initOAuth2Session()
-
-    @Slot()
-    def doOAuth1Login(self):
-        try:
-            self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get(
-                'consumer_key')
-            self.oauth1service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get(
-                'consumer_secret')
-
-            if self.oauth1service.consumer_key == '' or self.oauth1service.consumer_secret == '':
-                raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
-
-            self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.oauth1service.get_request_token()
-
-            self.showLoginWindow(False,
-                                 self.defaults.get('login_window_caption','Login'),
-                                 self.oauth1service.get_authorize_url(self.oauthdata['requesttoken']),
-                                 self.defaults.get('login_window_width',600),
-                                 self.defaults.get('login_window_height',600)
-                                 )
-        except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                 str(e),
-                                 QMessageBox.StandardButton.Ok)
-
-    @Slot()
-    def getOAuth1Token(self):
-        url = urllib.parse.parse_qs(self.login_webview.url().toString())
-        if "oauth_verifier" in url:
-            token = url["oauth_verifier"]
-            if token:
-                self.oauthdata['oauth_verifier'] = token[0]
-                self.session = self.oauth1service.get_auth_session(self.oauthdata['requesttoken'],
-                                                                   self.oauthdata['requesttoken_secret'], method="POST",
-                                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']})
-
-                self.tokenEdit.setText(self.session.access_token)
-                self.tokensecretEdit.setText(self.session.access_token_secret)
-
-                self.closeLoginWindow()
-
-
-    def initOAuth1Session(self):
-        if (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
-            self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else \
-            self.defaults['consumer_key']
-            self.oauth1service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else \
-            self.defaults['consumer_secret']
-            self.oauth1service.base_url = self.basepathEdit.currentText().strip() if self.basepathEdit.currentText().strip() != "" else \
-            self.defaults['basepath']
-
-            self.session = self.oauth1service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
-            return self.session
-
-        else:
-            raise Exception("No access, login please!")
-
-
-    @Slot()
-    def doOAuth2Login(self):
-        try:
-            options = self.getOptions()
-    
-            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
-            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope',None)
-            loginurl = options.get('auth_uri','')
-                   
-            if loginurl  == '':
-                raise Exception('Login URL is missing, please adjust settings!')
-
-            if clientid  == '':
-                raise Exception('Client Id is missing, please adjust settings!')
-                        
-            self.session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'],scope=scope)        
-            params = {'client_id':clientid,
-                      'redirect_uri':options['redirect_uri'],
-                      'response_type':options.get('response_type','code')}
-    
-            if scope is not None:
-                params['scope'] = scope
-    
-            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
-            url = loginurl + "?"+params
-
-            self.showLoginWindow(False,self.defaults.get('login_window_caption','Login'),
-                                         url,
-                                         self.defaults.get('login_window_width',600),
-                                         self.defaults.get('login_window_height',600)
-                                         )
-        except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                            str(e),
-                                            QMessageBox.StandardButton.Ok)
-
-    @Slot(QUrl)
-    def getOAuth2Token(self, url):
-        options = self.getOptions()
-
-        if url.toString().startswith(options['redirect_uri']):
-            try:
-                clientsecret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get('client_secret','')
-
-                token = self.session.fetch_token(options['token_uri'],
-                        authorization_response=str(url.toString()),
-                        client_secret=clientsecret)
-
-                self.tokenEdit.setText(token['access_token'])
-
-                try:
-                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
-                except AttributeError:
-                    pass
-
-            finally:
-                self.closeLoginWindow()
-
-    def initOAuth2Session(self):
-        return super(AuthTab, self).initSession()
-
-    @Slot()
-    def doTwitterAppLogin(self):
-        try:
-            #See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
-            options = self.getOptions()
-
-            clientid = self.clientIdEdit.text() #if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
-            if clientid == '':
-                raise Exception('Client Id is missing, please adjust settings!')
-
-            clientsecret = self.clientSecretEdit.text() #if self.clientSecretEdit.text() != "" else self.defaults.get('client_secret', '')
-            if clientsecret == '':
-                raise Exception('Client Secret is missing, please adjust settings!')
-
-            basicauth = urllib.parse.quote_plus(clientid)+':'+urllib.parse.quote_plus(clientsecret)
-            basicauth = base64.b64encode(basicauth)
-
-            path = 'https://api.twitter.com/oauth2/token/'
-            payload = 'grant_type=client_credentials'
-            headers = {'Authorization': 'Basic '+basicauth,'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}
-            data, headers, status = self.request(path, payload=payload, headers=headers, method="POST")
-
-            token = data.get('access_token','')
-            self.tokenEdit.setText(token)
-
-            try:
-                self.tokensecretEdit.setText('')
-            except AttributeError:
-                pass
-
-            if token != '':
-                QMessageBox.information(self, "Login","Login succeeded, got new access token.",QMessageBox.StandardButton.Ok)
-            else:
-                raise Exception("Check your settings, no token could be retrieved.")
-        except Exception as e:
-            QMessageBox.critical(self, "Login failed",
-                                 str(e),
-                                 QMessageBox.StandardButton.Ok)
-
 class AmazonTab(AuthTab):
 
     # see YoutubeTab for keys in the options-parameter
@@ -1980,7 +1986,7 @@ class AmazonTab(AuthTab):
         self.regionEdit = QLineEdit()
         loginlayout.addWidget(self.regionEdit)
 
-        self.mainLayout.addRow("Access Key", loginwidget)
+        self.extraLayout.addRow("Access Key", loginwidget)
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(AmazonTab, self).getOptions(purpose)
@@ -2159,29 +2165,6 @@ class TwitterTab(AuthTab):
             request_token_url=self.defaults.get('request_token_url'),
             base_url=self.defaults.get('basepath'))
 
-    def initExtractInputs(self):
-        layout = QHBoxLayout()
-
-        # Extract
-        self.extractEdit = QComboBox(self)
-        self.extractEdit.setEditable(True)
-        self.extractEdit.setToolTip(wraptip("If your data contains a list of objects, set the key of the list. Every list element will be added as a single node. Remaining data will be added as offcut node."))
-
-        layout.addWidget(self.extractEdit)
-        layout.setStretch(0, 0)
-
-
-        layout.addWidget(QLabel("Key for Object ID"))
-        self.objectidEdit = QComboBox(self)
-        self.objectidEdit.setEditable(True)
-        self.objectidEdit.setToolTip(wraptip("If your data contains unique IDs for every node, define the corresponding key."))
-        layout.addWidget(self.objectidEdit)
-        layout.setStretch(1, 0)
-        layout.setStretch(2, 2)
-
-        # Add layout
-        self.mainLayout.addRow("Key to extract", layout)
-
     def initLoginInputs(self):
         # Login-Boxes
         loginlayout = QHBoxLayout()
@@ -2205,7 +2188,7 @@ class TwitterTab(AuthTab):
 
 
         # Add to main-Layout
-        self.mainLayout.addRow("Access Token", loginlayout)
+        self.extraLayout.addRow("Access Token", loginlayout)
 
     def initAuthSetupInputs(self):
         authlayout = QFormLayout()
@@ -2416,9 +2399,7 @@ class GenericTab(AuthTab):
         layout.setStretch(4, 2)
 
         # Add layout
-        self.mainLayout.addRow("Response", layout)
-
-        #super(GenericTab, self).initExtractInputs()
+        self.extraLayout.addRow("Response", layout)
 
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -2428,55 +2409,6 @@ class GenericTab(AuthTab):
             options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
         return options
-
-class FilesTab(AuthTab):
-    def __init__(self, mainWindow=None):
-        super(FilesTab, self).__init__(mainWindow, "Files")
-
-        self.defaults['basepath'] = '<Object ID>'
-        self.defaults['key_objectid'] = 'filename'
-        self.defaults['key_nodedata'] = None        
-
-        # Standard inputs
-        self.initInputs()
-
-        # Header, Verbs
-        self.initHeaderInputs()
-        self.initVerbInputs()
-        self.initUploadFolderInput()
-
-        # Extract input
-        #self.initExtractInputs()
-        self.initPagingInputs(False,True)
-        self.initFileInputs()
-
-        # Login inputs
-        self.initAuthSetupInputs()
-        self.initLoginInputs()
-
-        self.loadDoc()
-        self.loadSettings()
-        self.timeout = 30
-
-
-
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(FilesTab, self).getOptions(purpose)
-        
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
-
-        options['format'] = "file"
-        options['paging_type'] = 'count'
-
-
-        return options
-
-    def setOptions(self, options):
-        options['format'] = 'file'
-        options['paging_type'] = 'count'
-
-        super(FilesTab, self).setOptions(options)
 
 class QWebPageCustom(QWebEnginePage):
     logmessage = Signal(str)
