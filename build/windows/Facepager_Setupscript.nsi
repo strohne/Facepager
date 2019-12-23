@@ -77,7 +77,7 @@ CreateShortCut "$DESKTOP\Facepager.lnk" "$INSTDIR\Facepager.exe" ""
 ;create start-menu items
 CreateDirectory "$SMPROGRAMS\Facepager"
 CreateShortCut "$SMPROGRAMS\Facepager\Uninstall.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
-CreateShortCut "$SMPROGRAMS\Facepager\Facepager.lnk" "$INSTDIR\Facepager.exe" "" "$INSTDIR\Pacepager.exe" 0
+CreateShortCut "$SMPROGRAMS\Facepager\Facepager.lnk" "$INSTDIR\Facepager.exe" "" "$INSTDIR\Facepager.exe" 0
 
 ;write uninstall information to the registry
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Facepager" "DisplayName" "Facepager(remove only)"
