@@ -392,8 +392,11 @@ class PresetWindow(QDialog):
         if not data.get('iscategory',False):
 
             #Find API module
+            module = data.get('module', '')
+            module = 'Generic' if module == 'Files' else module
+
             for i in range(0, self.mainWindow.RequestTabs.count()):
-                if self.mainWindow.RequestTabs.widget(i).name == data.get('module',''):
+                if self.mainWindow.RequestTabs.widget(i).name == module:
                     tab = self.mainWindow.RequestTabs.widget(i)
                     tab.setOptions(data.get('options', {}))
                     self.mainWindow.RequestTabs.setCurrentWidget(tab)
