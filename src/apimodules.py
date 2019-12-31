@@ -833,7 +833,7 @@ class ApiTab(QScrollArea):
             self.folderwidget.show()
             self.mainLayout.labelForField(self.folderwidget).show()                        
 
-    def initExtractInputs(self):
+    def initResponseInputs(self):
         layout= QHBoxLayout()
         
         #Extract
@@ -1950,7 +1950,7 @@ class AmazonTab(AuthTab):
         self.initUploadFolderInput()
 
         # Extract input
-        self.initExtractInputs()
+        self.initResponseInputs()
 
         # Pages Box
         self.initPagingInputs(True, True)
@@ -2145,7 +2145,6 @@ class TwitterTab(AuthTab):
 
         # Query and Parameter Box
         self.initInputs()
-        #self.initExtractInputs()
         self.initPagingInputs()
 
         self.initAuthSetupInputs()
@@ -2358,7 +2357,7 @@ class GenericTab(AuthTab):
 
         # Extract input
         self.initPagingInputs(True, True)
-        self.initExtractInputs()
+        self.initResponseInputs()
 
         self.initFileInputs()
 
@@ -2370,13 +2369,16 @@ class GenericTab(AuthTab):
         self.loadSettings()
         self.timeout = 30
 
-    def initExtractInputs(self):
+    def initResponseInputs(self):
         layout = QHBoxLayout()
 
         #Format
         self.formatEdit = QComboBox(self)
         self.formatEdit.addItems(['json','text','links','file'])
-        self.formatEdit.setToolTip(wraptip("JSON: default option, data will be parsed as JSON or converted from XML to JSON. Text: data will not be parsed and embedded in JSON. Links: data will be parsed as xml and links will be extracted. File: data will only be downloaded to files, specify download folder and filename."))
+        self.formatEdit.setToolTip("<p>JSON: default option, data will be parsed as JSON or converted from XML to JSON. </p> \
+                                    <p>Text: data will not be parsed and embedded in JSON. </p> \
+                                    <p>Links: data will be parsed as xml and links will be extracted (set key to extract to 'links' and key for Object ID to 'url'). </p> \
+                                    <p>File: data will only be downloaded to files, specify download folder and filename.</p>")
         layout.addWidget(self.formatEdit)
         layout.setStretch(0, 0)
         #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
