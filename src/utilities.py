@@ -22,8 +22,10 @@ def getResourceFolder():
 
     return folder
 
-def hasDictValue(data,multikey):
+def hasDictValue(data,multikey, piped=False):
     try:
+        multikey = multikey.split('|').pop(0) if piped else multikey
+
         keys=multikey.split('.',1)
 
         if isinstance(data, Mapping) and keys[0] != '':
@@ -53,8 +55,12 @@ def hasDictValue(data,multikey):
     except Exception as e:
         return False
 
-def getDictValue(data,multikey,dump=True):
+
+def getDictValue(data, multikey, dump=True, piped=False):
     try:
+        pipeline = multikey.split('|') if piped else [multikey]
+        multikey = pipeline.pop(0)
+
         keys=multikey.split('.',1)
 
         if isinstance(data, Mapping) and keys[0] != '':
@@ -101,17 +107,27 @@ def getDictValue(data,multikey,dump=True):
         else:
             value = data
 
+        for modifier in pipeline:
+            if modifier.startswith('css:'):
+                selector = modifier[4:]
+                value = extractHtml(value, selector, type='css', dump=dump)
+            if modifier.startswith('xpath:'):
+                selector = modifier[6:]
+                value = extractHtml(value, selector, type='xpath', dump=dump)
+
         if dump and (type(value) is dict or type(value) is list):
-            return json.dumps(value)
+            value = json.dumps(value)
         elif dump and (isinstance(value, int)):
-            return str(value)
-        else:
-            return value
+            value = str(value)
+
+        return value
+
     except Exception as e:
         return ""
 
-def filterDictValue(data,multikey,dump=True):
+def filterDictValue(data, multikey, dump=True, piped=False):
     try:
+        multikey = multikey.split('|').pop(0) if piped else multikey
         keys=multikey.split('.',1)
 
         if isinstance(data, Mapping) and keys[0] != '':
@@ -268,16 +284,32 @@ def extractLinks(data,baseurl):
 
     return links, base
 
-def extractHtml(html, selector):
+def extractHtml(html, selector, type='css', dump=False):
     items = []
-    soup = lxml.html.fromstring(html)
 
-    for item in soup.cssselect(selector):
-        item = lxml.etree.tostring(item).decode('utf-8').strip()
-        items.append(item)
+    if html != '':
+        try:
+            soup = lxml.html.fromstring(html)
 
-    return items
+            if type == 'css':
+                for item in soup.cssselect(selector):
+                    item = lxml.etree.tostring(item).decode('utf-8').strip()
+                    items.append(item)
+            elif type == 'xpath':
+                result = soup.xpath(selector)
+                result = result if isinstance(result, list) else [result]
+                for item in result:
+                    if isinstance(item,lxml.etree._Element):
+                        item = lxml.etree.tostring(item).decode('utf-8')
+                    items.append(str(item))
 
+        except Exception as e:
+            items.append('ERROR: '+str(e))
+
+    if dump:
+        return ";".join(items)
+    else:
+        return items
 
 def xmlToJson(data):
     bf = BadgerFish(dict_type=OrderedDict)

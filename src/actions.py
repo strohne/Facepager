@@ -79,13 +79,11 @@ class Actions(object):
         self.actionAddAllolumns.setToolTip(wraptip("Analyzes all selected nodes in the data view and adds all found keys as columns"))
         self.actionAddAllolumns.triggered.connect(self.addAllColumns)
 
-        self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
-        self.actionUnpack.setToolTip(wraptip("Unpacks a list in the JSON-data and creates a new node containing the list content"))
+        self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Extract Data")
+        self.actionUnpack.setToolTip(wraptip("Extract new nodes from the data using keys." \
+                                             "You can pipe the value to css selectors (e.g. text|div.main)" \
+                                             "or xpath selectors (e.g. text|//div[@class='main']/text()"))
         self.actionUnpack.triggered.connect(self.unpackList)
-
-        self.actionHtml = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Extract HTML")
-        self.actionHtml.setToolTip(wraptip("Extracts HTML elements from text."))
-        self.actionHtml.triggered.connect(self.extractHtml)
 
         self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
         self.actionJsonCopy.setToolTip(wraptip("Copy the selected JSON-data to the clipboard"))
@@ -342,37 +340,20 @@ class Actions(object):
 
     @Slot()
     def unpackList(self):
+        key = self.mainWindow.detailTree.selectedKey()
+        key, ok = QInputDialog().getText(self.mainWindow, "Unpack data",
+                                              "Key:", QLineEdit.Normal,key)
+
+        if not (ok and key != ''):
+            return False
+
         try:
-            key = self.mainWindow.detailTree.selectedKey()
-            if key == '':
-                return False
             selected = self.mainWindow.tree.selectionModel().selectedRows()
             for item in selected:
                 if not item.isValid():
                     continue
                 treenode = item.internalPointer()
                 treenode.unpackList(key)
-        except Exception as e:
-            self.mainWindow.logmessage(e)
-
-    @Slot()
-    def extractHtml(self):
-        selector, ok = QInputDialog().getText(self.mainWindow, "Extract HTML",
-                                              "CSS selector:", QLineEdit.Normal)
-
-        if not (ok and selector):
-            return (False)
-
-        try:
-            key = self.mainWindow.detailTree.selectedKey()
-            if key == '':
-                return False
-            selected = self.mainWindow.tree.selectionModel().selectedRows()
-            for item in selected:
-                if not item.isValid():
-                    continue
-                treenode = item.internalPointer()
-                treenode.extractHtml(key, selector)
         except Exception as e:
             self.mainWindow.logmessage(e)
 

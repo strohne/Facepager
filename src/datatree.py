@@ -237,12 +237,12 @@ class TreeItem(object):
             subkey = 0
             nodes = data
             offcut = None
-        elif hasDictValue(data,options['nodedata']):
-            subkey = options['nodedata'].rsplit('.', 1)[0]
-            nodes = getDictValue(data, options['nodedata'], False)
-            offcut = filterDictValue(data, options['nodedata'], False)
+        elif hasDictValue(data,options['nodedata'], piped=True):
+            subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
+            nodes = getDictValue(data, options['nodedata'], False, piped=True)
+            offcut = filterDictValue(data, options['nodedata'], False, piped=True)
         else:
-            subkey = options['nodedata'].rsplit('.', 1)[0]
+            subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
             nodes = []
             offcut = data
 
@@ -277,7 +277,7 @@ class TreeItem(object):
 
         #extracted nodes
         for n in nodes:
-            appendNode('data', getDictValue(n, options.get('objectid', "")), n, fieldsuffix)
+            appendNode('data', getDictValue(n, options.get('objectid', ""), piped=True), n, fieldsuffix)
 
         #Offcut
         if offcut is not None:
@@ -298,39 +298,15 @@ class TreeItem(object):
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
 
-    def extractHtml(self, key, selector):
-        dbnode = Node.query.get(self.id)
-
-        html = getDictValue(dbnode.response, key, False)
-        items = extractHtml(html, selector)
-
-        newnodes = []
-        for item in items:
-            new = Node(dbnode.objectid, dbnode.id)
-            new.objecttype = 'extracted'
-            new.response = {'text': item}
-            new.level = dbnode.level + 1
-            new.querystatus = dbnode.querystatus
-            new.querytime = dbnode.querytime
-            new.querytype = dbnode.querytype
-            new.queryparams = dbnode.queryparams
-            newnodes.append(new)
-
-        self.model.database.session.add_all(newnodes)
-        self._childcountall += len(newnodes)
-        dbnode.childcount += len(newnodes)
-        self.model.database.session.commit()
-        self.model.layoutChanged.emit()
-
     def unpackList(self, key):
         dbnode = Node.query.get(self.id)
 
-        nodes = getDictValue(dbnode.response, key, False)
+        nodes = getDictValue(dbnode.response, key, dump=False, piped=True)
         if not (type(nodes) is list):
-            return False
+            nodes = [nodes]
 
         # extract nodes
-        subkey = key.rsplit('.', 1)[0]
+        subkey = key.split("|").pop(0).rsplit('.', 1)[0]
         newnodes = []
         for n in nodes:
             new = Node(dbnode.objectid, dbnode.id)
@@ -464,7 +440,9 @@ class TreeModel(QAbstractItemModel):
             elif index.column() == 4:
                 return item.data.get('querytype','')
             else:
-                return getDictValue(item.data.get('response',''), self.customcolumns[index.column() - 5])
+                key = self.customcolumns[index.column() - 5]
+                value = getDictValue(item.data.get('response',''), key, piped=True)
+                return value
 
     def index(self, row, column, parent):
         if not self.hasIndex(row, column, parent):
