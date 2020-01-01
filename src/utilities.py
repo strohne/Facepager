@@ -3,6 +3,7 @@ import os,sys,platform,time
 import re
 import lxml
 import lxml.html
+import lxml.etree
 import html
 import urllib.parse
 from collections import OrderedDict
@@ -267,6 +268,15 @@ def extractLinks(data,baseurl):
 
     return links, base
 
+def extractHtml(html, selector):
+    items = []
+    soup = lxml.html.fromstring(html)
+
+    for item in soup.cssselect(selector):
+        item = lxml.etree.tostring(item).decode('utf-8').strip()
+        items.append(item)
+
+    return items
 
 
 def xmlToJson(data):

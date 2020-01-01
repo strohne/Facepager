@@ -298,6 +298,29 @@ class TreeItem(object):
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
 
+    def extractHtml(self, key, selector):
+        dbnode = Node.query.get(self.id)
+
+        html = getDictValue(dbnode.response, key, False)
+        items = extractHtml(html, selector)
+
+        newnodes = []
+        for item in items:
+            new = Node(dbnode.objectid, dbnode.id)
+            new.objecttype = 'extracted'
+            new.response = {'text': item}
+            new.level = dbnode.level + 1
+            new.querystatus = dbnode.querystatus
+            new.querytime = dbnode.querytime
+            new.querytype = dbnode.querytype
+            new.queryparams = dbnode.queryparams
+            newnodes.append(new)
+
+        self.model.database.session.add_all(newnodes)
+        self._childcountall += len(newnodes)
+        dbnode.childcount += len(newnodes)
+        self.model.database.session.commit()
+        self.model.layoutChanged.emit()
 
     def unpackList(self, key):
         dbnode = Node.query.get(self.id)

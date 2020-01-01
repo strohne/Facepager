@@ -1,6 +1,6 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QActionGroup
+from PySide2.QtWidgets import QActionGroup, QInputDialog, QLineEdit
 
 import csv
 from copy import deepcopy
@@ -82,6 +82,10 @@ class Actions(object):
         self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Unpack List")
         self.actionUnpack.setToolTip(wraptip("Unpacks a list in the JSON-data and creates a new node containing the list content"))
         self.actionUnpack.triggered.connect(self.unpackList)
+
+        self.actionHtml = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Extract HTML")
+        self.actionHtml.setToolTip(wraptip("Extracts HTML elements from text."))
+        self.actionHtml.triggered.connect(self.extractHtml)
 
         self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
         self.actionJsonCopy.setToolTip(wraptip("Copy the selected JSON-data to the clipboard"))
@@ -348,6 +352,27 @@ class Actions(object):
                     continue
                 treenode = item.internalPointer()
                 treenode.unpackList(key)
+        except Exception as e:
+            self.mainWindow.logmessage(e)
+
+    @Slot()
+    def extractHtml(self):
+        selector, ok = QInputDialog().getText(self.mainWindow, "Extract HTML",
+                                              "CSS selector:", QLineEdit.Normal)
+
+        if not (ok and selector):
+            return (False)
+
+        try:
+            key = self.mainWindow.detailTree.selectedKey()
+            if key == '':
+                return False
+            selected = self.mainWindow.tree.selectionModel().selectedRows()
+            for item in selected:
+                if not item.isValid():
+                    continue
+                treenode = item.internalPointer()
+                treenode.extractHtml(key, selector)
         except Exception as e:
             self.mainWindow.logmessage(e)
 
