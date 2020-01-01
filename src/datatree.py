@@ -298,20 +298,24 @@ class TreeItem(object):
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
 
-    def unpackList(self, key):
+    def unpackList(self, key_nodes, key_objectid):
         dbnode = Node.query.get(self.id)
 
-        nodes = getDictValue(dbnode.response, key, dump=False, piped=True)
+        # extract nodes
+        nodes = getDictValue(dbnode.response, key_nodes, dump=False, piped=True)
         if not (type(nodes) is list):
             nodes = [nodes]
 
-        # extract nodes
-        subkey = key.split("|").pop(0).rsplit('.', 1)[0]
+        # add nodes
+        subkey = key_nodes.split("|").pop(0).rsplit('.', 1)[0]
         newnodes = []
         for n in nodes:
-            new = Node(dbnode.objectid, dbnode.id)
+            objectid = getDictValue(n, key_objectid, dump=True, piped=True)
+            response = n if isinstance(n, Mapping) else {subkey : n}
+
+            new = Node(objectid, dbnode.id)
             new.objecttype = 'unpacked'
-            new.response = n if isinstance(n, Mapping) else {subkey : n}
+            new.response = response
             new.level = dbnode.level + 1
             new.querystatus = dbnode.querystatus
             new.querytime = dbnode.querytime

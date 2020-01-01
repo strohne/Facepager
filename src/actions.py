@@ -341,21 +341,57 @@ class Actions(object):
     @Slot()
     def unpackList(self):
         key = self.mainWindow.detailTree.selectedKey()
-        key, ok = QInputDialog().getText(self.mainWindow, "Unpack data",
-                                              "Key:", QLineEdit.Normal,key)
 
-        if not (ok and key != ''):
-            return False
+        # Create dialog
+        dialog = QDialog(self.mainWindow)
+        dialog.setMinimumWidth(400)
+        dialog.setWindowTitle("Extract data")
+        layout = QFormLayout()
+        dialog.setLayout(layout)
 
-        try:
-            selected = self.mainWindow.tree.selectionModel().selectedRows()
-            for item in selected:
-                if not item.isValid():
-                    continue
-                treenode = item.internalPointer()
-                treenode.unpackList(key)
-        except Exception as e:
-            self.mainWindow.logmessage(e)
+        # Extract key input
+        input_extract = QLineEdit()
+        input_extract.setFocus()
+        input_extract.setText(key)
+        layout.addRow("Key to extract:", input_extract)
+
+        # Object ID key input
+        input_id = QLineEdit()
+        layout.addRow("Key for Object ID:", input_id)
+
+        # Buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        layout.addRow(buttons)
+
+        def createNodes():
+            key_nodes = input_extract.text()
+            key_objectid = input_id.text()
+            if key_nodes == '':
+                dialog.close()
+                return False
+
+            try:
+                selected = self.mainWindow.tree.selectionModel().selectedRows()
+                for item in selected:
+                    if not item.isValid():
+                        continue
+                    treenode = item.internalPointer()
+                    treenode.unpackList(key_nodes, key_objectid)
+            except Exception as e:
+                self.mainWindow.logmessage(e)
+
+            dialog.close()
+            return True
+
+        def close():
+            dialog.close()
+
+        # Connect the nested functions to the buttons buttons
+        buttons.accepted.connect(createNodes)
+        buttons.rejected.connect(close)
+
+        # Open dialog
+        dialog.exec_()
 
     @Slot()
     def showFieldDoc(self):
