@@ -507,7 +507,7 @@ class TreeModel(QAbstractItemModel):
                node.data['querytype']
               ]
         for key in self.customcolumns:
-            row.append(getDictValue(node.data['response'], key))
+            row.append(getDictValue(node.data['response'], key, piped=True))
         return row
 
     def hasChildren(self, index):
