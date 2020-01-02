@@ -301,7 +301,7 @@ def extractHtml(html, selector, type='css', dump=False):
                 for item in result:
                     if isinstance(item,lxml.etree._Element):
                         item = lxml.etree.tostring(item).decode('utf-8')
-                    items.append(str(item))
+                    items.append(str(item).strip())
 
         except Exception as e:
             items.append('ERROR: '+str(e))

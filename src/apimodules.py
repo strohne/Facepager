@@ -1298,7 +1298,7 @@ class AuthTab(ApiTab):
 
             # sign request (for Amazon tab)
             if hasattr(self, "signRequest"):
-                headers = self.signRequest(urlpath, urlparams, headers, method, payload, options)
+                requestheaders = self.signRequest(urlpath, urlparams, requestheaders, method, payload, options)
 
             if options['logrequests']:
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
@@ -2028,7 +2028,7 @@ class AmazonTab(AuthTab):
 
     # Get authorization header
     # See https://docs.aws.amazon.com/de_de/general/latest/gr/sigv4-signed-request-examples.html
-    def signRequest(urlpath, urlparams, headers, method, payload, options):
+    def signRequest(self, urlpath, urlparams, headers, method, payload, options):
 
         # Access keys
         access_key = options.get('accesskey', '')
@@ -2100,7 +2100,7 @@ class AmazonTab(AuthTab):
             payload = payload_buffer.read()
             payload_buffer.rewind()
 
-        payload_hash = hashlib.sha256(payload).hexdigest()
+        payload_hash = hashlib.sha256(payload.encode('utf-8')).hexdigest()
 
         # Combine elements to create canonical request
         canonical_request = method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers_str + '\n' + signed_headers + '\n' + payload_hash
@@ -2110,7 +2110,7 @@ class AmazonTab(AuthTab):
         algorithm = 'AWS4-HMAC-SHA256'
         credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
         string_to_sign = algorithm + '\n' + amzdate + '\n' + credential_scope + '\n' + hashlib.sha256(
-            canonical_request).hexdigest()
+            canonical_request.encode('utf-8')).hexdigest()
 
         # Create the signing key using the function defined above.
         signing_key = getSignatureKey(secret_key, datestamp, region, service)
