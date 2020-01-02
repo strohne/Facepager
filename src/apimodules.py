@@ -907,24 +907,36 @@ class ApiTab(QScrollArea):
                 fullfilename = None
                 file = None
 
-            try:
-                content = io.BytesIO()
+            # requests completely downloads data to memory if not stream=True
+            # iter_content, text and content all fall back to the previously downloaded content
+            # no need to download into string object a second time
+
+            # try:
+            #     content = io.BytesIO()
+            #     try:
+            #         for chunk in response.iter_content(1024):
+            #             content.write(chunk)
+            #             if file is not None:
+            #                 file.write(chunk)
+            #
+            #         out = content.getvalue().decode('utf-8')
+            #     except Exception as e:
+            #         out = str(e)
+            #     finally:
+            #         content.close()
+            # finally:
+            #     if file is not None:
+            #         file.close()
+
+            if file is not None:
                 try:
                     for chunk in response.iter_content(1024):
-                        content.write(chunk)
-                        if file is not None:
-                            file.write(chunk)
-
-                    out = content.getvalue().decode('utf-8')
-                except Exception as e:
-                    out = str(e)
+                        file.write(chunk)
                 finally:
-                    content.close()
-            finally:
-                if file is not None:
                     file.close()
 
-            return (fullfilename,out)
+
+            return fullfilename
 
         #Throttle speed
         if (self.speed is not None) and (self.lastrequest is not None):
@@ -968,7 +980,7 @@ class ApiTab(QScrollArea):
                 'sourcepath': path,'sourcequery': args,'finalurl': response.url
             }
 
-            fullfilename, content = download(response, foldername, filename, fileext)
+            fullfilename = download(response, foldername, filename, fileext)
 
             if fullfilename is not None:
                 data['filename'] = os.path.basename(fullfilename)
@@ -976,12 +988,12 @@ class ApiTab(QScrollArea):
 
             # Text
             if format == 'text':
-                    data['text'] = content  # str(response.text)
+                    data['text'] = response.text  # str(response.text)
 
              # Scrape links
             elif format == 'links':
                 try:
-                    links, base = extractLinks(content, response.url)
+                    links, base = extractLinks(response.text, response.url)
                     data['links'] = links
                     data['base'] = base
                 except Exception as  e:
@@ -995,12 +1007,9 @@ class ApiTab(QScrollArea):
                     data = response.json() if response.text != '' else []
                 except:
                     try:
-                        #.encode('utf-8').encode('ascii')
-                        # str(response.text)
-                        xml = bytes(str(response.text), encoding='utf-8')
-                        data = xmlToJson(xml)
+                        data = xmlToJson(response.text)
                     except:
-                        data = {'error': 'Data could not be converted to JSON','response':response.text}
+                        data = {'error': 'Data could not be converted to JSON','response': response.text}
 
             return data, headers, status
 
