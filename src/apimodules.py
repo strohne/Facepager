@@ -915,7 +915,9 @@ class ApiTab(QScrollArea):
                         if file is not None:
                             file.write(chunk)
 
-                    out = str(content.getvalue())
+                    out = content.getvalue().decode('utf-8')
+                except Exception as e:
+                    out = str(e)
                 finally:
                     content.close()
             finally:
