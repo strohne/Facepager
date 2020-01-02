@@ -129,11 +129,6 @@ __Hints for solving errors:__
 
 If drafting a new version adjust version numbers in:  
 - src/Facepager.py
-- build/windows/Facepager.spec
-- build/windows/Facepager_Setupscript.nsi
-- build/windows/build.bat
-- build/osx/Facepager.spec
-- build/osx/build.pyinstaller.command
 
 # How to deploy builds
 
