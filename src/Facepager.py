@@ -59,13 +59,13 @@ class MainWindow(QMainWindow):
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
 
-        self.setWindowTitle("Facepager 4.0")
+        self.setWindowTitle("Facepager 4.1")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
 
         # This is needed to display the app icon on the taskbar on Windows 7
         if os.name == 'nt':
             import ctypes
-            myappid = 'Facepager.4.0' # arbitrary string
+            myappid = 'Facepager.4.1' # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         self.setMinimumSize(1100,680)
@@ -453,7 +453,7 @@ class MainWindow(QMainWindow):
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
-        self.settings.setValue("version","4.0.0")
+        self.settings.setValue("version","4.1")
         self.settings.endGroup()
 
 

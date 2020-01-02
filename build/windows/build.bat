@@ -14,7 +14,7 @@ pyinstaller --windowed --noconfirm Facepager.spec
 cd dist
 copy ..\..\build\windows\Facepager_Setupscript.nsi Facepager_Setupscript.nsi
 "C:\Program Files (x86)\NSIS\makensis.exe" Facepager_Setupscript.nsi
-copy Facepager_Setup_4.exe ..\..\build\windows\Facepager_Setup_4.exe 
+copy Facepager_Setup.exe ..\..\build\windows\Facepager_Setup.exe 
 
 endlocal
 pause

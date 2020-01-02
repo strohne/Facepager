@@ -1,11 +1,11 @@
 ; Start
 
-Name "Facepager 4"
+Name "Facepager"
 CRCCheck On
 
 ;General
 
-OutFile "Facepager_Setup_4.exe"
+OutFile "Facepager_Setup.exe"
 ShowInstDetails "nevershow"
 ShowUninstDetails "nevershow"
 
