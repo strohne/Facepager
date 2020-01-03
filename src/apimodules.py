@@ -1634,6 +1634,16 @@ class FacebookTab(AuthTab):
             options['ratelimit'] = False
             options['querystatus'] = status
 
+
+
+            # rate limit info
+            if 'x-app-usage' in headers:
+                appusage = json.loads(headers['x-app-usage'])
+                appusage = appusage.get('call_count', 'Undefined')
+                if appusage > 0:
+                    options['info'] = {'x-app-usage': "{} percent of app level rate limit reached.".format(appusage)}
+
+
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
                 code = getDictValue(data,"error.code")
@@ -1641,7 +1651,7 @@ class FacebookTab(AuthTab):
 
                 # see https://developers.facebook.com/docs/graph-api/using-graph-api
                 # see https://developers.facebook.com/docs/graph-api/advanced/rate-limiting/
-                if (code in [4,17,32,613]) and (status == "error (400)"):
+                if (code in ['4','17','32','613']) and (status in ['error (400)', 'error (403)']):
                     options['ratelimit'] = True
 
             # options for data handling
