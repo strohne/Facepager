@@ -133,7 +133,7 @@ class ApiTab(QScrollArea):
             #modifier = pipeline[1] if len(pipeline) > 1 else None
 
             if key in paramdata:
-                value = paramdata[key]
+                value = str(paramdata[key])
             elif key == 'None':
                 value = ''
             elif key == 'Object ID':
