@@ -433,7 +433,7 @@ class ApiTab(QScrollArea):
             self.pagingkeyEdit.setEditText(options.get('key_paging', ''))
             self.pagingparamEdit.setEditText(options.get('param_paging', ''))
             self.offsetStartEdit.setValue(int(options.get('offset_start', 1)))
-            self.offsetStepEdit.setValue(int(options.get('offset_stop', 1)))
+            self.offsetStepEdit.setValue(int(options.get('offset_step', 1)))
             self.pagingChanged()
         except AttributeError:
             pass
