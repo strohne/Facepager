@@ -432,20 +432,24 @@ class TreeModel(QAbstractItemModel):
 
         item = index.internalPointer()
 
-        if role == Qt.DisplayRole:
+        if (role == Qt.DisplayRole) or (role == Qt.ToolTipRole):
             if index.column() == 0:
-                return item.data.get('objectid','')
+                value = item.data.get('objectid','')
             elif index.column() == 1:
-                return item.data.get('objecttype','')
+                value = item.data.get('objecttype','')
             elif index.column() == 2:
-                return item.data.get('querystatus','')
+                value = item.data.get('querystatus','')
             elif index.column() == 3:
-                return item.data.get('querytime','')
+                value = item.data.get('querytime','')
             elif index.column() == 4:
-                return item.data.get('querytype','')
+                value = item.data.get('querytype','')
             else:
                 key = self.customcolumns[index.column() - 5]
                 value = getDictValue(item.data.get('response',''), key, piped=True)
+
+            if role == Qt.ToolTipRole:
+                return wraptip(value)
+            else:
                 return value
 
     def index(self, row, column, parent):
