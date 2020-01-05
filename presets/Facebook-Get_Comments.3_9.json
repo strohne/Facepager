@@ -5,10 +5,10 @@
   "options": {
     "params": {
       "fields": "message, created_time, parent, comment_count, like_count",
-      "<post>": "<Object ID>"
+      "<post-id>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v2.12",
-    "resource": "/<post>/comments",
+    "basepath": "https://graph.facebook.com/v3.2",
+    "resource": "/<post-id>/comments",
     "pages": 1,
     "scope": ""
   },
