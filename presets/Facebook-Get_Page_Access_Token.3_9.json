@@ -5,10 +5,10 @@
   "options": {
     "params": {
       "fields": "access_token",
-      "<page>": "<Object ID>"
+      "<page-id>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v2.12",
-    "resource": "/<page>",
+    "basepath": "https://graph.facebook.com/v3.2",
+    "resource": "/<page-id>",
     "pages": 1,
     "scope": "pages_show_list"
   },
