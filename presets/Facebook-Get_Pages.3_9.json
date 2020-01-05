@@ -3,11 +3,11 @@
   "module": "Facebook",
   "speed": 200,
   "options": {
-    "resource": "/<page>",
-    "basepath": "https://graph.facebook.com/v2.12",
+    "resource": "/<page-id>",
+    "basepath": "https://graph.facebook.com/v3.2",
     "params": {
       "fields": "name, about, location, category, talking_about_count",
-      "<page>": "<Object ID>"
+      "<page-id>": "<Object ID>"
     },
     "pages": 1,
     "scope": ""
