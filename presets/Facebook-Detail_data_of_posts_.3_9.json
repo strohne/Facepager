@@ -5,10 +5,10 @@
   "options": {
     "params": {
       "fields": "type,link,from,likes.limit(0).summary(1)",
-      "<post>": "<Object ID>"
+      "<post-id>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v2.12",
-    "resource": "/<post>",
+    "basepath": "https://graph.facebook.com/v3.3",
+    "resource": "/<post-id>",
     "pages": 1,
     "scope": ""
   },
