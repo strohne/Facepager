@@ -7,7 +7,7 @@
       "fields": "type,link,from,likes.limit(0).summary(1)",
       "<post-id>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v3.3",
+    "basepath": "https://graph.facebook.com/v3.2",
     "resource": "/<post-id>",
     "pages": 1,
     "scope": ""
