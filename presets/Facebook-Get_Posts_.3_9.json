@@ -3,12 +3,12 @@
   "module": "Facebook",
   "speed": 200,
   "options": {
-    "resource": "/<page>/feed",
-    "basepath": "https://graph.facebook.com/v2.12",
+    "resource": "/<page-id>/feed",
+    "basepath": "https://graph.facebook.com/v3.2",
     "params": {
       "limit": "20",
       "fields": "message, from, created_time, updated_time",
-	  "<page>": "<Object ID>"
+	  "<page-id>": "<Object ID>"
     },
     "pages": 1,
     "scope": ""
