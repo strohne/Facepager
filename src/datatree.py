@@ -239,7 +239,7 @@ class TreeItem(object):
             offcut = None
         elif hasDictValue(data,options['nodedata'], piped=True):
             subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
-            nodes = getDictValue(data, options['nodedata'], False, piped=True)
+            nodes = extractValue(data, options['nodedata'], False)
             offcut = filterDictValue(data, options['nodedata'], False, piped=True)
         else:
             subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
@@ -277,7 +277,7 @@ class TreeItem(object):
 
         #extracted nodes
         for n in nodes:
-            appendNode('data', getDictValue(n, options.get('objectid', ""), piped=True), n, fieldsuffix)
+            appendNode('data', extractValue(n, options.get('objectid', "")), n, fieldsuffix)
 
         #Offcut
         if offcut is not None:
@@ -302,7 +302,7 @@ class TreeItem(object):
         dbnode = Node.query.get(self.id)
 
         # extract nodes
-        nodes = getDictValue(dbnode.response, key_nodes, dump=False, piped=True)
+        nodes = extractValue(dbnode.response, key_nodes, dump=False)
         if not (type(nodes) is list):
             nodes = [nodes]
 
@@ -310,7 +310,7 @@ class TreeItem(object):
         subkey = key_nodes.split("|").pop(0).rsplit('.', 1)[0]
         newnodes = []
         for n in nodes:
-            objectid = getDictValue(n, key_objectid, dump=True, piped=True)
+            objectid = extractValue(n, key_objectid)
             response = n if isinstance(n, Mapping) else {subkey : n}
 
             new = Node(objectid, dbnode.id)
@@ -445,7 +445,7 @@ class TreeModel(QAbstractItemModel):
                 value = item.data.get('querytype','')
             else:
                 key = self.customcolumns[index.column() - 5]
-                value = getDictValue(item.data.get('response',''), key, piped=True)
+                value = extractValue(item.data.get('response',''), key)
 
             if role == Qt.ToolTipRole:
                 return wraptip(value)
@@ -511,7 +511,7 @@ class TreeModel(QAbstractItemModel):
                node.data['querytype']
               ]
         for key in self.customcolumns:
-            row.append(getDictValue(node.data['response'], key, piped=True))
+            row.append(extractValue(node.data['response'], key))
         return row
 
     def hasChildren(self, index):

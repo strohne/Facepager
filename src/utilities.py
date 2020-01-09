@@ -56,16 +56,79 @@ def hasDictValue(data,multikey, piped=False):
         return False
 
 
-def getDictValue(data, multikey, dump=True, piped=False):
+def extractValue(data, multikey, dump=True):
+    """Extract value from dict and pipe through modifiers
+    :param data:
+    :param multikey:
+    :param dump:
+    :return:
+    """
     try:
-        pipeline = multikey.split('|') if piped else [multikey]
+        pipeline = multikey.split('|')
         multikey = pipeline.pop(0)
 
+        # Input: dict. Output: string, number, list or dict
+        value = getDictValue(data, multikey, dump)
+
+        for idx, modifier in enumerate(pipeline):
+            value = value if type(value) is list else [value]
+
+            if modifier.startswith('json:'):
+                # Input: list of strings.
+                # Output if dump==True: list of strings
+                # Output if dump==False: list of dict, list, string or number
+                selector = modifier[5:]
+
+
+                # Flatten list if not dumped
+                if dump:
+                    value = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+                else:
+                    items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+                    value = []
+                    for item in items:
+                        if type(item) is list:
+                            value += item
+                        else:
+                            value.append(item)
+
+            elif modifier.startswith('css:'):
+                # Input: list of strings.
+                # Output: list of strings
+                selector = modifier[4:]
+                value = [extractHtml(x, selector, type='css') for x in value]
+                value = [y for x in value for y in x]
+            elif modifier.startswith('xpath:'):
+                # Input: list of strings.
+                # Output: list of strings
+                selector = modifier[6:]
+                value = [extractHtml(x, selector, type='xpath') for x in value]
+                value = [y for x in value for y in x]
+
+        # If modified in pipeline (otherwise already handled by getDictValue)...
+        if dump and (type(value) is dict):
+            value = json.dumps(value)
+        if dump and (type(value) is list):
+            value = ";".join(value)
+        elif dump and (isinstance(value, int)):
+            value = str(value)
+
+        return value
+
+    except Exception as e:
+        return ""
+
+def getDictValue(data, multikey, dump=True):
+    """Extract value from dict
+    :param data:
+    :param multikey:
+    :param dump:
+    :return:
+    """
+    try:
         keys=multikey.split('.',1)
 
         if isinstance(data, Mapping) and keys[0] != '':
-            #value=data.get(keys[0],"")
-
             try:
                 value=data[keys[0]]
                 if len(keys) > 1:
@@ -101,19 +164,11 @@ def getDictValue(data, multikey, dump=True, piped=False):
 
                 valuelist=[]
                 for elem in data:
-                    valuelist.append(getDictValue(elem,listkey,dump))
+                    valuelist.append(getDictValue(elem, listkey, dump))
                 value = ";".join(valuelist)
 
         else:
             value = data
-
-        for modifier in pipeline:
-            if modifier.startswith('css:'):
-                selector = modifier[4:]
-                value = extractHtml(value, selector, type='css', dump=dump)
-            if modifier.startswith('xpath:'):
-                selector = modifier[6:]
-                value = extractHtml(value, selector, type='xpath', dump=dump)
 
         if dump and (type(value) is dict or type(value) is list):
             value = json.dumps(value)
@@ -306,10 +361,7 @@ def extractHtml(html, selector, type='css', dump=False):
         except Exception as e:
             items.append('ERROR: '+str(e))
 
-    if dump:
-        return ";".join(items)
-    else:
-        return items
+    return items
 
 def xmlToJson(data):
     bf = BadgerFish(dict_type=OrderedDict)
