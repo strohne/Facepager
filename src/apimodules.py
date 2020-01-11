@@ -20,6 +20,7 @@ from requests.exceptions import *
 from rauth import OAuth1Service
 from requests_oauthlib import OAuth2Session
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+import cchardet
 
 if sys.version_info.major < 3:
     from urllib import url2pathname
@@ -2519,6 +2520,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
         if response.status_code == 200 and req.method.lower() != 'head':
             try:
                 response.raw = open(path, 'rb')
+                response.encoding = cchardet.detect(response.content)['encoding']
             except (OSError, IOError) as err:
                 response.status_code = 500
                 response.reason = str(err)
