@@ -16,6 +16,10 @@ import platform
 import subprocess
 
 from export import ExportFileDialog
+if sys.version_info.major < 3:
+    from urllib import pathname2url
+else:
+    from urllib.request import pathname2url
 
 class Actions(object):
     def __init__(self, mainWindow):
@@ -234,7 +238,7 @@ class Actions(object):
         dialog.setWindowTitle("Add Nodes")
         layout = QVBoxLayout()
 
-        label = QLabel("One <b>Object ID</b> per line. You can provide additional JSON data after a pipe |")
+        label = QLabel("One <b>Object ID</b> per line.")
         layout.addWidget(label)
 
 
@@ -246,6 +250,7 @@ class Actions(object):
         layout.addWidget(input)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        filesbutton = buttons.addButton("Add files", QDialogButtonBox.ResetRole)
         loadbutton = buttons.addButton("Load CSV", QDialogButtonBox.ResetRole)
         layout.addWidget(buttons)
 
@@ -274,6 +279,26 @@ class Actions(object):
                 self.mainWindow.tree.selectLastRow()
                 dialog.close()
 
+        def loadFilenames():
+            datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
+            datadir = os.path.expanduser('~') if datadir == '' else datadir
+
+            filenames, filter = QFileDialog.getOpenFileNames(dialog, "Add filenames", datadir)
+            for filename in filenames:
+                with open(filename, encoding="UTF-8-sig") as file:
+
+                    data = {}
+                    data['fileurl'] = 'file:' + pathname2url(filename)
+                    data['filename'] = os.path.basename(filename)
+                    data['filepath'] = filename
+
+
+                    self.mainWindow.tree.treemodel.addNodes([data])
+                    self.mainWindow.tree.selectLastRow()
+                    dialog.close()
+
+                self.mainWindow.tree.selectLastRow()
+                dialog.close()
 
         def close():
             dialog.close()
@@ -282,6 +307,8 @@ class Actions(object):
         buttons.accepted.connect(createNodes)
         buttons.rejected.connect(close)
         loadbutton.clicked.connect(loadCSV)
+        filesbutton.clicked.connect(loadFilenames)
+
         dialog.exec_()
 
 
