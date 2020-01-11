@@ -1,0 +1,42 @@
+{
+  "category": "Scraping",
+  "columns": [
+    "text|xpath:string(*[1])",
+    "text|xpath:string(*[2])",
+    "text|xpath:string(*[3])",
+    "text|xpath:string(*[4])",
+    "text|xpath:string(*[5])",
+    "text|xpath:string(*[6])",
+    "text|xpath://a/@href",
+    "text|xpath://a/text()"
+  ],
+  "description": "Add the URL of a webpage containing a table as seed node, select the node, and fetch data, e.g. \nhttps://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population\n\nAll tables and their rows are scraped. If a page contains multiple tables and you are interested in only one specific table, adjust the Key to extract-field. For example, the key \"text|xpath://table[3]//tr\" extracts only rows in the third table. \n\nThe column setup defines what data you see in the table. XPath expressions are used to extract the data. The preset shows the first six table columns followed by two columns with all contained links and link texts. You can adjust the setup according to your needs and the structure of the table. Inspect the source code of the table with you browser in order to understand the structure. The following examples may help you with finding XPath expressions.\n\n- Extract the HTML code of the second td-element: text|xpath://td[2]\n\n- Extract all text of the second td-element: text|xpath:string(//td[2])\n\n- Extract all text nodes of the second td-element. Multiple nodes are pasted together with a semicolon by Facepager: text|xpath://td[2]/text()\n\n- Extract the URL of all image tags: text|xpath://img/@src\n\nHints:\n- You can blank out the Key to extract-field and use the Extract Data-button after fecthing the complete source code of the page.\n\n- Some tables in webpages are loaded by JavaScript (using HttpRequests / Ajax). In this case, you need to figure out the URL of the page containing the table. The network analysis tab in the developer console of your browser (press F12 in firefox) is a relatively convenient way.\n\n- If tables are split over several pages, figure out which parts in the URL change between the pages. You can use the paging mechanism of Facepager to set the parameter and automatically download all pages.\n\n- To address an element no matter where it is in the source code, use an relative XPath expression. For example, \"xpath://td\" gets all td elements. \n\n- An asterisk * in XPath expressions denotes any element. For example,\"*\" adresses all direct child elements of the root element.\n\n- In XPath, the current element is denoted by a dot. For example, \"./*/img\" adresses all img elements that are direct children to the current element. \n\n- See https://github.com/strohne/Facepager/wiki/The-Basic-Concept#webscraping-with-css-and-xpath for an explanation of XPath and CSS in Facepager.\n\nOther pages you could try to scrape:\nhttps://en.wikipedia.org/wiki/List_of_news_television_channels\nhttps://en.wikipedia.org/wiki/List_of_most_expensive_films\nhttps://en.wikipedia.org/wiki/List_of_micronations\nhttps://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)\n",
+  "headers": false,
+  "module": "Generic",
+  "name": "Scrape Wikipedia tables",
+  "options": {
+    "auth": "disable",
+    "auth_type": "OAuth2",
+    "auth_uri": "",
+    "basepath": "<Object ID>",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "text",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "text|xpath://table//tr",
+    "objectid": "text|xpath:string(td[1])",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 1,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {},
+    "redirect_uri": "",
+    "resource": "",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200
+}
