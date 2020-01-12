@@ -1007,14 +1007,13 @@ class ApiTab(QScrollArea):
                 try:
                     data = response.json() if response.text != '' else []
                 except Exception as e:
-                    self.logMessage("No valid JSON data, try to parse as XML: "+str(e))
+                    self.logMessage("No valid JSON data, try XML conversion ("+str(e)+")")
                     try:
                         data = xmlToJson(response.text)
                     except:
                         data = {'error': 'Data could not be converted to JSON','response': response.text}
 
             return data, headers, status
-
 
     def disconnectSocket(self):
         """Used to disconnect when canceling requests"""
