@@ -1006,7 +1006,8 @@ class ApiTab(QScrollArea):
             elif format == 'json':
                 try:
                     data = response.json() if response.text != '' else []
-                except:
+                except Exception as e:
+                    self.logMessage("No valid JSON data, try to parse as XML: "+str(e))
                     try:
                         data = xmlToJson(response.text)
                     except:

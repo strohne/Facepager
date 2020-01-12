@@ -238,7 +238,7 @@ class Actions(object):
         dialog.setWindowTitle("Add Nodes")
         layout = QVBoxLayout()
 
-        label = QLabel("One <b>Object ID</b> per line.")
+        label = QLabel("One <b>Object ID</b> per line")
         layout.addWidget(label)
 
 
