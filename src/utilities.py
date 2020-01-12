@@ -29,11 +29,24 @@ def hasDictValue(data,multikey, piped=False):
         keys=multikey.split('.',1)
 
         if isinstance(data, Mapping) and keys[0] != '':
+
             if len(keys) > 1:
-                value=data.get(keys[0],"")
+                value = data.get(keys[0],"")
                 value = hasDictValue(value,keys[1])
             else:
                 value = keys[0] in data
+
+            if (not value) and (keys[0] == '*'):
+                if len(keys) == 1:
+                    value = bool(data)
+
+                else:
+                    listkey = keys[1]
+                    for elem in data:
+                        value = hasDictValue(data[elem], listkey)
+                        if value:
+                            break
+
         elif type(data) is list and keys[0] == '*':
             if len(keys) > 1 and len(data) > 0:
                 value = data[0]
@@ -52,6 +65,7 @@ def hasDictValue(data,multikey, piped=False):
             value = False
 
         return value
+
     except Exception as e:
         return False
 
@@ -134,18 +148,11 @@ def getDictValue(data, multikey, dump=True):
                 if len(keys) > 1:
                     value = getDictValue(value,keys[1],dump)
             except:
-                if keys[0] == '*' and len(keys) > 1:
-                    listkey = keys[1]
-                elif keys[0] == '*':
-                    listkey = ''
-                else:
-                    listkey = None
-
-                if listkey is not None:
-                    valuelist=[]
+                if keys[0] == '*':
+                    listkey = keys[1] if len(keys) > 1 else ''
+                    value=[]
                     for elem in data:
-                        valuelist.append(getDictValue(data[elem],listkey,dump))
-                    value = ";".join(valuelist)
+                        value.append(getDictValue(data[elem],listkey,dump))
                 else:
                     value = ''
 
@@ -155,23 +162,22 @@ def getDictValue(data, multikey, dump=True):
                 if len(keys) > 1:
                     value = getDictValue(value,keys[1],dump)
             except:
-                if keys[0] == '*' and len(keys) > 1:
-                    listkey = keys[1]
-                elif keys[0] == '*':
-                    listkey = ''
+                if keys[0] == '*':
+                    listkey = keys[1] if len(keys) > 1 else ''
                 else:
                     listkey = keys[0]
 
-                valuelist=[]
+                value=[]
                 for elem in data:
-                    valuelist.append(getDictValue(elem, listkey, dump))
-                value = ";".join(valuelist)
+                    value.append(getDictValue(elem, listkey, dump))
 
         else:
             value = data
 
-        if dump and (type(value) is dict or type(value) is list):
+        if dump and (type(value) is dict):
             value = json.dumps(value)
+        elif dump and (type(value) is list):
+            value = ";".join(value)
         elif dump and (isinstance(value, int)):
             value = str(value)
 
