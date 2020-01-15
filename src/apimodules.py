@@ -2328,6 +2328,7 @@ class YoutubeTab(AuthTab):
 
         self.defaults['key_objectid'] = 'id.videoId'
         self.defaults['key_nodedata'] = 'items'
+        self.defaults['paging_type'] = "key"
         self.defaults['key_paging'] = "nextPageToken"
         self.defaults['param_paging'] = 'pageToken'
 
