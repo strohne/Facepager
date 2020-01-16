@@ -956,7 +956,7 @@ class ApiTab(QScrollArea):
             maxretries = 3
             while True:
                 try:
-                    response = session.request(method,path, params=args,headers=headers,data=payload, timeout=self.timeout)
+                    response = session.request(method,path, params=args,headers=headers,data=payload, timeout=self.timeout) # verify=False
 
                 except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
