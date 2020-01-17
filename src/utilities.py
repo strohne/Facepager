@@ -453,7 +453,10 @@ class BufferReader():
         return chunk
 
 def wraptip(value):
-    value = '<qt>{}</qt>'.format(html.escape(value)) if value is not None else value
+    try:
+        value = '<qt>{}</qt>'.format(html.escape(str(value))) if value is not None else value
+    except:
+        pass
     return value
 
 def formatdict(data):

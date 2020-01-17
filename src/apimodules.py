@@ -1007,11 +1007,18 @@ class ApiTab(QScrollArea):
                 try:
                     data = response.json() if response.text != '' else []
                 except Exception as e:
-                    self.logMessage("No valid JSON data, try XML conversion ("+str(e)+")")
+                    self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
                     try:
                         data = xmlToJson(response.text)
                     except:
                         data = {'error': 'Data could not be converted to JSON','response': response.text}
+
+            # JSON
+            elif format == 'xml':
+                try:
+                    data = xmlToJson(response.text)
+                except:
+                    data = {'error': 'Data could not be converted to JSON','response': response.text}
 
             return data, headers, status
 
@@ -1509,7 +1516,7 @@ class AuthTab(ApiTab):
                 raise Exception('Client Secret is missing, please adjust settings!')
 
             basicauth = urllib.parse.quote_plus(clientid) + ':' + urllib.parse.quote_plus(clientsecret)
-            basicauth = base64.b64encode(basicauth)
+            basicauth = base64.b64encode(basicauth.encode('utf-8')).decode('utf-8')
 
             path = 'https://api.twitter.com/oauth2/token/'
             payload = 'grant_type=client_credentials'
@@ -1962,6 +1969,7 @@ class AmazonTab(AuthTab):
 
         self.defaults['region'] = 'us-east-1'  # 'eu-central-1'
         self.defaults['service'] = 's3'
+        self.defaults['format'] = 'xml'
 
         # Standard inputs
         self.initInputs()
@@ -2278,6 +2286,11 @@ class TwitterTab(AuthTab):
                     headers['x-rate-limit-remaining'])}
 
             options['ratelimit'] = (status == "error (429)")
+
+            if hasDictValue(data,'results'):
+                options['nodedata'] = 'results'
+            else:
+                options['nodedata'] = None
 
             logData(data, options, headers)
             if self.progress is not None:
