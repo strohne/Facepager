@@ -15,6 +15,7 @@ Facepager depends on the following packages:
 - numpy and pandas: pip install numpy pandas (licensed under BSD and 3-clause BSD license) 
 - lxml: pip install lxml (BSD licence)
 - xmljson pip install xmljson (MIT licence)
+- cchardet: pip install cchardet (GPL, LGPL, MPL 1.1)
 
 Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
@@ -35,7 +36,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ python -m venv pyenv  
   $ pyenv\Scripts\activate.bat  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet
   $ pip install PySide2==5.11.1  
 
 - Start Facepager  
@@ -54,7 +55,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet
   $ pip install PySide2==5.11.1  
 
 - Start Facepager  
@@ -77,7 +78,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
-  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas  
+  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet 
   $ pip3 install PySide2==5.11.1  
 
 - Start Facepager  
