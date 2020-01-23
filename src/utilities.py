@@ -180,6 +180,8 @@ def getDictValue(data, multikey, dump=True):
             value = ";".join(value)
         elif dump and (isinstance(value, int)):
             value = str(value)
+        elif dump and (isinstance(value, float)):
+            value = str(value)
 
         return value
 
