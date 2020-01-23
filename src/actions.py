@@ -398,14 +398,22 @@ class Actions(object):
                 return False
 
             try:
+                progress = ProgressBar("Extracting data...", self.mainWindow)
                 selected = self.mainWindow.tree.selectionModel().selectedRows()
+                progress.setMaximum(len(selected))
                 for item in selected:
+                    progress.step()
+                    if progress.wasCanceled:
+                        break
                     if not item.isValid():
                         continue
                     treenode = item.internalPointer()
-                    treenode.unpackList(key_nodes, key_objectid)
+                    treenode.unpackList(key_nodes, key_objectid, delaycommit = True)
             except Exception as e:
                 self.mainWindow.logmessage(e)
+            finally:
+                self.mainWindow.tree.treemodel.commitNewNodes()
+                progress.close()
 
             dialog.close()
             return True

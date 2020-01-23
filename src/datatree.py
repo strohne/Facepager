@@ -298,7 +298,7 @@ class TreeItem(object):
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
 
-    def unpackList(self, key_nodes, key_objectid):
+    def unpackList(self, key_nodes, key_objectid, delaycommit=False):
         dbnode = Node.query.get(self.id)
 
         # extract nodes
@@ -323,11 +323,14 @@ class TreeItem(object):
             new.queryparams = dbnode.queryparams
             newnodes.append(new)
 
+
         self.model.database.session.add_all(newnodes)
         self._childcountall += len(newnodes)
         dbnode.childcount += len(newnodes)
-        self.model.database.session.commit()
-        self.model.layoutChanged.emit()
+
+        self.model.newnodes += len(newnodes)
+        self.model.nodecounter += len(newnodes)
+        self.model.commitNewNodes(delaycommit)
 
     def __repr__(self):
         return self.id
