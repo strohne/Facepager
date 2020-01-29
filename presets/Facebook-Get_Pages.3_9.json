@@ -6,7 +6,7 @@
     "resource": "/<page-id>",
     "basepath": "https://graph.facebook.com/v3.2",
     "params": {
-      "fields": "name, about, location, category, talking_about_count",
+      "fields": "name, about, location, category, talking_about_count, fan_count",
       "<page-id>": "<Object ID>"
     },
     "pages": 1,
@@ -17,6 +17,7 @@
     "about",
     "location.city",
     "category",
+    "fan_count",
     "talking_about_count",
     "error.message"
   ],
