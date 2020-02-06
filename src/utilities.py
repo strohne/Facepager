@@ -1,5 +1,6 @@
 import json
 import os,sys,platform,time
+from base64 import b64encode
 import re
 import lxml
 import lxml.html
@@ -79,8 +80,16 @@ def extractNames(customcolumns = []):
         names.append(name)
     return names
 
+def parseKey(key):
+    pipeline = key.split('|')
+    key = pipeline.pop(0).split('=', 1)
+    name = key.pop(0) if len(key) > 1 else None
+    key = key[0]
 
-def extractValue(data, multikey, dump=True):
+    return (name, key, pipeline)
+
+
+def extractValue(data, key, dump=True, folder = ""):
     """Extract value from dict and pipe through modifiers
     :param data:
     :param multikey:
@@ -88,13 +97,11 @@ def extractValue(data, multikey, dump=True):
     :return:
     """
     try:
-        pipeline = multikey.split('|')
-        multikey = pipeline.pop(0).split('=', 1)
-        name = multikey.pop(0) if len(multikey) > 1 else None
-        multikey = multikey[0]
+        # Parse key
+        name, key, pipeline = parseKey(key)
 
         # Input: dict. Output: string, number, list or dict
-        value = getDictValue(data, multikey, dump)
+        value = getDictValue(data, key, dump)
 
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
@@ -130,6 +137,19 @@ def extractValue(data, multikey, dump=True):
                 selector = modifier[6:]
                 value = [extractHtml(x, selector, type='xpath') for x in value]
                 value = [y for x in value for y in x]
+
+            # Load file contents (using modifiers after a pipe symbol)
+            elif modifier == 'file':
+                value = value[0]
+                with open(os.path.join(folder, value), 'rb') as file:
+                    value = file.read()
+
+            elif modifier == 'base64':
+                value = value[0]
+                value = b64encode(value.encode('utf-8')).decode('utf-8')
+
+            elif modifier == 'length':
+                value = len(value)
 
         # If modified in pipeline (otherwise already handled by getDictValue)...
         if dump and (type(value) is dict):

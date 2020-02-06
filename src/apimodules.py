@@ -129,30 +129,17 @@ class ApiTab(QScrollArea):
         matches = re.findall(r"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
 
         for match in matches:
-            pipeline = match.split('|')
-            key = pipeline.pop(0)
-            #modifier = pipeline[1] if len(pipeline) > 1 else None
+            name, key, pipeline = parseKey(match)
 
             if key in paramdata:
                 value = str(paramdata[key])
             elif key == 'None':
                 value = ''
             elif key == 'Object ID':
-                value = str(nodedata['objectid'])
+                value = {'Object ID':str(nodedata['objectid'])}
+                name, value = extractValue(value, match, folder=options.get('folder', ''))
             else:
-                value = getDictValue(nodedata['response'], key)
-
-            # Load file contents (using modifiers after a pipe symbol)
-            for modifier in pipeline:
-                if modifier == 'file':
-                    with open(os.path.join(options.get('folder',''),value), 'rb') as file:
-                        value = file.read()
-
-                if modifier == 'base64':
-                    value = base64.b64encode(value)
-
-                if modifier == 'length':
-                    value = len(value)
+                name, value = extractValue(nodedata['response'], match, folder=options.get('folder',''))
 
             if (pattern == '<' + match + '>'):
                 pattern = value
@@ -2021,8 +2008,8 @@ class AmazonTab(AuthTab):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(AmazonTab, self).getOptions(purpose)
 
-        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get(
-            'service', '')
+        options['format'] = self.defaults.get('format', '')
+        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get('service', '')
         options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get(
             'region', '')
 
@@ -2113,13 +2100,14 @@ class AmazonTab(AuthTab):
 
         # Create payload hash (hash of the request body content). For GET
         # requests, the payload is an empty string ("").
-        payload = '' if payload is None else payload
+        payload = b'' if payload is None else payload
         if isinstance(payload, BufferReader):
             payload_buffer = payload
             payload = payload_buffer.read()
             payload_buffer.rewind()
+            #payload = payload.decode('utf-8')
 
-        payload_hash = hashlib.sha256(payload.encode('utf-8')).hexdigest()
+        payload_hash = hashlib.sha256(payload).hexdigest()
 
         # Combine elements to create canonical request
         canonical_request = method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers_str + '\n' + signed_headers + '\n' + payload_hash
