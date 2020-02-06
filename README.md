@@ -1,7 +1,6 @@
 ﻿![Logo](https://raw.github.com/strohne/Facepager/master/icons/icon_facepager.png)
 
-Facepager was made for fetching public available data from YouTube, Twitter and other JSON-based APIs. 
-All data is stored in a SQLite database and may be exported to csv. 
+Facepager was made for fetching public available data from YouTube, Twitter and other websites on the basis of APIs and webscraping. All data is stored in a SQLite database and may be exported to csv. 
 
 ### Installer
 
@@ -22,7 +21,7 @@ You can get help regarding specific problems in the [Facepager Usergroup on Face
 
 ### Citation
 
-[Jünger, Jakob](https://ipk.uni-greifswald.de/kommunikationswissenschaft/dr-jakob-juenger/) / [Keyling, Till](http://tillkeyling.com/) (2019). Facepager. An application for generic data retrieval through APIs. Source code and releases available at https://github.com/strohne/Facepager/.
+[Jünger, Jakob](https://ipk.uni-greifswald.de/kommunikationswissenschaft/dr-jakob-juenger/) / [Keyling, Till](http://tillkeyling.com/) (2019). Facepager. An application for automated data retrieval on the web. Source code and releases available at https://github.com/strohne/Facepager/.
 
 ### Licence
 
