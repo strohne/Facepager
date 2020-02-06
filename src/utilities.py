@@ -69,6 +69,16 @@ def hasDictValue(data,multikey, piped=False):
     except Exception as e:
         return False
 
+def extractNames(customcolumns = []):
+    """Extract name contained in keys
+    """
+    names = []
+    for column in customcolumns:
+        name = str(column).split('|').pop(0).split('=', 1)
+        name = column if len(name) < 2 else name[0]
+        names.append(name)
+    return names
+
 
 def extractValue(data, multikey, dump=True):
     """Extract value from dict and pipe through modifiers
@@ -79,7 +89,9 @@ def extractValue(data, multikey, dump=True):
     """
     try:
         pipeline = multikey.split('|')
-        multikey = pipeline.pop(0)
+        multikey = pipeline.pop(0).split('=', 1)
+        name = multikey.pop(0) if len(multikey) > 1 else None
+        multikey = multikey[0]
 
         # Input: dict. Output: string, number, list or dict
         value = getDictValue(data, multikey, dump)
@@ -127,10 +139,10 @@ def extractValue(data, multikey, dump=True):
         elif dump and (isinstance(value, int)):
             value = str(value)
 
-        return value
+        return (name, value)
 
     except Exception as e:
-        return ""
+        return (None, "")
 
 def getDictValue(data, multikey, dump=True):
     """Extract value from dict

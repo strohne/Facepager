@@ -126,7 +126,7 @@ class ExportFileDialog(QFileDialog):
             #headers
             row = ["level", "id", "parent_id", "object_id", "object_type", "query_status", "query_time",
                    "query_type"]
-            for key in self.mainWindow.tree.treemodel.customcolumns:
+            for key in extractNames(self.mainWindow.tree.treemodel.customcolumns):
                 row.append(key)
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
@@ -146,7 +146,7 @@ class ExportFileDialog(QFileDialog):
                     row = [node.level, node.id, node.parent_id, node.objectid, node.objecttype,
                            node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
-                        row.append(node.getResponseValue(key))
+                        row.append(node.getResponseValue(key)[1])
 
                     if self.optionLinebreaks.isChecked():
                         row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]

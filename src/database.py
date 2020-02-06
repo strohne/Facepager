@@ -145,9 +145,9 @@ class Node(Base):
             self.queryparams_raw = json.dumps(queryparams_raw)
 
         def getResponseValue(self,key,encoding=None):
-            value=extractValue(self.response,key)
+            name, value=extractValue(self.response,key)
             if encoding and isinstance(value, str):
-                return value.encode(encoding)
+                return (name, value.encode(encoding))
             else:
-                return value
+                return (name, value)
 

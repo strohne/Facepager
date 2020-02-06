@@ -239,7 +239,7 @@ class TreeItem(object):
             offcut = None
         elif hasDictValue(data,options['nodedata'], piped=True):
             subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
-            nodes = extractValue(data, options['nodedata'], False)
+            name, nodes = extractValue(data, options['nodedata'], False)
             offcut = filterDictValue(data, options['nodedata'], False, piped=True)
         else:
             subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
@@ -277,7 +277,7 @@ class TreeItem(object):
 
         #extracted nodes
         for n in nodes:
-            appendNode('data', extractValue(n, options.get('objectid', "")), n, fieldsuffix)
+            appendNode('data', extractValue(n, options.get('objectid', ""))[1], n, fieldsuffix)
 
         #Offcut
         if offcut is not None:
@@ -302,7 +302,7 @@ class TreeItem(object):
         dbnode = Node.query.get(self.id)
 
         # extract nodes
-        nodes = extractValue(dbnode.response, key_nodes, dump=False)
+        name, nodes = extractValue(dbnode.response, key_nodes, dump=False)
         if not (type(nodes) is list):
             nodes = [nodes]
 
@@ -310,7 +310,7 @@ class TreeItem(object):
         subkey = key_nodes.split("|").pop(0).rsplit('.', 1)[0]
         newnodes = []
         for n in nodes:
-            objectid = extractValue(n, key_objectid)
+            objectid = extractValue(n, key_objectid)[1]
             response = n if isinstance(n, Mapping) else {subkey : n}
 
             new = Node(objectid, dbnode.id)
@@ -448,7 +448,7 @@ class TreeModel(QAbstractItemModel):
                 value = item.data.get('querytype','')
             else:
                 key = self.customcolumns[index.column() - 5]
-                value = extractValue(item.data.get('response',''), key)
+                value = extractValue(item.data.get('response',''), key)[1]
 
             if role == Qt.ToolTipRole:
                 return wraptip(value)
@@ -491,15 +491,16 @@ class TreeModel(QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
-            captions = ['Object ID', 'Object Type', 'Query Status', 'Query Time', 'Query Type'] + self.customcolumns
+            captions = ['Object ID', 'Object Type', 'Query Status', 'Query Time', 'Query Type'] + extractNames(self.customcolumns)
             return captions[section] if section < len(captions) else ""
 
         return None
 
     def getRowHeader(self):
         row = ["id", "parent_id", "level", "object_id", "object_type", "query_status", "query_time", "query_type"]
-        for key in self.customcolumns:
-            row.append(str(key))
+        columns = extractNames(self.customcolumns)
+        for key in columns:
+            row.append(key)
         return row
 
     def getRowData(self, index):
@@ -514,7 +515,7 @@ class TreeModel(QAbstractItemModel):
                node.data['querytype']
               ]
         for key in self.customcolumns:
-            row.append(extractValue(node.data['response'], key))
+            row.append(extractValue(node.data['response'],key)[1])
         return row
 
     def hasChildren(self, index):
