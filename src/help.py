@@ -14,7 +14,7 @@ class HelpWindow(QMainWindow):
     def __init__(self, parent=None):
         super(HelpWindow,self).__init__(parent)
 
-        self.setWindowTitle("Facepager 4.0 - Help")
+        self.setWindowTitle("Facepager 4 - Help")
         self.setMinimumWidth(600);
         self.setMinimumHeight(600);
         central = QWidget()
