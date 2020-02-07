@@ -1166,6 +1166,10 @@ class AuthTab(ApiTab):
                 "Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a bearer token header containing the access token will be sent."))
             loginlayout.addWidget(self.authEdit)
 
+            loginlayout.addWidget(QLabel("Name"))
+            self.tokenNameEdit = QLineEdit()
+            loginlayout.addWidget(self.tokenNameEdit,1)
+
             rowcaption = "Authorization"
             loginlayout.addWidget(QLabel("Access token"))
         else:
@@ -1173,7 +1177,7 @@ class AuthTab(ApiTab):
 
         self.tokenEdit = QLineEdit()
         self.tokenEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokenEdit)
+        loginlayout.addWidget(self.tokenEdit,2)
 
         self.authButton = QPushButton('Settings', self)
         self.authButton.clicked.connect(self.editAuthSettings)
@@ -1193,9 +1197,7 @@ class AuthTab(ApiTab):
 
         # Auth type
         try:
-            options[
-                'auth_type'] = self.authTypeEdit.currentText().strip() if self.authTypeEdit.currentText() != "" else self.defaults.get(
-                'auth_type', '')
+            options['auth_type'] = self.authTypeEdit.currentText().strip() if self.authTypeEdit.currentText() != "" else self.defaults.get('auth_type', '')
         except AttributeError:
             pass
 
@@ -1219,7 +1221,13 @@ class AuthTab(ApiTab):
             options[
                 'auth'] = self.authEdit.currentText().strip() if self.authEdit.currentText() != "" else self.defaults.get(
                 'auth', 'disable')
+            if self.tokenNameEdit.text() != "":
+                options['auth_tokenname'] = self.tokenNameEdit.text()
+            else:
+                options.pop('auth_tokenname', None)
+
         except AttributeError:
+            options.pop('auth_tokenname',None)
             options['auth'] = self.defaults.get('auth', 'disable')
 
         return options
@@ -1236,6 +1244,7 @@ class AuthTab(ApiTab):
 
         try:
             self.authEdit.setCurrentIndex(self.authEdit.findText(options.get('auth', 'disable')))
+            self.tokenNameEdit.setText(options.get('auth_tokenname'))
         except AttributeError:
             pass
 
@@ -1276,9 +1285,9 @@ class AuthTab(ApiTab):
                 requestheaders = options.get('headers', {})
 
                 if options.get('auth', 'disable') == 'param':
-                    urlparams["access_token"] = options['access_token']
+                    urlparams[options.get('auth_tokenname','access_token')] = options['access_token']
                 elif options.get('auth', 'disable') == 'header':
-                    requestheaders["Authorization"] = "Bearer " + options['access_token']
+                    requestheaders[options.get('auth_tokenname','Authorization')] = "Bearer " + options['access_token']
 
                 method = options.get('verb', 'GET')
                 payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options)
