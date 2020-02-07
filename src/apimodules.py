@@ -1168,6 +1168,7 @@ class AuthTab(ApiTab):
 
             loginlayout.addWidget(QLabel("Name"))
             self.tokenNameEdit = QLineEdit()
+            self.tokenNameEdit.setToolTip(wraptip("The name of the access token parameter or the authorization header. If you leave this empty, the default value is 'access_token' for param-method and 'Authorization' for header-method. The authorization header value is automatically prefixed with 'Bearer '"))
             loginlayout.addWidget(self.tokenNameEdit,1)
 
             rowcaption = "Authorization"
