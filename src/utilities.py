@@ -125,6 +125,13 @@ def extractValue(data, key, dump=True, folder = ""):
                         else:
                             value.append(item)
 
+            elif modifier.startswith('re:'):
+                # Input: list of strings.
+                # Output: list of strings
+                selector = modifier[3:]
+                value = [re.findall(selector,x) for x in value]
+                value = [y for x in value for y in x]
+
             elif modifier.startswith('css:'):
                 # Input: list of strings.
                 # Output: list of strings
