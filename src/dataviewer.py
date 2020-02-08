@@ -19,12 +19,10 @@ class DataViewer(QDialog):
         self.mainWindow = parent
         self.setWindowTitle("Extract Data")
         self.setMinimumWidth(400)
-        self.setMinimumHeight(400)
 
         # layout
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-
 
         self.extractLayout = QFormLayout()
         layout.addLayout(self.extractLayout)
@@ -39,14 +37,24 @@ class DataViewer(QDialog):
         self.input_id = QLineEdit()
         self.extractLayout.addRow("Key for Object ID:",self.input_id)
 
-        # Data
-        self.dataLayout = QVBoxLayout()
-        layout.addLayout(self.dataLayout)
+        # Preview toggle
+        previewLayout = QHBoxLayout()
+        layout.addLayout(previewLayout)
+        self.togglePreviewCheckbox = QCheckBox()
+        self.togglePreviewCheckbox .setCheckState(Qt.Checked)
+        self.togglePreviewCheckbox.setToolTip(wraptip("Check to see a dumped preview of the value"))
+        self.togglePreviewCheckbox.stateChanged.connect(self.showPreview)
+        previewLayout.addWidget(self.togglePreviewCheckbox)
 
-        self.dataLayout.addWidget(QLabel("Preview"))
+        self.togglePreviewLabel = QLabel("Preview")
+        previewLayout.addWidget(self.togglePreviewLabel)
+        previewLayout.addStretch()
+
+        # Data
         self.dataEdit = QTextEdit(self)
         self.dataEdit.setReadOnly(True)
-        self.dataLayout.addWidget(self.dataEdit)
+        self.dataEdit.setMinimumHeight(400)
+        layout.addWidget(self.dataEdit)
 
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -55,27 +63,31 @@ class DataViewer(QDialog):
         layout.addWidget(buttons)
 
     def showValue(self, key = '', value = ''):
+        self.dataEdit.setVisible(self.togglePreviewCheckbox.isChecked())
         self.input_extract.setText(key)
         self.show()
 
     @Slot()
     def showPreview(self):
-        key_nodes = self.input_extract.text()
-        value = ''
+        if self.togglePreviewCheckbox.isChecked():
+            key_nodes = self.input_extract.text()
+            value = ''
 
-        selected = self.mainWindow.tree.selectionModel().selectedRows()
-        for item in selected:
-            if not item.isValid():
-                continue
-            treenode = item.internalPointer()
-            dbnode = treenode.dbnode()
-            if dbnode is not None:
-                name, value = extractValue(dbnode.response, key_nodes, dump=True)
+            selected = self.mainWindow.tree.selectionModel().selectedRows()
+            for item in selected:
+                if not item.isValid():
+                    continue
+                treenode = item.internalPointer()
+                dbnode = treenode.dbnode()
+                if dbnode is not None:
+                    name, value = extractValue(dbnode.response, key_nodes, dump=True)
 
-            break
+                break
 
-        self.dataEdit.setPlainText(value)
-        self.show()
+            self.dataEdit.setPlainText(value)
+        self.dataEdit.setVisible(self.togglePreviewCheckbox.isChecked())
+        if not self.togglePreviewCheckbox.isChecked():
+            self.adjustSize()
 
     @Slot()
     def createNodes(self):
