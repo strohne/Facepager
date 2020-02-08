@@ -19,6 +19,7 @@ class DataViewer(QDialog):
         self.mainWindow = parent
         self.setWindowTitle("Extract Data")
         self.setMinimumWidth(400)
+        self.setMinimumHeight(400)
 
         # layout
         layout = QVBoxLayout(self)
@@ -39,7 +40,14 @@ class DataViewer(QDialog):
         self.input_id = QLineEdit()
         self.extractLayout.addWidget(self.input_id)
 
-        # buttons
+        # Data
+        self.dataLayout = QVBoxLayout()
+        layout.addLayout(self.dataLayout)
+
+        self.dataEdit = QTextEdit(self)
+        self.dataLayout.addWidget(self.dataEdit)
+
+
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.createNodes)
@@ -48,6 +56,7 @@ class DataViewer(QDialog):
 
     def showValue(self, key = '', value = ''):
         self.input_extract.setText(key)
+        self.dataEdit.setPlainText(value)
         self.show()
 
     @Slot()
