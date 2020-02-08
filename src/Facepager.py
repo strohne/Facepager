@@ -41,6 +41,7 @@ from help import *
 from presets import *
 from timer import *
 from apiviewer import *
+from dataviewer import *
 from selectnodes import *
 import logging
 import threading
@@ -103,6 +104,7 @@ class MainWindow(QMainWindow):
         self.helpwindow=HelpWindow(self)
         self.presetWindow=PresetWindow(self)
         self.apiWindow = ApiViewer(self)
+        self.dataWindow = DataViewer(self)
         self.timerWindow=TimerWindow(self)
         #self.selectNodesWindow=SelectNodesWindow(self,self.tree)
 
