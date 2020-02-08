@@ -26,27 +26,27 @@ class DataViewer(QDialog):
         self.setLayout(layout)
 
 
-        self.extractLayout = QHBoxLayout()
+        self.extractLayout = QFormLayout()
         layout.addLayout(self.extractLayout)
 
         # Extract key input
-        self.extractLayout.addWidget(QLabel("Key to extract:"))
         self.input_extract = QLineEdit()
         self.input_extract.setFocus()
-        self.extractLayout.addWidget(self.input_extract)
+        self.input_extract.textChanged.connect(self.showPreview)
+        self.extractLayout.addRow("Key to extract:",self.input_extract)
 
         # Object ID key input
-        self.extractLayout.addWidget(QLabel("Key for Object ID:"))
         self.input_id = QLineEdit()
-        self.extractLayout.addWidget(self.input_id)
+        self.extractLayout.addRow("Key for Object ID:",self.input_id)
 
         # Data
         self.dataLayout = QVBoxLayout()
         layout.addLayout(self.dataLayout)
 
+        self.dataLayout.addWidget(QLabel("Preview"))
         self.dataEdit = QTextEdit(self)
+        self.dataEdit.setReadOnly(True)
         self.dataLayout.addWidget(self.dataEdit)
-
 
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -56,6 +56,24 @@ class DataViewer(QDialog):
 
     def showValue(self, key = '', value = ''):
         self.input_extract.setText(key)
+        self.show()
+
+    @Slot()
+    def showPreview(self):
+        key_nodes = self.input_extract.text()
+        value = ''
+
+        selected = self.mainWindow.tree.selectionModel().selectedRows()
+        for item in selected:
+            if not item.isValid():
+                continue
+            treenode = item.internalPointer()
+            dbnode = treenode.dbnode()
+            if dbnode is not None:
+                name, value = extractValue(dbnode.response, key_nodes, dump=True)
+
+            break
+
         self.dataEdit.setPlainText(value)
         self.show()
 
