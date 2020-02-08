@@ -39,6 +39,17 @@ class DictionaryTree(QTreeView):
     def clear(self):
         self.treemodel.reset()
 
+    def selectedValue(self):
+        selected = [x for x in self.selectedIndexes() if x.column() == 0]
+        if not len(selected):
+            return ''
+        index = selected[0]
+        if not index.isValid():
+            return ''
+
+        treeitem = index.internalPointer()
+        return treeitem.itemDataValue
+
     def selectedKey(self):
         selected = [x for x in self.selectedIndexes() if x.column() == 0]
         if not len(selected):
@@ -114,7 +125,6 @@ class DictionaryTreeModel(QAbstractItemModel):
             return doc
         except:
             return field
-
 
     def columnCount(self, parent):
         return 2
