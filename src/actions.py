@@ -364,69 +364,11 @@ class Actions(object):
     def jsonCopy(self):
         self.mainWindow.detailTree.copyToClipboard()
 
-
     @Slot()
     def unpackList(self):
         key = self.mainWindow.detailTree.selectedKey()
-
-        # Create dialog
-        dialog = QDialog(self.mainWindow)
-        dialog.setMinimumWidth(400)
-        dialog.setWindowTitle("Extract data")
-        layout = QFormLayout()
-        dialog.setLayout(layout)
-
-        # Extract key input
-        input_extract = QLineEdit()
-        input_extract.setFocus()
-        input_extract.setText(key)
-        layout.addRow("Key to extract:", input_extract)
-
-        # Object ID key input
-        input_id = QLineEdit()
-        layout.addRow("Key for Object ID:", input_id)
-
-        # Buttons
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        layout.addRow(buttons)
-
-        def createNodes():
-            key_nodes = input_extract.text()
-            key_objectid = input_id.text()
-            if key_nodes == '':
-                dialog.close()
-                return False
-
-            try:
-                progress = ProgressBar("Extracting data...", self.mainWindow)
-                selected = self.mainWindow.tree.selectionModel().selectedRows()
-                progress.setMaximum(len(selected))
-                for item in selected:
-                    progress.step()
-                    if progress.wasCanceled:
-                        break
-                    if not item.isValid():
-                        continue
-                    treenode = item.internalPointer()
-                    treenode.unpackList(key_nodes, key_objectid, delaycommit = True)
-            except Exception as e:
-                self.mainWindow.logmessage(e)
-            finally:
-                self.mainWindow.tree.treemodel.commitNewNodes()
-                progress.close()
-
-            dialog.close()
-            return True
-
-        def close():
-            dialog.close()
-
-        # Connect the nested functions to the buttons buttons
-        buttons.accepted.connect(createNodes)
-        buttons.rejected.connect(close)
-
-        # Open dialog
-        dialog.exec_()
+        value = self.mainWindow.detailTree.selectedValue()
+        self.mainWindow.dataWindow.showValue(key, value)
 
     @Slot()
     def showFieldDoc(self):
