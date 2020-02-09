@@ -75,13 +75,13 @@ def extractNames(customcolumns = []):
     """
     names = []
     for column in customcolumns:
-        name = str(column).split('|').pop(0).split('=', 1)
+        name = tokenize_with_escape(str(column)).pop(0).split('=', 1)
         name = column if len(name) < 2 else name[0]
         names.append(name)
     return names
 
 def parseKey(key):
-    pipeline = key.split('|')
+    pipeline = tokenize_with_escape(key)
     key = pipeline.pop(0).split('=', 1)
     name = key.pop(0) if len(key) > 1 else None
     key = key[0]
@@ -129,8 +129,19 @@ def extractValue(data, key, dump=True, folder = ""):
                 # Input: list of strings.
                 # Output: list of strings
                 selector = modifier[3:]
-                value = [re.findall(selector,x) for x in value]
-                value = [y for x in value for y in x]
+                items = [re.findall(selector,x) for x in value]
+
+                # Flatten (first group)
+                value = []
+                for matches in items:
+                    for match in matches:
+                        if (type(match) is tuple):
+                            value.append(match[0])
+                        else:
+                            value.append(match)
+
+                #value = [y for x in value for y in x]
+
 
             elif modifier.startswith('css:'):
                 # Input: list of strings.
@@ -515,3 +526,27 @@ def formatdict(data):
 
     return "\n".join(getdictvalues(data))
 
+
+def tokenize_with_escape(a, escape='\\', separator='|'):
+    '''
+        Tokenize a string with escape characters
+    '''
+    result = []
+    token = ''
+    state = 0
+    for c in a:
+        if state == 0:
+            if c == escape:
+                state = 1
+            elif c == separator:
+                result.append(token)
+                token = ''
+            else:
+                token += c
+        elif state == 1:
+            token += c
+            state = 0
+
+
+    result.append(token)
+    return result
