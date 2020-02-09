@@ -279,7 +279,9 @@ class TreeItem(object):
 
         #extracted nodes
         for n in nodes:
-            appendNode('data', extractValue(n, options.get('objectid', ""))[1], n, fieldsuffix)
+            o = options.get('objectid', None)
+            o = extractValue(n, o)[1] if o is not None else dbnode.objectid
+            appendNode('data', o, n, fieldsuffix)
 
         #Offcut
         if offcut is not None:
@@ -309,7 +311,9 @@ class TreeItem(object):
             nodes = [nodes]
 
         # add nodes
-        subkey = key_nodes.split("|").pop(0).rsplit('.', 1)[0]
+        #subkey = key_nodes.split("|").pop(0).rsplit('.', 1)[0]
+        subkey_name, subkey_key, subkey_pipeline = parseKey(key_nodes)
+        subkey = subkey_name if subkey_name is not None else subkey_key.rsplit('.', 1)[0]
         newnodes = []
         for n in nodes:
             objectid = extractValue(n, key_objectid)[1]
