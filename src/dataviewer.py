@@ -61,9 +61,9 @@ class DataViewer(QDialog):
         layout.addWidget(self.dataEdit)
 
         # Buttons
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        buttons.accepted.connect(self.createNodes)
-        buttons.rejected.connect(self.close)
+        buttons = QDialogButtonBox(QDialogButtonBox.Apply | QDialogButtonBox.Close)
+        buttons.button(QDialogButtonBox.Apply).clicked.connect(self.createNodes)
+        buttons.button(QDialogButtonBox.Close).clicked.connect(self.close)
         layout.addWidget(buttons)
 
     def showValue(self, key = ''):
