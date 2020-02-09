@@ -14,6 +14,7 @@ from utilities import *
 class DataViewer(QDialog):
     def __init__(self, parent=None):
         super(DataViewer, self).__init__(parent)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Main window
         self.mainWindow = parent
