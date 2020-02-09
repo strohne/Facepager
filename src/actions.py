@@ -367,8 +367,7 @@ class Actions(object):
     @Slot()
     def unpackList(self):
         key = self.mainWindow.detailTree.selectedKey()
-        value = self.mainWindow.detailTree.selectedValue()
-        self.mainWindow.dataWindow.showValue(key, value)
+        self.mainWindow.dataWindow.showValue(key)
 
     @Slot()
     def showFieldDoc(self):
@@ -668,6 +667,10 @@ class Actions(object):
         if current.isValid():
             item = current.internalPointer()
             self.mainWindow.detailTree.showDict(item.data['response'],item.data['querytype'], item.data['queryparams'])
+
+        # update preview in extract data window
+        if self.mainWindow.dataWindow.isVisible():
+            self.mainWindow.dataWindow.delayPreview()
 
         #select level
         level = 0

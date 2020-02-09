@@ -131,7 +131,7 @@ def extractValue(data, key, dump=True, folder = ""):
                 selector = modifier[3:]
                 items = [re.findall(selector,x) for x in value]
 
-                # Flatten (first group)
+                # Flatten (first group in match if re.findall returns multiple groups)
                 value = []
                 for matches in items:
                     for match in matches:
@@ -139,9 +139,6 @@ def extractValue(data, key, dump=True, folder = ""):
                             value.append(match[0])
                         else:
                             value.append(match)
-
-                #value = [y for x in value for y in x]
-
 
             elif modifier.startswith('css:'):
                 # Input: list of strings.

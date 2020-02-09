@@ -30,7 +30,7 @@ class DataViewer(QDialog):
         # Extract key input
         self.input_extract = QLineEdit()
         self.input_extract.setFocus()
-        self.input_extract.textChanged.connect(self.showPreview)
+        self.input_extract.textChanged.connect(self.delayPreview)
         self.extractLayout.addRow("Key to extract:",self.input_extract)
 
         # Object ID key input
@@ -45,6 +45,10 @@ class DataViewer(QDialog):
         self.togglePreviewCheckbox.setToolTip(wraptip("Check to see a dumped preview of the value"))
         self.togglePreviewCheckbox.stateChanged.connect(self.showPreview)
         previewLayout.addWidget(self.togglePreviewCheckbox)
+
+        self.previewTimer = QTimer()
+        self.previewTimer.timeout.connect(self.showPreview)
+        self.previewTimer.setSingleShot(True)
 
         self.togglePreviewLabel = QLabel("Preview")
         previewLayout.addWidget(self.togglePreviewLabel)
@@ -62,29 +66,40 @@ class DataViewer(QDialog):
         buttons.rejected.connect(self.close)
         layout.addWidget(buttons)
 
-    def showValue(self, key = '', value = ''):
-        self.dataEdit.setVisible(self.togglePreviewCheckbox.isChecked())
+    def showValue(self, key = ''):
         self.input_extract.setText(key)
         self.show()
 
     @Slot()
+    def delayPreview(self):
+        self.previewTimer.stop()
+        self.previewTimer.start(500)
+
+    @Slot()
     def showPreview(self):
         if self.togglePreviewCheckbox.isChecked():
+            # Get nodes
             key_nodes = self.input_extract.text()
-            value = ''
-
             selected = self.mainWindow.tree.selectionModel().selectedRows()
+            nodes = []
             for item in selected:
                 if not item.isValid():
                     continue
                 treenode = item.internalPointer()
                 dbnode = treenode.dbnode()
                 if dbnode is not None:
-                    name, value = extractValue(dbnode.response, key_nodes, dump=True)
-
+                    name, nodes = extractValue(dbnode.response, key_nodes, dump=False)
                 break
 
+            # Dump nodes
+            value = ''
+            nodes = [nodes] if not (type(nodes) is list) else nodes
+            for n in nodes:
+                n = json.dumps(n) if isinstance(n, Mapping) else n
+                value += n + '\n\n'
+
             self.dataEdit.setPlainText(value)
+
         self.dataEdit.setVisible(self.togglePreviewCheckbox.isChecked())
         if not self.togglePreviewCheckbox.isChecked():
             self.adjustSize()

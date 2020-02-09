@@ -228,6 +228,8 @@ class TreeItem(object):
 
 
     def appendNodes(self, data, options, headers=None, delaycommit=False):
+        """Append nodes after fetching data
+        """
         dbnode = Node.query.get(self.id)
         if not dbnode:
             return False
