@@ -69,6 +69,7 @@ class DataViewer(QDialog):
     def showValue(self, key = ''):
         self.input_extract.setText(key)
         self.show()
+        self.raise_()
 
     @Slot()
     def delayPreview(self):

@@ -160,7 +160,7 @@ class ApiViewer(QDialog):
         self.itemList.setFocus()
 
         #self.applyButton.setDefault(True)
-        #self.exec_()
+        self.raise_()
 
     def showDoc(self, module, basepath, path, field = None):
         # Show
