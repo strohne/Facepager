@@ -19,7 +19,6 @@ from progressbar import ProgressBar
 class ApiViewer(QDialog):
     def __init__(self, parent=None):
         super(ApiViewer,self).__init__(parent)
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Main window
         self.mainWindow = parent

@@ -17,7 +17,6 @@ from utilities import wraptip, formatdict
 class PresetWindow(QDialog):
     def __init__(self, parent=None):
         super(PresetWindow,self).__init__(parent)
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         self.mainWindow = parent
         self.setWindowTitle("Presets")
