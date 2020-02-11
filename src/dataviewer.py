@@ -103,6 +103,7 @@ class DataViewer(QDialog):
         self.dataEdit.setVisible(self.togglePreviewCheckbox.isChecked())
         if not self.togglePreviewCheckbox.isChecked():
             self.adjustSize()
+        self.show()
 
     @Slot()
     def createNodes(self):

@@ -160,7 +160,7 @@ class ApiViewer(QDialog):
         self.itemList.setFocus()
 
         #self.applyButton.setDefault(True)
-        self.exec_()
+        #self.exec_()
 
     def showDoc(self, module, basepath, path, field = None):
         # Show
@@ -205,7 +205,7 @@ class ApiViewer(QDialog):
                 valuewidget.setStyleSheet("border: 2px solid blue;font-weight:bold;")
                 self.detailView.ensureWidgetVisible(valuewidget)
 
-        self.exec_()
+        #self.exec_()
 
     def addDetailTable(self, caption):
         detailForm=QFormLayout()

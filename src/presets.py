@@ -219,7 +219,7 @@ class PresetWindow(QDialog):
         QApplication.processEvents()
 
         self.initPresets()
-        self.exec_()
+        #self.exec_()
 
     def addPresetItem(self,folder,filename,default=False,online=False):
         try:
@@ -546,7 +546,7 @@ class PresetWindow(QDialog):
         #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(save)
         buttons.rejected.connect(close)
-        dialog.exec_()
+        dialog.open()
         return self.currentFilename
 
 
