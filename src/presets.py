@@ -493,7 +493,8 @@ class PresetWindow(QDialog):
 
         def save():
             if self.currentFilename == None:
-                self.currentFilename = self.uniqueFilename(self.mainWindow.RequestTabs.currentWidget().name+"-"+name.text())
+                cat = category.text() if category.text() != "" else self.mainWindow.RequestTabs.currentWidget().name
+                self.currentFilename = self.uniqueFilename(cat+"-"+name.text())
 
             data_meta = {
                     'name':name.text(),
@@ -546,7 +547,7 @@ class PresetWindow(QDialog):
         #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(save)
         buttons.rejected.connect(close)
-        dialog.open()
+        dialog.exec()
         return self.currentFilename
 
 
