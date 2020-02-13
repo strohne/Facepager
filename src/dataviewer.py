@@ -79,25 +79,28 @@ class DataViewer(QDialog):
     @Slot()
     def showPreview(self):
         if self.togglePreviewCheckbox.isChecked():
-            # Get nodes
-            key_nodes = self.input_extract.text()
-            selected = self.mainWindow.tree.selectionModel().selectedRows()
-            nodes = []
-            for item in selected:
-                if not item.isValid():
-                    continue
-                treenode = item.internalPointer()
-                dbnode = treenode.dbnode()
-                if dbnode is not None:
-                    name, nodes = extractValue(dbnode.response, key_nodes, dump=False)
-                break
+            try:
+                # Get nodes
+                key_nodes = self.input_extract.text()
+                selected = self.mainWindow.tree.selectionModel().selectedRows()
+                nodes = []
+                for item in selected:
+                    if not item.isValid():
+                        continue
+                    treenode = item.internalPointer()
+                    dbnode = treenode.dbnode()
+                    if dbnode is not None:
+                        name, nodes = extractValue(dbnode.response, key_nodes, dump=False)
+                    break
 
-            # Dump nodes
-            value = ''
-            nodes = [nodes] if not (type(nodes) is list) else nodes
-            for n in nodes:
-                n = json.dumps(n) if isinstance(n, Mapping) else n
-                value += n + '\n\n'
+                # Dump nodes
+                value = ''
+                nodes = [nodes] if not (type(nodes) is list) else nodes
+                for n in nodes:
+                    n = json.dumps(n) if isinstance(n, Mapping) else n
+                    value += n + '\n\n'
+            except Exception as e:
+                value = str(e)
 
             self.dataEdit.setPlainText(value)
 
