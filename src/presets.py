@@ -132,6 +132,12 @@ class PresetWindow(QDialog):
         self.reloadButton.setToolTip(wraptip("Reload all preset files."))
         buttons.addWidget(self.reloadButton)
 
+        self.pipelineButton=QPushButton('Start pipeline')
+        self.pipelineButton.clicked.connect(self.startPipeline)
+        self.pipelineButton.setToolTip(wraptip("Start fetching data with every preset in the selected category, one after another. The node level is increased step by step. Careful: EVERY preset in the category is applied, this will not work with the default presets."))
+        buttons.addWidget(self.pipelineButton)
+
+
         self.rejectButton=QPushButton('Cancel')
         self.rejectButton.clicked.connect(self.close)
         self.rejectButton.setToolTip(wraptip("Close the preset dialog."))
@@ -384,6 +390,47 @@ class PresetWindow(QDialog):
 
         #self.currentChanged()
 
+    def getCategories(self):
+        categories = []
+
+        root = self.presetList.invisibleRootItem()
+        for i in range(root.childCount()):
+            item = root.child(i)
+            data = item.data(0, Qt.UserRole)
+            categories.append(data.get('category', ''))
+
+        return categories
+
+    def startPipeline(self):
+        if not self.presetList.currentItem():
+            return []
+
+        # Get category item
+        root_item = self.presetList.currentItem()
+        root_data = root_item.data(0, Qt.UserRole)
+        if not root_data.get('iscategory', False):
+            root_item = root_item.parent()
+            root_data = root_item.data(0, Qt.UserRole)
+
+        # Apply pipeline items
+        for i in range(root_item.childCount()):
+            item = root_item.child(i)
+            data = item.data(0, Qt.UserRole)
+            module = data.get('module', None)
+            options = data.get('options', {}).copy()
+
+            finished = self.mainWindow.actions.queryNodes(None, module, options)
+
+            level = self.mainWindow.levelEdit.value()
+            self.mainWindow.levelEdit.setValue(level + 1)
+
+            if not finished:
+                return False
+
+        return True
+        #self.close()
+
+
     def loadPreset(self):
         if not self.presetList.currentItem():
             return False
@@ -395,12 +442,10 @@ class PresetWindow(QDialog):
             module = data.get('module', '')
             module = 'Generic' if module == 'Files' else module
 
-            for i in range(0, self.mainWindow.RequestTabs.count()):
-                if self.mainWindow.RequestTabs.widget(i).name == module:
-                    tab = self.mainWindow.RequestTabs.widget(i)
-                    tab.setOptions(data.get('options', {}))
-                    self.mainWindow.RequestTabs.setCurrentWidget(tab)
-                    break
+            tab = self.mainWindow.getModule(module)
+            if tab is not None:
+                tab.setOptions(data.get('options', {}))
+                self.mainWindow.RequestTabs.setCurrentWidget(tab)
 
             #Set columns
             self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
@@ -461,8 +506,11 @@ class PresetWindow(QDialog):
 
         label=QLabel("<b>Category</b>")
         layout.addWidget(label)
-        category=QLineEdit()
-        category.setText(self.currentData.get('category',''))
+        category= QComboBox(self)
+        category.addItems(self.getCategories())
+        category.setEditable(True)
+
+        category.setCurrentText(self.currentData.get('category',''))
         layout.addWidget(category,0)
 
 
@@ -493,12 +541,12 @@ class PresetWindow(QDialog):
 
         def save():
             if self.currentFilename == None:
-                cat = category.text() if category.text() != "" else self.mainWindow.RequestTabs.currentWidget().name
+                cat = category.currentText() if category.currentText() != "" else self.mainWindow.RequestTabs.currentWidget().name
                 self.currentFilename = self.uniqueFilename(cat+"-"+name.text())
 
             data_meta = {
                     'name':name.text(),
-                    'category':category.text(),
+                    'category':category.currentText(),
                     'description':description.toPlainText()
             }
 
@@ -536,8 +584,6 @@ class PresetWindow(QDialog):
 
             dialog.close()
             return True
-
-
 
         def close():
             dialog.close()
