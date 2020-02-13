@@ -298,11 +298,9 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(GenericTab(self),"Generic")
 
         module = self.settings.value('module',False)
-        for i in range(0, self.RequestTabs.count()):
-            if self.RequestTabs.widget(i).name == module:
-                tab = self.RequestTabs.widget(i)
-                self.RequestTabs.setCurrentWidget(tab)
-                break
+        tab = self.getModule(module)
+        if tab is not None:
+            self.RequestTabs.setCurrentWidget(tab)
 
         #Fetch settings
         #-Level
@@ -420,6 +418,13 @@ class MainWindow(QMainWindow):
             else:
                 webbrowser.open('file:///'+os.path.dirname(self.database.filename))
 
+
+    def getModule(self,module):
+        for i in range(0, self.RequestTabs.count()):
+            if self.RequestTabs.widget(i).name == module:
+                tab = self.RequestTabs.widget(i)
+                return tab
+        return None
 
     def updateUI(self):
         #disable buttons that do not work without an opened database

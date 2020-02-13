@@ -396,7 +396,7 @@ class Actions(object):
 
     def queryNodes(self, indexes=None, apimodule=False, options=False):
         if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (indexes is not None)):
-            return(False)
+            return False
 
         #Show progress window
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
@@ -440,6 +440,8 @@ class Actions(object):
             allowedstatus = ['fetched (200)','downloaded (200)','fetched (202)','stream'] #,'error (400)'
 
 
+            if isinstance(apimodule,str):
+                apimodule = self.mainWindow.getModule(apimodule)
             if apimodule == False:
                 apimodule = self.mainWindow.RequestTabs.currentWidget()
             if options == False:
@@ -621,6 +623,7 @@ class Actions(object):
                 self.mainWindow.tree.treemodel.commitNewNodes()
         finally:
             progress.close()
+            return not progress.wasCanceled
 
     @Slot()
     def querySelectedNodes(self):
