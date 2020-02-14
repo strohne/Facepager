@@ -132,12 +132,6 @@ class PresetWindow(QDialog):
         self.reloadButton.setToolTip(wraptip("Reload all preset files."))
         buttons.addWidget(self.reloadButton)
 
-        self.pipelineButton=QPushButton('Start pipeline')
-        self.pipelineButton.clicked.connect(self.startPipeline)
-        self.pipelineButton.setToolTip(wraptip("Start fetching data with every preset in the selected category, one after another. The node level is increased step by step. Careful: EVERY preset in the category is applied, this will not work with the default presets."))
-        buttons.addWidget(self.pipelineButton)
-
-
         self.rejectButton=QPushButton('Cancel')
         self.rejectButton.clicked.connect(self.close)
         self.rejectButton.setToolTip(wraptip("Close the preset dialog."))
@@ -145,8 +139,9 @@ class PresetWindow(QDialog):
 
         self.applyButton=QPushButton('Apply')
         self.applyButton.setDefault(True)
-        self.applyButton.clicked.connect(self.loadPreset)
-        self.applyButton.setToolTip(wraptip("Load the selected preset."))
+        self.applyButton.clicked.connect(self.applyPreset)
+        self.applyButton.setToolTip(wraptip("If a single preset is selected: load the selected preset. If a category is selected: Start fetching data with every preset in the selected category, one after another. The node level is increased step by step. Careful: EVERY preset in the category is applied, this will not work with the default presets."))
+
         #buttons.addButton(self.applyButton,QDialogButtonBox.AcceptRole)
         buttons.addWidget(self.applyButton)
 
@@ -403,7 +398,7 @@ class PresetWindow(QDialog):
 
     def startPipeline(self):
         if not self.presetList.currentItem():
-            return []
+            return False
 
         # Get category item
         root_item = self.presetList.currentItem()
@@ -413,30 +408,42 @@ class PresetWindow(QDialog):
             root_data = root_item.data(0, Qt.UserRole)
 
         # Apply pipeline items
+        columns = []
         for i in range(root_item.childCount()):
             item = root_item.child(i)
+            self.presetList.setCurrentItem(item)
             data = item.data(0, Qt.UserRole)
-            module = data.get('module', None)
-            options = data.get('options', {}).copy()
+            module = self.mainWindow.getModule(data.get('module', None))
+            options = module.getOptions()
+            options.update(data.get('options', {}))
+            columns.extend(data.get('columns'))
 
             finished = self.mainWindow.actions.queryNodes(None, module, options)
 
-            level = self.mainWindow.levelEdit.value()
-            self.mainWindow.levelEdit.setValue(level + 1)
-
             if not finished:
                 return False
+            else:
+                level = self.mainWindow.levelEdit.value()
+                self.mainWindow.levelEdit.setValue(level + 1)
+
+
+        # Set columns
+        columns = list(dict.fromkeys(columns))
+        self.mainWindow.fieldList.setPlainText("\n".join(columns))
+        self.mainWindow.actions.showColumns()
 
         return True
         #self.close()
 
 
-    def loadPreset(self):
+    def applyPreset(self):
         if not self.presetList.currentItem():
             return False
 
         data = self.presetList.currentItem().data(0,Qt.UserRole)
-        if not data.get('iscategory',False):
+        if data.get('iscategory',False):
+            self.startPipeline()
+        else:
 
             #Find API module
             module = data.get('module', '')
