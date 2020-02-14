@@ -2366,6 +2366,10 @@ class YoutubeTab(AuthTab):
         authlayout.setContentsMargins(0,0,0,0)
         self.authWidget.setLayout(authlayout)
 
+        self.authTypeEdit= QComboBox()
+        self.authTypeEdit.addItems(['OAuth2', 'API key'])
+        authlayout.addRow("Authentication type", self.authTypeEdit)
+
         self.clientIdEdit = QLineEdit()
         self.clientIdEdit.setEchoMode(QLineEdit.Password)
         authlayout.addRow("Client Id", self.clientIdEdit)
@@ -2376,6 +2380,21 @@ class YoutubeTab(AuthTab):
 
         self.scopeEdit = QLineEdit()
         authlayout.addRow("Scopes",self.scopeEdit)
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(YoutubeTab, self).getOptions(purpose)
+
+        if options.get('auth_type','OAuth2') == 'API key':
+            options['auth_tokenname'] = 'key'
+
+        return options
+
+    @Slot()
+    def doLogin(self):
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'API key':
+            QMessageBox.information(self, "Facepager", "Manually enter your API key into the access token field or switch to OAuth2")
+        else:
+            super(YoutubeTab, self).doLogin()
 
 class GenericTab(AuthTab):
     def __init__(self, mainWindow=None):
