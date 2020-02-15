@@ -411,6 +411,8 @@ class Actions(object):
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
+            globaloptions['emptyonly'] = self.mainWindow.emptynodesCheckbox.isChecked()
+            globaloptions['paginate'] = self.mainWindow.paginationCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
             level = self.mainWindow.levelEdit.value() - 1
 
@@ -418,6 +420,8 @@ class Actions(object):
             if indexes is None:
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
+                if globaloptions['emptyonly']:
+                    select_filter['childcount'] = 0
                 indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all)
             elif isinstance(indexes,list):
                 indexes = iter(indexes)
@@ -475,10 +479,19 @@ class Actions(object):
                                 jobsin += 1
                                 totalnodes += 1
                                 if index.isValid():
+                                    # Copy node data and options
                                     treenode = index.internalPointer()
+                                    node_data = deepcopy(treenode.data)
+                                    node_options = deepcopy(options)
+
+                                    # Add data of last child, to continue pagination
+                                    if options.get('paginate',False):
+                                        node_options['childdata'] = treenode.getLastChildData()
+
+                                    # Add job
                                     job = {'nodeindex': index,
-                                           'nodedata': deepcopy(treenode.data),
-                                           'options': deepcopy(options)}
+                                           'nodedata': node_data,
+                                           'options': node_options}
                                     threadpool.addJob(job)
                             else:
                                 threadpool.applyJobs()

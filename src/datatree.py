@@ -60,9 +60,7 @@ class DataTree(QTreeView):
             return len(indexes) == model.rootItem.childCount()
 
 
-    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False): #, emptyonly = False
-
-        #emptyonly=filter.get('childcount',None)
+    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False):
         level = filter.get('level', None)
 
         def getLevel(index):
@@ -91,10 +89,6 @@ class DataTree(QTreeView):
         def addIndex(index, selected = False):
             if self.selectionModel().isSelected(index):
                 selected = True
-
-            #if emptyonly:
-            #    child=index.child(0,0)
-            #    append = not child.isValid()
 
             if checkFilter(index) and selected:
                 if persistent:
@@ -203,6 +197,17 @@ class TreeItem(object):
     #    def allIndexes(self):
     #        yield self
     #        for index in self.childItems:
+
+    def getLastChildData(self,status = "fetched (200)", objecttype = "offcut"):
+        if not self.id:
+            return None
+
+        query = Node.query.filter(Node.parent_id == self.id,Node.querystatus == status,Node.objecttype == objecttype)
+        item = query.order_by(Node.id.desc()).limit(1).first()
+        if item is not None:
+            item = self.model.getItemData(item)
+
+        return item
 
 
     def parentid(self):
@@ -536,7 +541,9 @@ class TreeModel(QAbstractItemModel):
         return item.childCountAll() > 0
 
     def getItemData(self, item):
+        """Creates dict for model items (itemdata) from database row (item)"""
         itemdata = {'level': item.level,
+                    'childcount': item.childcount,
                     'objectid': item.objectid,
                     'objecttype': item.objecttype,
                     'querystatus': item.querystatus,

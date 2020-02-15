@@ -320,6 +320,18 @@ class MainWindow(QMainWindow):
         self.typesEdit.setToolTip(wraptip("Based on the selected nodes, only fetch data for nodes with one of the listed object types (normally should not be changed)"))
         fetchsettings.addRow("Object types",self.typesEdit)
 
+        #-Empty nodes
+        self.emptynodesCheckbox = QCheckBox(self)
+        self.emptynodesCheckbox.setCheckState(Qt.Unchecked)
+        self.emptynodesCheckbox.setToolTip(wraptip("Check if you want to fetch data only for nodes without children. This can be used to continue cancelled data collection."))
+        fetchsettings.addRow("Select only empty nodes", self.emptynodesCheckbox)
+
+        #-Continue pagination
+        self.paginationCheckbox = QCheckBox(self)
+        self.paginationCheckbox.setCheckState(Qt.Unchecked)
+        self.paginationCheckbox.setToolTip(wraptip("Check if you want to continue pagination after fetching was cancelled. The last fetched offcut node is used to determine the pagination value. Only works for cursored pagination."))
+        fetchsettings.addRow("Try to continue pagination", self.paginationCheckbox)
+
         # Thread Box
         self.threadsEdit = QSpinBox(self)
         self.threadsEdit.setMinimum(1)

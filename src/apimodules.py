@@ -166,24 +166,27 @@ class ApiTab(QScrollArea):
         """
         urlpath, urlparams = self.parseURL(urlpath)
 
-        #Replace placeholders in params and collect template params
+        # Filter empty params
+        params = {name: params[name] for name in params if (name != '') and (name != '<None>') and (params[name] != '<None>')}
+
+        # Collect template parameters (= placeholders)
         templateparams = {}
         for name in params:
-            #Filter empty params
-            if (name == '<None>') or (params[name] == '<None>') or (name == ''):
-                continue
-
-            # Replace placeholders in parameter value
-            value = self.parsePlaceholders(params[name], nodedata, {},options)
-
-            #check parameter name
             match = re.match(r"^<(.*)>$", str(name))
             if match:
+                # Replace placeholders in parameter value
+                value = self.parsePlaceholders(params[name], nodedata, {}, options)
                 templateparams[match.group(1)] = value
-            else:
-                urlparams[name] = str(value) #.encode("utf-8")
 
-        #Replace placeholders in urlpath
+        # Replace placeholders in parameters
+        for name in params:
+            match = re.match(r"^<(.*)>$", str(name))
+            if not match:
+                # Replace placeholders in parameter value
+                value = self.parsePlaceholders(params[name], nodedata, templateparams, options)
+                urlparams[name] = str(value)
+
+        # Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
 
         return urlpath, urlparams, templateparams
@@ -1262,6 +1265,20 @@ class AuthTab(ApiTab):
             offset = options.get('offset_start', 1)
             options['params'][options.get('param_paging', '')] = offset
 
+        # paging by key (continue previous fetching process based on last fetched child offcut node)
+        elif (options.get('paging_type', 'key') == "key") and (options.get('key_paging', '') is not None) and (options.get('param_paging', '') is not None):
+            childdata = options.get('childdata',None)
+            if childdata is not None:
+                childdata = childdata.get('response',None)
+
+            if isinstance(childdata, dict) and hasDictValue(childdata,options['key_paging']):
+                cursor = getDictValue(childdata, options['key_paging'])
+            else:
+                cursor = None
+
+            if (cursor is not None) and (cursor != ""):
+                options['params'][options['param_paging']] = cursor
+
         # file settings
         foldername, filename, fileext = self.getFileFolderName(options, nodedata)
 
@@ -1324,13 +1341,14 @@ class AuthTab(ApiTab):
                 self.progress({'page': page + 1})
 
             # paging by key
-            if (options.get('paging_type', 'key') == "key"):
-                if (options.get('key_paging', '') is not None) and (
-                        options.get('param_paging', '') is not None) and isinstance(data, dict) and hasDictValue(data,
-                                                                                                                 options[
-                                                                                                                     'key_paging']):
-                    options['params'][options['param_paging']] = getDictValue(data, options['key_paging'])
-                else:
+            if (options.get('paging_type', 'key') == "key") and (options.get('key_paging', '') is not None) and (options.get('param_paging', '') is not None):
+                if not (isinstance(data, dict) and hasDictValue(data,options['key_paging'])):
+                    break
+
+                options['params'][options['param_paging']] = getDictValue(data, options['key_paging'])
+                if options['params'][options['param_paging']] == "":
+                    break
+                if options['params'][options['param_paging']] is None:
                     break
 
             # paging by auto count
