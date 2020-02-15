@@ -1,6 +1,7 @@
 import json
 import os,sys,platform,time
 from base64 import b64encode
+from datetime import datetime
 import re
 import lxml
 import lxml.html
@@ -165,6 +166,8 @@ def extractValue(data, key, dump=True, folder = ""):
 
             elif modifier == 'length':
                 value = len(value)
+            elif modifier == "timestamp":
+                value = [datetime.fromtimestamp(int(x)).isoformat() for x in value]
 
         # If modified in pipeline (otherwise already handled by getDictValue)...
         if dump and (type(value) is dict):
