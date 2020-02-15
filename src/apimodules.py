@@ -958,8 +958,13 @@ class ApiTab(QScrollArea):
                 else:
                     break
 
-        except (HTTPError, ConnectionError) as e:
-            raise Exception("Request Error: {0}".format(str(e)))
+        except (HTTPError, ConnectionError, InvalidURL, MissingSchema) as e:
+            status = 'request error'
+            data = {'error':str(e)}
+            headers = {}
+            return data, headers, status
+            #raise Exception("Request Error: {0}".format(str(e)))
+
         else:
             status = 'fetched' if response.ok else 'error'
             status = status + ' (' + str(response.status_code) + ')'
