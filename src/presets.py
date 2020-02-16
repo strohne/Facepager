@@ -46,61 +46,78 @@ class PresetWindow(QDialog):
         central.addWidget(self.presetList)
         central.setStretchFactor(0, 0)
 
-        #detail view
-        self.detailView=QScrollArea()
-        self.detailView.setWidgetResizable(True)
-        self.detailWidget = QWidget()
-        self.detailWidget.setAutoFillBackground(True)
-        self.detailWidget.setStyleSheet("background-color: rgb(255,255,255);")
+        # category / pipeline
+        self.categoryWidget = QWidget()
+        self.categoryWidget.setAutoFillBackground(True)
+        self.categoryLayout=QVBoxLayout()
+        self.categoryWidget.setLayout(self.categoryLayout)
+
+        self.categoryView=QScrollArea()
+        self.categoryView.setWidgetResizable(True)
+        self.categoryView.setWidget(self.categoryWidget)
+        central.addWidget(self.categoryView)
+        central.setStretchFactor(1, 2)
+
+        # preset widget
+        self.presetWidget = QWidget()
+
+        p = self.presetWidget.palette()
+        p.setColor(self.presetWidget.backgroundRole(), Qt.white)
+        self.presetWidget.setPalette(p)
+        self.presetWidget.setAutoFillBackground(True)
+
+        #self.presetWidget.setStyleSheet("background-color: rgb(255,255,255);")
+        self.presetView=QScrollArea()
+        self.presetView.setWidgetResizable(True)
+        self.presetView.setWidget(self.presetWidget)
+
+        central.addWidget(self.presetView)
+        central.setStretchFactor(2, 2)
 
         #self.detailView.setFrameStyle(QFrame.Box)
-        self.detailLayout=QVBoxLayout()
-        self.detailWidget.setLayout(self.detailLayout)
-        self.detailView.setWidget(self.detailWidget)
-
-        central.addWidget(self.detailView)
-        central.setStretchFactor(1, 2)
+        self.presetLayout=QVBoxLayout()
+        self.presetWidget.setLayout(self.presetLayout)
 
         self.detailName = QLabel('')
         self.detailName.setWordWrap(True)
         self.detailName.setStyleSheet("QLabel  {font-size:15pt;}")
 
-        self.detailLayout.addWidget(self.detailName)
+        self.presetLayout.addWidget(self.detailName)
 
 
         self.detailDescription = TextViewer()
-        self.detailLayout.addWidget(self.detailDescription)
+        self.presetLayout.addWidget(self.detailDescription)
 
 
-        self.detailForm=QFormLayout()
-        self.detailForm.setRowWrapPolicy(QFormLayout.DontWrapRows);
-        self.detailForm.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
-        self.detailForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
-        self.detailForm.setLabelAlignment(Qt.AlignLeft);
-        self.detailLayout.addLayout(self.detailForm,1)
+        self.presetForm=QFormLayout()
+        self.presetForm.setRowWrapPolicy(QFormLayout.DontWrapRows);
+        self.presetForm.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
+        self.presetForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
+        self.presetForm.setLabelAlignment(Qt.AlignLeft);
+        self.presetLayout.addLayout(self.presetForm, 1)
 
         # Module
         self.detailModule = QLabel('')
-        self.detailForm.addRow('<b>Module</b>',self.detailModule)
+        self.presetForm.addRow('<b>Module</b>', self.detailModule)
 
         #Options
         self.detailOptionsLabel = QLabel('<b>Options</b>')        
         self.detailOptionsLabel.setStyleSheet("QLabel {height:25px;}")
         self.detailOptions = TextViewer()
-        self.detailForm.addRow(self.detailOptionsLabel,self.detailOptions)
+        self.presetForm.addRow(self.detailOptionsLabel, self.detailOptions)
 
         # Columns
         self.detailColumnsLabel = QLabel('<b>Columns</b>')        
         self.detailColumnsLabel.setStyleSheet("QLabel {height:25px;}")
         self.detailColumns = TextViewer()
-        self.detailForm.addRow(self.detailColumnsLabel,self.detailColumns)
+        self.presetForm.addRow(self.detailColumnsLabel, self.detailColumns)
 
         # Speed
         self.detailSpeed = QLabel('')
-        self.detailForm.addRow('<b>Speed</b>',self.detailSpeed)
+        self.presetForm.addRow('<b>Speed</b>', self.detailSpeed)
 
         self.detailHeaders = QLabel('')
-        self.detailForm.addRow('<b>Header nodes</b>',self.detailHeaders)
+        self.presetForm.addRow('<b>Header nodes</b>', self.detailHeaders)
         
         # Buttons
         buttons= QHBoxLayout() #QDialogButtonBox()
@@ -141,15 +158,7 @@ class PresetWindow(QDialog):
         self.applyButton.setDefault(True)
         self.applyButton.clicked.connect(self.applyPreset)
         self.applyButton.setToolTip(wraptip("If a single preset is selected: load the selected preset. If a category is selected: Start fetching data with every preset in the selected category, one after another. The node level is increased step by step. Careful: EVERY preset in the category is applied, this will not work with the default presets."))
-
-        #buttons.addButton(self.applyButton,QDialogButtonBox.AcceptRole)
         buttons.addWidget(self.applyButton)
-
-        #buttons.addButton(QDialogButtonBox.Cancel)
-        #buttons.rejected.connect(self.close)
-
-
-        #layout.addWidget(buttons,0)
         layout.addLayout(buttons)
 
         #status bar
@@ -195,7 +204,9 @@ class PresetWindow(QDialog):
         self.detailDescription.setText("")
         self.detailOptions.setText("")
         self.detailColumns.setText("")
-        self.detailWidget.hide()
+
+        self.presetView.hide()
+        self.categoryView.hide()
 
         current = self.presetList.currentItem()
         if current and current.isSelected():
@@ -211,8 +222,9 @@ class PresetWindow(QDialog):
                 self.detailColumns.setText("\r\n".join(data.get('columns', [])))
                 self.detailSpeed.setText(str(data.get('speed','')))
 
-
-                self.detailWidget.show()
+                self.presetView.show()
+            else:
+                self.categoryView.show()
 
     def showPresets(self):
         self.clear()
@@ -235,47 +247,61 @@ class PresetWindow(QDialog):
             data['default'] = default
             data['online'] = online
 
-            data['caption'] = data.get('name')
-            if default:
-                data['caption'] = data['caption'] +" *"
+            if data.get('type','preset') == 'pipeline':
+                data['category'] = data.get('category', 'noname')
+                if not data['category'] in self.categoryNodes:
+                    categoryItem = PresetWidgetItem()
+                    categoryItem.setText(0, data['category'])
 
-            data['category'] = data.get('category','')
-            if (data['category'] == ''):           
-                if (data.get('module') in ['Generic','Files']):
-                    try:                    
-                        data['category'] = data.get('module') + " ("+urlparse(data['options']['basepath']).netloc+")"
-                    except:
-                        data['category'] = data.get('module')
+                    ft = categoryItem.font(0)
+                    ft.setWeight(QFont.Bold)
+                    categoryItem.setFont(0, ft)
+
+                    self.presetList.addTopLevelItem(categoryItem)
                 else:
-                    data['category'] = data.get('module')
+                    categoryItem = self.categoryNodes[data['category']]
 
-
-            if not data['category'] in self.categoryNodes:
-                categoryItem = PresetWidgetItem()
-                categoryItem.setText(0,data['category'])
-
-                ft = categoryItem.font(0)
-                ft.setWeight(QFont.Bold)
-                categoryItem.setFont(0,ft)
-
-                categoryItem.setData(0,Qt.UserRole,{'iscategory':True,'name':data['module'],'category':data['category']})
-
-
-                self.presetList.addTopLevelItem(categoryItem)
-                self.categoryNodes[data['category']] = categoryItem
+                data['iscategory'] = True
+                categoryItem.setData(0, Qt.UserRole,data)
 
             else:
-                categoryItem = self.categoryNodes[data['category']]
+                data['caption'] = data.get('name')
+                if default:
+                    data['caption'] = data['caption'] +" *"
 
-            newItem = PresetWidgetItem()
-            newItem.setText(0,data['caption'])
-            newItem.setData(0,Qt.UserRole,data)
-            if default:
-                newItem.setForeground(0,QBrush(QColor("darkblue")))
+                data['category'] = data.get('category','')
+                if (data['category'] == ''):
+                    if (data.get('module') in ['Generic','Files']):
+                        try:
+                            data['category'] = data.get('module') + " ("+urlparse(data['options']['basepath']).netloc+")"
+                        except:
+                            data['category'] = data.get('module')
+                    else:
+                        data['category'] = data.get('module')
 
 
+                if not data['category'] in self.categoryNodes:
+                    categoryItem = PresetWidgetItem()
+                    categoryItem.setText(0,data['category'])
 
-            categoryItem.addChild(newItem)
+                    ft = categoryItem.font(0)
+                    ft.setWeight(QFont.Bold)
+                    categoryItem.setFont(0,ft)
+
+                    categoryItem.setData(0,Qt.UserRole,{'iscategory':True,'name':data['module'],'category':data['category']})
+
+                    self.presetList.addTopLevelItem(categoryItem)
+                    self.categoryNodes[data['category']] = categoryItem
+
+                else:
+                    categoryItem = self.categoryNodes[data['category']]
+
+                newItem = PresetWidgetItem()
+                newItem.setText(0,data['caption'])
+                newItem.setData(0,Qt.UserRole,data)
+                if default:
+                    newItem.setForeground(0,QBrush(QColor("darkblue")))
+                categoryItem.addChild(newItem)
 
             #self.presetList.setCurrentItem(newItem,0)
             QApplication.processEvents()
@@ -286,11 +312,10 @@ class PresetWindow(QDialog):
              QMessageBox.information(self,"Facepager","Error loading preset:"+str(e))
              return None
 
-
-
     def clear(self):
         self.presetList.clear()
-        self.detailWidget.hide()
+        self.presetView.hide()
+        self.categoryView.hide()
         self.loadingIndicator.show()
 
     def checkDefaultFiles(self):
@@ -353,7 +378,9 @@ class PresetWindow(QDialog):
         #self.defaultPresetFolder
         self.categoryNodes = {}
         self.presetList.clear()
-        self.detailWidget.hide()
+        self.presetView.hide()
+        self.categoryView.hide()
+
         selectitem = None
 
         while not self.presetsDownloaded:
