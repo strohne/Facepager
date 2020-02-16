@@ -1272,17 +1272,26 @@ class AuthTab(ApiTab):
 
         # paging by key (continue previous fetching process based on last fetched child offcut node)
         elif (options.get('paging_type', 'key') == "key") and (options.get('key_paging', '') is not None) and (options.get('param_paging', '') is not None):
+            # Get last offcut data
             childdata = options.get('childdata',None)
             if childdata is not None:
                 childdata = childdata.get('response',None)
 
+            # Get last cursor
             if isinstance(childdata, dict) and hasDictValue(childdata,options['key_paging']):
                 cursor = getDictValue(childdata, options['key_paging'])
+                cursor = None if (cursor == "") else cursor
             else:
                 cursor = None
 
-            if (cursor is not None) and (cursor != ""):
+            # Dont't fetch if already finished (=offcut without next cursor)
+            if options.get('paginate',False) and (childdata is not None) and (cursor is None):
+                return False
+
+            # Continue / start fetching
+            elif (cursor is not None) :
                 options['params'][options['param_paging']] = cursor
+
 
         # file settings
         foldername, filename, fileext = self.getFileFolderName(options, nodedata)

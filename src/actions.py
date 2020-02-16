@@ -411,7 +411,7 @@ class Actions(object):
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
-            globaloptions['emptyonly'] = self.mainWindow.emptynodesCheckbox.isChecked()
+            #globaloptions['emptyonly'] = self.mainWindow.emptynodesCheckbox.isChecked()
             globaloptions['paginate'] = self.mainWindow.paginationCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
             level = self.mainWindow.levelEdit.value() - 1
@@ -420,8 +420,8 @@ class Actions(object):
             if indexes is None:
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
-                if globaloptions['emptyonly']:
-                    select_filter['childcount'] = 0
+                # if globaloptions['emptyonly']:
+                #     select_filter['childcount'] = 0
                 indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all)
             elif isinstance(indexes,list):
                 indexes = iter(indexes)
@@ -634,6 +634,8 @@ class Actions(object):
                 self.mainWindow.logmessage("{}, {} new node(s) created. Summary of responses: {}.".format(request_end, self.mainWindow.tree.treemodel.nodecounter,request_summary))
 
                 self.mainWindow.tree.treemodel.commitNewNodes()
+        except Exception as e:
+            self.mainWindow.logmessage("Error in scheduler, fetching aborted: {}.".format(str(e)))
         finally:
             progress.close()
             return not progress.wasCanceled
