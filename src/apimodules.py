@@ -37,6 +37,7 @@ try:
     from credentials import *
 except ImportError:
     credentials = {}
+    proxies = {}
 
 class ApiTab(QScrollArea):
     """
@@ -866,6 +867,7 @@ class ApiTab(QScrollArea):
         with self.lock_session:
             if not hasattr(self, "session"):
                 self.session = requests.Session()
+                self.session.proxies.update(proxies)
                 self.session.mount('file://', LocalFileAdapter())
 
         return self.session
