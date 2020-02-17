@@ -60,7 +60,7 @@ class DataTree(QTreeView):
             return len(indexes) == model.rootItem.childCount()
 
 
-    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False):
+    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, key_paging = None):
         level = filter.get('level', None)
 
         def getLevel(index):
@@ -77,12 +77,25 @@ class DataTree(QTreeView):
             if not index.isValid():
                 return False
 
+            # Object types
             treeitem = index.internalPointer()
             for key, value in filter.items():
                 if treeitem.data is not None and treeitem.data[key] is not None:
                     orlist = value if type(value) is list else [value]
                     if not treeitem.data[key] in orlist:
                         return False
+
+            # Dont't fetch if already finished (=has offcut without next cursor)
+            if (key_paging is not None) and (treeitem.childCountAll() > 0):
+                # Get cursor of last offcut node
+                treeitem.offcut = treeitem.getLastChildData()
+                response = getDictValueOrNone(treeitem.offcut, 'response', dump=False)
+                cursor = getDictValueOrNone(response, key_paging)
+
+                if (treeitem.offcut is not None) and (cursor is None):
+                    return False
+            else:
+                treeitem.offcut = None
 
             return True
 
@@ -186,9 +199,11 @@ class TreeItem(object):
                     dbnode.childcount -= 1
 
     def childCount(self):
+        """Return number of loaded children"""
         return len(self.childItems)
 
     def childCountAll(self):
+        """Return number of children in database"""
         if not self._childcountallloaded:
             self._childcountall = Node.query.filter(Node.parent_id == self.id).count()
             self._childcountallloaded = True

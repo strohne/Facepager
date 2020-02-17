@@ -402,7 +402,7 @@ class Actions(object):
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
-            #Get global options
+            # Get global options
             globaloptions = {}
             globaloptions['threads'] = self.mainWindow.threadsEdit.value()
             globaloptions['speed'] = self.mainWindow.speedEdit.value()
@@ -411,26 +411,31 @@ class Actions(object):
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
-            #globaloptions['emptyonly'] = self.mainWindow.emptynodesCheckbox.isChecked()
             globaloptions['paginate'] = self.mainWindow.paginationCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
             level = self.mainWindow.levelEdit.value() - 1
+
+            # Get module option
+            if isinstance(apimodule,str):
+                apimodule = self.mainWindow.getModule(apimodule)
+            if apimodule == False:
+                apimodule = self.mainWindow.RequestTabs.currentWidget()
+            if options == False:
+                options = apimodule.getOptions()
+
+            options.update(globaloptions)
+
 
             #Get selected nodes
             if indexes is None:
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
-                # if globaloptions['emptyonly']:
-                #     select_filter['childcount'] = 0
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all)
+                key_paging =  options.get('key_paging',None) if globaloptions['paginate'] else None
+                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, key_paging)
             elif isinstance(indexes,list):
                 indexes = iter(indexes)
 
-            # if (len(indexes) == 0):
-            #     return (False)
-
-            #Update progress window
-            #self.mainWindow.logmessage("Start fetching data for {} node(s).".format(len(indexes)))
+            # Update progress window
             self.mainWindow.logmessage("Start fetching data.")
             totalnodes = 0
             hasindexes = True
@@ -443,15 +448,6 @@ class Actions(object):
             ratelimitcount = 0
             allowedstatus = ['fetched (200)','downloaded (200)','fetched (202)','stream'] #,'error (400)'
 
-
-            if isinstance(apimodule,str):
-                apimodule = self.mainWindow.getModule(apimodule)
-            if apimodule == False:
-                apimodule = self.mainWindow.RequestTabs.currentWidget()
-            if options == False:
-                options = apimodule.getOptions()
-
-            options.update(globaloptions)
 
             try:
                 #Spawn Threadpool
@@ -483,10 +479,7 @@ class Actions(object):
                                     treenode = index.internalPointer()
                                     node_data = deepcopy(treenode.data)
                                     node_options = deepcopy(options)
-
-                                    # Add data of last child, to continue pagination
-                                    if options.get('paginate',False):
-                                        node_options['childdata'] = treenode.getLastChildData()
+                                    node_options['offcutdata'] = treenode.offcut if hasattr(treenode, 'offcut') else None
 
                                     # Add job
                                     job = {'nodeindex': index,

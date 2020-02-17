@@ -182,11 +182,12 @@ def extractValue(data, key, dump=True, folder = ""):
     except Exception as e:
         return (None, "")
 
-def getDictValue(data, multikey, dump=True):
+def getDictValue(data, multikey, dump=True, default = ''):
     """Extract value from dict
     :param data:
     :param multikey:
     :param dump:
+    :param default:
     :return:
     """
     try:
@@ -204,7 +205,7 @@ def getDictValue(data, multikey, dump=True):
                     for elem in data:
                         value.append(getDictValue(data[elem],listkey,dump))
                 else:
-                    value = ''
+                    value = default
 
         elif type(data) is list and keys[0] != '':
             try:
@@ -236,7 +237,19 @@ def getDictValue(data, multikey, dump=True):
         return value
 
     except Exception as e:
-        return ""
+        return default
+
+def getDictValueOrNone(data, key, dump = True):
+    # Get last cursor
+    if (key is None) or (key == ''):
+        value = None
+    elif isinstance(data, dict) and hasDictValue(data, key):
+        value = getDictValue(data, key,  dump=dump, default=None)
+        value = None if (value == "") else value
+    else:
+        value = None
+
+    return value
 
 def filterDictValue(data, multikey, dump=True, piped=False):
     try:

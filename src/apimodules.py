@@ -1271,21 +1271,13 @@ class AuthTab(ApiTab):
             options['params'][options.get('param_paging', '')] = offset
 
         # paging by key (continue previous fetching process based on last fetched child offcut node)
-        elif (options.get('paging_type', 'key') == "key") and (options.get('key_paging', '') is not None) and (options.get('param_paging', '') is not None):
-            # Get last offcut data
-            childdata = options.get('childdata',None)
-            if childdata is not None:
-                childdata = childdata.get('response',None)
-
-            # Get last cursor
-            if isinstance(childdata, dict) and hasDictValue(childdata,options['key_paging']):
-                cursor = getDictValue(childdata, options['key_paging'])
-                cursor = None if (cursor == "") else cursor
-            else:
-                cursor = None
+        elif (options.get('paging_type', 'key') == "key") and (options.get('key_paging', None) is not None) and (options.get('param_paging', None) is not None):
+            # Get cursor of last offcut node
+            offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
+            cursor = getDictValueOrNone(offcut,options['key_paging'])
 
             # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('paginate',False) and (childdata is not None) and (cursor is None):
+            if options.get('paginate',False) and (offcut is not None) and (cursor is None):
                 return False
 
             # Continue / start fetching
@@ -1356,14 +1348,10 @@ class AuthTab(ApiTab):
 
             # paging by key
             if (options.get('paging_type', 'key') == "key") and (options.get('key_paging', '') is not None) and (options.get('param_paging', '') is not None):
-                if not (isinstance(data, dict) and hasDictValue(data,options['key_paging'])):
+                cursor = getDictValueOrNone(data, options['key_paging'])
+                if cursor is None:
                     break
-
-                options['params'][options['param_paging']] = getDictValue(data, options['key_paging'])
-                if options['params'][options['param_paging']] == "":
-                    break
-                if options['params'][options['param_paging']] is None:
-                    break
+                options['params'][options['param_paging']] = cursor
 
             # paging by auto count
             elif (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
@@ -1373,6 +1361,7 @@ class AuthTab(ApiTab):
                 break
             if not self.connected:
                 break
+        return True
 
     @Slot()
     def doLogin(self):
