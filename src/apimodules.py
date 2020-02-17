@@ -21,6 +21,7 @@ from rauth import OAuth1Service
 from requests_oauthlib import OAuth2Session
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 import cchardet
+import json
 
 if sys.version_info.major < 3:
     from urllib import url2pathname
@@ -37,7 +38,6 @@ try:
     from credentials import *
 except ImportError:
     credentials = {}
-    proxies = {}
 
 class ApiTab(QScrollArea):
     """
@@ -863,11 +863,27 @@ class ApiTab(QScrollArea):
     def onChangedParam(self,index=0):
         pass
 
+    def getProxies(self):
+        if not hasattr(self,"proxies"):
+            try:
+                filename = os.path.join(os.path.expanduser("~"), 'Facepager','proxies.json')
+                if os.path.exists(filename):
+                    with open(filename, 'r', encoding='utf-8') as f:
+                        self.proxies = json.load(f)
+                else:
+                    self.proxies = {}
+            except Exception as e:
+                self.logMessage("Error loading proxies: {}".format(str(e)))
+                self.proxies = {}
+
+        return self.proxies
+
+
     def initSession(self):
         with self.lock_session:
             if not hasattr(self, "session"):
                 self.session = requests.Session()
-                self.session.proxies.update(proxies)
+                self.session.proxies.update(self.getProxies())
                 self.session.mount('file://', LocalFileAdapter())
 
         return self.session
@@ -1367,8 +1383,7 @@ class AuthTab(ApiTab):
 
     @Slot()
     def doLogin(self):
-        if hasattr(self, "session"):
-            del self.session
+        self.closeSession()
 
         if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
             self.doTwitterAppLogin()
