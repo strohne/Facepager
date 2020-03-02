@@ -16,6 +16,8 @@ Facepager depends on the following packages:
 - lxml: pip install lxml (BSD licence)
 - xmljson pip install xmljson (MIT licence)
 - cchardet: pip install cchardet (GPL, LGPL, MPL 1.1)
+- json
+- datetime
 
 Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
