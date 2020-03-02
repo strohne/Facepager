@@ -1641,11 +1641,11 @@ class FacebookTab(AuthTab):
         self.speed = options.get('speed',None)
         self.progress = logProgress
 
-        # Abort condition for time based pagination
-        since = options['params'].get('since', False)
-        if (since != False):
-            since = dateutil.parser.parse(since, yearfirst=True, dayfirst=False)
-            since = int((since - datetime(1970, 1, 1)).total_seconds())
+        # # Abort condition for time based pagination
+        # since = options['params'].get('since', False)
+        # if (since != False):
+        #     since = dateutil.parser.parse(since, yearfirst=True, dayfirst=False)
+        #     since = int((since - datetime(1970, 1, 1)).total_seconds())
 
         # Abort condition: maximum page count
         for page in range(options.get('currentpage', 0), options.get('pages', 1)):
@@ -1712,10 +1712,10 @@ class FacebookTab(AuthTab):
             if hasDictValue(data, 'paging.next'):
                 url, params = self.parseURL(getDictValue(data, 'paging.next', False))
 
-                # abort time based pagination
-                until = params.get('until', False)
-                if (since != False) and (until != False) and (int(until) < int(since)):
-                    break
+                # # abort time based pagination
+                # until = params.get('until', False)
+                # if (since != False) and (until != False) and (int(until) < int(since)):
+                #     break
 
                 options['params'] = params
                 options['url'] = url
