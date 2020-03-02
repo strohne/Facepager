@@ -17,6 +17,8 @@ from utilities import *
 from progressbar import ProgressBar
 
 class ApiViewer(QDialog):
+    logmessage = Signal(str)
+
     def __init__(self, parent=None):
         super(ApiViewer,self).__init__(parent)
 
@@ -393,12 +395,12 @@ class ApiViewer(QDialog):
                     if progress is not None:
                         progress.step()
 
-                self.mainWindow.logmessage("Default API definitions downloaded from GitHub.")
+                self.logmessage.emit("Default API definitions downloaded from GitHub.")
             except Exception as e:
                 if not silent:
                     QMessageBox.information(self,"Facepager","Error downloading default API definitions:"+str(e))
 
-                self.mainWindow.logmessage("Error downloading default API definitions:"+str(e))
+                self.logmessage.emit("Error downloading default API definitions:"+str(e))
 
                 return False
             else:

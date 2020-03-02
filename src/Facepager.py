@@ -103,7 +103,9 @@ class MainWindow(QMainWindow):
 
         self.helpwindow=HelpWindow(self)
         self.presetWindow=PresetWindow(self)
+        self.presetWindow.logmessage.connect(self.logmessage)
         self.apiWindow = ApiViewer(self)
+        self.apiWindow.logmessage.connect(self.logmessage)
         self.dataWindow = DataViewer(self)
         self.timerWindow=TimerWindow(self)
         #self.selectNodesWindow=SelectNodesWindow(self,self.tree)
