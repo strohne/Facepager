@@ -285,23 +285,25 @@ class ApiTab(QScrollArea):
 
         try:
             options['paging_type'] = self.pagingTypeEdit.currentText().strip() if self.pagingTypeEdit.currentText() != "" else self.defaults.get('paging_type', '')
-            options['key_paging'] = self.pagingkeyEdit.currentText() if self.pagingkeyEdit.currentText() != "" else self.defaults.get('key_paging',None)
-            options['param_paging'] = self.pagingparamEdit.currentText() if self.pagingparamEdit.currentText() != "" else self.defaults.get('param_paging',None)
+            options['key_paging'] = self.pagingkeyEdit.text() if self.pagingkeyEdit.text() != "" else self.defaults.get('key_paging',None)
+            options['paging_stop'] = self.pagingstopEdit.text()
+            options['param_paging'] = self.pagingparamEdit.text() if self.pagingparamEdit.text() != "" else self.defaults.get('param_paging',None)
             options['offset_start'] = self.offsetStartEdit.value()
             options['offset_step'] = self.offsetStepEdit.value()
+
 
         except AttributeError:
             options['paging_type'] = self.defaults.get('paging_type',None)
             options['key_paging'] = self.defaults.get('key_paging',None)
+            options['paging_stop'] = ''
             options['param_paging'] = self.defaults.get('param_paging',None)
             options['offset_start'] = 1
             options['offset_step'] = 1
 
-                    
         #options for data handling
         try:
-            options['nodedata'] = self.extractEdit.currentText() if self.extractEdit.currentText() != "" else self.defaults.get('key_objectid',None)
-            options['objectid'] = self.objectidEdit.currentText() if self.objectidEdit.currentText() != "" else self.defaults.get('key_nodedata',None)
+            options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else self.defaults.get('key_objectid',None)
+            options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else self.defaults.get('key_nodedata',None)
         except AttributeError:
             options['objectid'] = self.defaults.get('key_objectid',None)
             options['nodedata'] = self.defaults.get('key_nodedata',None)
@@ -422,8 +424,9 @@ class ApiTab(QScrollArea):
         
         try:
             self.pagingTypeEdit.setCurrentIndex(self.pagingTypeEdit.findText(options.get('paging_type', self.defaults.get('paging_type', 'key'))))
-            self.pagingkeyEdit.setEditText(options.get('key_paging', ''))
-            self.pagingparamEdit.setEditText(options.get('param_paging', ''))
+            self.pagingkeyEdit.setText(options.get('key_paging', ''))
+            self.pagingstopEdit.setText(options.get('paging_stop', ''))
+            self.pagingparamEdit.setText(options.get('param_paging', ''))
             self.offsetStartEdit.setValue(int(options.get('offset_start', 1)))
             self.offsetStepEdit.setValue(int(options.get('offset_step', 1)))
             self.pagingChanged()
@@ -432,8 +435,8 @@ class ApiTab(QScrollArea):
         
         # Extract options
         try:
-            self.extractEdit.setEditText(options.get('nodedata', ''))
-            self.objectidEdit.setEditText(options.get('objectid', ''))            
+            self.extractEdit.setText(options.get('nodedata', ''))
+            self.objectidEdit.setText(options.get('objectid', ''))
         except AttributeError:
             pass
                 
@@ -678,9 +681,8 @@ class ApiTab(QScrollArea):
             layout.setStretch(0, 0)
 
             layout.addWidget(QLabel("Param"))
-            self.pagingparamEdit = QComboBox(self)
-            self.pagingparamEdit.setEditable(True)
-            self.pagingparamEdit.setToolTip(wraptip("This parameter will be added to the query and filled with the page value."))
+            self.pagingparamEdit = QLineEdit(self)
+            self.pagingparamEdit.setToolTip(wraptip("This parameter will be added to the query. The value is extracted by the paging key."))
             layout.addWidget(self.pagingparamEdit)
             layout.setStretch(1, 0)
             layout.setStretch(2, 1)
@@ -692,9 +694,8 @@ class ApiTab(QScrollArea):
             self.pagingKeyWidget.setLayout(self.pagingKeyLayout)
 
             self.pagingKeyLayout.addWidget(QLabel("Paging key"))
-            self.pagingkeyEdit = QComboBox(self)
-            self.pagingkeyEdit.setEditable(True)
-            self.pagingkeyEdit.setToolTip(wraptip("If the respsonse contains data about the next page, set the key. The value will be added as paging parameter."))
+            self.pagingkeyEdit = QLineEdit(self)
+            self.pagingkeyEdit.setToolTip(wraptip("If the respsonse contains data about the next page, specify the key. The value will be added as paging parameter."))
             self.pagingKeyLayout.addWidget(self.pagingkeyEdit)
             self.pagingKeyLayout.setStretch(0, 0)
             self.pagingKeyLayout.setStretch(1, 1)
@@ -736,6 +737,14 @@ class ApiTab(QScrollArea):
             layout.addWidget(self.pagesEdit)
             layout.setStretch(5, 0)
             layout.setStretch(6, 0)
+
+            # Stop if
+            layout.addWidget(QLabel("Stop key"))
+            self.pagingstopEdit = QLineEdit(self)
+            self.pagingstopEdit.setToolTip(wraptip("Stops fetching data as soon as the given key is present but empty or false. For example, stops fetching if the value of 'hasNext' ist false, none or an empty list. Usually you can leave the field blank, since fetching will stop anyway when the paging key is empty."))
+            layout.addWidget(self.pagingstopEdit)
+            layout.setStretch(7, 0)
+            layout.setStretch(8, 1)
 
             rowcaption = "Paging"
 
@@ -829,14 +838,12 @@ class ApiTab(QScrollArea):
         layout= QHBoxLayout()
         
         #Extract
-        self.extractEdit = QComboBox(self)
-        self.extractEdit.setEditable(True)
+        self.extractEdit = QLineEdit(self)
         layout.addWidget(self.extractEdit)
         layout.setStretch(0, 1)
 
         layout.addWidget(QLabel("Key for Object ID"))
-        self.objectidEdit = QComboBox(self)
-        self.objectidEdit.setEditable(True)
+        self.objectidEdit = QLineEdit(self)
         layout.addWidget(self.objectidEdit)
         layout.setStretch(2, 1)
                     
@@ -1289,13 +1296,14 @@ class AuthTab(ApiTab):
             options['params'][options.get('param_paging', '')] = offset
 
         # paging by key (continue previous fetching process based on last fetched child offcut node)
-        elif (options.get('paging_type', 'key') == "key") and (options.get('key_paging', None) is not None) and (options.get('param_paging', None) is not None):
+        elif (options.get('paging_type', 'key') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
             # Get cursor of last offcut node
             offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
-            cursor = getDictValueOrNone(offcut,options['key_paging'])
+            cursor = getDictValueOrNone(offcut,options.get('key_paging'))
+            stopvalue = not extractValue(offcut,options.get('paging_stop'), dump = False, default = True)[1]
 
             # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('paginate',False) and (offcut is not None) and (cursor is None):
+            if options.get('paginate',False) and (offcut is not None) and ((cursor is None) or stopvalue):
                 return False
 
             # Continue / start fetching
@@ -1364,19 +1372,29 @@ class AuthTab(ApiTab):
             if self.progress is not None:
                 self.progress({'page': page + 1})
 
+            # Stop if result is empty
+            if (options['nodedata'] is not None) and not hasValue(data,options['nodedata']):
+                break
+
             # paging by key
-            if (options.get('paging_type', 'key') == "key") and (options.get('key_paging', '') is not None) and (options.get('param_paging', '') is not None):
+            if (options.get('paging_type', 'key') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
                 cursor = getDictValueOrNone(data, options['key_paging'])
                 if cursor is None:
                     break
+
+                stopvalue = not extractValue(data, options.get('paging_stop'), dump = False, default=True)[1]
+                if stopvalue:
+                    break
+
                 options['params'][options['param_paging']] = cursor
 
             # paging by auto count
-            elif (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
+            elif (options.get('paging_type', 'key') == "count") and (options.get('param_paging') is not None):
                 offset = offset + options.get('offset_step', 1)
                 options['params'][options['param_paging']] = offset
             else:
                 break
+
             if not self.connected:
                 break
         return True
@@ -2476,16 +2494,14 @@ class GenericTab(AuthTab):
 
         # Extract
         layout.addWidget(QLabel("Key to extract"))
-        self.extractEdit = QComboBox(self)
-        self.extractEdit.setEditable(True)
+        self.extractEdit = QLineEdit(self)
         self.extractEdit.setToolTip(wraptip("If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
         layout.addWidget(self.extractEdit)
         layout.setStretch(1, 0)
         layout.setStretch(2, 2)
 
         layout.addWidget(QLabel("Key for Object ID"))
-        self.objectidEdit = QComboBox(self)
-        self.objectidEdit.setEditable(True)
+        self.objectidEdit = QLineEdit(self)
         self.objectidEdit.setToolTip(wraptip("If your data contains unique IDs for every node, define the corresponding key."))
         layout.addWidget(self.objectidEdit)
         layout.setStretch(3, 0)
