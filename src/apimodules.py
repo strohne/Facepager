@@ -728,6 +728,14 @@ class ApiTab(QScrollArea):
             layout.addWidget(self.pagingStepsWidget)
             layout.setStretch(4, 1)
 
+            # Stop if
+            layout.addWidget(QLabel("Stop key"))
+            self.pagingstopEdit = QLineEdit(self)
+            self.pagingstopEdit.setToolTip(wraptip("Stops fetching data as soon as the given key is present but empty or false. For example, stops fetching if the value of 'hasNext' ist false, none or an empty list. Usually you can leave the field blank, since fetching will stop anyway when the paging key is empty."))
+            layout.addWidget(self.pagingstopEdit)
+            layout.setStretch(5, 0)
+            layout.setStretch(6, 1)
+
             #Page count
             layout.addWidget(QLabel("Maximum pages"))
             self.pagesEdit = QSpinBox(self)
@@ -735,16 +743,8 @@ class ApiTab(QScrollArea):
             self.pagesEdit.setMaximum(50000)
             self.pagesEdit.setToolTip(wraptip("Number of maximum pages."))
             layout.addWidget(self.pagesEdit)
-            layout.setStretch(5, 0)
-            layout.setStretch(6, 0)
-
-            # Stop if
-            layout.addWidget(QLabel("Stop key"))
-            self.pagingstopEdit = QLineEdit(self)
-            self.pagingstopEdit.setToolTip(wraptip("Stops fetching data as soon as the given key is present but empty or false. For example, stops fetching if the value of 'hasNext' ist false, none or an empty list. Usually you can leave the field blank, since fetching will stop anyway when the paging key is empty."))
-            layout.addWidget(self.pagingstopEdit)
             layout.setStretch(7, 0)
-            layout.setStretch(8, 1)
+            layout.setStretch(8, 0)
 
             rowcaption = "Paging"
 
