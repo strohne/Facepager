@@ -90,7 +90,19 @@ def parseKey(key):
     return (name, key, pipeline)
 
 
-def extractValue(data, key, dump=True, folder = ""):
+def hasValue(data,key):
+    name, value = extractValue(data, key, False)
+    if (value is None):
+        return False
+    elif (value == False):
+        return False
+    elif (type(value) is list) and (len(value) == 0):
+        return False
+    else:
+        return True
+
+
+def extractValue(data, key, dump=True, folder="", default=''):
     """Extract value from dict and pipe through modifiers
     :param data:
     :param multikey:
@@ -102,7 +114,7 @@ def extractValue(data, key, dump=True, folder = ""):
         name, key, pipeline = parseKey(key)
 
         # Input: dict. Output: string, number, list or dict
-        value = getDictValue(data, key, dump)
+        value = getDictValue(data, key, dump, default)
 
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
@@ -125,6 +137,16 @@ def extractValue(data, key, dump=True, folder = ""):
                             value += item
                         else:
                             value.append(item)
+
+            elif modifier.startswith('not:'):
+                selector = modifier[4:]
+                check = [x == selector for x in value]
+                value = not any(check)
+
+            elif modifier.startswith('is:'):
+                selector = modifier[3:]
+                check = [x == selector for x in value]
+                value = any(check)
 
             elif modifier.startswith('re:'):
                 # Input: list of strings.
@@ -180,7 +202,7 @@ def extractValue(data, key, dump=True, folder = ""):
         return (name, value)
 
     except Exception as e:
-        return (None, "")
+        return (None, default)
 
 def getDictValue(data, multikey, dump=True, default = ''):
     """Extract value from dict
@@ -197,13 +219,13 @@ def getDictValue(data, multikey, dump=True, default = ''):
             try:
                 value=data[keys[0]]
                 if len(keys) > 1:
-                    value = getDictValue(value,keys[1],dump)
+                    value = getDictValue(value,keys[1],dump, default)
             except:
                 if keys[0] == '*':
                     listkey = keys[1] if len(keys) > 1 else ''
                     value=[]
                     for elem in data:
-                        value.append(getDictValue(data[elem],listkey,dump))
+                        value.append(getDictValue(data[elem],listkey,dump, default))
                 else:
                     value = default
 
@@ -211,7 +233,7 @@ def getDictValue(data, multikey, dump=True, default = ''):
             try:
                 value=data[int(keys[0])]
                 if len(keys) > 1:
-                    value = getDictValue(value,keys[1],dump)
+                    value = getDictValue(value,keys[1],dump, default)
             except:
                 if keys[0] == '*':
                     listkey = keys[1] if len(keys) > 1 else ''
@@ -220,10 +242,9 @@ def getDictValue(data, multikey, dump=True, default = ''):
 
                 value=[]
                 for elem in data:
-                    value.append(getDictValue(elem, listkey, dump))
-
+                    value.append(getDictValue(elem, listkey, dump, default))
         else:
-            value = data
+            value = default
 
         if dump and (type(value) is dict):
             value = json.dumps(value)
@@ -240,16 +261,16 @@ def getDictValue(data, multikey, dump=True, default = ''):
         return default
 
 def getDictValueOrNone(data, key, dump = True):
-    # Get last cursor
     if (key is None) or (key == ''):
-        value = None
-    elif isinstance(data, dict) and hasDictValue(data, key):
-        value = getDictValue(data, key,  dump=dump, default=None)
-        value = None if (value == "") else value
+        return None
+    elif not (isinstance(data, dict)):
+        return None
+    elif not hasDictValue(data, key, piped=True):
+        return None
     else:
-        value = None
-
-    return value
+        name, value = extractValue(data, key, dump=dump, default=None)
+        value = None if (value == "") else value
+        return value
 
 def filterDictValue(data, multikey, dump=True, piped=False):
     try:
