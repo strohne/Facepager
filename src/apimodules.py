@@ -2368,7 +2368,8 @@ class TwitterTab(AuthTab):
 
             # manual paging with max-id
             # if there are still statuses in the response, use the last ID-1 for further pagination
-            elif isinstance(data, list) and (len(data) >= int(urlparams.get('count',1))):
+            #elif isinstance(data, list) and (len(data) >= int(urlparams.get('count',1))):
+            elif isinstance(data, list) and (len(data) > 0):
                 options['params']['max_id'] = int(data[-1]["id"]) - 1
                 paging = True
 
