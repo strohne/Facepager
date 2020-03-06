@@ -1437,12 +1437,15 @@ class AuthTab(ApiTab):
     def doOAuth1Login(self):
         try:
             self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get(
-                'consumer_key')
+                'consumer_key','')
             self.oauth1service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get(
-                'consumer_secret')
+                'consumer_secret','')
 
-            if self.oauth1service.consumer_key == '' or self.oauth1service.consumer_secret == '':
-                raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
+            if self.oauth1service.consumer_key == '':
+                raise Exception('Consumer key is missing, please adjust settings!')
+
+            if self.oauth1service.consumer_secret == '':
+                raise Exception('Consumer secret is missing, please adjust settings!')
 
             self.oauthdata.pop('oauth_verifier', None)
             self.oauthdata['requesttoken'], self.oauthdata[
@@ -1496,8 +1499,7 @@ class AuthTab(ApiTab):
         try:
             options = self.getOptions()
 
-            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id',
-                                                                                                         '')
+            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
             scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
             loginurl = options.get('auth_uri', '')
 
