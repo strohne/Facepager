@@ -539,7 +539,7 @@
 					{
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "A comma-separated list of Page nodes, each representing an individual Facebook Page.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -876,7 +876,7 @@
 					{
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "An array of Page objects, each representing an individual location for the business.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -1213,7 +1213,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "A comma-separated list of LifeEvent-Nodes.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -1304,7 +1304,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "A list of Photo-Nodes, each representing a photo on Facebook.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -1431,7 +1431,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "An array of Posts objects, each representing a single post in a feed.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -1581,7 +1581,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "A list of Video nodes, each representing an individual video on Facebook.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -1846,7 +1846,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "An array of Comment objects.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -2043,7 +2043,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "A list of Post objects representing each of the shares.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -2183,7 +2183,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "An array of Comment objects.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
@@ -2277,7 +2277,7 @@
                     {
                       "name" : "fields",
                       "in" : "query",
-                      "description" : "An array of Comment objects.",
+                      "description" : "A comma-separated list of fields (see response fields).",
                       "schema" : {
                         "type" : "array",
                         "items" : {
