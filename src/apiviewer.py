@@ -291,7 +291,21 @@ class ApiViewer(QDialog):
                             paramname = param.get('name')
                             if param.get('in','query') == 'path':
                                 paramname = '<'+paramname+'>'
-                            self.addDetailRow(paramname,param.get('description'))
+
+                            # Description
+                            description = param.get('description')
+
+                            # Options
+                            schema = param.get('schema',{})
+                            items = schema.get('items', {}) if schema.get('type') == 'array' else schema
+                            enum = items.get('enum', [])
+                            oneof = [value.get('const', '') for value in  items.get('oneOf', [])]
+                            bool = ['0','1'] if items.get('type') == 'boolean' else []
+                            options = ",".join(enum+oneof+bool)
+                            if options != '':
+                                description += "\n\nOptions: "+options
+
+                            self.addDetailRow(paramname, description)
 
                     # Response
                     self.addDetailTable('Response')
