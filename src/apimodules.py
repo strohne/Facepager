@@ -2345,8 +2345,8 @@ class TwitterTab(AuthTab):
 
             if hasDictValue(data,'results'):
                 options['nodedata'] = 'results'
-            else:
-                options['nodedata'] = None
+            #else:
+            #    options['nodedata'] = None
 
             logData(data, options, headers)
             if self.progress is not None:
