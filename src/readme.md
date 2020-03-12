@@ -1,4 +1,4 @@
-# General notes
+pip install -U requests[socks]# General notes
 
 Facepager 4 is developed for Python 3.7 (64 bit) and PySide2 (Qt5)
 
@@ -10,6 +10,7 @@ Facepager depends on the following packages:
 - requests: pip install requests (Apache2 License)
 - requests_oauthlib: pip install requests_oauthlib (ISC License, equivalent to the BSD 2-Clause and MIT licenses)
 - requests[security]: pip install -U requests[security]==2.7.0
+- requests[socks]: pip install -U requests[socks]
 - requests-toolbelt pip install requests-toolbelt (Licence: Apache 2.0)
 - rauth: pip install rauth (MIT licence)
 - numpy and pandas: pip install numpy pandas (licensed under BSD and 3-clause BSD license) 
