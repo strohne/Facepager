@@ -305,8 +305,12 @@ class ApiTab(QScrollArea):
             options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else self.defaults.get('key_objectid',None)
             options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else self.defaults.get('key_nodedata',None)
         except AttributeError:
-            options['objectid'] = self.defaults.get('key_objectid',None)
-            options['nodedata'] = self.defaults.get('key_nodedata',None)
+            doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.'
+            nodedata = getDictValue(self.apidoc, doc+'x-facepager-extract', dump=False)
+            objectid = getDictValue(self.apidoc, doc + 'x-facepager-objectid', dump=False)
+
+            options['nodedata'] = nodedata if nodedata != '' else self.defaults.get('key_nodedata',None)
+            options['objectid'] = objectid if objectid != '' else self.defaults.get('key_objectid',None)
 
         # Scopes
         try:
@@ -2291,18 +2295,6 @@ class TwitterTab(AuthTab):
         self.clientSecretEdit = QLineEdit()
         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
         authlayout.addRow("Consumer Secret", self.clientSecretEdit)
-
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-
-        options = super(TwitterTab, self).getOptions(purpose)
-
-        # options for data handling
-        if purpose == 'fetch':
-            doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.x-facepager-extract'
-            nodedata = getDictValue(self.apidoc,doc,dump=False)
-            options['nodedata'] = nodedata if nodedata != '' else None
-
-        return options
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         self.connected = True
