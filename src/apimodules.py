@@ -311,11 +311,11 @@ class ApiTab(QScrollArea):
             options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else self.defaults.get('key_nodedata',None)
         except AttributeError:
             doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.'
-            nodedata = getDictValue(self.apidoc, doc+'x-facepager-extract', dump=False)
-            objectid = getDictValue(self.apidoc, doc + 'x-facepager-objectid', dump=False)
+            nodedata = getDictValue(self.apidoc, doc+'x-facepager-extract', dump=False, default=None)
+            objectid = getDictValue(self.apidoc, doc + 'x-facepager-objectid', dump=False, default=None)
 
-            options['nodedata'] = nodedata if nodedata != '' else self.defaults.get('key_nodedata',None)
-            options['objectid'] = objectid if objectid != '' else self.defaults.get('key_objectid',None)
+            options['nodedata'] = nodedata if nodedata is not None else self.defaults.get('key_nodedata',None)
+            options['objectid'] = objectid if objectid is not None else self.defaults.get('key_objectid',None)
 
         # Scopes
         try:
