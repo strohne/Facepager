@@ -279,7 +279,7 @@ class TreeItem(object):
         def appendNode(objecttype, objectid, response, fieldsuffix = ''):
             new = Node(str(objectid), dbnode.id)
             new.objecttype = objecttype
-            new.response = response if isinstance(response,Mapping) else {subkey : response}
+            new.response = response if isinstance(response, Mapping) else {subkey : response}
 
             new.level = dbnode.level + 1
             new.querystatus = options.get("querystatus", "")

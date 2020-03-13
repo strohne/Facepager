@@ -114,7 +114,6 @@ class DataViewer(QDialog):
         key_nodes = self.input_extract.text()
         key_objectid = self.input_id.text()
         if key_nodes == '':
-            #self.close()
             return False
 
         try:
@@ -128,7 +127,7 @@ class DataViewer(QDialog):
                 if not item.isValid():
                     continue
                 treenode = item.internalPointer()
-                treenode.unpackList(key_nodes, key_objectid, delaycommit = True)
+                treenode.unpackList(key_nodes, key_objectid, delaycommit=True)
         except Exception as e:
             self.mainWindow.logmessage(e)
         finally:

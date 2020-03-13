@@ -243,7 +243,7 @@ def getDictValue(data, multikey, dump=True, default = ''):
                 value=[]
                 for elem in data:
                     value.append(getDictValue(elem, listkey, dump, default))
-        elif keys[0] == '*':
+        elif keys[0] == '':
             value = data
         else:
             value = default

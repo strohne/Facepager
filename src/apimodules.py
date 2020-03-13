@@ -1854,8 +1854,8 @@ class TwitterStreamingTab(ApiTab):
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
-        self.defaults['basepath'] = 'https://stream.twitter.com/1.1/'
-        self.defaults['resource'] = 'statuses/filter'
+        self.defaults['basepath'] = 'https://stream.twitter.com/1.1'
+        self.defaults['resource'] = '/statuses/filter'
         self.defaults['params'] = {'track': '<Object ID>'}        
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = None
@@ -1938,11 +1938,11 @@ class TwitterStreamingTab(ApiTab):
 
         # options for data handling
         if purpose == 'fetch':            
-            if options["resource"] == 'search/tweets':
+            if options["resource"] == '/search/tweets':
                 options['nodedata'] = 'statuses'
-            elif options["resource"] == 'followers/list':
+            elif options["resource"] == '/followers/list':
                 options['nodedata'] = 'users'
-            elif options["resource"] == 'friends/list':
+            elif options["resource"] == '/friends/list':
                 options['nodedata'] = 'users'
             else:
                 options['nodedata'] = None
