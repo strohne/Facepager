@@ -59,7 +59,6 @@ class ApiTab(QScrollArea):
         self.lastrequest = None
         self.speed = None
         self.lock_session = threading.Lock()
-        self.progress = None
         self.sessions = []
 
         # Layout       
@@ -193,7 +192,7 @@ class ApiTab(QScrollArea):
 
         return urlpath, urlparams, templateparams
 
-    def getPayload(self,payload, params, nodedata,options):
+    def getPayload(self,payload, params, nodedata,options, logProgress=None):
         #Return nothing
         if (payload is None) or (payload == ''):            
             return None
@@ -220,19 +219,24 @@ class ApiTab(QScrollArea):
                 else:
                     value = payload[name]
                     payload[name] = self.parsePlaceholders(value, nodedata, params,options)
-            
-            payload = MultipartEncoder(fields=payload)
 
             def callback(monitor):
-                self.uploadProgress(monitor.bytes_read,monitor.len)
+                if logProgress is not None:
+                    logProgress({'current': monitor.bytes_read, 'total': monitor.len})
+
+            payload = MultipartEncoder(fields=payload)
             payload = MultipartEncoderMonitor(payload,callback)
 
             return payload
         
         # Replace placeholders in string and setup progress callback
-        else:   
-            payload = self.parsePlaceholders(payload, nodedata, params,options)                    
-            payload = BufferReader(payload,self.uploadProgress)
+        else:
+            def callback(current, total):
+                if logProgress is not None:
+                    logProgress({'current': current, 'total': total})
+
+            payload = self.parsePlaceholders(payload, nodedata, params,options)
+            payload = BufferReader(payload,callback)
             return payload
 
     # Gets data from input fields or defaults (never gets credentials from default values!)
@@ -923,10 +927,6 @@ class ApiTab(QScrollArea):
                 self.sessions[no].close()
                 self.sessions[no] = None
 
-    def uploadProgress(self,current = 0, total = 0):
-        if self.progress is not None:
-            self.progress({'current':current,'total':total})
-
     def request(self, session_no=0, path=None, args=None, headers=None, method="GET", payload=None,foldername=None,
                                                       filename=None, fileext=None, format='json'):
         """
@@ -1311,7 +1311,6 @@ class AuthTab(ApiTab):
         self.closeSession(session_no)
         self.connected = True
         self.speed = options.get('speed', None)
-        self.progress = logProgress
 
         # paging by auto count
         if (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
@@ -1363,7 +1362,7 @@ class AuthTab(ApiTab):
                     requestheaders[options.get('auth_tokenname','Authorization')] = "Bearer " + options['access_token']
 
                 method = options.get('verb', 'GET')
-                payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options)
+                payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options, logProgress)
                 if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
                     requestheaders["Content-Type"] = payload.content_type
 
@@ -1392,8 +1391,8 @@ class AuthTab(ApiTab):
             # if 'x-rate-limit-remaining' in headers:
             #     options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
 
-            if self.progress is not None:
-                self.progress({'page': page + 1})
+            if logprogress is not None:
+                logprogress({'page': page + 1})
 
             # Stop if result is empty
             if (options['nodedata'] is not None) and not hasValue(data,options['nodedata']):
@@ -1710,7 +1709,6 @@ class FacebookTab(AuthTab):
             raise Exception('Access token is missing, login please!')
         self.connected = True
         self.speed = options.get('speed',None)
-        self.progress = logProgress
         session_no = options.get('threadnumber', 0)
 
         # # Abort condition for time based pagination
@@ -1777,8 +1775,8 @@ class FacebookTab(AuthTab):
                 options['nodedata'] = None
 
             logData(data, options, headers)
-            if self.progress is not None:
-                self.progress({'page':page+1})
+            if logProgress is not None:
+                logProgress({'page':page+1})
 
             # paging
             if hasDictValue(data, 'paging.next'):
@@ -2361,7 +2359,6 @@ class TwitterTab(AuthTab):
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         self.connected = True
         self.speed = options.get('speed', None)
-        self.progress = logProgress
         session_no = options.get('threadnumber',0)
 
         for page in range(options.get('currentpage', 0), options.get('pages', 1)):
@@ -2404,8 +2401,8 @@ class TwitterTab(AuthTab):
             #    options['nodedata'] = None
 
             logData(data, options, headers)
-            if self.progress is not None:
-                self.progress({'page': page + 1})
+            if logProgress is not None:
+                logProgress({'page': page + 1})
 
             paging = False
             if isinstance(data, dict) and hasDictValue(data, "next_cursor_str") and (data["next_cursor_str"] != "0"):
