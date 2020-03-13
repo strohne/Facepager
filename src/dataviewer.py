@@ -98,7 +98,7 @@ class DataViewer(QDialog):
                 nodes = [nodes] if not (type(nodes) is list) else nodes
                 for n in nodes:
                     n = json.dumps(n) if isinstance(n, Mapping) else n
-                    value += n + '\n\n'
+                    value += str(n) + '\n\n'
             except Exception as e:
                 value = str(e)
 

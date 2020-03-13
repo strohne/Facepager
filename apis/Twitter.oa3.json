@@ -286,6 +286,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
+									"x-facepager-objectid" : "*",
 									"properties": {
 										"ids": {
 											"type": "array"
@@ -410,6 +411,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
+									"x-facepager-objectid" : "*",
 									"properties": {
 										"ids": {
 											"type": "array",
@@ -526,6 +528,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
+									"x-facepager-objectid" : "*",
 									"properties": {
 										"ids": {
 											"type": "array",
@@ -636,6 +639,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
+									"x-facepager-objectid" : "*",
 									"properties": {
 										"ids": {
 											"type": "array"
@@ -1811,6 +1815,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
+									"x-facepager-objectid" : "*",
 									"properties": {
 										"ids": {
 											"type": "array"
