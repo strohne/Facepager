@@ -1967,7 +1967,7 @@ class TwitterStreamingTab(ApiTab):
         return session
 
 
-    def request(self, session_no=0, path, args=None, headers=None):
+    def request(self, session_no=0, path='', args=None, headers=None):
         self.connected = True
         self.retry_counter=0
         self.last_reconnect=QDateTime.currentDateTime()
