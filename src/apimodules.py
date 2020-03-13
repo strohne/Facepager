@@ -1385,14 +1385,21 @@ class AuthTab(ApiTab):
             data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders, method, payload,
                                                  foldername, filename, fileext, format=format)
             options['querystatus'] = status
+
+            # Rate limit
+            try:
+                options['ratelimit'] = options.get('paginate', False) and (status.startswith("error (4"))
+            except:
+                options['ratelimit'] = False
+
             logData(data, options, headers)
 
             # rate limit info
             # if 'x-rate-limit-remaining' in headers:
             #     options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
 
-            if logprogress is not None:
-                logprogress({'page': page + 1})
+            if logProgress is not None:
+                logProgress({'page': page + 1})
 
             # Stop if result is empty
             if (options['nodedata'] is not None) and not hasValue(data,options['nodedata']):
@@ -1498,7 +1505,7 @@ class AuthTab(ApiTab):
                 self.closeLoginWindow()
 
     def getOAuth1Service(self):
-        if not hasattr(self,oauthdata):
+        if not hasattr(self,'oauthdata'):
             self.oauthdata = {}
 
         service = OAuth1Service(
@@ -1865,7 +1872,7 @@ class TwitterStreamingTab(ApiTab):
         self.connected = False
 
     def getOAuth1Service(self):
-        if not hasattr(self, oauthdata):
+        if not hasattr(self, 'oauthdata'):
             self.oauthdata = {}
 
         service = OAuth1Service(
