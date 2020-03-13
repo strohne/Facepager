@@ -60,6 +60,7 @@ class ApiTab(QScrollArea):
         self.speed = None
         self.lock_session = threading.Lock()
         self.progress = None
+        self.sessions = []
 
         # Layout       
         self.mainLayout = QFormLayout()
@@ -653,7 +654,6 @@ class ApiTab(QScrollArea):
 
         self.extraLayout.addRow("Download", self.downloadfolderwidget)
 
-
     def pagingChanged(self):
         if self.pagingTypeEdit.currentText() == "count":
             self.pagingStepsWidget.show()
@@ -889,27 +889,45 @@ class ApiTab(QScrollArea):
 
         return self.proxies
 
-
-    def initSession(self):
+    def initSession(self,no=0):
+        """
+        Return existing session or create a new session if necessary
+        :param no: Session number
+        :return: None
+        """
         with self.lock_session:
-            if not hasattr(self, "session"):
-                self.session = requests.Session()
-                self.session.proxies.update(self.getProxies())
-                self.session.mount('file://', LocalFileAdapter())
+            while (len(self.sessions) <= no):
+                self.sessions.append(None)
 
-        return self.session
+            session = self.sessions[no]
+            if session is None:
+                session = requests.Session()
+                session.proxies.update(self.getProxies())
 
-    def closeSession(self):
+                adapter = requests.adapters.HTTPAdapter(pool_connections=1, pool_maxsize=1)
+                session.mount('http://', adapter)
+                session.mount('https://', adapter)
+                session.mount('file://', LocalFileAdapter())
+
+            self.sessions[no] = session
+        return session
+
+    def closeSession(self, no=0):
+        """
+        Close the session
+        :param no: number of session
+        :return: None
+        """
         with self.lock_session:
-            if hasattr(self, "session"):
-                del self.session
-
+            if (len(self.sessions) > no) and (self.sessions[no] is not None):
+                self.sessions[no].close()
+                self.sessions[no] = None
 
     def uploadProgress(self,current = 0, total = 0):
         if self.progress is not None:
             self.progress({'current':current,'total':total})
 
-    def request(self, path, args=None, headers=None, method="GET", payload=None,foldername=None,
+    def request(self, session_no=0, path=None, args=None, headers=None, method="GET", payload=None,foldername=None,
                                                       filename=None, fileext=None, format='json'):
         """
         Start a new threadsafe session and request
@@ -967,7 +985,7 @@ class ApiTab(QScrollArea):
 
         self.lastrequest = QDateTime.currentDateTime()
 
-        session = self.initSession()
+        session = self.initSession(session_no)
         if (not session):
             raise Exception("No session available.")
             
@@ -1289,7 +1307,8 @@ class AuthTab(ApiTab):
         super(AuthTab, self).setOptions(options)
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
-        self.closeSession()
+        session_no = options.get('threadnumber',0)
+        self.closeSession(session_no)
         self.connected = True
         self.speed = options.get('speed', None)
         self.progress = logProgress
@@ -1364,7 +1383,7 @@ class AuthTab(ApiTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams, requestheaders, method, payload,
+            data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders, method, payload,
                                                  foldername, filename, fileext, format=format)
             options['querystatus'] = status
             logData(data, options, headers)
@@ -1404,15 +1423,15 @@ class AuthTab(ApiTab):
         return True
 
     @Slot()
-    def doLogin(self):
-        self.closeSession()
+    def doLogin(self, session_no = 0):
+        self.closeSession(session_no)
 
         if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
-            self.doTwitterAppLogin()
+            self.doTwitterAppLogin(session_no)
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
-            self.doOAuth1Login()
+            self.doOAuth1Login(session_no)
         else:
-            self.doOAuth2Login()
+            self.doOAuth2Login(session_no)
 
     @Slot()
     def getToken(self, url=False):
@@ -1426,38 +1445,32 @@ class AuthTab(ApiTab):
             self.getOAuth2Token(url)
 
     @Slot()
-    def initSession(self):
-        if hasattr(self, "session"):
-            return self.session
+    def initSession(self, no=0):
+        """
+        Dispatch session initialization to specialized functions
+        :param no: session number
+        :return: session object
+        """
 
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
-            return self.initOAuth2Session()
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
-            return self.initOAuth1Session()
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
+            return self.initOAuth1Session(no)
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
+            return self.initOAuth2Session(no)
         else:
-            return self.initOAuth2Session()
+            return self.initOAuth2Session(no)
 
     @Slot()
-    def doOAuth1Login(self):
+    def doOAuth1Login(self, session_no = 0):
         try:
-            self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get(
-                'consumer_key','')
-            self.oauth1service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get(
-                'consumer_secret','')
-
-            if self.oauth1service.consumer_key == '':
-                raise Exception('Consumer key is missing, please adjust settings!')
-
-            if self.oauth1service.consumer_secret == '':
-                raise Exception('Consumer secret is missing, please adjust settings!')
+            service = self.getOAuth1Service()
 
             self.oauthdata.pop('oauth_verifier', None)
             self.oauthdata['requesttoken'], self.oauthdata[
-                'requesttoken_secret'] = self.oauth1service.get_request_token()
+                'requesttoken_secret'] = service.get_request_token()
 
             self.showLoginWindow(False,
                                  self.defaults.get('login_window_caption', 'Login'),
-                                 self.oauth1service.get_authorize_url(self.oauthdata['requesttoken']),
+                                 service.get_authorize_url(self.oauthdata['requesttoken']),
                                  self.defaults.get('login_window_width', 600),
                                  self.defaults.get('login_window_height', 600)
                                  )
@@ -1472,34 +1485,63 @@ class AuthTab(ApiTab):
         if "oauth_verifier" in url:
             token = url["oauth_verifier"]
             if token:
+                service = self.getOAuth1Service()
                 self.oauthdata['oauth_verifier'] = token[0]
-                self.session = self.oauth1service.get_auth_session(self.oauthdata['requesttoken'],
-                                                                   self.oauthdata['requesttoken_secret'], method="POST",
-                                                                   data={'oauth_verifier': self.oauthdata[
-                                                                       'oauth_verifier']})
 
-                self.tokenEdit.setText(self.session.access_token)
-                self.tokensecretEdit.setText(self.session.access_token_secret)
+                session = service.get_auth_session(self.oauthdata['requesttoken'],
+                                                   self.oauthdata['requesttoken_secret'], method="POST",
+                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
+                self.tokenEdit.setText(session.access_token)
+                self.tokensecretEdit.setText(session.access_token_secret)
+
+                self.closeSession()
                 self.closeLoginWindow()
 
-    def initOAuth1Session(self):
-        if (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
-            self.oauth1service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else \
-                self.defaults['consumer_key']
-            self.oauth1service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else \
-                self.defaults['consumer_secret']
-            self.oauth1service.base_url = self.basepathEdit.currentText().strip() if self.basepathEdit.currentText().strip() != "" else \
-                self.defaults['basepath']
+    def getOAuth1Service(self):
+        if not hasattr(self,oauthdata):
+            self.oauthdata = {}
 
-            self.session = self.oauth1service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
-            return self.session
+        service = OAuth1Service(
+            consumer_key=self.defaults.get('consumer_key'),
+            consumer_secret=self.defaults.get('consumer_secret'),
+            name='oauth1',
+            access_token_url=self.defaults.get('access_token_url'),
+            authorize_url=self.defaults.get('authorize_url'),
+            request_token_url=self.defaults.get('request_token_url'),
+            base_url=self.defaults.get('basepath'))
 
-        else:
-            raise Exception("No access, login please!")
+        service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else \
+            self.defaults['consumer_key']
+        service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else \
+            self.defaults['consumer_secret']
+        service.base_url = self.basepathEdit.currentText().strip() if self.basepathEdit.currentText().strip() != "" else \
+            self.defaults['basepath']
+
+        if service.consumer_key == '':
+            raise Exception('Consumer key is missing, please adjust settings!')
+        if service.consumer_secret == '':
+            raise Exception('Consumer secret is missing, please adjust settings!')
+
+        return service
+
+    def initOAuth1Session(self,no=0):
+        while (len(self.sessions) <= no):
+            self.sessions.append(None)
+
+        session = self.sessions[no]
+        if session is None:
+            if (self.tokenEdit.text() == '') or (self.tokensecretEdit.text() == ''):
+                raise Exception("No access, login please!")
+
+            service = self.getOAuth1Service()
+            session = service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
+
+        self.sessions[no] = session
+        return session
 
     @Slot()
-    def doOAuth2Login(self):
+    def doOAuth2Login(self, session_no=0):
         try:
             options = self.getOptions()
 
@@ -1513,7 +1555,6 @@ class AuthTab(ApiTab):
             if clientid == '':
                 raise Exception('Client Id is missing, please adjust settings!')
 
-            self.session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'], scope=scope)
             params = {'client_id': clientid,
                       'redirect_uri': options['redirect_uri'],
                       'response_type': options.get('response_type', 'code')}
@@ -1540,10 +1581,15 @@ class AuthTab(ApiTab):
 
         if url.toString().startswith(options['redirect_uri']):
             try:
-                clientsecret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else self.defaults.get(
-                    'client_secret', '')
+                clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" \
+                    else self.defaults.get('client_id', '')
+                clientsecret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" \
+                    else self.defaults.get('client_secret', '')
+                scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else \
+                    self.defaults.get('scope', None)
 
-                token = self.session.fetch_token(options['token_uri'],
+                session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'], scope=scope)
+                token = session.fetch_token(options['token_uri'],
                                                  authorization_response=str(url.toString()),
                                                  client_secret=clientsecret)
 
@@ -1555,22 +1601,21 @@ class AuthTab(ApiTab):
                     pass
 
             finally:
+                session.close()
                 self.closeLoginWindow()
 
-    def initOAuth2Session(self):
-        return super(AuthTab, self).initSession()
+    def initOAuth2Session(self, no=0):
+        return super(AuthTab, self).initSession(no)
 
     @Slot()
     def doTwitterAppLogin(self):
         try:
             # See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
-            options = self.getOptions()
-
-            clientid = self.clientIdEdit.text()  # if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+            clientid = self.clientIdEdit.text() # no defaults
             if clientid == '':
                 raise Exception('Client Id is missing, please adjust settings!')
 
-            clientsecret = self.clientSecretEdit.text()  # if self.clientSecretEdit.text() != "" else self.defaults.get('client_secret', '')
+            clientsecret = self.clientSecretEdit.text() # no defaults
             if clientsecret == '':
                 raise Exception('Client Secret is missing, please adjust settings!')
 
@@ -1581,7 +1626,9 @@ class AuthTab(ApiTab):
             payload = 'grant_type=client_credentials'
             headers = {'Authorization': 'Basic ' + basicauth,
                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
-            data, headers, status = self.request(path, payload=payload, headers=headers, method="POST")
+            session_no = 0
+            self.closeSession(session_no)
+            data, headers, status = self.request(session_no, path, payload=payload, headers=headers, method="POST")
 
             token = data.get('access_token', '')
             self.tokenEdit.setText(token)
@@ -1664,6 +1711,7 @@ class FacebookTab(AuthTab):
         self.connected = True
         self.speed = options.get('speed',None)
         self.progress = logProgress
+        session_no = options.get('threadnumber', 0)
 
         # # Abort condition for time based pagination
         # since = options['params'].get('since', False)
@@ -1696,7 +1744,7 @@ class FacebookTab(AuthTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(urlpath, urlparams)
+            data, headers, status = self.request(session_no,urlpath, urlparams)
 
             options['ratelimit'] = False
             options['querystatus'] = status
@@ -1772,13 +1820,14 @@ class FacebookTab(AuthTab):
             try:
                 url = urllib.parse.parse_qs(url.toString())
                 token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
-                self.closeSession()
                 self.tokenEdit.setText(token[0])
 
                 # Get page access token
                 pageid = self.pageIdEdit.text().strip()
                 if  pageid != '':
-                    data, headers, status = self.request(self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token[0])
+                    session_no = 0
+                    self.closeSession(session_no)
+                    data, headers, status = self.request(session_no, self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token[0])
                     if status != 'fetched (200)':
                         raise Exception("Could not authorize for page. Check page ID in the settings.")
 
@@ -1814,9 +1863,14 @@ class TwitterStreamingTab(ApiTab):
         self.loadDoc()
         self.loadSettings()
 
-        # Twitter OAUTH consumer key and secret should be defined in credentials.py
-        self.oauthdata = {}
-        self.twitter = OAuth1Service(
+        self.timeout = 60
+        self.connected = False
+
+    def getOAuth1Service(self):
+        if not hasattr(self, oauthdata):
+            self.oauthdata = {}
+
+        service = OAuth1Service(
             consumer_key=self.defaults.get('consumer_key'),
             consumer_secret=self.defaults.get('consumer_secret'),
             name='twitterstreaming',
@@ -1824,8 +1878,17 @@ class TwitterStreamingTab(ApiTab):
             authorize_url=self.defaults.get('authorize_url'),
             request_token_url=self.defaults.get('request_token_url'),
             base_url=self.defaults.get('basepath'))
-        self.timeout = 60
-        self.connected = False
+
+        service.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" \
+            else self.defaults['consumer_key']
+        service.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" \
+            else self.defaults['consumer_secret']
+
+        if service.consumer_key == '' or service.consumer_secret == '':
+            raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
+
+        return service
+
 
     def initLoginInputs(self):
         # Login-Boxes
@@ -1881,37 +1944,47 @@ class TwitterStreamingTab(ApiTab):
 
         return options
     
-    def initSession(self):
-        if hasattr(self, "session"):
-            return self.session
+    def initSession(self, no=0):
+        """
+        Return session or create if necessary
+        :param no: session number
+        :return: session object
+        """
 
-        elif (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
-            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults['consumer_key']
-            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults['consumer_secret']
-            self.session = self.twitter.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
-            return self.session
+        while (len(self.sessions) <= no):
+            self.sessions.append(None)
 
-        else:
+        session = self.sessions[no]
+        if session is None:
+            service = self.getOAuth1Service()
+            if (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
+                session = service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
+
+        if session is None:
             raise Exception("No access, login please!")
 
-    def request(self, path, args=None, headers=None):
+        self.sessions[no] = session
+        return session
+
+
+    def request(self, session_no=0, path, args=None, headers=None):
         self.connected = True
         self.retry_counter=0
         self.last_reconnect=QDateTime.currentDateTime()
         try:
-            self.initSession()
+            session = self.initSession(session_no)
 
             def _send():
                 self.last_reconnect = QDateTime.currentDateTime()
                 while self.connected:
                     try:
                         if headers is not None:
-                            response = self.session.post(path, params=args,
+                            response = session.post(path, params=args,
                                                          headers=headers,
                                                          timeout=self.timeout,
                                                          stream=True)
                         else:
-                            response = self.session.get(path, params=args, timeout=self.timeout,
+                            response = session.get(path, params=args, timeout=self.timeout,
                                                         stream=True)
 
                     except requests.exceptions.Timeout:
@@ -1979,7 +2052,8 @@ class TwitterStreamingTab(ApiTab):
 
         # data
         headers = None
-        for data in self.request(path=urlpath, args=urlparams):
+        session_no = options.get('threadnumber',0)
+        for data in self.request(session_no, path=urlpath, args=urlparams):
             # data
             options['querytime'] = str(datetime.now())
             options['querystatus'] = 'stream'
@@ -1990,15 +2064,12 @@ class TwitterStreamingTab(ApiTab):
     @Slot()
     def doLogin(self, query=False, caption="Twitter Login Page", url=""):
         try:
-            self.twitter.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" else self.defaults.get('consumer_key','')
-            self.twitter.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" else self.defaults.get('consumer_secret','')
-            if self.twitter.consumer_key  == '' or self.twitter.consumer_secret == '':
-                 raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
-                
+            service = self.getOAuth1Service()
+
             self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = self.twitter.get_request_token()
+            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = service.get_request_token()
     
-            self.showLoginWindow(query, caption,self.twitter.get_authorize_url(self.oauthdata['requesttoken']))
+            self.showLoginWindow(query, caption,service.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
                                             str(e),
@@ -2010,14 +2081,16 @@ class TwitterStreamingTab(ApiTab):
         if 'oauth_verifier' in url:
             token = url['oauth_verifier']
             if token:
+                service = self.getOAuth1Service()
                 self.oauthdata['oauth_verifier'] = token[0]
-                self.session = self.twitter.get_auth_session(self.oauthdata['requesttoken'],
+                session = service.get_auth_session(self.oauthdata['requesttoken'],
                                                              self.oauthdata['requesttoken_secret'], method='POST',
                                                              data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
-                self.tokenEdit.setText(self.session.access_token)
-                self.tokensecretEdit.setText(self.session.access_token_secret)
+                self.tokenEdit.setText(session.access_token)
+                self.tokensecretEdit.setText(session.access_token_secret)
 
+                session.close()
                 self.closeLoginWindow()
 
 class AmazonTab(AuthTab):
@@ -2243,17 +2316,6 @@ class TwitterTab(AuthTab):
         self.loadDoc()
         self.loadSettings()
 
-        # Twitter OAUTH consumer key and secret should be defined in credentials.py
-        self.oauthdata = {}
-        self.oauth1service = OAuth1Service(
-            consumer_key=self.defaults.get('consumer_key'),
-            consumer_secret=self.defaults.get('consumer_secret'),
-            name='oauth1',
-            access_token_url=self.defaults.get('access_token_url'),
-            authorize_url=self.defaults.get('authorize_url'),
-            request_token_url=self.defaults.get('request_token_url'),
-            base_url=self.defaults.get('basepath'))
-
     def initLoginInputs(self):
         # Login-Boxes
         loginlayout = QHBoxLayout()
@@ -2300,6 +2362,7 @@ class TwitterTab(AuthTab):
         self.connected = True
         self.speed = options.get('speed', None)
         self.progress = logProgress
+        session_no = options.get('threadnumber',0)
 
         for page in range(options.get('currentpage', 0), options.get('pages', 1)):
             # Save page
@@ -2324,7 +2387,7 @@ class TwitterTab(AuthTab):
                 requestheaders["Authorization"] = "Bearer "+options['access_token']
 
             # data
-            data, headers, status = self.request(urlpath, urlparams, requestheaders)
+            data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 

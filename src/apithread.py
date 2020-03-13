@@ -195,7 +195,7 @@ class ApiThread(threading.Thread):
 
         def logProgress(progress):
             progress['progress'] = job.get('number', 0)
-            progress['threadnumber'] = self.number
+            progress['threadnumber'] = job.get('threadnumber', 0)
             self.output.put(progress)
             if self.halt.isSet():
                 raise CancelException('Request cancelled.')
