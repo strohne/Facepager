@@ -1435,36 +1435,9 @@ class AuthTab(ApiTab):
             # Save page
             options['currentpage'] = page
 
+
             # build url
-            if not ('url' in options):
-                urlpath = options["basepath"] + options['resource']
-                urlparams = {}
-                urlparams.update(options['params'])
-
-                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
-
-                requestheaders = options.get('headers', {})
-
-                if options.get('auth') == 'param':
-                    urlparams[options.get('auth_tokenname','access_token')] = options['access_token']
-                elif (options.get('auth') == 'header') and options.get('auth_type') != 'Cookie':
-                    requestheaders[options.get('auth_tokenname','Authorization')] = "Bearer " + options['access_token']
-                elif (options.get('auth') == 'header'):
-                    requestheaders[options.get('auth_tokenname','Authorization')] = options['access_token']
-
-                method = options.get('verb', 'GET')
-                payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options, logProgress)
-                if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
-                    requestheaders["Content-Type"] = payload.content_type
-
-            else:
-                payload = None
-                urlpath = options['url']
-                urlparams = options['params']
-
-            # sign request (for Amazon tab)
-            if hasattr(self, "signRequest"):
-                requestheaders = self.signRequest(urlpath, urlparams, requestheaders, method, payload, options)
+            method, urlpath, urlparams, payload, requestheaders  = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
@@ -1494,6 +1467,41 @@ class AuthTab(ApiTab):
                 break
 
         return True
+
+    def buildUrl(self, nodedata, options, logProgress):
+        if not ('url' in options):
+            urlpath = options["basepath"].strip() + options['resource'].strip() + options.get('pathextension', '')
+            urlparams = {}
+            urlparams.update(options['params'])
+
+            urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
+
+            requestheaders = options.get('headers', {})
+
+            if options.get('auth') == 'param':
+                urlparams[options.get('auth_tokenname', 'access_token')] = options['access_token']
+            elif (options.get('auth') == 'header') and options.get('auth_type') != 'Cookie':
+                requestheaders[options.get('auth_tokenname', 'Authorization')] = "Bearer " + options['access_token']
+            elif (options.get('auth') == 'header'):
+                requestheaders[options.get('auth_tokenname', 'Authorization')] = options['access_token']
+            # App auth
+            if options.get('auth_type','Twitter OAuth1') == 'Twitter App-only':
+                requestheaders["Authorization"] = "Bearer "+options['access_token']
+
+            method = options.get('verb', 'GET')
+            payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options, logProgress)
+            if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
+                requestheaders["Content-Type"] = payload.content_type
+        else:
+            payload = None
+            urlpath = options['url']
+            urlparams = options['params']
+
+        # sign request (for Amazon tab)
+        if hasattr(self, "signRequest"):
+            requestheaders = self.signRequest(urlpath, urlparams, requestheaders, method, payload, options)
+
+        return method, urlpath, urlparams, payload, requestheaders
 
     @Slot()
     def doLogin(self, session_no = 0):
@@ -1768,6 +1776,9 @@ class FacebookTab(AuthTab):
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = 'data'
 
+        self.defaults['auth'] = 'param'
+        self.defaults['auth_tokenname'] = 'access_token'
+
         self.defaults['paging_type'] = 'url'
         self.defaults['key_paging'] = 'paging.next'
 
@@ -1838,23 +1849,11 @@ class FacebookTab(AuthTab):
             # Save page
             options['currentpage'] = page
 
-            # build url
-            if not ('url' in options):
-                urlpath = options["basepath"].strip() + options['resource'].strip()
-                urlparams = {}
-
-                urlparams.update(options['params'])
-
-                urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata,options)
-                urlparams["access_token"] = options['access_token']
-            else:
-                urlpath = options['url']
-                urlparams = options['params']
+            method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
-                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                    urlpath + "?" + urllib.parse.urlencode(
-                                                                                       urlparams)))
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], \
+                           urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
             # data
             options['querytime'] = str(datetime.now())
@@ -1901,7 +1900,6 @@ class FacebookTab(AuthTab):
 
             if not self.connected:
                 break
-
 
     @Slot()
     def doLogin(self, session_no = 0):
@@ -2483,22 +2481,12 @@ class TwitterTab(AuthTab):
             options = deepcopy(options)
             options['currentpage'] = page
 
-            # Build URL
-            if not ('url' in options):
-                urlpath = options["basepath"] + options["resource"] + ".json"
-                urlpath, urlparams, templateparams = self.getURL(urlpath, options["params"], nodedata, options)
-            else:
-                urlpath = options['url']
-                urlparams = options["params"]
+            options['pathextension'] = ".json"
+            method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
-                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                    urlpath + "?" + urllib.parse.urlencode(
-                                                                        urlparams)))
-            # App auth
-            requestheaders = options.get('headers', {})
-            if options.get('auth_type','Twitter OAuth1') == 'Twitter App-only':
-                requestheaders["Authorization"] = "Bearer "+options['access_token']
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], \
+                            urlpath + "?" + urllib.parse.urlencode(urlparams)))
 
             # data
             data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders)
