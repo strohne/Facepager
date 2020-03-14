@@ -3,7 +3,7 @@
   "module": "Facebook",
   "speed": 200,
   "options": {
-    "resource": "/<page-id>/feed",
+    "resource": "/<page-id>/posts",
     "basepath": "https://graph.facebook.com/v3.2",
     "params": {
       "limit": "20",
