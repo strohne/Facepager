@@ -350,8 +350,6 @@ class Actions(object):
 
             progress.close()
 
-
-
     @Slot()
     def loadPreset(self):
         self.mainWindow.presetWindow.showPresets()
