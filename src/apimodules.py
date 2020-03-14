@@ -240,6 +240,11 @@ class ApiTab(QScrollArea):
             payload = BufferReader(payload,callback)
             return payload
 
+    def getFromDoc(self, dockey, defaultkey):
+        value = getDictValue(self.apidoc, dockey, dump=False, default=None)
+        value = value if value is not None else self.defaults.get(defaultkey, None)
+        return value
+
     # Gets data from input fields or defaults (never gets credentials from default values!)
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
@@ -258,6 +263,9 @@ class ApiTab(QScrollArea):
             options['verb'] = self.verbEdit.currentText().strip()            
         except AttributeError:
             pass
+
+        # Get doc key for lookup of data handling keys
+        doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.'
 
         #format
         try:
@@ -292,17 +300,15 @@ class ApiTab(QScrollArea):
         try:
             options['paging_type'] = self.pagingTypeEdit.currentText().strip() if self.pagingTypeEdit.currentText() != "" else self.defaults.get('paging_type', '')
             options['key_paging'] = self.pagingkeyEdit.text() if self.pagingkeyEdit.text() != "" else self.defaults.get('key_paging',None)
-            options['paging_stop'] = self.pagingstopEdit.text()
+            options['paging_stop'] = self.pagingstopEdit.text() if self.pagingstopEdit.text() != "" else self.defaults.get('paging_stop',None)
             options['param_paging'] = self.pagingparamEdit.text() if self.pagingparamEdit.text() != "" else self.defaults.get('param_paging',None)
             options['offset_start'] = self.offsetStartEdit.value()
             options['offset_step'] = self.offsetStepEdit.value()
-
-
         except AttributeError:
-            options['paging_type'] = self.defaults.get('paging_type',None)
-            options['key_paging'] = self.defaults.get('key_paging',None)
-            options['paging_stop'] = ''
-            options['param_paging'] = self.defaults.get('param_paging',None)
+            options['paging_type'] = self.getFromDoc(doc + 'x-facepager-paging-type', 'paging_type')
+            options['key_paging'] = self.getFromDoc(doc + 'x-facepager-paging-key', 'key_paging')
+            options['paging_stop'] = self.getFromDoc(doc + 'x-facepager-paging-stop', 'paging_stop')
+            options['param_paging'] = self.getFromDoc(doc + 'x-facepager-paging-param', 'param_paging')
             options['offset_start'] = 1
             options['offset_step'] = 1
 
@@ -311,12 +317,8 @@ class ApiTab(QScrollArea):
             options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else self.defaults.get('key_objectid',None)
             options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else self.defaults.get('key_nodedata',None)
         except AttributeError:
-            doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.'
-            nodedata = getDictValue(self.apidoc, doc+'x-facepager-extract', dump=False, default=None)
-            objectid = getDictValue(self.apidoc, doc + 'x-facepager-objectid', dump=False, default=None)
-
-            options['nodedata'] = nodedata if nodedata is not None else self.defaults.get('key_nodedata',None)
-            options['objectid'] = objectid if objectid is not None else self.defaults.get('key_objectid',None)
+            options['nodedata'] = self.getFromDoc(doc + 'x-facepager-extract', 'key_nodedata')
+            options['objectid'] = self.getFromDoc(doc + 'x-facepager-objectid', 'key_objectid')
 
         # Scopes
         try:
@@ -1331,19 +1333,15 @@ class AuthTab(ApiTab):
 
         super(AuthTab, self).setOptions(options)
 
-    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
-        session_no = options.get('threadnumber',0)
-        self.closeSession(session_no)
-        self.connected = True
-        self.speed = options.get('speed', None)
 
+    def initPagingOptions(self, data, options):
         # paging by auto count
-        if (options.get('paging_type', 'key') == "count") and (options.get('param_paging', '') is not None):
+        if (options.get('paging_type') == "count") and (options.get('param_paging', '') is not None):
             offset = options.get('offset_start', 1)
             options['params'][options.get('param_paging', '')] = offset
 
         # paging by key (continue previous fetching process based on last fetched child offcut node)
-        elif (options.get('paging_type', 'key') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
+        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
             # Get cursor of last offcut node
             offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
             cursor = getDictValueOrNone(offcut,options.get('key_paging'))
@@ -1351,12 +1349,78 @@ class AuthTab(ApiTab):
 
             # Dont't fetch if already finished (=offcut without next cursor)
             if options.get('paginate',False) and (offcut is not None) and ((cursor is None) or stopvalue):
-                return False
+                return None
 
             # Continue / start fetching
             elif (cursor is not None) :
                 options['params'][options['param_paging']] = cursor
 
+        # url based paging
+        elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
+            offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
+            url = getDictValueOrNone(offcut,options.get('key_paging'))
+
+            # Dont't fetch if already finished (=offcut without next cursor)
+            if options.get('paginate',False) and (offcut is not None) and (url is None):
+                return None
+
+            if url is not None:
+                url, params = self.parseURL(url)
+                options['params'] = params
+                options['url'] = url
+
+        return options
+
+    def updatePagingOptions(self, data, options):
+        # Stop if result is empty
+        if (options['nodedata'] is not None) and not hasValue(data, options['nodedata']):
+            return None
+
+        # paging by auto count
+        if (options.get('paging_type') == "count") and (options.get('param_paging') is not None):
+            offset = options['params'][options['param_paging']]
+            offset = offset + options.get('offset_step', 1)
+            options['params'][options['param_paging']] = offset
+
+        # paging by key
+        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (
+                options.get('param_paging') is not None):
+            cursor = getDictValueOrNone(data, options['key_paging'])
+            if cursor is None:
+                return None
+
+            stopvalue = not extractValue(data, options.get('paging_stop'), dump=False, default=True)[1]
+            if stopvalue:
+                return None
+
+            options['params'][options['param_paging']] = cursor
+
+        # url based paging
+        elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
+            url = getDictValueOrNone(data, options['key_paging'])
+            if url is not None:
+                url, params = self.parseURL(url)
+                options['params'] = params
+                options['url'] = url
+            else:
+                return None
+
+        # no pagination
+        else:
+            return None
+
+        return options
+
+    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        session_no = options.get('threadnumber',0)
+        self.closeSession(session_no)
+        self.connected = True
+        self.speed = options.get('speed', None)
+
+        # Init pagination
+        options = self.initPagingOptions(nodedata, options)
+        if options is None:
+            return False
 
         # file settings
         foldername, filename, fileext = self.getFileFolderName(options, nodedata)
@@ -1421,31 +1485,14 @@ class AuthTab(ApiTab):
             if logProgress is not None:
                 logProgress({'page': page + 1})
 
-            # Stop if result is empty
-            if (options['nodedata'] is not None) and not hasValue(data,options['nodedata']):
-                break
-
-            # paging by key
-            if (options.get('paging_type', 'key') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
-                cursor = getDictValueOrNone(data, options['key_paging'])
-                if cursor is None:
-                    break
-
-                stopvalue = not extractValue(data, options.get('paging_stop'), dump = False, default=True)[1]
-                if stopvalue:
-                    break
-
-                options['params'][options['param_paging']] = cursor
-
-            # paging by auto count
-            elif (options.get('paging_type', 'key') == "count") and (options.get('param_paging') is not None):
-                offset = offset + options.get('offset_step', 1)
-                options['params'][options['param_paging']] = offset
-            else:
+            # Paging
+            options = self.updataPagingOptions(data, options)
+            if options is None:
                 break
 
             if not self.connected:
                 break
+
         return True
 
     @Slot()
@@ -1714,14 +1761,18 @@ class FacebookTab(AuthTab):
 
         #Defaults
         self.defaults['scope'] = '' #user_groups
-        self.defaults['basepath'] = 'https://graph.facebook.com/v2.10/'
-        self.defaults['resource'] = '<Object ID>'
+        self.defaults['basepath'] = 'https://graph.facebook.com/v3.12'
+        self.defaults['resource'] = '/<Object ID>'
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = 'data'
+
+        self.defaults['paging_type'] = 'url'
+        self.defaults['key_paging'] = 'paging.next'
+
         self.defaults['login_buttoncaption'] = " Login to Facebook "
-            
+
         # Query Box
         self.initInputs()
 
@@ -1770,6 +1821,11 @@ class FacebookTab(AuthTab):
         self.connected = True
         self.speed = options.get('speed',None)
         session_no = options.get('threadnumber', 0)
+
+        # Init pagination
+        options = self.initPagingOptions(nodedata, options)
+        if options is None:
+            return False
 
         # # Abort condition for time based pagination
         # since = options['params'].get('since', False)
@@ -1828,26 +1884,20 @@ class FacebookTab(AuthTab):
             # options for data handling
             if hasDictValue(data, 'data'):
                 options['nodedata'] = 'data'
-            else:
-                options['nodedata'] = None
 
             logData(data, options, headers)
             if logProgress is not None:
                 logProgress({'page':page+1})
 
             # paging
-            if hasDictValue(data, 'paging.next'):
-                url, params = self.parseURL(getDictValue(data, 'paging.next', False))
-
-                # # abort time based pagination
-                # until = params.get('until', False)
-                # if (since != False) and (until != False) and (int(until) < int(since)):
-                #     break
-
-                options['params'] = params
-                options['url'] = url
-            else:
+            options = self.updatePagingOptions(data, options)
+            if options is None:
                 break
+
+            # # abort time based pagination
+            # until = params.get('until', False)
+            # if (since != False) and (until != False) and (int(until) < int(since)):
+            #     break
 
             if not self.connected:
                 break
@@ -2349,11 +2399,16 @@ class TwitterTab(AuthTab):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
         # Defaults
-        self.defaults['basepath'] = 'https://api.twitter.com/1.1/'
-        self.defaults['resource'] = 'search/tweets'
+        self.defaults['basepath'] = 'https://api.twitter.com/1.1'
+        self.defaults['resource'] = '/search/tweets'
         self.defaults['params'] = {'q': '<Object ID>'}
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = None
+
+        self.defaults['paging_type'] = 'key'
+        self.defaults['param_paging'] = 'cursor'
+        self.defaults['key_paging'] = 'next_cursor_str'
+        self.defaults['paging_stop'] = 'next_cursor'
 
         self.defaults['auth_type'] = 'Twitter OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
@@ -2418,6 +2473,11 @@ class TwitterTab(AuthTab):
         self.speed = options.get('speed', None)
         session_no = options.get('threadnumber',0)
 
+        # Init pagination
+        options = self.initPagingOptions(nodedata, options)
+        if options is None:
+            return False
+
         for page in range(options.get('currentpage', 0), options.get('pages', 1)):
             # Save page
             options = deepcopy(options)
@@ -2459,14 +2519,14 @@ class TwitterTab(AuthTab):
             if logProgress is not None:
                 logProgress({'page': page + 1})
 
-            paging = False
-            if isinstance(data, dict) and hasDictValue(data, "next_cursor_str") and (data["next_cursor_str"] != "0"):
-                paging = True
-                options['params']['cursor'] = data["next_cursor_str"]
+            # Pagination
+            paging = self.updatePagingOptions(data, options)
 
-            # paging with next-results; Note: Do not rely on the search_metadata information, sometimes the next_results param is missing, this is a known bug
-            elif isinstance(data, dict) and hasDictValue(data, "search_metadata.next_results"):
-                paging = True
+            # paging with next_results; Note: Do not rely on the search_metadata information,
+            # sometimes the next_results param is missing, this is a known bug
+            # applies to /search/tweets
+            if (paging is None) and isinstance(data, dict) and hasDictValue(data, "search_metadata.next_results"):
+                paging = options
                 url, params = self.parseURL(getDictValue(data, "search_metadata.next_results", False))
                 options['url'] = urlpath
                 options['params'] = params
@@ -2477,12 +2537,14 @@ class TwitterTab(AuthTab):
 
             # manual paging with max-id
             # if there are still statuses in the response, use the last ID-1 for further pagination
-            #elif isinstance(data, list) and (len(data) >= int(urlparams.get('count',1))):
-            elif isinstance(data, list) and (len(data) > 0):
-                options['params']['max_id'] = int(data[-1]["id"]) - 1
-                paging = True
+            # applies to /statuses/user_timeline
+            elif (paging is None) and isinstance(data, list) and (len(data) > 0):
+                paging = options
+                paging['params']['max_id'] = int(data[-1]["id"]) - 1
 
-            if not paging:
+            if paging is not None:
+                options = paging
+            else:
                 break
 
             if not self.connected:
@@ -2510,8 +2572,8 @@ class YoutubeTab(AuthTab):
         self.defaults['param_paging'] = 'pageToken'
 
         self.defaults['auth'] = 'param'
-        self.defaults['basepath'] = "https://www.googleapis.com/youtube/v3/"
-        self.defaults['resource'] = 'search'
+        self.defaults['basepath'] = "https://www.googleapis.com/youtube/v3"
+        self.defaults['resource'] = '/search'
         self.defaults['params'] = {'q':'<Object ID>','part':'snippet','maxResults':'50'}
 
         # Standard inputs
