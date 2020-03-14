@@ -12,6 +12,7 @@ from collections import OrderedDict
 import threading
 
 from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
+from PySide2.QtNetwork import QNetworkCookie
 from PySide2.QtWidgets import *
 from PySide2.QtCore import QUrl
 
@@ -1089,18 +1090,18 @@ class ApiTab(QScrollArea):
         dialog.exec_()
 
     @Slot()
-    def showLoginWindow(self, query=False, caption='', url='',width=600,height=600):
+    def showLoginWindow(self, caption='', url='',width=600,height=600):
         """
         Create a SSL-capable WebView for the login-process
         Uses a Custom QT-Webpage Implementation
         Supply a getToken-Slot to fetch the API-Token
         """
 
-        self.doQuery = query
         self.loginWindow = QMainWindow(self.mainWindow)
         self.loginWindow.resize(width, height)
         self.loginWindow.setWindowTitle(caption)
         self.loginWindow.stopped = False
+        self.loginWindow.cookie = ''
 
 
         #create WebView with Facebook log-Dialog, OpenSSL needed
@@ -1120,6 +1121,8 @@ class ApiTab(QScrollArea):
         # Connect to the loadFinished-Slot for an error message
         self.login_webview.loadFinished.connect(self.loadFinished)
 
+        # Connect the cookieChanged-Slot to get cookies
+        webpage.cookieChanged.connect(self.cookieChanged)
 
         self.login_webview.load(QUrl(url))
         #self.login_webview.resize(window.size())
@@ -1137,6 +1140,22 @@ class ApiTab(QScrollArea):
     def loadFinished(self, success):
         if (not success and not self.loginWindow.stopped):
             self.logMessage('Error loading web page')
+
+    @Slot()
+    def cookieChanged(self, domain, cookie):
+        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Cookie':
+            try:
+                options = self.getOptions()
+                targeturl= options.get('auth_uri', '')
+                targeturl= urllib.parse.urlparse(targeturl)
+                targetdomain = targeturl.netloc
+            except:
+                targetdomain = None
+
+            if domain == targetdomain:
+                self.tokenEdit.setText(cookie)
+                self.loginStatus.showMessage("Domain: "+domain+". Cookie: "+cookie)
+                print("Domain: "+domain+". Cookie: "+cookie)
 
     def selectFolder(self):
         datadir = self.folderEdit.text()
@@ -1172,6 +1191,12 @@ class ApiTab(QScrollArea):
 
 
 class AuthTab(ApiTab):
+    """
+    Module providing authorization
+    - init input fields
+    - login windows
+    - open authorization support
+    """
 
     # see YoutubeTab for keys in the options-parameter
     def __init__(self, mainWindow=None, name='NoName'):
@@ -1187,7 +1212,7 @@ class AuthTab(ApiTab):
         self.authWidget.setLayout(authlayout)
 
         self.authTypeEdit = QComboBox()
-        self.authTypeEdit.addItems(['OAuth2', 'Twitter App-only'])
+        self.authTypeEdit.addItems(['OAuth2', 'Twitter App-only','Cookie'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.authURIEdit = QLineEdit()
@@ -1356,10 +1381,12 @@ class AuthTab(ApiTab):
 
                 requestheaders = options.get('headers', {})
 
-                if options.get('auth', 'disable') == 'param':
+                if options.get('auth') == 'param':
                     urlparams[options.get('auth_tokenname','access_token')] = options['access_token']
-                elif options.get('auth', 'disable') == 'header':
+                elif (options.get('auth') == 'header') and options.get('auth_type') != 'Cookie':
                     requestheaders[options.get('auth_tokenname','Authorization')] = "Bearer " + options['access_token']
+                elif (options.get('auth') == 'header'):
+                    requestheaders[options.get('auth_tokenname','Authorization')] = options['access_token']
 
                 method = options.get('verb', 'GET')
                 payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options, logProgress)
@@ -1367,7 +1394,6 @@ class AuthTab(ApiTab):
                     requestheaders["Content-Type"] = payload.content_type
 
             else:
-                # requestheaders = {}
                 payload = None
                 urlpath = options['url']
                 urlparams = options['params']
@@ -1385,13 +1411,7 @@ class AuthTab(ApiTab):
             data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders, method, payload,
                                                  foldername, filename, fileext, format=format)
             options['querystatus'] = status
-
-            # Rate limit
-            try:
-                options['ratelimit'] = options.get('paginate', False) and (status.startswith("error (4"))
-            except:
-                options['ratelimit'] = False
-
+            options['ratelimit'] = (status == "error (429)")
             logData(data, options, headers)
 
             # rate limit info
@@ -1430,12 +1450,19 @@ class AuthTab(ApiTab):
 
     @Slot()
     def doLogin(self, session_no = 0):
+        """
+        Show login window
+        :param session_no: the number of the session used for login
+        :return:
+        """
         self.closeSession(session_no)
 
         if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
             self.doTwitterAppLogin(session_no)
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
             self.doOAuth1Login(session_no)
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Cookie':
+            self.doCookieLogin(session_no)
         else:
             self.doOAuth2Login(session_no)
 
@@ -1447,6 +1474,8 @@ class AuthTab(ApiTab):
             return False
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
             self.getOAuth1Token()
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Cookie':
+            self.getCookieToken(url)
         else:
             self.getOAuth2Token(url)
 
@@ -1474,8 +1503,7 @@ class AuthTab(ApiTab):
             self.oauthdata['requesttoken'], self.oauthdata[
                 'requesttoken_secret'] = service.get_request_token()
 
-            self.showLoginWindow(False,
-                                 self.defaults.get('login_window_caption', 'Login'),
+            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
                                  service.get_authorize_url(self.oauthdata['requesttoken']),
                                  self.defaults.get('login_window_width', 600),
                                  self.defaults.get('login_window_height', 600)
@@ -1571,7 +1599,7 @@ class AuthTab(ApiTab):
             params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
             url = loginurl + "?" + params
 
-            self.showLoginWindow(False, self.defaults.get('login_window_caption', 'Login'),
+            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
                                  url,
                                  self.defaults.get('login_window_width', 600),
                                  self.defaults.get('login_window_height', 600)
@@ -1612,6 +1640,31 @@ class AuthTab(ApiTab):
 
     def initOAuth2Session(self, no=0):
         return super(AuthTab, self).initSession(no)
+
+    @Slot()
+    def doCookieLogin(self, session_no=0):
+        try:
+            options = self.getOptions()
+            url= options.get('auth_uri', '')
+
+            if url == '':
+                raise Exception('Login URL is missing, please adjust settings!')
+
+            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
+                                 url,
+                                 self.defaults.get('login_window_width', 600),
+                                 self.defaults.get('login_window_height', 600)
+                                 )
+
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+    @Slot(QUrl)
+    def getCookieToken(self, url):
+        pass
+
 
     @Slot()
     def doTwitterAppLogin(self):
@@ -1754,8 +1807,6 @@ class FacebookTab(AuthTab):
             options['ratelimit'] = False
             options['querystatus'] = status
 
-
-
             # rate limit info
             if 'x-app-usage' in headers:
                 appusage = json.loads(headers['x-app-usage'])
@@ -1775,7 +1826,6 @@ class FacebookTab(AuthTab):
                     options['ratelimit'] = True
 
             # options for data handling
-
             if hasDictValue(data, 'data'):
                 options['nodedata'] = 'data'
             else:
@@ -1804,7 +1854,7 @@ class FacebookTab(AuthTab):
 
 
     @Slot()
-    def doLogin(self, query=False, caption="Facebook Login Page",url=""):
+    def doLogin(self, session_no = 0):
         try:
             #use credentials from input if provided
             clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
@@ -1814,8 +1864,8 @@ class FacebookTab(AuthTab):
                  raise Exception('Client ID missing, please adjust settings!')
             
             url = self.defaults['auth_uri'] +"?client_id=" + clientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
-    
-            self.showLoginWindow(query, caption, url)
+            caption = "Facebook Login Page"
+            self.showLoginWindow(caption, url)
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",str(e),QMessageBox.StandardButton.Ok)
 
@@ -2067,14 +2117,14 @@ class TwitterStreamingTab(ApiTab):
 
 
     @Slot()
-    def doLogin(self, query=False, caption="Twitter Login Page", url=""):
+    def doLogin(self, session_no=0):
         try:
             service = self.getOAuth1Service()
 
             self.oauthdata.pop('oauth_verifier', None)
             self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = service.get_request_token()
-    
-            self.showLoginWindow(query, caption,service.get_authorize_url(self.oauthdata['requesttoken']))
+            caption = "Twitter Login Page"
+            self.showLoginWindow(caption,service.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
                                             str(e),
@@ -2394,18 +2444,16 @@ class TwitterTab(AuthTab):
             data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
+            options['ratelimit'] = (status == "error (429)")
 
             # rate limit info
             if 'x-rate-limit-remaining' in headers:
                 options['info'] = {'x-rate-limit-remaining': "{} requests remaining until rate limit".format(
                     headers['x-rate-limit-remaining'])}
 
-            options['ratelimit'] = (status == "error (429)")
-
-            if hasDictValue(data,'results'):
+            # adapt nodedata key
+            if (options['nodedata'] is None) and (hasDictValue(data,'results')):
                 options['nodedata'] = 'results'
-            #else:
-            #    options['nodedata'] = None
 
             logData(data, options, headers)
             if logProgress is not None:
@@ -2508,7 +2556,7 @@ class YoutubeTab(AuthTab):
         return options
 
     @Slot()
-    def doLogin(self):
+    def doLogin(self, session_no=0):
         if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'API key':
             QMessageBox.information(self, "Facepager", "Manually enter your API key into the access token field or switch to OAuth2")
         else:
@@ -2584,10 +2632,13 @@ class GenericTab(AuthTab):
 class QWebPageCustom(QWebEnginePage):
     logmessage = Signal(str)
     urlNotFound = Signal(QUrl)
+    cookieChanged = Signal(str, str)
 
     def __init__(self, parent):
         #super(QWebPageCustom, self).__init__(*args, **kwargs)
         super(QWebPageCustom, self).__init__(parent)
+
+        self.cookiecache = {}
 
         profile = self.profile()
         profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
@@ -2596,6 +2647,30 @@ class QWebPageCustom(QWebEnginePage):
         cookies = profile.cookieStore()
         profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
         cookies.deleteAllCookies()
+        cookies.cookieAdded.connect(self.cookieAdded)
+
+
+    @Slot()
+    def cookieAdded(self, cookie):
+        """
+        Save cookies in cookie jar and emit cookie signal
+        :param cookie:
+        :return:
+        """
+        #value = cookie.toRawForm(QNetworkCookie.NameAndValueOnly).data().decode()
+
+        cookieid = cookie.domain() + cookie.path()
+        domain = cookie.domain().strip(".")
+        name = cookie.name().data().decode()
+        value = cookie.value().data().decode()
+
+        cookies = self.cookiecache.get(cookieid,{})
+        cookies[name] = value
+        self.cookiecache[cookieid] = cookies
+
+        fullcookie = '; '.join(['{}={}'.format(k, v) for k, v in cookies.items()])
+
+        self.cookieChanged.emit(domain, fullcookie)
 
     def supportsExtension(self, extension):
         if extension == QWebEnginePage.ErrorPageExtension:
