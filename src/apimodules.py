@@ -911,7 +911,8 @@ class ApiTab(QScrollArea):
                 session = requests.Session()
                 session.proxies.update(self.getProxies())
 
-                adapter = requests.adapters.HTTPAdapter(pool_connections=1, pool_maxsize=1)
+                #adapter = requests.adapters.HTTPAdapter(pool_connections=1, pool_maxsize=1)
+                adapter = requests.adapters.HTTPAdapter(pool_connections=1, pool_maxsize=10, pool_block=False)
                 session.mount('http://', adapter)
                 session.mount('https://', adapter)
                 session.mount('file://', LocalFileAdapter())
@@ -1369,6 +1370,14 @@ class AuthTab(ApiTab):
                 options['params'] = params
                 options['url'] = url
 
+        # break if "continue pagination" is checked and offcut is present
+        elif options.get('paginate',False):
+            offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
+
+            # Dont't fetch if already finished (=offcut)
+            if (offcut is not None):
+                return None
+
         return options
 
     def updatePagingOptions(self, data, options):
@@ -1459,7 +1468,7 @@ class AuthTab(ApiTab):
                 logProgress({'page': page + 1})
 
             # Paging
-            options = self.updataPagingOptions(data, options)
+            options = self.updatePagingOptions(data, options)
             if options is None:
                 break
 
