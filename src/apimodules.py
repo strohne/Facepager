@@ -1502,9 +1502,11 @@ class AuthTab(ApiTab):
             if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
                 requestheaders["Content-Type"] = payload.content_type
         else:
+            method = options.get('verb', 'GET')
             payload = None
             urlpath = options['url']
             urlparams = options['params']
+            requestheaders = {}
 
         # sign request (for Amazon tab)
         if hasattr(self, "signRequest"):
