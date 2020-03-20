@@ -1449,8 +1449,9 @@ class AuthTab(ApiTab):
             method, urlpath, urlparams, payload, requestheaders  = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
-                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'],
-                                                                   urlpath + "?" + urllib.parse.urlencode(urlparams)))
+                logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
+                    options.get('access_token',''),'')
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data
             options['querytime'] = str(datetime.now())
@@ -1863,8 +1864,9 @@ class FacebookTab(AuthTab):
             method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
-                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], \
-                           urlpath + "?" + urllib.parse.urlencode(urlparams)))
+                logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
+                    options.get('access_token',''),'')
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data
             options['querytime'] = str(datetime.now())
@@ -2162,7 +2164,9 @@ class TwitterStreamingTab(ApiTab):
             urlparams = options["params"]
 
         if options['logrequests']:
-            logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], urlpath + "?" + urllib.parse.urlencode(urlparams)))
+            logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
+                options.get('access_token', ''), '')
+            logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
         # data
         headers = None
@@ -2496,8 +2500,9 @@ class TwitterTab(AuthTab):
             method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
-                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], \
-                            urlpath + "?" + urllib.parse.urlencode(urlparams)))
+                logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
+                    options.get('access_token', ''), '')
+                logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data
             data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders)
