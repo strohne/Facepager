@@ -1,6 +1,6 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QActionGroup, QInputDialog, QLineEdit
+from PySide2.QtWidgets import QActionGroup
 
 import csv
 from copy import deepcopy
@@ -429,8 +429,7 @@ class Actions(object):
             if indexes is None:
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
-                key_paging =  options.get('key_paging',None) if globaloptions['paginate'] else None
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, key_paging)
+                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, options)
             elif isinstance(indexes,list):
                 indexes = iter(indexes)
 

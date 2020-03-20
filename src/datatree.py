@@ -60,7 +60,7 @@ class DataTree(QTreeView):
             return len(indexes) == model.rootItem.childCount()
 
 
-    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, key_paging = None):
+    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, options = {}):
         level = filter.get('level', None)
 
         def getLevel(index):
@@ -85,15 +85,19 @@ class DataTree(QTreeView):
                     if not treeitem.data[key] in orlist:
                         return False
 
-            # Dont't fetch if already finished (=has offcut without next cursor)
-            if (key_paging is not None) and (treeitem.childCountAll() > 0):
-                # Get cursor of last offcut node
+            # Find last offcut node
+            if options.get('paginate', False):
                 treeitem.offcut = treeitem.getLastChildData()
-                response = getDictValueOrNone(treeitem.offcut, 'response', dump=False)
-                cursor = getDictValueOrNone(response, key_paging)
 
-                if (treeitem.offcut is not None) and (cursor is None):
-                    return False
+                # Dont't fetch if already finished (=has offcut without next cursor)
+                if (treeitem.offcut is not None) and (options.get('key_paging') is not None):
+                    response = getDictValueOrNone(treeitem.offcut, 'response', dump=False)
+                    cursor = getDictValueOrNone(response, options.get('key_paging'))
+                    stopvalue = not extractValue(response, options.get('paging_stop'), dump=False, default=True)[1]
+
+                    # Dont't fetch if already finished (=offcut without next cursor)
+                    if (cursor is None) or stopvalue:
+                        return False
             else:
                 treeitem.offcut = None
 
@@ -103,7 +107,7 @@ class DataTree(QTreeView):
             if self.selectionModel().isSelected(index):
                 selected = True
 
-            if checkFilter(index) and selected:
+            if selected and checkFilter(index):
                 if persistent:
                     index_persistent = QPersistentModelIndex(index)
                     yield (index_persistent)
@@ -213,8 +217,11 @@ class TreeItem(object):
     #        yield self
     #        for index in self.childItems:
 
-    def getLastChildData(self,status = "fetched (200)", objecttype = "offcut"):
+    def getLastChildData(self, status="fetched (200)", objecttype="offcut"):
         if not self.id:
+            return None
+
+        if  not (self.childCountAll() > 0):
             return None
 
         query = Node.query.filter(Node.parent_id == self.id,Node.querystatus == status,Node.objecttype == objecttype)
