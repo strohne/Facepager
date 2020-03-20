@@ -881,8 +881,8 @@ class ApiTab(QScrollArea):
     def onChangedParam(self,index=0):
         pass
 
-    def getProxies(self):
-        if not hasattr(self,"proxies"):
+    def getProxies(self, reload=False):
+        if not hasattr(self,"proxies") or reload:
             try:
                 filename = os.path.join(os.path.expanduser("~"), 'Facepager','proxies.json')
                 if os.path.exists(filename):
@@ -1053,11 +1053,11 @@ class ApiTab(QScrollArea):
                 try:
                     data = response.json() if response.text != '' else []
                 except Exception as e:
-                    self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
-                    try:
-                        data = xmlToJson(response.text)
-                    except:
-                        data = {'error': 'Data could not be converted to JSON','response': response.text}
+                    # self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
+                    # try:
+                    #     data = xmlToJson(response.text)
+                    # except:
+                    data = {'error': 'Data could not be converted to JSON','response': response.text}
 
             # JSON
             elif format == 'xml':

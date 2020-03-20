@@ -418,9 +418,10 @@ class Actions(object):
                 apimodule = self.mainWindow.getModule(apimodule)
             if apimodule == False:
                 apimodule = self.mainWindow.RequestTabs.currentWidget()
+            apimodule.getProxies(True)
+
             if options == False:
                 options = apimodule.getOptions()
-
             options.update(globaloptions)
 
 
