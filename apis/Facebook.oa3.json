@@ -388,7 +388,22 @@
                       "in" : "query",
                       "description" : "Used with the promotable_posts edge only. Filters by published or unpublished page posts.",
                       "schema":{"type":"boolean"}
-                    },                    
+                    },
+                   {
+                      "name" : "since",
+                      "in" : "query",
+                      "description" : "Filter by date.",
+                      "schema":{"type":"string"},
+                        "example":"2020-03-19"
+                    },
+                    {
+                      "name" : "until",
+                      "in" : "query",
+                      "description" : "Filter by date. The until-parameter always has to be one day later, the day starts at 0:00am GMT.",
+                      "schema":{"type":"string"},
+                        "example":"2020-03-20"
+
+                    },
                     {
                       "name" : "fields",
                       "in" : "query",
@@ -1427,7 +1442,22 @@
                       "in" : "query",
                       "description" : "Used with the promotable_posts edge only. Filters by published or unpublished page posts.",
                       "schema":{"type":"boolean"}
-                    },                    
+                    },
+                    {
+                      "name" : "since",
+                      "in" : "query",
+                      "description" : "Filter by date.",
+                      "schema":{"type":"string"},
+                        "example":"2020-03-19"
+                    },
+                    {
+                      "name" : "until",
+                      "in" : "query",
+                      "description" : "Filter by date. The until-parameter always has to be one day later, the day starts at 0:00am GMT.",
+                      "schema":{"type":"string"},
+                        "example":"2020-03-20"
+
+                    },
                     {
                       "name" : "fields",
                       "in" : "query",
