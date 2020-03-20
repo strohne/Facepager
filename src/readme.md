@@ -1,4 +1,4 @@
-pip install -U requests[socks]# General notes
+# General notes
 
 Facepager 4 is developed for Python 3.7 (64 bit) and PySide2 (Qt5)
 
