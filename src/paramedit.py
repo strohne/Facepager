@@ -67,7 +67,17 @@ class QParamEdit(QTableWidget):
         params = OrderedDict()
         for row in range(0,self.rowCount()):
             if not self.rowEmpty(row):
-                params[self.getValue(row,0).strip()] = self.getValue(row,1).strip()
+                key = self.getValue(row,0).strip()
+                value = self.getValue(row,1).strip()
+
+                if not key in params:
+                    params[key] = value
+                elif isinstance(params[key],list):
+                    params[key].append(value)
+                else:
+                    params[key] = [params[key],value]
+
+                #params[self.getValue(row,0).strip()] =
         return params
 
 
