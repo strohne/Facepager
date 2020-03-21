@@ -1653,6 +1653,7 @@
                       "schema":{
 						  "type":"string",
 						  "enum": ["extended", "compat"]
+
 					  }
 					}
 				],
