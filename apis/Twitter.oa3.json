@@ -1652,7 +1652,7 @@
                       "description" : "Any REST API endpoints that return Tweets will accept a new tweet_mode request parameter. Valid request values are compat and extended, which give compatibility mode and extended mode, respectively. The default mode (if no parameter is provided) is compatibility mode, to support older clients and display methods. Tweets rendered in compatibility mode via the standard REST API will not contain the extended_tweet field. REST API clients that wish to get the full text can instead opt into extended mode.",
                       "schema":{
 						  "type":"string",
-						  "enum": ["extended", "compat"],
+						  "enum": ["extended", "compat"]
 					  }
 					}
 				],
@@ -1721,7 +1721,7 @@
                       "description" : "Any REST API endpoints that return Tweets will accept a new tweet_mode request parameter. Valid request values are compat and extended, which give compatibility mode and extended mode, respectively. The default mode (if no parameter is provided) is compatibility mode, to support older clients and display methods. Tweets rendered in compatibility mode via the standard REST API will not contain the extended_tweet field. REST API clients that wish to get the full text can instead opt into extended mode.",
                       "schema":{
 						  "type":"string",
-						  "enum": ["extended", "compat"],
+						  "enum": ["extended", "compat"]
 					  }
 					}
 				],
@@ -1777,7 +1777,7 @@
                       "description" : "Any REST API endpoints that return Tweets will accept a new tweet_mode request parameter. Valid request values are compat and extended, which give compatibility mode and extended mode, respectively. The default mode (if no parameter is provided) is compatibility mode, to support older clients and display methods. Tweets rendered in compatibility mode via the standard REST API will not contain the extended_tweet field. REST API clients that wish to get the full text can instead opt into extended mode.",
                       "schema":{
 						  "type":"string",
-						  "enum": ["extended", "compat"],
+						  "enum": ["extended", "compat"]
 					  }
 					}
 				],
@@ -1905,7 +1905,7 @@
                       "description" : "Any REST API endpoints that return Tweets will accept a new tweet_mode request parameter. Valid request values are compat and extended, which give compatibility mode and extended mode, respectively. The default mode (if no parameter is provided) is compatibility mode, to support older clients and display methods. Tweets rendered in compatibility mode via the standard REST API will not contain the extended_tweet field. REST API clients that wish to get the full text can instead opt into extended mode.",
                       "schema":{
 						  "type":"string",
-						  "enum": ["extended", "compat"],
+						  "enum": ["extended", "compat"]
 					  }
 					}
 				],
@@ -2000,7 +2000,7 @@
                       "description" : "Any REST API endpoints that return Tweets will accept a new tweet_mode request parameter. Valid request values are compat and extended, which give compatibility mode and extended mode, respectively. The default mode (if no parameter is provided) is compatibility mode, to support older clients and display methods. Tweets rendered in compatibility mode via the standard REST API will not contain the extended_tweet field. REST API clients that wish to get the full text can instead opt into extended mode.",
                       "schema":{
 						  "type":"string",
-						  "enum": ["extended", "compat"],
+						  "enum": ["extended", "compat"]
 					  }
 					}
 				],
@@ -2091,8 +2091,9 @@
                       "in" : "query",
                       "description" : "Any REST API endpoints that return Tweets will accept a new tweet_mode request parameter. Valid request values are compat and extended, which give compatibility mode and extended mode, respectively. The default mode (if no parameter is provided) is compatibility mode, to support older clients and display methods. Tweets rendered in compatibility mode via the standard REST API will not contain the extended_tweet field. REST API clients that wish to get the full text can instead opt into extended mode.",
                       "schema":{"type":"string",
-						"enum": ["extended", "compat"]}
+						"enum": ["extended", "compat"]
 					  }
+					}
 				],
 			"responses" : {
 				"200" : {
