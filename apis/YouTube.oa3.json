@@ -3,7 +3,7 @@
     "x-facepager-module":"YouTube",
 
 	"x-facepager-extract" : "items",
-	"x-facepager-objectid" : "id.videoId",
+	"x-facepager-objectid" : "id",
 	"x-facepager-pagination": {
 		"method" : "key",
 		"param" : "pageToken",
