@@ -537,7 +537,7 @@ class ApiTab(QScrollArea):
             self.defaults['key_nodedata'] = getDictValueOrNone(self.apidoc,"x-facepager-extract")
 
             # Default pagination setting
-            pagination = getDictValueOrNone(self.apidoc, "x-facepager-pagination")
+            pagination = getDictValueOrNone(self.apidoc, "x-facepager-pagination", dump=False)
             self.defaults['paging_type'] = getDictValueOrNone(pagination,'method')
             self.defaults['param_paging'] = getDictValueOrNone(pagination,'param')
             self.defaults['key_paging'] = getDictValueOrNone(pagination,'key')
@@ -1513,6 +1513,8 @@ class AuthTab(ApiTab):
                 key_nodedata = self.defaults.get('key_nodedata')
                 if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
                     options['nodedata'] = key_nodedata
+            if (options.get('key_objectid') is None):
+                options['objectid'] = self.defaults.get('key_objectid')
 
             # return data
             logData(data, options, headers)
@@ -1950,6 +1952,8 @@ class FacebookTab(AuthTab):
                 key_nodedata = self.defaults.get('key_nodedata')
                 if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
                     options['nodedata'] = key_nodedata
+            if (options.get('key_objectid') is None):
+                options['objectid'] = self.defaults.get('key_objectid')
 
             logData(data, options, headers)
             if logProgress is not None:
@@ -2568,6 +2572,8 @@ class TwitterTab(AuthTab):
                 key_nodedata = self.defaults.get('key_nodedata')
                 if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
                     options['nodedata'] = key_nodedata
+            if (options.get('key_objectid') is None):
+                options['objectid'] = self.defaults.get('key_objectid')
 
             logData(data, options, headers)
             if logProgress is not None:
