@@ -265,7 +265,9 @@ class ApiTab(QScrollArea):
             pass
 
         # Get doc key for lookup of data handling keys
-        doc = 'paths.' + options.get('resource','') + '.get.responses.200.content.application/json.schema.'
+        doc_path = 'paths.' + options.get('resource', '') + '.get'
+        doc_response = doc_path +'.responses.200.content.application/json.schema.'
+
 
         #format
         try:
@@ -305,10 +307,10 @@ class ApiTab(QScrollArea):
             options['offset_start'] = self.offsetStartEdit.value()
             options['offset_step'] = self.offsetStepEdit.value()
         except AttributeError:
-            options['paging_type'] = self.getFromDoc(doc + 'x-facepager-paging-type', 'paging_type')
-            options['key_paging'] = self.getFromDoc(doc + 'x-facepager-paging-key', 'key_paging')
-            options['paging_stop'] = self.getFromDoc(doc + 'x-facepager-paging-stop', 'paging_stop')
-            options['param_paging'] = self.getFromDoc(doc + 'x-facepager-paging-param', 'param_paging')
+            options['paging_type'] = self.getFromDoc(doc_path + '.x-facepager-pagination.method', 'paging_type')
+            options['key_paging'] = self.getFromDoc(doc_path + '.x-facepager-pagination.key', 'key_paging')
+            options['paging_stop'] = self.getFromDoc(doc_path+ '.x-facepager-pagination.stop', 'paging_stop')
+            options['param_paging'] = self.getFromDoc(doc_path + '.x-facepager-pagination.param', 'param_paging')
             options['offset_start'] = 1
             options['offset_step'] = 1
 
@@ -317,8 +319,8 @@ class ApiTab(QScrollArea):
             options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else self.defaults.get('key_objectid',None)
             options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else self.defaults.get('key_nodedata',None)
         except AttributeError:
-            options['nodedata'] = self.getFromDoc(doc + 'x-facepager-extract', 'key_nodedata')
-            options['objectid'] = self.getFromDoc(doc + 'x-facepager-objectid', 'key_objectid')
+            options['nodedata'] = self.getFromDoc(doc_response + 'x-facepager-extract', 'key_nodedata')
+            options['objectid'] = self.getFromDoc(doc_response + 'x-facepager-objectid', 'key_objectid')
 
         # Scopes
         try:
@@ -529,7 +531,7 @@ class ApiTab(QScrollArea):
 
             self.buttonApiHelp.setVisible(True)
 
-        self.resourceEdit.insertItem(0, "<Object ID>")
+        self.resourceEdit.insertItem(0, "/<Object ID>")
 
 
 
@@ -1344,7 +1346,7 @@ class AuthTab(ApiTab):
         # paging by key (continue previous fetching process based on last fetched child offcut node)
         elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
             # Get cursor of last offcut node
-            offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
+            offcut = getDictValueOrNone(options, 'offcut.response', dump=False)
             cursor = getDictValueOrNone(offcut,options.get('key_paging'))
             stopvalue = not extractValue(offcut,options.get('paging_stop'), dump = False, default = True)[1]
 
@@ -1358,7 +1360,7 @@ class AuthTab(ApiTab):
 
         # url based paging
         elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
-            offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
+            offcut = getDictValueOrNone(options, 'offcut.response', dump=False)
             url = getDictValueOrNone(offcut,options.get('key_paging'))
 
             # Dont't fetch if already finished (=offcut without next cursor)
@@ -1370,9 +1372,23 @@ class AuthTab(ApiTab):
                 options['params'] = params
                 options['url'] = url
 
+        elif (options.get('paging_type') == "decrease"):
+            node= getDictValueOrNone(options, 'offcut.response', dump=False)
+            cursor = getDictValueOrNone(node, options.get('key_paging'))
+
+            if (node is not None):
+                if cursor is None:
+                    return None
+
+                try:
+                    cursor = int(cursor) - 1
+                    options['params'][options['param_paging']] = cursor
+                except:
+                    return None
+
         # break if "continue pagination" is checked and offcut is present
         elif options.get('paginate',False):
-            offcut = getDictValueOrNone(options, 'offcutdata.response', dump=False)
+            offcut = getDictValueOrNone(options, 'offcut.response', dump=False)
 
             # Dont't fetch if already finished (=offcut)
             if (offcut is not None):
@@ -1412,6 +1428,24 @@ class AuthTab(ApiTab):
                 options['params'] = params
                 options['url'] = url
             else:
+                return None
+        elif (options.get('paging_type') == "decrease"):
+            # manual paging with max-id
+            # if there are still statuses in the response, use the last ID-1 for further pagination
+
+            if isinstance(data, list) and (len(data) > 0):
+                node = data[-1]
+            else:
+                node = data
+
+            cursor = getDictValueOrNone(node, options['key_paging'])
+            if cursor is None:
+                return None
+
+            try:
+                cursor = int(cursor) - 1
+                options['params'][options['param_paging']] = cursor
+            except:
                 return None
 
         # no pagination
@@ -1786,7 +1820,7 @@ class FacebookTab(AuthTab):
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
         self.defaults['key_objectid'] = 'id'
-        self.defaults['key_nodedata'] = 'data'
+        self.defaults['key_nodedata'] = None
 
         self.defaults['auth'] = 'param'
         self.defaults['auth_tokenname'] = 'access_token'
@@ -2538,13 +2572,6 @@ class TwitterTab(AuthTab):
                 # Workaround for Twitter bug (carry on tweet_mode=extended)
                 if 'tweet_mode' in urlparams:
                     options['params']['tweet_mode'] = urlparams['tweet_mode']
-
-            # manual paging with max-id
-            # if there are still statuses in the response, use the last ID-1 for further pagination
-            # applies to /statuses/user_timeline
-            elif (paging is None) and isinstance(data, list) and (len(data) > 0):
-                paging = options
-                paging['params']['max_id'] = int(data[-1]["id"]) - 1
 
             if paging is not None:
                 options = paging

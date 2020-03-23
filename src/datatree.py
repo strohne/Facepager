@@ -87,7 +87,10 @@ class DataTree(QTreeView):
 
             # Find last offcut node
             if options.get('paginate', False):
-                treeitem.offcut = treeitem.getLastChildData()
+                if options.get('paging_type') == "decrease":
+                    treeitem.offcut = treeitem.getLastChildData(objecttype = "data")
+                else:
+                    treeitem.offcut = treeitem.getLastChildData(objecttype = "offcut")
 
                 # Dont't fetch if already finished (=has offcut without next cursor)
                 if (treeitem.offcut is not None) and (options.get('key_paging') is not None):
@@ -131,7 +134,12 @@ class DataTree(QTreeView):
 
                     row += 1
 
-        yield from addIndex(QModelIndex(), selectall)
+        if selectall:
+            yield from addIndex(QModelIndex(), True)
+        else:
+            for index in self.selectionModel().selectedRows():
+                yield from addIndex(index, True)
+
 
 class TreeItem(object):
     def __init__(self, model=None, parent=None, id=None, data=None):
@@ -221,7 +229,7 @@ class TreeItem(object):
         if not self.id:
             return None
 
-        if  not (self.childCountAll() > 0):
+        if not (self.childCountAll() > 0):
             return None
 
         query = Node.query.filter(Node.parent_id == self.id,Node.querystatus == status,Node.objecttype == objecttype)

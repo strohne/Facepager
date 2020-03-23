@@ -477,7 +477,7 @@ class Actions(object):
                                     treenode = index.internalPointer()
                                     node_data = deepcopy(treenode.data)
                                     node_options = deepcopy(options)
-                                    node_options['offcutdata'] = treenode.offcut if hasattr(treenode, 'offcut') else None
+                                    node_options['offcut'] = treenode.offcut if hasattr(treenode, 'offcut') else None
 
                                     # Add job
                                     job = {'nodeindex': index,
