@@ -1,6 +1,16 @@
 {
     "openapi": "3.0.0",
     "x-facepager-module":"Twitter",
+
+    "x-facepager-extract" : "results",
+	"x-facepager-objectid" : "id",
+	"x-facepager-pagination": {
+		"method" : "key",
+		"param" : "cursor",
+		"key" : "next_cursor_str",
+		"stop" : "next_cursor"
+	},
+
     "info": {
         "title": "Twitter API",
         "description": "The Twitter API lets you search for tweets and get user information.",

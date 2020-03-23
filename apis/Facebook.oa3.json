@@ -1,6 +1,16 @@
 {
     "openapi": "3.0.0",
     "x-facepager-module":"Facebook",
+    "x-facepager-extract" : "data",
+	"x-facepager-objectid" : "id",
+
+	"x-facepager-pagination": {
+		"method" : "url",
+		"param" : null,
+		"key" : "paging.next",
+		"stop" : null
+	},
+
     "info": {
         "title": "Facebook Graph API",
         "description": "The Graph API is the primary way to get data into and out of the Facebook platform.",

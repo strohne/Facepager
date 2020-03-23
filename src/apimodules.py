@@ -240,9 +240,10 @@ class ApiTab(QScrollArea):
             payload = BufferReader(payload,callback)
             return payload
 
-    def getFromDoc(self, dockey, defaultkey):
+    def getFromDoc(self, dockey, defaultkey = None):
         value = getDictValue(self.apidoc, dockey, dump=False, default=None)
-        value = value if value is not None else self.defaults.get(defaultkey, None)
+        if (value is None) and (defaultkey is not None):
+            value = self.defaults.get(defaultkey)
         return value
 
     # Gets data from input fields or defaults (never gets credentials from default values!)
@@ -319,8 +320,8 @@ class ApiTab(QScrollArea):
             options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else self.defaults.get('key_objectid',None)
             options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else self.defaults.get('key_nodedata',None)
         except AttributeError:
-            options['nodedata'] = self.getFromDoc(doc_response + 'x-facepager-extract', 'key_nodedata')
-            options['objectid'] = self.getFromDoc(doc_response + 'x-facepager-objectid', 'key_objectid')
+            options['nodedata'] = self.getFromDoc(doc_response + 'x-facepager-extract')
+            options['objectid'] = self.getFromDoc(doc_response + 'x-facepager-objectid')
 
         # Scopes
         try:
@@ -530,6 +531,17 @@ class ApiTab(QScrollArea):
                 self.resourceEdit.setItemData(0, operations, Qt.UserRole)
 
             self.buttonApiHelp.setVisible(True)
+
+            # Default extract settings
+            self.defaults['key_objectid'] = getDictValueOrNone(self.apidoc,"x-facepager-objectid")
+            self.defaults['key_nodedata'] = getDictValueOrNone(self.apidoc,"x-facepager-extract")
+
+            # Default pagination setting
+            pagination = getDictValueOrNone(self.apidoc, "x-facepager-pagination")
+            self.defaults['paging_type'] = getDictValueOrNone(pagination,'method')
+            self.defaults['param_paging'] = getDictValueOrNone(pagination,'param')
+            self.defaults['key_paging'] = getDictValueOrNone(pagination,'key')
+            self.defaults['paging_stop'] = getDictValueOrNone(pagination,'stop')
 
         self.resourceEdit.insertItem(0, "/<Object ID>")
 
@@ -1491,14 +1503,25 @@ class AuthTab(ApiTab):
             options['querytime'] = str(datetime.now())
             data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders, method, payload,
                                                  foldername, filename, fileext, format=format)
+
+            # status handling
             options['querystatus'] = status
             options['ratelimit'] = (status == "error (429)")
+
+            # fallback option for data handling
+            if (options.get('nodedata') is None):
+                key_nodedata = self.defaults.get('key_nodedata')
+                if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
+                    options['nodedata'] = key_nodedata
+
+            # return data
             logData(data, options, headers)
 
             # rate limit info
             # if 'x-rate-limit-remaining' in headers:
             #     options['info'] = {'x-rate-limit-remaining': u"{} requests remaining until rate limit".format(headers['x-rate-limit-remaining'])}
 
+            # Progress
             if logProgress is not None:
                 logProgress({'page': page + 1})
 
@@ -1819,14 +1842,9 @@ class FacebookTab(AuthTab):
         self.defaults['resource'] = '/<Object ID>'
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
-        self.defaults['key_objectid'] = 'id'
-        self.defaults['key_nodedata'] = None
 
         self.defaults['auth'] = 'param'
         self.defaults['auth_tokenname'] = 'access_token'
-
-        self.defaults['paging_type'] = 'url'
-        self.defaults['key_paging'] = 'paging.next'
 
         self.defaults['login_buttoncaption'] = " Login to Facebook "
 
@@ -1927,9 +1945,11 @@ class FacebookTab(AuthTab):
                 if (code in ['4','17','32','613']) and (status in ['error (400)', 'error (403)']):
                     options['ratelimit'] = True
 
-            # options for data handling
-            if hasDictValue(data, 'data'):
-                options['nodedata'] = 'data'
+            # fallback option for data handling
+            if (options.get('nodedata') is None):
+                key_nodedata = self.defaults.get('key_nodedata')
+                if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
+                    options['nodedata'] = key_nodedata
 
             logData(data, options, headers)
             if logProgress is not None:
@@ -2002,9 +2022,10 @@ class TwitterStreamingTab(ApiTab):
         self.defaults['basepath'] = 'https://stream.twitter.com/1.1'
         self.defaults['resource'] = '/statuses/filter'
         self.defaults['params'] = {'track': '<Object ID>'}        
+
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = None
-        
+
         # Query Box
         self.initInputs()
         self.initAuthSettingsInputs()
@@ -2449,13 +2470,6 @@ class TwitterTab(AuthTab):
         self.defaults['basepath'] = 'https://api.twitter.com/1.1'
         self.defaults['resource'] = '/search/tweets'
         self.defaults['params'] = {'q': '<Object ID>'}
-        self.defaults['key_objectid'] = 'id'
-        self.defaults['key_nodedata'] = None
-
-        self.defaults['paging_type'] = 'key'
-        self.defaults['param_paging'] = 'cursor'
-        self.defaults['key_paging'] = 'next_cursor_str'
-        self.defaults['paging_stop'] = 'next_cursor'
 
         self.defaults['auth_type'] = 'Twitter OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
@@ -2549,9 +2563,11 @@ class TwitterTab(AuthTab):
                 options['info'] = {'x-rate-limit-remaining': "{} requests remaining until rate limit".format(
                     headers['x-rate-limit-remaining'])}
 
-            # adapt nodedata key
-            if (options['nodedata'] is None) and (hasDictValue(data,'results')):
-                options['nodedata'] = 'results'
+            # fallback option for data handling
+            if (options.get('nodedata') is None):
+                key_nodedata = self.defaults.get('key_nodedata')
+                if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
+                    options['nodedata'] = key_nodedata
 
             logData(data, options, headers)
             if logProgress is not None:
@@ -2595,12 +2611,6 @@ class YoutubeTab(AuthTab):
 
         self.defaults['login_buttoncaption'] = " Login to Google "
         self.defaults['login_window_caption'] = "YouTube Login Page"
-
-        self.defaults['key_objectid'] = 'id.videoId'
-        self.defaults['key_nodedata'] = 'items'
-        self.defaults['paging_type'] = "key"
-        self.defaults['key_paging'] = "nextPageToken"
-        self.defaults['param_paging'] = 'pageToken'
 
         self.defaults['auth'] = 'param'
         self.defaults['basepath'] = "https://www.googleapis.com/youtube/v3"
