@@ -317,8 +317,8 @@ class ApiTab(QScrollArea):
 
         #options for data handling
         try:
-            options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else self.defaults.get('key_objectid',None)
-            options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else self.defaults.get('key_nodedata',None)
+            options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else None
+            options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else None
         except AttributeError:
             options['nodedata'] = self.getFromDoc(doc_response + 'x-facepager-extract')
             options['objectid'] = self.getFromDoc(doc_response + 'x-facepager-objectid')
@@ -1513,7 +1513,7 @@ class AuthTab(ApiTab):
                 key_nodedata = self.defaults.get('key_nodedata')
                 if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
                     options['nodedata'] = key_nodedata
-            if (options.get('key_objectid') is None):
+            if (options.get('objectid') is None):
                 options['objectid'] = self.defaults.get('key_objectid')
 
             # return data
