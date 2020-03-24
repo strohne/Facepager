@@ -2179,7 +2179,7 @@ class TwitterStreamingTab(ApiTab):
                                 #self.connected = False
                                 self.disconnectSocket()
                                 raise Exception("Request Error: " + str(response.status_code) + ". Message: "+str(response.content))
-                        print("good response")
+
                         return response
 
 
