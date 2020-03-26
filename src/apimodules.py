@@ -910,28 +910,30 @@ class ApiTab(QScrollArea):
 
         return self.proxies
 
-    def initSession(self,no=0):
+    def initSession(self, no=0, renew=False):
         """
         Return existing session or create a new session if necessary
         :param no: Session number
-        :return: None
+        :return: session
         """
         with self.lock_session:
             while (len(self.sessions) <= no):
                 self.sessions.append(None)
 
-            session = self.sessions[no]
+            session = self.sessions[no] if not renew else None
+
             if session is None:
                 session = requests.Session()
                 session.proxies.update(self.getProxies())
 
-                #adapter = requests.adapters.HTTPAdapter(pool_connections=1, pool_maxsize=1)
-                adapter = requests.adapters.HTTPAdapter(pool_connections=1, pool_maxsize=10, pool_block=False)
+                # Mount new adapters = don't cache connections
+                adapter = requests.adapters.HTTPAdapter()
                 session.mount('http://', adapter)
                 session.mount('https://', adapter)
                 session.mount('file://', LocalFileAdapter())
 
             self.sessions[no] = session
+
         return session
 
     def closeSession(self, no=0):
@@ -1004,19 +1006,23 @@ class ApiTab(QScrollArea):
         self.lastrequest = QDateTime.currentDateTime()
 
         session = self.initSession(session_no)
-        if (not session):
-            raise Exception("No session available.")
-            
+
         try:
             maxretries = 3
             while True:
                 try:
+                    if (not session):
+                        raise Exception("No session available.")
+
                     response = session.request(method,path, params=args,headers=headers,data=payload, timeout=self.timeout) # verify=False
 
                 except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
+
+                    # Try next request with new session
                     if maxretries > 0:
                         time.sleep(0.1)
+                        session = self.initSession(session_no, True)
                         self.logMessage("Automatic retry: Request Error: {0}".format(str(e)))
                     else:
                         raise e
@@ -1363,7 +1369,7 @@ class AuthTab(ApiTab):
             stopvalue = not extractValue(offcut,options.get('paging_stop'), dump = False, default = True)[1]
 
             # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('paginate',False) and (offcut is not None) and ((cursor is None) or stopvalue):
+            if options.get('resume',False) and (offcut is not None) and ((cursor is None) or stopvalue):
                 return None
 
             # Continue / start fetching
@@ -1376,7 +1382,7 @@ class AuthTab(ApiTab):
             url = getDictValueOrNone(offcut,options.get('key_paging'))
 
             # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('paginate',False) and (offcut is not None) and (url is None):
+            if options.get('resume',False) and (offcut is not None) and (url is None):
                 return None
 
             if url is not None:
@@ -1398,8 +1404,8 @@ class AuthTab(ApiTab):
                 except:
                     return None
 
-        # break if "continue pagination" is checked and offcut is present
-        elif options.get('paginate',False):
+        # break if "continue pagination" is checked and data already present
+        elif options.get('resume',False):
             offcut = getDictValueOrNone(options, 'offcut.response', dump=False)
 
             # Dont't fetch if already finished (=offcut)
@@ -1952,7 +1958,7 @@ class FacebookTab(AuthTab):
                 key_nodedata = self.defaults.get('key_nodedata')
                 if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
                     options['nodedata'] = key_nodedata
-            if (options.get('key_objectid') is None):
+            if (options.get('objectid') is None):
                 options['objectid'] = self.defaults.get('key_objectid')
 
             logData(data, options, headers)
@@ -2557,7 +2563,7 @@ class TwitterTab(AuthTab):
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data
-            data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders)
+            data, headers, status = self.request(session_no, urlpath, urlparams, requestheaders)
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
             options['ratelimit'] = (status == "error (429)")
@@ -2572,7 +2578,7 @@ class TwitterTab(AuthTab):
                 key_nodedata = self.defaults.get('key_nodedata')
                 if (key_nodedata is not None) and  hasDictValue(data, key_nodedata):
                     options['nodedata'] = key_nodedata
-            if (options.get('key_objectid') is None):
+            if (options.get('objectid') is None):
                 options['objectid'] = self.defaults.get('key_objectid')
 
             logData(data, options, headers)

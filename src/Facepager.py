@@ -329,10 +329,10 @@ class MainWindow(QMainWindow):
         # fetchsettings.addRow("Select only empty nodes", self.emptynodesCheckbox)
 
         #-Continue pagination
-        self.paginationCheckbox = QCheckBox(self)
-        self.paginationCheckbox.setCheckState(Qt.Unchecked)
-        self.paginationCheckbox.setToolTip(wraptip("Check if you want to continue pagination after fetching was cancelled or nodes were skipped. Only works for cursored pagination (YouTube, Amazon, Generic with pagination=key). The last fetched offcut node is used to determine the pagination value. Nodes are skipped if no pagination value can be found in the offcut. Nodes without offcut nodes are processed anyway."))
-        fetchsettings.addRow("Continue pagination", self.paginationCheckbox)
+        self.resumeCheckbox = QCheckBox(self)
+        self.resumeCheckbox.setCheckState(Qt.Unchecked)
+        self.resumeCheckbox.setToolTip(wraptip("Check if you want to continue collection after fetching was cancelled or nodes were skipped. The last fetched offcut or data node is used to determine the pagination value. Nodes are skipped if no pagination value can be found. Nodes without children having status fetched(200) are processed anyway."))
+        fetchsettings.addRow("Resume collection", self.resumeCheckbox)
 
         # Thread Box
         self.threadsEdit = QSpinBox(self)
