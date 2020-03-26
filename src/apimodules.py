@@ -1612,7 +1612,7 @@ class AuthTab(ApiTab):
             self.getOAuth2Token(url)
 
     @Slot()
-    def initSession(self, no=0):
+    def initSession(self, no=0, renew=False):
         """
         Dispatch session initialization to specialized functions
         :param no: session number
@@ -1620,11 +1620,11 @@ class AuthTab(ApiTab):
         """
 
         if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
-            return self.initOAuth1Session(no)
+            return self.initOAuth1Session(no, renew)
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
-            return self.initOAuth2Session(no)
+            return self.initOAuth2Session(no, renew)
         else:
-            return self.initOAuth2Session(no)
+            return self.initOAuth2Session(no, renew)
 
     @Slot()
     def doOAuth1Login(self, session_no = 0):
@@ -1691,11 +1691,11 @@ class AuthTab(ApiTab):
 
         return service
 
-    def initOAuth1Session(self,no=0):
+    def initOAuth1Session(self,no=0, renew=False):
         while (len(self.sessions) <= no):
             self.sessions.append(None)
 
-        session = self.sessions[no]
+        session = self.sessions[no] if not renew else None
         if session is None:
             if (self.tokenEdit.text() == '') or (self.tokensecretEdit.text() == ''):
                 raise Exception("No access, login please!")
@@ -1770,8 +1770,8 @@ class AuthTab(ApiTab):
                 session.close()
                 self.closeLoginWindow()
 
-    def initOAuth2Session(self, no=0):
-        return super(AuthTab, self).initSession(no)
+    def initOAuth2Session(self, no=0, renew=False):
+        return super(AuthTab, self).initSession(no, renew)
 
     @Slot()
     def doCookieLogin(self, session_no=0):
@@ -2125,7 +2125,7 @@ class TwitterStreamingTab(ApiTab):
 
         return options
     
-    def initSession(self, no=0):
+    def initSession(self, no=0, renew=False):
         """
         Return session or create if necessary
         :param no: session number
@@ -2135,7 +2135,7 @@ class TwitterStreamingTab(ApiTab):
         while (len(self.sessions) <= no):
             self.sessions.append(None)
 
-        session = self.sessions[no]
+        session = self.sessions[no] if not renew else None
         if session is None:
             service = self.getOAuth1Service()
             if (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
