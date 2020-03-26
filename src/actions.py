@@ -409,7 +409,7 @@ class Actions(object):
             globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
-            globaloptions['paginate'] = self.mainWindow.paginationCheckbox.isChecked()
+            globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
             objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
             level = self.mainWindow.levelEdit.value() - 1
 
