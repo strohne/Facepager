@@ -44,11 +44,17 @@ class DataTree(QTreeView):
         parent = QModelIndex()
         row = model.rowCount(parent)-1
          
-        index = model.index(row, 0,parent)
+        index = model.index(row, 0, parent)
+        self.showRow(index)
+
+    def showRow(self,index):
+        if not index.isValid():
+            return False
+
         self.scrollTo(index)
         self.selectionModel().select(index, QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
-        self.selectionModel().setCurrentIndex(index,QItemSelectionModel.Rows)
-                
+        self.selectionModel().setCurrentIndex(index, QItemSelectionModel.Rows)
+
     def noneOrAllSelected(self):
         indexes = self.selectionModel().selectedRows()
 
@@ -59,6 +65,23 @@ class DataTree(QTreeView):
             indexes = [idx for idx in indexes if idx.parent() == self.rootIndex()]
             return len(indexes) == model.rootItem.childCount()
 
+    def findNext(self, index, filter={}):
+        while index.isValid():
+            next = self.model().index(index.row()+1, 0, index.parent())
+            if next.isValid():
+                treeitem = next.internalPointer()
+                if treeitem.hasValues(filter):
+                    return next
+            index = next
+
+        return QModelIndex()
+
+    def selectNext(self,filter = {}):
+        index = self.selectedIndexes()
+        index = index[0] if len(index) else self.model().index(0, 0, QModelIndex() )
+
+        index = self.findNext(index, filter)
+        self.showRow(index)
 
     def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, options = {}):
         level = filter.get('level', None)
@@ -291,7 +314,7 @@ class TreeItem(object):
         def appendNode(objecttype, objectid, response, fieldsuffix = ''):
             new = Node(str(objectid), dbnode.id)
             new.objecttype = objecttype
-            new.response = response if isinstance(response, Mapping) else {subkey : response}
+            new.response = response
 
             new.level = dbnode.level + 1
             new.querystatus = options.get("querystatus", "")
@@ -311,6 +334,7 @@ class TreeItem(object):
 
         #extracted nodes
         for n in nodes:
+            n = n if isinstance(n, Mapping) else {subkey: n}
             o = options.get('objectid', None)
             o = extractValue(n, o)[1] if o is not None else dbnode.objectid
             appendNode('data', o, n, fieldsuffix)
@@ -333,6 +357,17 @@ class TreeItem(object):
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
+
+    def hasValues(self,filter = {}):
+        if self.data is None:
+            return False
+
+        for key, value in filter.items():
+            orlist = value if type(value) is list else [value]
+            if not self.data.get(key) in orlist:
+                return False
+
+        return True
 
     def unpackList(self, key_nodes, key_objectid, delaycommit=False):
         dbnode = Node.query.get(self.id)
