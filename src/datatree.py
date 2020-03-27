@@ -2,6 +2,7 @@ from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 from database import *
 import json
+from collections import defaultdict
 
 class DataTree(QTreeView):
 
@@ -68,149 +69,32 @@ class DataTree(QTreeView):
     def selectNext(self, filter={}, recursive=False, exact=True, progress=None):
         # Start with selected index or root index
         index = self.selectedIndexes()
-        index = index[0] if len(index) else QModelIndex()
+        if not len(index):
+            index = self.model().index(0,0,QModelIndex())
+            includeself = True
+        else:
+            index = index[0]
+            includeself = False
+
         if not recursive:
             filter['level'] = self.model().getLevel(index)
 
         try:
             options = None
-            includeself = False
-            index = next(self.getNextOrSelf(index, filter, exact, options, includeself, recursive, progress))
+            index = next(self.model().getNextOrSelf(index, filter, exact, options, includeself, recursive, progress))
             self.showRow(index)
         except StopIteration:
             pass
-
-    def checkData(self, index, options=None):
-        """
-        Add last offcut or data node to tree item if resume is in options
-        Return False if pagination is finished, otherwise True
-        """
-        if options is None:
-            return True
-
-        if not index.isValid():
-            return False
-
-        # Find last offcut or data node
-        treeitem = index.internalPointer()
-        if options.get('resume', False):
-            treeitem.offcut = treeitem.getLastChildData(objecttypes=["data", "offcut"])
-
-            # Dont't fetch if already finished (=has offcut without next cursor)
-            if (treeitem.offcut is not None) and (options.get('key_paging') is not None):
-                response = getDictValueOrNone(treeitem.offcut, 'response', dump=False)
-                cursor = getDictValueOrNone(response, options.get('key_paging'))
-                stopvalue = not extractValue(response, options.get('paging_stop'), dump=False, default=True)[1]
-
-                # Dont't fetch if already finished (=offcut without next cursor)
-                if (cursor is None) or stopvalue:
-                    return False
-        else:
-            treeitem.offcut = None
-
-        return True
-
-    def checkFilter(self, index, filter=None, exact=True):
-        if filter is None:
-            return True
-
-        if not index.isValid():
-            return False
-
-        treeitem = index.internalPointer()
-        for key, value in filter.items():
-            if treeitem.data is not None and treeitem.data[key] is not None:
-                orlist = value if type(value) is list else [value]
-                data = treeitem.data[key]
-                exact = exact or not isinstance(data, str)
-                if exact and not data in orlist:
-                    return False
-                elif not exact and not any(v in data for v in orlist):
-                    return False
-
-        return True
-
-    def getNextOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, recursive=True, progress=None):
-        parent = index.parent()
-        row = index.row()
-        row_start = row
-        row_end = self.model().rowCount(parent)
-
-        # Iterate all nodes on the same level or deeper
-        while True:
-            if not parent.isValid():
-                child = self.model().index(row, 0, parent)
-            else:
-                child = parent.child(row, 0)
-
-            if progress is not None:
-                if not progress(row - row_start,row_end - row_start):
-                    break
-
-            if child.isValid():
-                includeself = includeself or (row > row_start)
-                yield from self.getNextChildOrSelf(child, filter, exact, options, includeself)
-            else:
-                break
-            row += 1
-
-        # Jump to parent node level and select next
-        index = parent
-        nextindex = QModelIndex()
-        while recursive and index.isValid() and not nextindex.isValid():
-            parent = index.parent()
-            row = index.row()
-            nextindex = self.model().index(row+1,0,parent)
-            index = parent
-
-        if nextindex.isValid():
-            includeself=True
-            yield from self.getNextOrSelf(nextindex, filter, exact, options, includeself, recursive, progress)
-
-
-    def getNextChildOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, persistent=False):
-        """
-        Yield next node matching the criteria
-        """
-        level = filter.get('level')
-
-        # if (not selected) and self.selectionModel().isSelected(index):
-        #     selected = True
-
-        if includeself and self.checkFilter(index, filter, exact) and self.checkData(index, options):
-            if persistent:
-                index_persistent = QPersistentModelIndex(index)
-                yield (index_persistent)
-            else:
-                yield (index)
-
-        if (level is None) or (level > self.model().getLevel(index)):
-            self.model().fetchMore(index)
-
-            row = 0
-            while True:
-                if not index.isValid():
-                    child = self.model().index(row, 0, index)
-                else:
-                    child = index.child(row, 0)
-
-                if child.isValid():
-                    includeself = True
-                    yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent)
-                else:
-                    break
-
-                row += 1
 
     def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, options = {}):
         exact = True
         includeself = True
 
         if selectall:
-            yield from self.getNextChildOrSelf(QModelIndex(), filter, exact, options, includeself, persistent)
+            yield from self.model().getNextChildOrSelf(QModelIndex(), filter, exact, options, includeself, persistent)
         else:
             for index in self.selectionModel().selectedRows():
-                yield from self.getNextChildOrSelf(index, filter, exact, options, includeself, persistent)
+                yield from self.model().getNextChildOrSelf(index, filter, exact, options, includeself, persistent)
 
 
 class TreeItem(object):
@@ -303,7 +187,7 @@ class TreeItem(object):
         query = Node.query.filter(Node.parent_id == self.id,Node.querystatus == status,Node.objecttype.in_(objecttypes))
         item = query.order_by(Node.id.desc()).limit(1).first()
         if item is not None:
-            item = self.model.getItemData(item)
+            item = self.model.getItemDataFromRecord(item)
 
         return item
 
@@ -540,11 +424,7 @@ class TreeModel(QAbstractItemModel):
             self.layoutChanged.emit()
 
     def rowCount(self, parent=QModelIndex()):
-        if not parent.isValid():
-            parentNode = self.rootItem
-        else:
-            parentNode = parent.internalPointer()
-
+        parentNode = self.getItemFromIndex(parent)
         return parentNode.childCount()
 
     def columnCount(self, parent):
@@ -580,13 +460,7 @@ class TreeModel(QAbstractItemModel):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
-        if not parent.isValid():
-            # parent is not valid when it is the root node, since the "parent"
-            # method returns an empty QModelIndex
-            parentNode = self.rootItem
-        else:
-            parentNode = parent.internalPointer()  # the node
-
+        parentNode = self.getItemFromIndex(parent)
         childItem = parentNode.child(row)
 
         return self.createIndex(row, column, childItem)
@@ -643,11 +517,7 @@ class TreeModel(QAbstractItemModel):
         if not self.database.connected:
             return False
 
-        if not index.isValid():
-            item = self.rootItem
-        else:
-            item = index.internalPointer()
-
+        item = self.getItemFromIndex(index)
         return item.childCountAll() > 0
 
     def getLevel(self, index):
@@ -660,7 +530,7 @@ class TreeModel(QAbstractItemModel):
         else:
             return 0
 
-    def getItemData(self, item):
+    def getItemDataFromRecord(self, item):
         """Creates dict for model items (itemdata) from database row (item)"""
         itemdata = {'level': item.level,
                     'childcount': item.childcount,
@@ -673,37 +543,214 @@ class TreeModel(QAbstractItemModel):
                     'response': item.response}
         return itemdata
 
+    def getItemFromIndex(self, index):
+        """
+        Get TreeItem for QModelIndex
+          Note: index is not valid when it is the root node, return rootItem
+          Note: parent method of top level indexes returns an empty QModelIndex)
+        """
+        if not index.isValid():
+            return self.rootItem
+        else:
+            return index.internalPointer()
+
+    def getIndexFromId(self, id, startindex=None, loaddata=True):
+        """
+        Get QModelIndex from id of TreeItem / record
+        (only for loaded indexes)
+        """
+
+        # Start search with first node
+        if startindex is None:
+            startindex = self.index(0, 0, QModelIndex())
+
+        for index in self.getNextOrSelf(startindex, loaddata=loaddata):
+            item = self.getItemFromIndex(index)
+            if item.id == id:
+                return index
+
+        return QModelIndex()
+
     def canFetchMore(self, index):
         if not self.database.connected:
             return False
 
-        if not index.isValid():
-            item = self.rootItem
-        else:
-            item = index.internalPointer()
-
+        item = self.getItemFromIndex(index)
         return item.childCountAll() > item.childCount()
 
     def fetchMore(self, index):
-        if not index.isValid():
-            parentItem = self.rootItem
-        else:
-            parentItem = index.internalPointer()
-
+        parentItem = self.getItemFromIndex(index)
         if parentItem.childCountAll() == parentItem.childCount():
             return False
 
         row = parentItem.childCount()
         items = Node.query.filter(Node.parent_id == parentItem.id).offset(row).all()
+        self.appendRecords(index,items)
+        self.prefetch(index)
 
-        self.beginInsertRows(index, row, row + len(items) - 1)
+    def appendRecords(self, parent, records):
+        parentItem = self.getItemFromIndex(parent)
+        row = parentItem.childCount()
 
-        for item in items:
-            itemdata = self.getItemData(item)
-            new = TreeItem(self, parentItem, item.id, itemdata)
-            new._childcountall = item.childcount
+        self.beginInsertRows(parent, row, row + len(records) - 1)
+
+        for record in records:
+            itemdata = self.getItemDataFromRecord(record)
+            new = TreeItem(self, parentItem, record.id, itemdata)
+            new._childcountall = record.childcount
             new._childcountallloaded = True
-
 
         self.endInsertRows()
         parentItem.loaded = parentItem.childCountAll() == parentItem.childCount()
+
+
+    def prefetch(self, index, chunk=1000):
+        for index in self.getNextOrSelf(index):
+            if self.canFetchMore(index):
+                item = self.getItemFromIndex(index)
+                row = item.childCount()
+                level = item.level()
+
+                # Get next records
+                records = Node.query.filter(Node.parent_id >= item.id, Node.level == level+1).offset(row).limit(chunk).all()
+
+                # Group by parent_id
+                newitems = defaultdict(list)
+                for record in records:
+                    newitems[record.parent_id].append(record)
+
+                # Add to indexes
+                parent = index
+                for key, val in newitems.items():
+                    parent = self.getIndexFromId(key, parent, False)
+                    if parent.isValid():
+                        self.appendRecords(parent, val)
+
+                return True
+
+        return False
+
+
+
+    def checkData(self, index, options=None):
+        """
+        Add last offcut or data node to tree item if resume is in options
+        Return False if pagination is finished, otherwise True
+        """
+        if options is None:
+            return True
+
+        if not index.isValid():
+            return False
+
+        # Find last offcut or data node
+        treeitem = index.internalPointer()
+        if options.get('resume', False):
+            treeitem.offcut = treeitem.getLastChildData(objecttypes=["data", "offcut"])
+
+            # Dont't fetch if already finished (=has offcut without next cursor)
+            if (treeitem.offcut is not None) and (options.get('key_paging') is not None):
+                response = getDictValueOrNone(treeitem.offcut, 'response', dump=False)
+                cursor = getDictValueOrNone(response, options.get('key_paging'))
+                stopvalue = not extractValue(response, options.get('paging_stop'), dump=False, default=True)[1]
+
+                # Dont't fetch if already finished (=offcut without next cursor)
+                if (cursor is None) or stopvalue:
+                    return False
+        else:
+            treeitem.offcut = None
+
+        return True
+
+    def checkFilter(self, index, filter=None, exact=True):
+        if filter is None:
+            return True
+
+        if not index.isValid():
+            return False
+
+        treeitem = index.internalPointer()
+        for key, value in filter.items():
+            if treeitem.data is not None and treeitem.data[key] is not None:
+                orlist = value if type(value) is list else [value]
+                data = treeitem.data[key]
+                exact = exact or not isinstance(data, str)
+                if exact and not data in orlist:
+                    return False
+                elif not exact and not any(v in data for v in orlist):
+                    return False
+
+        return True
+
+    def getNextOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, recursive=True, progress=None, loaddata=True):
+        parent = index.parent()
+        row = index.row()
+        row_start = row
+        row_end = self.rowCount(parent)
+
+        # Iterate all nodes on the same level or deeper
+        while True:
+            if not parent.isValid():
+                child = self.index(row, 0, parent)
+            else:
+                child = parent.child(row, 0)
+
+            if progress is not None:
+                if not progress(row - row_start,row_end - row_start):
+                    break
+
+            if child.isValid():
+                includeself = includeself or (row > row_start)
+                persistent = False
+                yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata)
+            else:
+                break
+            row += 1
+
+        # Jump to parent node level and select next
+        index = parent
+        nextindex = QModelIndex()
+        while recursive and index.isValid() and not nextindex.isValid():
+            parent = index.parent()
+            row = index.row()
+            nextindex = self.index(row+1,0,parent)
+            index = parent
+
+        if nextindex.isValid():
+            includeself=True
+            yield from self.getNextOrSelf(nextindex, filter, exact, options, includeself, recursive, progress, loaddata)
+
+
+    def getNextChildOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, persistent=False, loaddata=True):
+        """
+        Yield next node matching the criteria
+        """
+        level = filter.get('level') if filter is not None else None
+
+        # if (not selected) and self.selectionModel().isSelected(index):
+        #     selected = True
+
+        if includeself and self.checkFilter(index, filter, exact) and self.checkData(index, options):
+            if persistent:
+                index_persistent = QPersistentModelIndex(index)
+                yield (index_persistent)
+            else:
+                yield (index)
+
+        if (level is None) or (level > self.getLevel(index)):
+            if loaddata:
+                self.fetchMore(index)
+
+            row = 0
+            while True:
+                if not index.isValid():
+                    child = self.index(row, 0, index)
+                else:
+                    child = index.child(row, 0)
+
+                if child.isValid():
+                    includeself = True
+                    yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata)
+                else:
+                    break
+                row += 1
