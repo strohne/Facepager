@@ -35,6 +35,8 @@ class SelectNodesWindow(QDialog):
         searchLayout.addRow("Query time", self.querytimeEdit)
         self.querytypeEdit = QLineEdit()
         searchLayout.addRow("Query type", self.querytypeEdit)
+        self.responseEdit = QLineEdit()
+        searchLayout.addRow("Response", self.responseEdit)
 
         # Exact match
         self.exactCheck = QCheckBox("Exact match")
@@ -107,6 +109,7 @@ class SelectNodesWindow(QDialog):
             filter['querystatus'] = self.querystatusEdit.text()
             filter['querytime'] = self.querytimeEdit.text()
             filter['querytype'] = self.querytypeEdit.text()
+            filter['response'] = self.responseEdit.text()
 
             filter = {k: v for k, v in filter.items() if v != ""}
             if filter:

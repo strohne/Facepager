@@ -350,6 +350,7 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns = []
         self.newnodes = 0
         self.nodecounter = 0
+        self.loading = False
 
         #Hidden root
         self.rootItem = TreeItem(self)
@@ -605,28 +606,35 @@ class TreeModel(QAbstractItemModel):
 
 
     def prefetch(self, index, chunk=1000):
-        for index in self.getNextOrSelf(index):
-            if self.canFetchMore(index):
-                item = self.getItemFromIndex(index)
-                row = item.childCount()
-                level = item.level()
+        if self.loading:
+            return False
 
-                # Get next records
-                records = Node.query.filter(Node.parent_id >= item.id, Node.level == level+1).offset(row).limit(chunk).all()
+        self.loading = True
+        try:
+            for index in self.getNextOrSelf(index):
+                if self.canFetchMore(index):
+                    item = self.getItemFromIndex(index)
+                    row = item.childCount()
+                    level = item.level()
 
-                # Group by parent_id
-                newitems = defaultdict(list)
-                for record in records:
-                    newitems[record.parent_id].append(record)
+                    # Get next records
+                    records = Node.query.filter(Node.parent_id >= item.id, Node.level == level+1).offset(row).limit(chunk).all()
 
-                # Add to indexes
-                parent = index
-                for key, val in newitems.items():
-                    parent = self.getIndexFromId(key, parent, False)
-                    if parent.isValid():
-                        self.appendRecords(parent, val)
+                    # Group by parent_id
+                    newitems = defaultdict(list)
+                    for record in records:
+                        newitems[record.parent_id].append(record)
 
-                return True
+                    # Add to indexes
+                    parent = index
+                    for key, val in newitems.items():
+                        parent = self.getIndexFromId(key, parent, False)
+                        if parent.isValid():
+                            self.appendRecords(parent, val)
+
+                    return True
+        finally:
+            self.loading = False
 
         return False
 
@@ -674,10 +682,14 @@ class TreeModel(QAbstractItemModel):
             if treeitem.data is not None and treeitem.data[key] is not None:
                 orlist = value if type(value) is list else [value]
                 data = treeitem.data[key]
-                exact = exact or not isinstance(data, str)
-                if exact and not data in orlist:
-                    return False
-                elif not exact and not any(v in data for v in orlist):
+                try:
+                    data = str(data) if not isinstance(data, str) else data
+                    #exact = exact or not isinstance(data, str)
+                    if exact and not data in orlist:
+                        return False
+                    elif not exact and not any(v in data for v in orlist):
+                        return False
+                except:
                     return False
 
         return True
