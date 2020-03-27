@@ -24,17 +24,17 @@ class SelectNodesWindow(QDialog):
         searchLayout=QFormLayout()
         central.addLayout(searchLayout, 1)
         
-        # Object types
+        # Search inputs
         self.objectidEdit = QLineEdit()
         searchLayout.addRow("Object ID",self.objectidEdit)
-
-        # Object type
         self.objecttypeEdit = QLineEdit()
         searchLayout.addRow("Object type",self.objecttypeEdit)
-
-        # Query status
         self.querystatusEdit = QLineEdit()
         searchLayout.addRow("Query status",self.querystatusEdit)
+        self.querytimeEdit = QLineEdit()
+        searchLayout.addRow("Query time", self.querytimeEdit)
+        self.querytypeEdit = QLineEdit()
+        searchLayout.addRow("Query type", self.querytypeEdit)
 
         # Exact match
         self.exactCheck = QCheckBox("Exact match")
@@ -105,6 +105,9 @@ class SelectNodesWindow(QDialog):
             filter['objectid'] = self.objectidEdit.text()
             filter['objecttype'] = self.objecttypeEdit.text()
             filter['querystatus'] = self.querystatusEdit.text()
+            filter['querytime'] = self.querytimeEdit.text()
+            filter['querytype'] = self.querytypeEdit.text()
+
             filter = {k: v for k, v in filter.items() if v != ""}
             if filter:
                 recursive = self.recursiveCheck.isChecked()
