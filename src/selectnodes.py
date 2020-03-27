@@ -42,7 +42,7 @@ class SelectNodesWindow(QDialog):
         searchLayout.addRow(self.exactCheck )
 
         # Level / recursion
-        self.recursiveCheck = QCheckBox("Search recursively (may take long, all data will be loaded)")
+        self.recursiveCheck = QCheckBox("Search recursively")
         self.recursiveCheck.setChecked(False)
         searchLayout.addRow(self.recursiveCheck)
 
