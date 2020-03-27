@@ -1,75 +1,118 @@
 from PySide2.QtCore import *
-from PySide2.QtWidgets import QDialog
-
-from paramedit import *
+from PySide2.QtWidgets import *
 
 class SelectNodesWindow(QDialog):
     
     
-    def __init__(self, parent=None,tree=None):
+    def __init__(self, parent=None):
         super(SelectNodesWindow,self).__init__(parent)
         
-        self.tree = tree
-        self.setWindowTitle("Select Nodes")
-        
-        
+        self.mainWindow = parent
+        self.setWindowTitle("Find nodes")
+        self.setMinimumWidth(200);
+
+        # Status
+        self.canceled = False
+        self.running = False
+
         #layout
         layout = QVBoxLayout(self)        
         central = QHBoxLayout()
-        layout.addLayout(central,1)
+        layout.addLayout(central, 1)
         self.setLayout(layout)
         
-        settingsLayout=QFormLayout()
-        central.addLayout(settingsLayout,1)
+        searchLayout=QFormLayout()
+        central.addLayout(searchLayout, 1)
         
-        #Params
-        self.paramEdit = QParamEdit(self)
-        self.paramEdit.setNameOptionsAll(['<None>', 'since', 'until', 'offset', 'limit', 'type'])
-        self.paramEdit.setValueOptionsAll(['<None>', '2013-07-17', 'page'])
-        settingsLayout.addRow("Parameters",self.paramEdit)
-        
-        #Checkboxes
-        self.childrenCheckbox = QCheckBox('Apply to current selection and child nodes')
-        self.childrenCheckbox.setChecked(True)
-        settingsLayout.addRow(self.childrenCheckbox)
-        
-        #Level
-        self.levelEdit=QSpinBox(self)
-        self.levelEdit.setMinimum(1)        
-        self.levelEdit.setMaximum(500)
-        settingsLayout.addRow("Level",self.levelEdit)        
-        
+        # Object types
+        self.objectidEdit = QLineEdit()
+        searchLayout.addRow("Object ID",self.objectidEdit)
+
+        # Object type
+        self.objecttypeEdit = QLineEdit()
+        searchLayout.addRow("Object type",self.objecttypeEdit)
+
+        # Query status
+        self.querystatusEdit = QLineEdit()
+        searchLayout.addRow("Query status",self.querystatusEdit)
+
+        # Exact match
+        self.exactCheck = QCheckBox("Exact match")
+        self.exactCheck .setChecked(True)
+        searchLayout.addRow(self.exactCheck )
+
+        # Level / recursion
+        self.recursiveCheck = QCheckBox("Search recursively (may take long, all data will be loaded)")
+        self.recursiveCheck.setChecked(False)
+        searchLayout.addRow(self.recursiveCheck)
+
+        # Button row layout
+        buttons= QHBoxLayout()
+
+        # Progress
+        self.progressBar = QProgressBar()
+        self.progressBar.setRange(0,0)
+        self.progressBar.hide()
+        buttons.addWidget(self.progressBar)
+        buttons.addStretch()
+
         #buttons
-        buttons=QDialogButtonBox()
-        self.selectButton = QPushButton('Apply Selection')        
-        self.selectButton.clicked.connect(self.selectNodes)
-        buttons.addButton(self.selectButton,QDialogButtonBox.ActionRole)
-        
-       
-        buttons.addButton(QDialogButtonBox.Cancel)
-        buttons.rejected.connect(self.close)                        
-        layout.addWidget(buttons,0)
+        self.nextButton = QPushButton('Find next')
+        self.nextButton.clicked.connect(self.selectNext)
+        buttons.addWidget(self.nextButton)
 
-    def show(self):
-        self.exec_()
-        
-    def selectNodes(self):  
-        level = self.levelEdit.value()-1
-              
-        filter = {'level':level} #,'objecttype':['seed','data','unpacked']
-        indexes = self.tree.selectedIndexesAndChildren(False,filter)
+        self.cancelButton = QPushButton('Cancel')
+        self.cancelButton.clicked.connect(self.cancel)
+        buttons.addWidget(self.cancelButton)
 
-        selmod = self.tree.selectionModel()
-        selmod.clearSelection()
-        newselection = QItemSelection()
-        #selmod.select(indexes, QItemSelectionModel.Select)
-        for index in indexes:
-            newselection.merge(QItemSelection(index,index),QItemSelectionModel.Select)       
-        
-        selmod.select(newselection, QItemSelectionModel.Select|QItemSelectionModel.Rows)
-                         
-        self.close()
-                        
-        
-        
-            
+        layout.addLayout(buttons)
+
+    def showWindow(self):
+        self.show()
+        self.raise_()
+
+    def cancel(self):
+        if self.running:
+            self.canceled = True
+        else:
+            self.close()
+
+    def initProgress(self):
+        self.progressBar.setRange(0, 0)
+        self.progressBar.show()
+
+    def updateProgress(self,current, total):
+        self.progressBar.setMaximum(total)
+        self.progressBar.setValue(current)
+        QApplication.processEvents()
+
+        return not self.canceled
+
+    def finishProgress(self):
+        self.progressBar.hide()
+
+    def selectNext(self):
+        if self.running:
+            return False
+
+        self.nextButton.hide()
+        self.initProgress()
+        self.running = True
+        self.canceled = False
+
+        try:
+            filter = {}
+            filter['objectid'] = self.objectidEdit.text()
+            filter['objecttype'] = self.objecttypeEdit.text()
+            filter['querystatus'] = self.querystatusEdit.text()
+            filter = {k: v for k, v in filter.items() if v != ""}
+            if filter:
+                recursive = self.recursiveCheck.isChecked()
+                exact = self.exactCheck.isChecked()
+                self.mainWindow.tree.selectNext(filter, recursive, exact, progress=self.updateProgress)
+        finally:
+            self.running = False
+            self.canceled = False
+            self.finishProgress()
+            self.nextButton.show()
+

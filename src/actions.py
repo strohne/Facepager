@@ -105,6 +105,9 @@ class Actions(object):
         self.actionCollapseAll = self.treeActions.addAction(QIcon(":/icons/collapse.png"), "Collapse nodes")
         self.actionCollapseAll.triggered.connect(self.collapseAll)
 
+        self.actionFind = self.treeActions.addAction(QIcon(":/icons/search.png"), "Find nodes")
+        self.actionFind.triggered.connect(self.selectNodes)
+
         #self.actionSelectNodes=self.treeActions.addAction(QIcon(":/icons/collapse.png"),"Select nodes")
         #self.actionSelectNodes.triggered.connect(self.selectNodes)
 
@@ -389,7 +392,7 @@ class Actions(object):
 
     @Slot()
     def selectNodes(self):
-        self.mainWindow.selectNodesWindow.show()
+        self.mainWindow.selectNodesWindow.showWindow()
 
 
     def queryNodes(self, indexes=None, apimodule=False, options=False):

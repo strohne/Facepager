@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Facepager 4.2")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
+        QApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton)
 
         # This is needed to display the app icon on the taskbar on Windows 7
         if os.name == 'nt':
@@ -108,7 +109,7 @@ class MainWindow(QMainWindow):
         self.apiWindow.logmessage.connect(self.logmessage)
         self.dataWindow = DataViewer(self)
         self.timerWindow=TimerWindow(self)
-        #self.selectNodesWindow=SelectNodesWindow(self,self.tree)
+        self.selectNodesWindow=SelectNodesWindow(self)
 
         self.timerWindow.timerstarted.connect(self.actions.timerStarted)
         self.timerWindow.timerstopped.connect(self.actions.timerStopped)
