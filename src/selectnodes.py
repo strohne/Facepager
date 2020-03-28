@@ -14,6 +14,8 @@ class SelectNodesWindow(QDialog):
 
         # Status
         self.progressUpdateNext = None
+        self.progressTotal = None
+        self.progressLevel = None
         self.canceled = False
         self.running = False
 
@@ -82,16 +84,27 @@ class SelectNodesWindow(QDialog):
             self.close()
 
     def initProgress(self):
+        self.progressTotal = None
+        self.progressLevel = None
+        self.progressUpdate = datetime.now()
+
         self.progressBar.setRange(0, 0)
         self.progressBar.show()
 
     def updateProgress(self,current, total, level=0):
-        if (self.progressUpdateNext is None) or (datetime.now() >= self.progressUpdateNext):
-            self.progressBar.setMaximum(total)
-            self.progressBar.setValue(current)
+        if datetime.now() >= self.progressUpdate:
+            if (self.progressLevel is None) or (level < self.progressLevel):
+                self.progressLevel = level
+                self.progressTotal = total
+
+            if (level == self.progressLevel) or (total > self.progressTotal):
+                self.progressBar.setMaximum(total)
+                self.progressBar.setValue(current)
+                self.progressUpdate = datetime.now() + timedelta(milliseconds=50)
+
             QApplication.processEvents()
 
-            self.progressUpdateNext = datetime.now() + timedelta(milliseconds=50)
+
 
         return not self.canceled
 

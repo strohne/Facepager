@@ -341,6 +341,7 @@ class TreeModel(QAbstractItemModel):
         self.rootItem = TreeItem(self)
 
     def clear(self):
+        self.cache.clear()
         self.beginResetModel()
         try:
             self.rootItem.clear()
@@ -531,7 +532,7 @@ class TreeModel(QAbstractItemModel):
 
     def getItemFromIndex(self, index):
         """
-        Get TreeItem for QModelIndex
+          Get TreeItem for QModelIndex
           Note: index is not valid when it is the root node, return rootItem
           Note: parent method of top level indexes returns an empty QModelIndex)
         """
@@ -558,6 +559,9 @@ class TreeModel(QAbstractItemModel):
         return QModelIndex()
 
     def appendRecords(self, parent, records):
+        if not len(records):
+            return False
+
         parentItem = self.getItemFromIndex(parent)
         row = parentItem.childCount()
 
@@ -596,7 +600,7 @@ class TreeModel(QAbstractItemModel):
     def fetchMore(self, index):
         parentItem = self.getItemFromIndex(index)
 
-        # From cache
+        # # From cache
         # if parentItem.childCountAll() > parentItem.childCount():
         #     self.prefetch(index)
 
@@ -606,7 +610,7 @@ class TreeModel(QAbstractItemModel):
             items = Node.query.filter(Node.parent_id == parentItem.id).offset(row).all()
             self.appendRecords(index, items)
 
-    def prefetch(self, index, chunk=1000):
+    def prefetch(self, index, chunk=2000):
         if self.prefetching:
             return False
         else:
@@ -614,23 +618,32 @@ class TreeModel(QAbstractItemModel):
 
         try:
             item = self.getItemFromIndex(index)
+            if item.id is None:
+                return False
 
-            # Get from cache
+            # Get from cache.
             if item.id in self.cache:
-                self.appendRecords(index, self.cache[item.id])
+                # Nodes are always ordered by their ID,
+                # so the cache always contains the first child rows.
+                # Discard already loaded rows to avoid duplicates.
+                row = item.childCount()
+                self.appendRecords(index, self.cache[item.id][row:])
                 del self.cache[item.id]
 
-            # Refill cache with next elements
-            level = item.level()
-            records = Node.query.filter(Node.parent_id > item.id, Node.level == level+1).offset(row).limit(chunk).all()
+            # Refill cache with first rows of siblings if cache shorter than 100
+            # Speeds up subsequent loading for higher parent_ids
+            # if they contain at maximum childnodes in chunk
+            if len(self.cache) < 100:
+                nextlevel = item.level()+1
+                nextid = max(list(self.cache.keys()) + [item.id])
+                records = Node.query.filter(Node.parent_id > nextid, Node.level == nextlevel).limit(chunk).all()
 
-            # Group by parent_id
-            for record in records:
-                self.cache[record.parent_id].append(record)
+                # Group by parent_id
+                for record in records:
+                    self.cache[record.parent_id].append(record)
 
         finally:
             self.prefetching = False
-
 
 
     def checkData(self, index, options=None):
@@ -711,7 +724,7 @@ class TreeModel(QAbstractItemModel):
             if child.isValid():
                 includeself = includeself or (row > row_start)
                 persistent = False
-                yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata)
+                yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata, progress)
             else:
                 break
             row += 1
@@ -756,7 +769,7 @@ class TreeModel(QAbstractItemModel):
             row = 0
             while True:
                 if progress is not None:
-                    if not progress(row, row_end, level):
+                    if not progress(row, row_end, level+1):
                         break
 
                 if not index.isValid():

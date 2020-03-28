@@ -435,7 +435,7 @@ class Actions(object):
 
                 def updateProgress(current, total, level=0):
                     QApplication.processEvents()
-                    progress.showInfo('input', "Adding nodes to queue ({} of {} checked).".format(current, total))
+                    progress.showInfo('input', "Adding nodes to queue ({}/{}).".format(current, total))
                     return not progress.wasCanceled
 
                 indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, options, progress=updateProgress)
