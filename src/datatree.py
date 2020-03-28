@@ -76,9 +76,6 @@ class DataTree(QTreeView):
             index = index[0]
             includeself = False
 
-        if not recursive:
-            filter['level'] = self.model().getLevel(index)
-
         try:
             options = None
             index = next(self.model().getNextOrSelf(index, filter, exact, options, includeself, recursive, progress))
@@ -86,15 +83,15 @@ class DataTree(QTreeView):
         except StopIteration:
             pass
 
-    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, options = {}):
+    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, options = {}, progress=None):
         exact = True
         includeself = True
 
         if selectall:
-            yield from self.model().getNextChildOrSelf(QModelIndex(), filter, exact, options, includeself, persistent)
+            yield from self.model().getNextChildOrSelf(QModelIndex(), filter, exact, options, includeself, persistent, True, progress)
         else:
             for index in self.selectionModel().selectedRows():
-                yield from self.model().getNextChildOrSelf(index, filter, exact, options, includeself, persistent)
+                yield from self.model().getNextChildOrSelf(index, filter, exact, options, includeself, persistent, True, progress)
 
 
 class TreeItem(object):
@@ -176,21 +173,6 @@ class TreeItem(object):
             self._childcountall = Node.query.filter(Node.parent_id == self.id).count()
             self._childcountallloaded = True
         return self._childcountall
-
-    def getLastChildData(self, status="fetched (200)", objecttypes=["offcut"]):
-        if not self.id:
-            return None
-
-        if not (self.childCountAll() > 0):
-            return None
-
-        query = Node.query.filter(Node.parent_id == self.id,Node.querystatus == status,Node.objecttype.in_(objecttypes))
-        item = query.order_by(Node.id.desc()).limit(1).first()
-        if item is not None:
-            item = self.model.getItemDataFromRecord(item)
-
-        return item
-
 
     def parentid(self):
         return self.parentItem.id if self.parentItem else None
@@ -350,7 +332,10 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns = []
         self.newnodes = 0
         self.nodecounter = 0
-        self.loading = False
+
+        # Cache for prefetching data
+        self.prefetching = False
+        self.cache = defaultdict(list)
 
         #Hidden root
         self.rootItem = TreeItem(self)
@@ -572,23 +557,6 @@ class TreeModel(QAbstractItemModel):
 
         return QModelIndex()
 
-    def canFetchMore(self, index):
-        if not self.database.connected:
-            return False
-
-        item = self.getItemFromIndex(index)
-        return item.childCountAll() > item.childCount()
-
-    def fetchMore(self, index):
-        parentItem = self.getItemFromIndex(index)
-        if parentItem.childCountAll() == parentItem.childCount():
-            return False
-
-        row = parentItem.childCount()
-        items = Node.query.filter(Node.parent_id == parentItem.id).offset(row).all()
-        self.appendRecords(index,items)
-        self.prefetch(index)
-
     def appendRecords(self, parent, records):
         parentItem = self.getItemFromIndex(parent)
         row = parentItem.childCount()
@@ -604,39 +572,64 @@ class TreeModel(QAbstractItemModel):
         self.endInsertRows()
         parentItem.loaded = parentItem.childCountAll() == parentItem.childCount()
 
+    def getLastChildData(self, index, filter=None):
+        self.fetchMore(index)
+        row = self.rowCount(index)-1
 
-    def prefetch(self, index, chunk=1000):
-        if self.loading:
+        # Iterate all nodes backwards
+        while row > 0:
+            child = index.child(row, 0)
+            if self.checkFilter(child, filter):
+                item = self.getItemFromIndex(child)
+                return item.data
+
+            row -= 1
+        return None
+
+    def canFetchMore(self, index):
+        if not self.database.connected:
             return False
 
-        self.loading = True
+        item = self.getItemFromIndex(index)
+        return item.childCountAll() > item.childCount()
+
+    def fetchMore(self, index):
+        parentItem = self.getItemFromIndex(index)
+
+        # From cache
+        # if parentItem.childCountAll() > parentItem.childCount():
+        #     self.prefetch(index)
+
+        # Remaining
+        if parentItem.childCountAll() > parentItem.childCount():
+            row = parentItem.childCount()
+            items = Node.query.filter(Node.parent_id == parentItem.id).offset(row).all()
+            self.appendRecords(index, items)
+
+    def prefetch(self, index, chunk=1000):
+        if self.prefetching:
+            return False
+        else:
+            self.prefetching = True
+
         try:
-            for index in self.getNextOrSelf(index):
-                if self.canFetchMore(index):
-                    item = self.getItemFromIndex(index)
-                    row = item.childCount()
-                    level = item.level()
+            item = self.getItemFromIndex(index)
 
-                    # Get next records
-                    records = Node.query.filter(Node.parent_id >= item.id, Node.level == level+1).offset(row).limit(chunk).all()
+            # Get from cache
+            if item.id in self.cache:
+                self.appendRecords(index, self.cache[item.id])
+                del self.cache[item.id]
 
-                    # Group by parent_id
-                    newitems = defaultdict(list)
-                    for record in records:
-                        newitems[record.parent_id].append(record)
+            # Refill cache with next elements
+            level = item.level()
+            records = Node.query.filter(Node.parent_id > item.id, Node.level == level+1).offset(row).limit(chunk).all()
 
-                    # Add to indexes
-                    parent = index
-                    for key, val in newitems.items():
-                        parent = self.getIndexFromId(key, parent, False)
-                        if parent.isValid():
-                            self.appendRecords(parent, val)
+            # Group by parent_id
+            for record in records:
+                self.cache[record.parent_id].append(record)
 
-                    return True
         finally:
-            self.loading = False
-
-        return False
+            self.prefetching = False
 
 
 
@@ -654,7 +647,8 @@ class TreeModel(QAbstractItemModel):
         # Find last offcut or data node
         treeitem = index.internalPointer()
         if options.get('resume', False):
-            treeitem.offcut = treeitem.getLastChildData(objecttypes=["data", "offcut"])
+            filter = {'querystatus': "fetched (200)", 'objecttype': ["data", "offcut"]}
+            treeitem.offcut = self.getLastChildData(index, filter)
 
             # Dont't fetch if already finished (=has offcut without next cursor)
             if (treeitem.offcut is not None) and (options.get('key_paging') is not None):
@@ -683,8 +677,7 @@ class TreeModel(QAbstractItemModel):
                 orlist = value if type(value) is list else [value]
                 data = treeitem.data[key]
                 try:
-                    data = str(data) if not isinstance(data, str) else data
-                    #exact = exact or not isinstance(data, str)
+                    data = str(data) if isinstance(data, Mapping) else data
                     if exact and not data in orlist:
                         return False
                     elif not exact and not any(v in data for v in orlist):
@@ -698,7 +691,11 @@ class TreeModel(QAbstractItemModel):
         parent = index.parent()
         row = index.row()
         row_start = row
-        row_end = self.rowCount(parent)
+        row_end = self.rowCount(parent)-1
+        level = self.getLevel(index)
+
+        if not recursive:
+            filter['level'] = level
 
         # Iterate all nodes on the same level or deeper
         while True:
@@ -708,7 +705,7 @@ class TreeModel(QAbstractItemModel):
                 child = parent.child(row, 0)
 
             if progress is not None:
-                if not progress(row - row_start,row_end - row_start):
+                if not progress(row - row_start,row_end - row_start + 1, level):
                     break
 
             if child.isValid():
@@ -733,15 +730,11 @@ class TreeModel(QAbstractItemModel):
             yield from self.getNextOrSelf(nextindex, filter, exact, options, includeself, recursive, progress, loaddata)
 
 
-    def getNextChildOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, persistent=False, loaddata=True):
+    def getNextChildOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, persistent=False, loaddata=True, progress=None):
         """
         Yield next node matching the criteria
         """
-        level = filter.get('level') if filter is not None else None
-
-        # if (not selected) and self.selectionModel().isSelected(index):
-        #     selected = True
-
+        # Self
         if includeself and self.checkFilter(index, filter, exact) and self.checkData(index, options):
             if persistent:
                 index_persistent = QPersistentModelIndex(index)
@@ -749,12 +742,23 @@ class TreeModel(QAbstractItemModel):
             else:
                 yield (index)
 
-        if (level is None) or (level > self.getLevel(index)):
+        # Children
+        maxlevel = filter.get('level') if filter is not None else None
+        level = self.getLevel(index)
+
+        if (maxlevel is None) or (maxlevel > level):
             if loaddata:
                 self.fetchMore(index)
 
+            if progress is not None:
+                row_end = self.rowCount(index) - 1
+
             row = 0
             while True:
+                if progress is not None:
+                    if not progress(row, row_end, level):
+                        break
+
                 if not index.isValid():
                     child = self.index(row, 0, index)
                 else:
@@ -762,7 +766,7 @@ class TreeModel(QAbstractItemModel):
 
                 if child.isValid():
                     includeself = True
-                    yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata)
+                    yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata, progress)
                 else:
                     break
                 row += 1

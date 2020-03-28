@@ -432,7 +432,13 @@ class Actions(object):
             if indexes is None:
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, options)
+
+                def updateProgress(current, total, level=0):
+                    QApplication.processEvents()
+                    progress.showInfo('input', "Adding nodes to queue ({} of {} checked).".format(current, total))
+                    return not progress.wasCanceled
+
+                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, options, progress=updateProgress)
             elif isinstance(indexes,list):
                 indexes = iter(indexes)
 
@@ -492,6 +498,7 @@ class Actions(object):
                                 progress.setRemaining(threadpool.getJobCount())
                                 progress.resetRate()
                                 hasindexes = False
+                                progress.removeInfo('input')
                                 self.mainWindow.logmessage("Added {} node(s) to queue.".format(totalnodes))
 
                         if jobsin > 0:

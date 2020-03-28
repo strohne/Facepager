@@ -85,7 +85,7 @@ class SelectNodesWindow(QDialog):
         self.progressBar.setRange(0, 0)
         self.progressBar.show()
 
-    def updateProgress(self,current, total):
+    def updateProgress(self,current, total, level=0):
         if (self.progressUpdateNext is None) or (datetime.now() >= self.progressUpdateNext):
             self.progressBar.setMaximum(total)
             self.progressBar.setValue(current)
