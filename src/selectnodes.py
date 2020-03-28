@@ -1,5 +1,6 @@
 from PySide2.QtCore import *
 from PySide2.QtWidgets import *
+from datetime import datetime, timedelta
 
 class SelectNodesWindow(QDialog):
     
@@ -12,6 +13,7 @@ class SelectNodesWindow(QDialog):
         self.setMinimumWidth(200);
 
         # Status
+        self.progressUpdateNext = None
         self.canceled = False
         self.running = False
 
@@ -39,9 +41,9 @@ class SelectNodesWindow(QDialog):
         searchLayout.addRow("Response", self.responseEdit)
 
         # Exact match
-        self.exactCheck = QCheckBox("Exact match")
-        self.exactCheck .setChecked(True)
-        searchLayout.addRow(self.exactCheck )
+        self.partialCheck = QCheckBox("Partial match")
+        self.partialCheck .setChecked(False)
+        searchLayout.addRow(self.partialCheck)
 
         # Level / recursion
         self.recursiveCheck = QCheckBox("Search recursively")
@@ -84,9 +86,12 @@ class SelectNodesWindow(QDialog):
         self.progressBar.show()
 
     def updateProgress(self,current, total):
-        self.progressBar.setMaximum(total)
-        self.progressBar.setValue(current)
-        QApplication.processEvents()
+        if (self.progressUpdateNext is None) or (datetime.now() >= self.progressUpdateNext):
+            self.progressBar.setMaximum(total)
+            self.progressBar.setValue(current)
+            QApplication.processEvents()
+
+            self.progressUpdateNext = datetime.now() + timedelta(milliseconds=50)
 
         return not self.canceled
 
@@ -114,7 +119,7 @@ class SelectNodesWindow(QDialog):
             filter = {k: v for k, v in filter.items() if v != ""}
             if filter:
                 recursive = self.recursiveCheck.isChecked()
-                exact = self.exactCheck.isChecked()
+                exact = not self.partialCheck.isChecked()
                 self.mainWindow.tree.selectNext(filter, recursive, exact, progress=self.updateProgress)
         finally:
             self.running = False
