@@ -581,7 +581,7 @@ class TreeModel(QAbstractItemModel):
         row = self.rowCount(index)-1
 
         # Iterate all nodes backwards
-        while row > 0:
+        while row >= 0:
             child = index.child(row, 0)
             if self.checkFilter(child, filter):
                 item = self.getItemFromIndex(child)
@@ -664,7 +664,7 @@ class TreeModel(QAbstractItemModel):
             treeitem.offcut = self.getLastChildData(index, filter)
 
             # Dont't fetch if already finished (=has offcut without next cursor)
-            if (treeitem.offcut is not None) and (options.get('key_paging') is not None):
+            if (treeitem.offcut is not None):
                 response = getDictValueOrNone(treeitem.offcut, 'response', dump=False)
                 cursor = getDictValueOrNone(response, options.get('key_paging'))
                 stopvalue = not extractValue(response, options.get('paging_stop'), dump=False, default=True)[1]
