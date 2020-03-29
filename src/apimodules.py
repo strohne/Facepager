@@ -520,15 +520,16 @@ class ApiTab(QScrollArea):
             # Add endpoints in reverse order
             endpoints = self.apidoc.get("paths",{})
             paths = endpoints.keys()
-            for path in reversed(list(paths)):
+            for path in list(paths):
                 operations = endpoints[path]
                 path = path.replace("{", "<").replace("}", ">")
 
-                self.resourceEdit.insertItem(0, path)
-                self.resourceEdit.setItemData(0, wraptip(getDictValue(operations,"get.summary","")), Qt.ToolTipRole)
+                self.resourceEdit.addItem(path)
+                idx = self.resourceEdit.count()-1
+                self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations,"get.summary","")), Qt.ToolTipRole)
 
                 #store params for later use in onChangedRelation
-                self.resourceEdit.setItemData(0, operations, Qt.UserRole)
+                self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
 
             self.buttonApiHelp.setVisible(True)
 
