@@ -132,7 +132,6 @@ class Actions(object):
             self.mainWindow.timerWindow.cancelTimer()
             self.mainWindow.tree.treemodel.clear()
             self.mainWindow.database.connect(fldg.selectedFiles()[0])
-            self.mainWindow.settings.setValue("lastpath", fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
 
             self.mainWindow.tree.loadData(self.mainWindow.database)
@@ -165,7 +164,6 @@ class Actions(object):
             self.mainWindow.timerWindow.cancelTimer()
             self.mainWindow.tree.treemodel.clear()
             self.mainWindow.database.createconnect(fldg.selectedFiles()[0])
-            self.mainWindow.settings.setValue("lastpath", fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
 
 

@@ -481,6 +481,7 @@ class MainWindow(QMainWindow):
 
         self.settings.setValue('columns',self.fieldList.toPlainText())
         self.settings.setValue('module',self.RequestTabs.currentWidget().name)
+        self.settings.setValue("lastpath", self.database.filename)
 
         self.settings.beginGroup("GlobalSettings")
         self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
