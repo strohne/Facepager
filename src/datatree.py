@@ -691,10 +691,16 @@ class TreeModel(QAbstractItemModel):
                 data = treeitem.data[key]
                 try:
                     data = str(data) if isinstance(data, Mapping) else data
-                    if exact and not data in orlist:
+
+                    # Exact match
+                    if exact or not isinstance(data, str):
+                        if not data in orlist:
+                            return False
+                    # Partial string match
+                    elif not any(v in data for v in orlist):
                         return False
-                    elif not exact and not any(v in data for v in orlist):
-                        return False
+
+
                 except:
                     return False
 
