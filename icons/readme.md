@@ -5,5 +5,6 @@ Add icons to Facepager:
 - On command line execute (adjust path):   
   `pyside2-rcc -py3 ../../../../icons/icons.qrc > ../../../../icons/icons.py`
 - Copy the new icons.py to src folder
+- Change linebreaks from CRLF to LF (workaround: will not load in builds otherwise)
 - Use icons by the following scheme ':/icons/filename.filetype'
 
