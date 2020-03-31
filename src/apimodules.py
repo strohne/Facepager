@@ -327,9 +327,15 @@ class ApiTab(QScrollArea):
         try:
             options['scope'] = self.scopeEdit.text().strip()
         except AttributeError:
-            pass    
-            
-        # Options not saved to preset but to settings
+            pass
+
+        try:
+            options['proxy'] = self.proxyEdit.text().strip()
+        except AttributeError:
+            pass
+
+
+                # Options not saved to preset but to settings
         if purpose != 'preset':
             # query type
             options['querytype'] = self.name + ':' + self.resourceEdit.currentText()            
@@ -460,7 +466,13 @@ class ApiTab(QScrollArea):
             self.scopeEdit.setText(options.get('scope',self.defaults.get('scope','')))
         except AttributeError:
             pass
-                
+
+        # Proxy
+        try:
+            self.proxyEdit.setText(options.get('proxy',self.defaults.get('proxy','')))
+        except AttributeError:
+            pass
+
         # Credentials
         try:
             if 'access_token' in options:
@@ -897,19 +909,42 @@ class ApiTab(QScrollArea):
         pass
 
     def getProxies(self, reload=False):
-        if not hasattr(self,"proxies") or reload:
-            try:
-                filename = os.path.join(os.path.expanduser("~"), 'Facepager','proxies.json')
-                if os.path.exists(filename):
-                    with open(filename, 'r', encoding='utf-8') as f:
-                        self.proxies = json.load(f)
-                else:
-                    self.proxies = {}
-            except Exception as e:
-                self.logMessage("Error loading proxies: {}".format(str(e)))
-                self.proxies = {}
+        if not hasattr(self, "proxies") or reload:
+            self.proxies = {}
+            if hasattr(self, "proxyEdit"):
+                self.proxies = self.proxyEdit.text().strip()
+                self.proxies = self.proxies .split(";")
 
-        return self.proxies
+        if len(self.proxies) == 0:
+            proxy = ""
+        elif len(self.proxies) == 1:
+            proxy = self.proxies[0]
+        else:
+            proxy = self.proxies[0]
+            self.proxies = self.proxies[1:] + self.proxies[:1]
+
+        if proxy.startswith('http'):
+            proxy_http = "http://"+re.sub('^https?://', '', proxy)
+            proxy_https = "https://" + re.sub('^https?://', '', proxy)
+            return {'http': proxy_http, 'https': proxy_https}
+        elif proxy != "":
+            return {'http': proxy, 'https': proxy}
+        else:
+            return {}
+
+        # if not hasattr(self,"proxies") or reload:
+        #     try:
+        #         filename = os.path.join(os.path.expanduser("~"), 'Facepager','proxies.json')
+        #         if os.path.exists(filename):
+        #             with open(filename, 'r', encoding='utf-8') as f:
+        #                 self.proxies = json.load(f)
+        #         else:
+        #             self.proxies = {}
+        #     except Exception as e:
+        #         self.logMessage("Error loading proxies: {}".format(str(e)))
+        #         self.proxies = {}
+        #
+        # return proxy
 
     def initSession(self, no=0, renew=False):
         """
@@ -1258,6 +1293,11 @@ class AuthTab(ApiTab):
 
         self.scopeEdit = QLineEdit()
         authlayout.addRow("Scopes", self.scopeEdit)
+
+        self.proxyEdit = QLineEdit()
+        self.proxyEdit .setToolTip(wraptip("The proxy will be used for fetching data only, not for the login procedure."))
+        authlayout.addRow("Proxy", self.proxyEdit)
+
 
     def initLoginInputs(self, toggle=True):
         # token and login button
@@ -2045,7 +2085,7 @@ class TwitterStreamingTab(ApiTab):
         self.loadDoc()
         self.loadSettings()
 
-        self.timeout = 60
+        self.timeout = 30
         self.connected = False
 
     def getOAuth1Service(self):
@@ -2702,7 +2742,7 @@ class GenericTab(AuthTab):
 
         self.loadDoc()
         self.loadSettings()
-        self.timeout = 30
+        self.timeout = 15
 
     def initResponseInputs(self):
         layout = QHBoxLayout()
