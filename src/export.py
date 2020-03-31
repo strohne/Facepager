@@ -116,35 +116,35 @@ class ExportFileDialog(QFileDialog):
         progress = ProgressBar("Exporting data...", self.mainWindow)
         progress.setMaximum(Node.query.count())
 
-
         try:
             delimiter = self.optionSeparator.currentText()
             delimiter = delimiter.encode('utf-8').decode('unicode_escape')
-            writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+            writer = csv.writer(output, delimiter=delimiter, quotechar='"',
+                                quoting=csv.QUOTE_ALL, doublequote=True,
                                 lineterminator='\r\n')
 
-            #headers
-            row = ["level", "id", "parent_id", "object_id", "object_type", "query_status", "query_time",
-                   "query_type"]
+            # Headers
+            row = ["level", "id", "parent_id", "object_id", "object_type",
+                   "query_status", "query_time", "query_type"]
             for key in extractNames(self.mainWindow.tree.treemodel.customcolumns):
                 row.append(key)
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
-
             writer.writerow(row)
 
-            #rows
+            # Rows
             page = 0
-
-            while True:
+            while not progress.wasCanceled:
                 allnodes = Node.query.offset(page * 5000).limit(5000)
                 if allnodes.count() == 0:
                     break
+
                 for node in allnodes:
                     if progress.wasCanceled:
                         break
-                    row = [node.level, node.id, node.parent_id, node.objectid, node.objecttype,
-                           node.querystatus, node.querytime, node.querytype]
+
+                    row = [node.level, node.id, node.parent_id, node.objectid,
+                           node.objecttype, node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
                         row.append(node.getResponseValue(key)[1])
 
@@ -152,12 +152,11 @@ class ExportFileDialog(QFileDialog):
                         row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]
 
                     writer.writerow(row)
-                    # step the Bar
+
+                    # Step the bar
                     progress.step()
-                if progress.wasCanceled:
-                    break
-                else:
-                    page += 1
+
+                page += 1
 
         finally:
             progress.close()
