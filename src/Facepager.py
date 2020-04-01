@@ -86,8 +86,8 @@ class MainWindow(QMainWindow):
 
     def createDB(self):
         self.database = Database(self)
-        
-        dbname= sys.argv[1]
+
+        dbname= sys.argv[1] if len(sys.argv) > 1 else None
         lastpath = self.settings.value("lastpath")
 
         if dbname and os.path.isfile(dbname):
