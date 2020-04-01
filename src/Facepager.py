@@ -86,8 +86,13 @@ class MainWindow(QMainWindow):
 
     def createDB(self):
         self.database = Database(self)
+        
+        dbname= sys.argv[1]
         lastpath = self.settings.value("lastpath")
-        if lastpath and os.path.isfile(lastpath):
+
+        if dbname and os.path.isfile(dbname):
+            self.database.connect(dbname)
+        elif lastpath and os.path.isfile(lastpath):
             self.database.connect(self.settings.value("lastpath"))
 
         self.tree.loadData(self.database)
@@ -338,7 +343,7 @@ class MainWindow(QMainWindow):
         # Thread Box
         self.threadsEdit = QSpinBox(self)
         self.threadsEdit.setMinimum(1)
-        self.threadsEdit.setMaximum(10)
+        self.threadsEdit.setMaximum(40)
         self.threadsEdit.setToolTip(wraptip("The number of concurrent threads performing the requests. Higher values increase the speed, but may result in API-Errors/blocks"))
         fetchsettings.addRow("Parallel Threads", self.threadsEdit)
 
