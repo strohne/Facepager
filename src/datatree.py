@@ -335,7 +335,7 @@ class TreeModel(QAbstractItemModel):
 
         # Cache for prefetching data
         self.prefetching = False
-        self.cache = defaultdict(list)
+        self.cache = defaultdict(defaultdict)
 
         #Hidden root
         self.rootItem = TreeItem(self)
@@ -563,9 +563,9 @@ class TreeModel(QAbstractItemModel):
             return False
 
         parentItem = self.getItemFromIndex(parent)
-        row = parentItem.childCount()
+        lastRow = parentItem.childCount()
 
-        self.beginInsertRows(parent, row, row + len(records) - 1)
+        self.beginInsertRows(parent, lastRow, lastRow + len(records) - 1)
 
         for record in records:
             itemdata = self.getItemDataFromRecord(record)
@@ -600,9 +600,8 @@ class TreeModel(QAbstractItemModel):
     def fetchMore(self, index):
         parentItem = self.getItemFromIndex(index)
 
-        # # From cache
-        # if parentItem.childCountAll() > parentItem.childCount():
-        #     self.prefetch(index)
+        # From cache (append, fetch, clear in one operation)
+        # self.prefetch(index)
 
         # Remaining
         if parentItem.childCountAll() > parentItem.childCount():
@@ -610,40 +609,45 @@ class TreeModel(QAbstractItemModel):
             items = Node.query.filter(Node.parent_id == parentItem.id).offset(row).all()
             self.appendRecords(index, items)
 
-    def prefetch(self, index, chunk=2000):
-        if self.prefetching:
+    def prefetch(self, parentIndex, chunk=5000):
+        # Append from cache if possible
+        self.appendFromCache(parentIndex)
+
+        # Get next chunks
+        parentItem = self.getItemFromIndex(parentIndex)
+        while parentItem.childCountAll() > parentItem.childCount():
+            row = parentItem.childCount()
+            records = Node.query.filter(Node.parent_id >= parentItem.id).offset(row).limit(chunk).all()
+
+            # Add to cache, grouped by parent_id and id to avoid duplicates
+            for record in records:
+                self.cache[record.parent_id][record.id] = record
+
+            # Append new items from cache
+            self.appendFromCache(parentIndex)
+
+    def appendFromCache(self, parentIndex):
+        parentItem = self.getItemFromIndex(parentIndex)
+        if not parentItem.id in self.cache:
             return False
-        else:
-            self.prefetching = True
 
-        try:
-            item = self.getItemFromIndex(index)
-            if item.id is None:
-                return False
+        # Get and remove slice from cache
+        recordsDict = self.cache[parentItem.id]
+        del self.cache[parentItem.id]
+        if parentItem.loaded:
+            return False
 
-            # Get from cache.
-            if item.id in self.cache:
-                # Nodes are always ordered by their ID,
-                # so the cache always contains the first child rows.
-                # Discard already loaded rows to avoid duplicates.
-                row = item.childCount()
-                self.appendRecords(index, self.cache[item.id][row:])
-                del self.cache[item.id]
+        # Filter out items after last child to avoid duplicates
+        # (records are ordered by ID)
+        lastRow = parentItem.childCount()
+        if lastRow > 0:
+            lastChild = parentItem.childItems[-1]
+            lastId = lastChild.id
+            recordsDict = {id: record for id, record in recordsDict.items() if id > lastId}
 
-            # Refill cache with first rows of siblings if cache shorter than 100
-            # Speeds up subsequent loading for higher parent_ids
-            # if they contain at maximum childnodes in chunk
-            if len(self.cache) < 100:
-                nextlevel = item.level()+1
-                nextid = max(list(self.cache.keys()) + [item.id])
-                records = Node.query.filter(Node.parent_id > nextid, Node.level == nextlevel).limit(chunk).all()
-
-                # Group by parent_id
-                for record in records:
-                    self.cache[record.parent_id].append(record)
-
-        finally:
-            self.prefetching = False
+        # Add remainder
+        recordsList = recordsDict.values()
+        self.appendRecords(perentIndex, recordsList)
 
 
     def checkData(self, index, options=None):
