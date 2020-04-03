@@ -1,0 +1,39 @@
+{
+  "category": "Facebook",
+  "columns": [
+    "name",
+    "period",
+    "values.*.value",
+    "values.*.end_time",
+    "title",
+    "description",
+    "id"
+  ],
+  "description": "You need to be admin of the Facebook page to get insight such as page impressions. To authorize, click the settings button (next to login) and set the Page ID (the name of your page, e.g. Uni.Greifswald.de). Then login to Facebook. This procedure will get you a page access token.\n\nAdd the name of the page as a node and fetch data. See the Facebook API reference for further options: https://developers.facebook.com/docs/graph-api/reference/page/insights/#availmetrics\n\nSee the wiki for a general introduction to login procedures: https://github.com/strohne/Facepager/wiki/Login-and-Access-Tokens",
+  "headers": false,
+  "module": "Facebook",
+  "name": "Get page insights",
+  "options": {
+    "basepath": "https://graph.facebook.com/v3.2",
+    "resource": "/<page-id>/insights",
+    "params": {
+      "<page-id>": "<Object ID>",
+      "metric": "page_impressions"
+    },
+    "pages": 1,
+    "paging_type": "url",
+    "key_paging": "paging.next",
+    "paging_stop": null,
+    "param_paging": null,
+    "offset_start": 1,
+    "offset_step": 1,
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "token_uri": "",
+    "auth": "param"
+  },
+  "speed": 200
+}
