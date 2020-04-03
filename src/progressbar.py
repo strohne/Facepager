@@ -221,12 +221,13 @@ class ProgressBar(QDialog):
                 timespan = self.rate_values[0]['time'].secsTo(currenttime)
                 valuespan = currentvalue - self.rate_values[0]['value']
 
-                rate = (valuespan * 60 / float(timespan))
-                remainingseconds = round((self.progressBar.maximum() - self.progressBar.value()) / float(rate) * 60)
-                remaining = timedelta(seconds=remainingseconds) if remainingseconds >= 0 else "lightyears"
+                if (valuespan > 0) and (timespan > 0):
+                    rate = (valuespan * 60 / float(timespan))
+                    remainingseconds = round((self.progressBar.maximum() - self.progressBar.value()) / float(rate) * 60)
+                    remaining = timedelta(seconds=remainingseconds) if remainingseconds >= 0 else "lightyears"
 
-                self.showInfo('rate', "Completing {} nodes per minute".format(int(round(rate))))
-                self.showInfo('remaining', "Estimated remaining time is {}".format(str(remaining)))
+                    self.showInfo('rate', "Completing {} nodes per minute".format(int(round(rate))))
+                    self.showInfo('remaining', "Estimated remaining time is {}".format(str(remaining)))
 
             self.rate_update_next = QDateTime.currentDateTime().addSecs(self.rate_update_frequency)
 

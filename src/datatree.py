@@ -408,7 +408,7 @@ class TreeModel(QAbstractItemModel):
             self.database.session.add_all(newnodes)
             self.database.session.commit()
             self.rootItem._childcountall += len(nodesdata)
-            self.rootItem.loaded=False
+            self.rootItem.loaded = False
 
             self.layoutChanged.emit()
         except Exception as e:
