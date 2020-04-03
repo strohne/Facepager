@@ -2,6 +2,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QActionGroup
 
+from datetime import datetime, timedelta
 import csv
 from copy import deepcopy
 from progressbar import ProgressBar
@@ -123,8 +124,11 @@ class Actions(object):
     @Slot()
     def openDB(self):
         #open a file dialog with a .db filter
-        datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
-        datadir = datadir if os.path.exists(datadir) else os.path.expanduser("~")
+        datadir = self.mainWindow.database.filename
+        if not os.path.exists(datadir):
+            datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
+        if not os.path.exists(datadir):
+            datadir = os.path.expanduser("~")
 
         fldg = QFileDialog(caption="Open DB File", directory=datadir, filter="DB files (*.db)")
         fldg.setFileMode(QFileDialog.ExistingFile)
@@ -431,9 +435,13 @@ class Actions(object):
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
 
+                self.progressUpdate = datetime.now()
                 def updateProgress(current, total, level=0):
-                    QApplication.processEvents()
-                    progress.showInfo('input', "Adding nodes to queue ({}/{}).".format(current, total))
+                    if datetime.now() >= self.progressUpdate:
+                        progress.showInfo('input', "Adding nodes to queue ({}/{}).".format(current, total))
+                        QApplication.processEvents()
+                        self.progressUpdate = datetime.now() + timedelta(milliseconds=30)
+
                     return not progress.wasCanceled
 
                 indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, options, progress=updateProgress)
@@ -473,7 +481,7 @@ class Actions(object):
 
                         # Jobs in: packages of 100 at a time
                         jobsin = 0
-                        while (hasindexes and (jobsin < 100)):
+                        while hasindexes and (jobsin < 100):
 
                             index = next(indexes, False)
                             if index:

@@ -70,15 +70,15 @@ class DataTree(QTreeView):
         # Start with selected index or root index
         index = self.selectedIndexes()
         if not len(index):
-            index = self.model().index(0,0,QModelIndex())
+            startindex = self.model().index(0,0,QModelIndex())
             includeself = True
         else:
-            index = index[0]
+            startindex = index[0]
             includeself = False
 
         try:
             options = None
-            index = next(self.model().getNextOrSelf(index, filter, exact, options, includeself, recursive, progress))
+            index = next(self.model().getNextOrSelf(startindex, filter, exact, options, includeself, recursive, progress))
             self.showRow(index)
         except StopIteration:
             pass
@@ -90,7 +90,17 @@ class DataTree(QTreeView):
         if selectall:
             yield from self.model().getNextChildOrSelf(QModelIndex(), filter, exact, options, includeself, persistent, True, progress)
         else:
-            for index in self.selectionModel().selectedRows():
+            indexes = self.selectionModel().selectedIndexes()
+            indexes = [index for index in indexes if index.column()==0]
+
+            row_end = len(indexes)
+            row=1
+            for index in indexes:
+                row+=1
+                if progress is not None:
+                    if not progress(row, row_end):
+                        break
+
                 yield from self.model().getNextChildOrSelf(index, filter, exact, options, includeself, persistent, True, progress)
 
 
@@ -398,6 +408,7 @@ class TreeModel(QAbstractItemModel):
             self.database.session.add_all(newnodes)
             self.database.session.commit()
             self.rootItem._childcountall += len(nodesdata)
+            self.rootItem.loaded=False
 
             self.layoutChanged.emit()
         except Exception as e:
@@ -601,7 +612,7 @@ class TreeModel(QAbstractItemModel):
         parentItem = self.getItemFromIndex(index)
 
         # From cache (append, fetch, clear in one operation)
-        # self.prefetch(index)
+        #self.prefetch(index)
 
         # Remaining
         if parentItem.childCountAll() > parentItem.childCount():
@@ -609,7 +620,7 @@ class TreeModel(QAbstractItemModel):
             items = Node.query.filter(Node.parent_id == parentItem.id).offset(row).all()
             self.appendRecords(index, items)
 
-    def prefetch(self, parentIndex, chunk=5000):
+    def prefetch(self, parentIndex, chunk=1000):
         # Append from cache if possible
         self.appendFromCache(parentIndex)
 
@@ -617,7 +628,12 @@ class TreeModel(QAbstractItemModel):
         parentItem = self.getItemFromIndex(parentIndex)
         while parentItem.childCountAll() > parentItem.childCount():
             row = parentItem.childCount()
-            records = Node.query.filter(Node.parent_id >= parentItem.id).offset(row).limit(chunk).all()
+            if parentItem.id is None:
+                records = Node.query.filter(Node.parent_id == parentItem.id).offset(row).all()
+            else:
+                missing = parentItem.childCountAll() - row
+                nextchunk = missing if missing > chunk else chunk
+                records = Node.query.filter(Node.parent_id >= parentItem.id).offset(row).limit(nextchunk).all()
 
             # Add to cache, grouped by parent_id and id to avoid duplicates
             for record in records:
@@ -647,7 +663,7 @@ class TreeModel(QAbstractItemModel):
 
         # Add remainder
         recordsList = recordsDict.values()
-        self.appendRecords(perentIndex, recordsList)
+        self.appendRecords(parentIndex, recordsList)
 
 
     def checkData(self, index, options=None):
@@ -779,7 +795,7 @@ class TreeModel(QAbstractItemModel):
             row = 0
             while True:
                 if progress is not None:
-                    if not progress(row, row_end, level+1):
+                    if not progress(row, row_end+1, level+1):
                         break
 
                 if not index.isValid():

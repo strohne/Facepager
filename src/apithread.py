@@ -80,6 +80,9 @@ class ApiThreadPool():
     def getJobCount(self):
         return len(self.input)
 
+    def getOutputCount(self):
+        return self.output.qsize()
+
     def hasJobs(self):
         if not self.jobsadded:
             return True
