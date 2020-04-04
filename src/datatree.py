@@ -66,12 +66,7 @@ class DataTree(QTreeView):
             indexes = [idx for idx in indexes if idx.parent() == self.rootIndex()]
             return len(indexes) == model.rootItem.childCount()
 
-    def selectNext(self, filter={}, recursive=False, exact=True, progress=None):
-        # Init conditions
-        conditions = {'filter': filter,
-                      'exact': exact,
-                      'recursive': recursive}
-
+    def selectNext(self, conditions={}, progress=None):
         # Start with selected index or root index
         index = self.selectedIndexes()
         if not len(index):
@@ -734,7 +729,7 @@ class TreeModel(QAbstractItemModel):
     def getNextOrSelf(self, index, conditions={}, progress=None):
         """
         Yield next node matching the criteria
-        # default conditions should be: filter = None, exact = True, options = None, includeself = True, recursive = True,
+        Default conditions are: filter = None, exact = True, options = None, includeself = True, recursive = True
         """
 
         parent = index.parent()

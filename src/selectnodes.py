@@ -130,10 +130,14 @@ class SelectNodesWindow(QDialog):
             filter['response'] = self.responseEdit.text()
 
             filter = {k: v for k, v in filter.items() if v != ""}
-            if filter:
-                recursive = self.recursiveCheck.isChecked()
-                exact = not self.partialCheck.isChecked()
-                self.mainWindow.tree.selectNext(filter, recursive, exact, progress=self.updateProgress)
+            if not filter:
+                return False
+
+            conditions = {'filter': filter,
+                          'exact': not self.partialCheck.isChecked(),
+                          'recursive': self.recursiveCheck.isChecked()}
+
+            self.mainWindow.tree.selectNext(filter, conditions, progress=self.updateProgress)
         finally:
             self.running = False
             self.canceled = False
