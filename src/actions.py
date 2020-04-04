@@ -183,7 +183,7 @@ class Actions(object):
         progress = ProgressBar("Deleting data...", self.mainWindow)
 
         try:
-            todo = self.mainWindow.tree.selectedIndexesAndChildren(True)
+            todo = self.mainWindow.tree.selectedIndexesAndChildren({'persistent': True})
             progress.setMaximum(0) #len(todo)
             todo = list(todo)
             for index in todo:
@@ -444,7 +444,10 @@ class Actions(object):
 
                     return not progress.wasCanceled
 
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(False, select_filter, select_all, options, progress=updateProgress)
+                conditions = {'filter': select_filter,
+                              'selectall': select_all,
+                              'options': options}
+                indexes = self.mainWindow.tree.selectedIndexesAndChildren(conditions, updateProgress)
             elif isinstance(indexes,list):
                 indexes = iter(indexes)
 
@@ -655,8 +658,10 @@ class Actions(object):
     def setupTimer(self):
         #Get data
         level = self.mainWindow.levelEdit.value() - 1
-        indexes = self.mainWindow.tree.selectedIndexesAndChildren(True, {'level': level,
-                                                                         'objecttype': ['seed', 'data', 'unpacked']})
+        conditions = {'persistent': True,
+                      'filter': {'level': level,
+                                 'objecttype': ['seed', 'data', 'unpacked']}}
+        indexes = self.mainWindow.tree.selectedIndexesAndChildren(conditions)
         module = self.mainWindow.RequestTabs.currentWidget()
         options = module.getOptions()
 

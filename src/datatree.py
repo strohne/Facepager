@@ -67,28 +67,34 @@ class DataTree(QTreeView):
             return len(indexes) == model.rootItem.childCount()
 
     def selectNext(self, filter={}, recursive=False, exact=True, progress=None):
+        # Init conditions
+        conditions = {'filter': filter,
+                      'exact': exact,
+                      'recursive': recursive}
+
         # Start with selected index or root index
         index = self.selectedIndexes()
         if not len(index):
             startindex = self.model().index(0,0,QModelIndex())
-            includeself = True
+            conditions['includeself'] = True
         else:
             startindex = index[0]
-            includeself = False
+            conditions['includeself'] = False
 
         try:
-            options = None
-            index = next(self.model().getNextOrSelf(startindex, filter, exact, options, includeself, recursive, progress))
+            index = next(self.model().getNextOrSelf(startindex, conditions, progress))
             self.showRow(index)
         except StopIteration:
             pass
 
-    def selectedIndexesAndChildren(self, persistent=False, filter={}, selectall = False, options = {}, progress=None):
-        exact = True
-        includeself = True
-
-        if selectall:
-            yield from self.model().getNextChildOrSelf(QModelIndex(), filter, exact, options, includeself, persistent, True, progress)
+    def selectedIndexesAndChildren(self, conditions, progress=None):
+        """
+        Yield the next selected index or its children
+        Default conditions are: persistent = False, filter = {}, selectall = False, options = {},
+                                exact = True, includeself = True
+        """
+        if conditions.get('selectall'):
+            yield from self.model().getNextChildOrSelf(QModelIndex(), conditions, progress)
         else:
             indexes = self.selectionModel().selectedIndexes()
             indexes = [index for index in indexes if index.column()==0]
@@ -100,8 +106,7 @@ class DataTree(QTreeView):
                 if progress is not None:
                     if not progress(row, row_end):
                         break
-
-                yield from self.model().getNextChildOrSelf(index, filter, exact, options, includeself, persistent, True, progress)
+                yield from self.model().getNextChildOrSelf(index, conditions, progress)
 
 
 class TreeItem(object):
@@ -552,22 +557,22 @@ class TreeModel(QAbstractItemModel):
         else:
             return index.internalPointer()
 
-    def getIndexFromId(self, id, startindex=None, loaddata=True):
-        """
-        Get QModelIndex from id of TreeItem / record
-        (only for loaded indexes)
-        """
-
-        # Start search with first node
-        if startindex is None:
-            startindex = self.index(0, 0, QModelIndex())
-
-        for index in self.getNextOrSelf(startindex, loaddata=loaddata):
-            item = self.getItemFromIndex(index)
-            if item.id == id:
-                return index
-
-        return QModelIndex()
+    # def getIndexFromId(self, id, startindex=None, loaddata=True):
+    #     """
+    #     Get QModelIndex from id of TreeItem / record
+    #     (only for loaded indexes)
+    #     """
+    #
+    #     # Start search with first node
+    #     if startindex is None:
+    #         startindex = self.index(0, 0, QModelIndex())
+    #
+    #     for index in self.getNextOrSelf(startindex, {'loaddata': loaddata}):
+    #         item = self.getItemFromIndex(index)
+    #         if item.id == id:
+    #             return index
+    #
+    #     return QModelIndex()
 
     def appendRecords(self, parent, records):
         if not len(records):
@@ -726,15 +731,22 @@ class TreeModel(QAbstractItemModel):
 
         return True
 
-    def getNextOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, recursive=True, progress=None, loaddata=True):
+    def getNextOrSelf(self, index, conditions={}, progress=None):
+        """
+        Yield next node matching the criteria
+        # default conditions should be: filter = None, exact = True, options = None, includeself = True, recursive = True,
+        """
+
         parent = index.parent()
         row = index.row()
         row_start = row
         row_end = self.rowCount(parent)-1
         level = self.getLevel(index)
 
+        recursive = conditions.get('recursive',True)
         if not recursive:
-            filter['level'] = level
+            # TODO: test if it works, or use defaultdict
+            conditions['filter']['level'] = level
 
         # Iterate all nodes on the same level or deeper
         while True:
@@ -748,9 +760,9 @@ class TreeModel(QAbstractItemModel):
                     break
 
             if child.isValid():
-                includeself = includeself or (row > row_start)
-                persistent = False
-                yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata, progress)
+                conditions['includeself'] = conditions.get('includeself',True) or (row > row_start)
+                conditions['persistent'] = False
+                yield from self.getNextChildOrSelf(child, conditions, progress)
             else:
                 break
             row += 1
@@ -765,17 +777,25 @@ class TreeModel(QAbstractItemModel):
             index = parent
 
         if nextindex.isValid():
-            includeself=True
-            yield from self.getNextOrSelf(nextindex, filter, exact, options, includeself, recursive, progress, loaddata)
+            conditions['includeself']=True
+            yield from self.getNextOrSelf(nextindex, conditions, progress)
 
 
-    def getNextChildOrSelf(self, index, filter=None, exact=True, options=None, includeself=True, persistent=False, loaddata=True, progress=None):
+    def getNextChildOrSelf(self, index, conditions={}, progress=None):
         """
-        Yield next node matching the criteria
+        Yield next child node matching the criteria
+
+        Default conditions are: filter=None, exact=True, options=None, includeself=True,
+                                        persistent=False
         """
         # Self
+        includeself = conditions.get('includeself', True)
+        filter = conditions.get('filter')
+        options = conditions.get('options')
+        exact = conditions.get('exact', True)
+
         if includeself and self.checkFilter(index, filter, exact) and self.checkData(index, options):
-            if persistent:
+            if conditions.get('persistent'):
                 index_persistent = QPersistentModelIndex(index)
                 yield (index_persistent)
             else:
@@ -786,8 +806,7 @@ class TreeModel(QAbstractItemModel):
         level = self.getLevel(index)
 
         if (maxlevel is None) or (maxlevel > level):
-            if loaddata:
-                self.fetchMore(index)
+            self.fetchMore(index)
 
             if progress is not None:
                 row_end = self.rowCount(index) - 1
@@ -804,8 +823,8 @@ class TreeModel(QAbstractItemModel):
                     child = index.child(row, 0)
 
                 if child.isValid():
-                    includeself = True
-                    yield from self.getNextChildOrSelf(child, filter, exact, options, includeself, persistent, loaddata, progress)
+                    conditions['includeself'] = True
+                    yield from self.getNextChildOrSelf(child, conditions, progress)
                 else:
                     break
                 row += 1
