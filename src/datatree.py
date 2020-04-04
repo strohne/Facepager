@@ -745,7 +745,7 @@ class TreeModel(QAbstractItemModel):
 
         recursive = conditions.get('recursive',True)
         if not recursive:
-            # TODO: test if it works, or use defaultdict
+            conditions['filter'] = conditions.get('filter', {})
             conditions['filter']['level'] = level
 
         # Iterate all nodes on the same level or deeper

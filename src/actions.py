@@ -184,8 +184,8 @@ class Actions(object):
 
         try:
             todo = self.mainWindow.tree.selectedIndexesAndChildren({'persistent': True})
-            progress.setMaximum(0) #len(todo)
             todo = list(todo)
+            progress.setMaximum(len(todo))
             for index in todo:
                 progress.step()
                 self.mainWindow.tree.treemodel.deleteNode(index, delaycommit=True)
