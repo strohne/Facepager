@@ -440,7 +440,7 @@ class Actions(object):
                     if datetime.now() >= self.progressUpdate:
                         progress.showInfo('input', "Adding nodes to queue ({}/{}).".format(current, total))
                         QApplication.processEvents()
-                        self.progressUpdate = datetime.now() + timedelta(milliseconds=30)
+                        self.progressUpdate = datetime.now() + timedelta(milliseconds=60)
 
                     return not progress.wasCanceled
 

@@ -137,7 +137,7 @@ class SelectNodesWindow(QDialog):
                           'exact': not self.partialCheck.isChecked(),
                           'recursive': self.recursiveCheck.isChecked()}
 
-            self.mainWindow.tree.selectNext(filter, conditions, progress=self.updateProgress)
+            self.mainWindow.tree.selectNext(conditions, progress=self.updateProgress)
         finally:
             self.running = False
             self.canceled = False

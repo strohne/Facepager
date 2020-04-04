@@ -70,13 +70,14 @@ class DataTree(QTreeView):
         # Start with selected index or root index
         index = self.selectedIndexes()
         if not len(index):
-            startindex = self.model().index(0,0,QModelIndex())
+            startindex = self.model().index(0, 0, QModelIndex())
             conditions['includeself'] = True
         else:
             startindex = index[0]
             conditions['includeself'] = False
 
         try:
+            # todo: turnaround, conditions['until'] = startindex
             index = next(self.model().getNextOrSelf(startindex, conditions, progress))
             self.showRow(index)
         except StopIteration:
