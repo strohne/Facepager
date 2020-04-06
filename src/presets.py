@@ -576,10 +576,6 @@ class PresetWindow(QDialog):
         dialog.setLayout(layout)
 
         def save():
-            if self.currentFilename == None:
-                cat = category.currentText() if category.currentText() != "" else self.mainWindow.RequestTabs.currentWidget().name
-                self.currentFilename = self.uniqueFilename(cat+"-"+name.text())
-
             data_meta = {
                     'name':name.text(),
                     'category':category.currentText(),
@@ -596,10 +592,7 @@ class PresetWindow(QDialog):
 
             self.currentData.update(data_meta)
 
-            if not os.path.exists(self.presetFolder):
-                os.makedirs(self.presetFolder)
-
-            if not os.path.exists(os.path.join(self.presetFolder,self.currentFilename)):
+            if self.currentFilename is None:
                 self.currentData.update(data_settings)
 
             elif self.overwriteCheckbox.isChecked():
@@ -614,6 +607,19 @@ class PresetWindow(QDialog):
             for k in list(self.currentData.keys()):
               if not k in ['name','category','description','module','options','speed','headers','columns']:
                 self.currentData.pop(k)
+
+            # Create folder
+            if not os.path.exists(self.presetFolder):
+                os.makedirs(self.presetFolder)
+
+            # Remove old file
+            filepath = os.path.join(self.presetFolder, self.currentFilename)
+            if (self.currentFilename is not None) and os.path.exists(filepath):
+                os.remove(filepath)
+
+            # Save new file
+            catname = category.currentText() if category.currentText() != "" else self.mainWindow.RequestTabs.currentWidget().name
+            self.currentFilename = self.uniqueFilename(catname+"-"+name.text())
 
             with open(os.path.join(self.presetFolder,self.currentFilename), 'w') as outfile:
                 json.dump(self.currentData, outfile,indent=2, separators=(',', ': '))
@@ -669,8 +675,8 @@ class PresetWidgetItem(QTreeWidgetItem):
         data1 = self.data(0,Qt.UserRole)
         data2 = other.data(0,Qt.UserRole)
 
-        if data1.get('iscategory',False) and data2.get('iscategory',False):
-            order = ['Facebook','YouTube','Twitter','Twitter Streaming','Generic','Files']
+        if data1.get('iscategory') and data2.get('iscategory'):
+            order = ['Facebook','YouTube','Twitter','Twitter Streaming','Amazon','Files','Generic']
             if data1.get('name','') in order and data2.get('name','') in order:
                 if data1.get('name','') == data2.get('name',''):
                     return data1.get('category','') < data2.get('category','')
