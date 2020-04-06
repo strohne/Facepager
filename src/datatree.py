@@ -83,7 +83,7 @@ class DataTree(QTreeView):
         except StopIteration:
             pass
 
-    def selectedIndexesAndChildren(self, conditions, progress=None):
+    def selectedIndexesAndChildren(self, conditions={}, progress=None):
         """
         Yield the next selected index or its children
         Default conditions are: persistent = False, filter = {}, selectall = False, options = {},
@@ -376,7 +376,7 @@ class TreeModel(QAbstractItemModel):
         item.remove(True)
         self.endRemoveRows()
 
-    def addNodes(self, nodesdata, extended = False):
+    def addNodes(self, nodesdata, extended=False, progress=None):
 
         try:
             if not self.database.connected:
@@ -384,6 +384,10 @@ class TreeModel(QAbstractItemModel):
 
             newnodes = []
             for nodedata in nodesdata:
+                if progress is not None:
+                    if not progress():
+                        return False
+
                 if isinstance(nodedata, Mapping):
                     objectid = list(nodedata.values())[0]
                     response = nodedata
@@ -408,7 +412,7 @@ class TreeModel(QAbstractItemModel):
 
             self.database.session.add_all(newnodes)
             self.database.session.commit()
-            self.rootItem._childcountall += len(nodesdata)
+            self.rootItem._childcountall += len(newnodes)
             self.rootItem.loaded = False
 
             self.layoutChanged.emit()

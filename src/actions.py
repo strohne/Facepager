@@ -182,6 +182,7 @@ class Actions(object):
 
         progress = ProgressBar("Deleting data...", self.mainWindow)
 
+        self.mainWindow.tree.setUpdatesEnabled(False)
         try:
             todo = self.mainWindow.tree.selectedIndexesAndChildren({'persistent': True})
             todo = list(todo)
@@ -194,6 +195,7 @@ class Actions(object):
         finally:
             # commit the operation on the db-layer afterwards (delaycommit is True)
             self.mainWindow.tree.treemodel.commitNewNodes()
+            self.mainWindow.tree.setUpdatesEnabled(True)
             progress.close()
 
     @Slot()
@@ -261,6 +263,8 @@ class Actions(object):
 
         dialog.setLayout(layout)
 
+        self.progressUpdate = datetime.now()
+
         def createNodes():
             newnodes = [node.strip() for node in input.toPlainText().splitlines()]
             
@@ -268,21 +272,34 @@ class Actions(object):
             self.mainWindow.tree.selectLastRow()
             dialog.close()
 
+        def updateProgress():
+            if datetime.now() >= self.progressUpdate:
+                self.progressUpdate = datetime.now() + timedelta(milliseconds=50)
+                QApplication.processEvents()
+            return True
+
         def loadCSV():
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
             datadir = os.path.expanduser('~') if datadir == '' else datadir
 
             filename, filetype = QFileDialog.getOpenFileName(dialog, "Load CSV", datadir, "CSV files (*.csv)")
             if filename != "":
-                with open(filename, encoding="UTF-8-sig") as csvfile:
-                    csvreader = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
-                    rows = [row for row in csvreader]
-                    self.mainWindow.tree.treemodel.addNodes(rows)
-                    self.mainWindow.tree.selectLastRow()
-                    dialog.close()
-
-                self.mainWindow.tree.selectLastRow()
                 dialog.close()
+
+                progress = ProgressBar("Adding nodes...", self.mainWindow)
+                try:
+
+                    with open(filename, encoding="UTF-8-sig") as csvfile:
+                        rows = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
+                        #rows = [row for row in csvreader]
+                        self.mainWindow.tree.treemodel.addNodes(rows, progress=updateProgress)
+                        self.mainWindow.tree.selectLastRow()
+                        dialog.close()
+
+                    self.mainWindow.tree.selectLastRow()
+                finally:
+                    progress.close()
+
 
         def loadFilenames():
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
@@ -290,17 +307,17 @@ class Actions(object):
 
             filenames, filter = QFileDialog.getOpenFileNames(dialog, "Add filenames", datadir)
             for filename in filenames:
-                with open(filename, encoding="UTF-8-sig") as file:
+                #with open(filename, encoding="UTF-8-sig") as file:
 
-                    data = {}
-                    data['fileurl'] = 'file:' + pathname2url(filename)
-                    data['filename'] = os.path.basename(filename)
-                    data['filepath'] = filename
+                data = {}
+                data['fileurl'] = 'file:' + pathname2url(filename)
+                data['filename'] = os.path.basename(filename)
+                data['filepath'] = filename
 
 
-                    self.mainWindow.tree.treemodel.addNodes([data])
-                    self.mainWindow.tree.selectLastRow()
-                    dialog.close()
+                self.mainWindow.tree.treemodel.addNodes([data])
+                self.mainWindow.tree.selectLastRow()
+                dialog.close()
 
                 self.mainWindow.tree.selectLastRow()
                 dialog.close()

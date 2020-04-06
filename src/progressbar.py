@@ -182,7 +182,7 @@ class ProgressBar(QDialog):
             self.progressBar.setValue(self.progressBar.value() + 1)
 
         self.computeRate()
-        QApplication.processEvents()
+        QApplication.processEvents(maximumTime=10)
 
     def setRemaining(self ,n):
         self.showInfo('remainingnodes',"{} node(s) remaining.".format(n))
