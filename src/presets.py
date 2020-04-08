@@ -613,9 +613,10 @@ class PresetWindow(QDialog):
                 os.makedirs(self.presetFolder)
 
             # Remove old file
-            filepath = os.path.join(self.presetFolder, self.currentFilename)
-            if (self.currentFilename is not None) and os.path.exists(filepath):
-                os.remove(filepath)
+            if self.currentFilename is not None:
+                filepath = os.path.join(self.presetFolder, self.currentFilename)
+                if os.path.exists(filepath):
+                    os.remove(filepath)
 
             # Save new file
             catname = category.currentText() if category.currentText() != "" else self.mainWindow.RequestTabs.currentWidget().name
