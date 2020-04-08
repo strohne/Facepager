@@ -268,7 +268,7 @@ class Actions(object):
         def createNodes():
             newnodes = [node.strip() for node in input.toPlainText().splitlines()]
             
-            self.mainWindow.tree.treemodel.addNodes(newnodes, True)
+            self.mainWindow.tree.treemodel.addSeedNodes(newnodes, True)
             self.mainWindow.tree.selectLastRow()
             dialog.close()
 
@@ -292,7 +292,7 @@ class Actions(object):
                     with open(filename, encoding="UTF-8-sig") as csvfile:
                         rows = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
                         #rows = [row for row in csvreader]
-                        self.mainWindow.tree.treemodel.addNodes(rows, progress=updateProgress)
+                        self.mainWindow.tree.treemodel.addSeedNodes(rows, progress=updateProgress)
                         self.mainWindow.tree.selectLastRow()
                         dialog.close()
 
@@ -315,7 +315,7 @@ class Actions(object):
                 data['filepath'] = filename
 
 
-                self.mainWindow.tree.treemodel.addNodes([data])
+                self.mainWindow.tree.treemodel.addSeedNodes([data])
                 self.mainWindow.tree.selectLastRow()
                 dialog.close()
 

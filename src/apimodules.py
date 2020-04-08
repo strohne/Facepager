@@ -1225,7 +1225,7 @@ class ApiTab(QScrollArea):
         if dlg.exec_():
             if dlg.optionNodes.isChecked():
                 newnodes = [os.path.basename(f)  for f in dlg.selectedFiles()]
-                self.mainWindow.tree.treemodel.addNodes(newnodes)
+                self.mainWindow.tree.treemodel.addSeedNodes(newnodes)
                 folder = os.path.dirname(dlg.selectedFiles()[0])
                 self.folderEdit.setText(folder)            
             else:
@@ -1241,7 +1241,7 @@ class ApiTab(QScrollArea):
         if dlg.exec_():
             if dlg.optionNodes.isChecked():
                 newnodes = [os.path.basename(f) for f in dlg.selectedFiles()]
-                self.mainWindow.tree.treemodel.addNodes(newnodes)
+                self.mainWindow.tree.treemodel.addSeedNodes(newnodes)
                 folder = os.path.dirname(dlg.selectedFiles()[0])
                 self.downloadfolderEdit.setText(folder)
             else:

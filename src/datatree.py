@@ -255,13 +255,19 @@ class TreeItem(object):
 
         #empty records
         if len(nodes) == 0:
-            appendNode('empty', '', {})
+            appendNode('empty', dbnode.objectid, {})
 
         #extracted nodes
         for n in nodes:
             n = n if isinstance(n, Mapping) else {subkey: n}
-            o = options.get('objectid', None)
-            o = extractValue(n, o)[1] if o is not None else dbnode.objectid
+
+            # Extract Object ID or use parent id if no key present
+            o = options.get('objectid')
+            if o is not None:
+                o = extractValue(n, o, default=None)[1]
+            if o is None:
+                o = dbnode.objectid
+
             appendNode('data', o, n, fieldsuffix)
 
         #Offcut
@@ -376,7 +382,10 @@ class TreeModel(QAbstractItemModel):
         item.remove(True)
         self.endRemoveRows()
 
-    def addNodes(self, nodesdata, extended=False, progress=None):
+    def addSeedNodes(self, nodesdata, extended=False, progress=None):
+        """
+        Add seed nodes
+        """
 
         try:
             if not self.database.connected:
