@@ -364,6 +364,7 @@ class ApiViewer(QDialog):
         self.detailWidgets = {}
 
     def clear(self):
+        self.allFilesLoaded=False
         self.itemList.clear()
         self.clearDetails()
 
@@ -528,7 +529,7 @@ class ApiViewer(QDialog):
         try:
             # Documentation
             #self.downloadDefaultFiles(True)
-            filename = module + self.filesSuffix[0]
+            filename = module.replace(" ","") + self.filesSuffix[0]
 
             if os.path.isfile(os.path.join(self.folder, filename)):
                 self.loadFile(self.folder, filename, False)

@@ -677,18 +677,18 @@ class PresetWidgetItem(QTreeWidgetItem):
         data2 = other.data(0,Qt.UserRole)
 
         if data1.get('iscategory') and data2.get('iscategory'):
-            order = ['Facebook','YouTube','Twitter','Twitter Streaming','Amazon','Files','Generic']
-            if data1.get('name','') in order and data2.get('name','') in order:
-                if data1.get('name','') == data2.get('name',''):
-                    return data1.get('category','') < data2.get('category','')
-                else:
-                    return order.index(data1.get('name','')) < order.index(data2.get('name',''))
-
-            elif (data1.get('name','') in order) != (data2.get('name','') in order):
-                return data1.get('name','') in order
-            else:
-                return data1.get('name','') < data2.get('name','')
+            #order = ['Facebook','YouTube','Twitter','Twitter Streaming','Amazon','Files','Generic']
+            # if data1.get('name','') in order and data2.get('name','') in order:
+            #     if data1.get('name','') == data2.get('name',''):
+            #         return data1.get('category','') < data2.get('category','')
+            #     else:
+            #         return order.index(data1.get('name','')) < order.index(data2.get('name',''))
+            #
+            # elif (data1.get('name','') in order) != (data2.get('name','') in order):
+            #     return data1.get('name','') in order
+            # else:
+            return data1.get('category','').lower()  < data2.get('category','').lower()
         elif data1.get('default',False) != data2.get('default',False):
             return data1.get('default',False)
         else:
-            return data1.get('name','') < data2.get('name','')
+            return data1.get('name','').lower() < data2.get('name','').lower()

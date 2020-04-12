@@ -250,6 +250,8 @@ class ApiTab(QScrollArea):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
 
+        options['module'] = self.name
+
         #options for request
         try:
             options['basepath'] = self.basepathEdit.currentText().strip()
