@@ -212,7 +212,7 @@ class DictionaryTreeItem(object):
         self.itemDataValue = value
         self.itemDataType = 'atom'
 
-        self.itemToolTip = self.model.getDoc(self.keyPath())
+        self.itemToolTip = wraptip(self.model.getDoc(self.keyPath()))
 
         if isinstance(value, dict):
             items = list(value.items())
@@ -232,12 +232,17 @@ class DictionaryTreeItem(object):
             self.itemDataType = 'atom'
             self.itemDataValue = str(value)
 
+            try:
+                self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(self.itemDataValue))+"</p>"
+            except:
+                pass
+
         else:
             self.itemDataType = 'atom'
             self.itemDataValue = value
 
             try:
-                self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(value))+"</p>"
+                self.itemToolTip = self.itemToolTip + "<p>"+str(wraptip(self.itemDataValue))+"</p>"
             except:
                 pass
 

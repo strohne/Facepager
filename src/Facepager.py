@@ -133,7 +133,6 @@ class MainWindow(QMainWindow):
         self.statusbar.addPermanentWidget(self.timerStatus)
 
         self.databaseLabel = QPushButton("No database connection ")
-        #self.databaseLabel.clicked.connect(self.actions.openDBFolder)
         self.statusbar.addWidget(self.databaseLabel)
 
         self.selectionStatus = QLabel("0 node(s) selected ")

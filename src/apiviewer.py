@@ -311,11 +311,6 @@ class ApiViewer(QDialog):
                     self.addDetailTable('Response')
                     self.addDetailText(getDictValue(operation, 'responses.200.description', ''))
 
-                    def getSchemaComponent(key):
-                        #eg "#components/schema/user/properties
-
-                        key = key.replace("#", "").replace("/", ".")
-                        return getDictValue(data,key,False)
 
                     def addDetailProperties(schema, key = ''):
                         if not isinstance(schema, dict):
@@ -326,7 +321,7 @@ class ApiViewer(QDialog):
                             if isinstance(properties, dict):
                                 ref = properties.get("$ref",None)
                                 if ref is not None:
-                                    properties = getSchemaComponent(ref)
+                                    properties = self.getSchemaComponent(data, ref)
 
                             if isinstance(properties, dict):
                                 for name, value in properties.items():
@@ -540,6 +535,11 @@ class ApiViewer(QDialog):
         except:
             return None
 
+    def getSchemaComponent(self, data, key):
+        # eg "#components/schema/user/properties
+        key = key.replace("#", "").replace("/", ".")
+        return getDictValue(data, key, False)
+
     def getDocField(self, module = '', basepath = '', path='', field=''):
         try:
             data = self.getDocModule(module, basepath)
@@ -573,6 +573,12 @@ class ApiViewer(QDialog):
 
                     if schema.get('type', None) == 'object':
                         properties = schema.get('properties', None)
+
+                        if isinstance(properties, dict):
+                            ref = properties.get("$ref", None)
+                            if ref is not None:
+                                properties = self.getSchemaComponent(data, ref)
+
                         if isinstance(properties, dict):
                             value = properties.get(keys[0],{})
 
