@@ -1,0 +1,37 @@
+{
+  "name": "Download images",
+  "category": "Facebook",
+  "description": "The preset demonstrates how to download images or other kind of media.  The principle is suitable for many different use cases. First, you need to get the URL of the image. For example, use the Facebook posts preset and make sure \"picture\" or \"attachments\" is in the fields list. In this case the URL can be found in the picture or attachements keys of the node.\n\nIn the base path set by this preset you find a Facepager placeholder referring to the key with the URL. Inspect your post data to figure out the right key. More information about placeholders can be found in the Facepager wiki: https://github.com/strohne/Facepager/wiki/URLs,-Placeholders,-Nodes-and-Keys\n\nBefore you fetch data make sure to select a download folder. The image is saved into this folder. Usually, `<Object ID>` is a good choice for the filename. The file extension will be guessed from the data if you set the custom file extension to `<None>`.",
+  "module": "Generic",
+  "options": {
+    "basepath": "<picture>",
+    "resource": "",
+    "params": {},
+    "headers": {},
+    "verb": "GET",
+    "format": "file",
+    "filename": "<Object ID>",
+    "fileext": "<None>",
+    "pages": 1,
+    "paging_type": "key",
+    "key_paging": null,
+    "paging_stop": null,
+    "param_paging": null,
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "proxy": "",
+    "auth_type": "OAuth2",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "disable"
+  },
+  "speed": 200,
+  "headers": false,
+  "columns": [
+    "type",
+    "media.image.src",
+    "url"
+  ]
+}
