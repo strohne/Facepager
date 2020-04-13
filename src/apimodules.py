@@ -250,7 +250,7 @@ class ApiTab(QScrollArea):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
 
-        options['module'] = self.name
+        #options['module'] = self.name
 
         #options for request
         try:
@@ -316,6 +316,22 @@ class ApiTab(QScrollArea):
             options['param_paging'] = self.getFromDoc(doc_path + '.x-facepager-pagination.param', 'param_paging')
             options['offset_start'] = 1
             options['offset_step'] = 1
+
+        if options.get('paging_type') == 'url':
+            options.pop('paging_stop')
+            options.pop('param_paging')
+            options.pop('offset_start')
+            options.pop('offset_step')
+        elif options.get('paging_type') == 'decrease':
+            options.pop('offset_start')
+            options.pop('offset_step')
+            options.pop('paging_stop')
+        elif options.get('paging_type') == 'key':
+            options.pop('offset_start')
+            options.pop('offset_step')
+        elif options.get('paging_type') == 'count':
+            options.pop('key_paging')
+            options.pop('paging_stop')
 
         #options for data handling
         try:
@@ -529,6 +545,7 @@ class ApiTab(QScrollArea):
 
         if self.apidoc and isinstance(self.apidoc,dict):
             # Add base path
+            self.basepathEdit.clear()
             self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.url"))
 
             # Add endpoints in reverse order
@@ -2154,18 +2171,6 @@ class TwitterStreamingTab(ApiTab):
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(TwitterStreamingTab, self).getOptions(purpose)
-
-        # options for data handling
-        if purpose == 'fetch':            
-            if options["resource"] == '/search/tweets':
-                options['nodedata'] = 'statuses'
-            elif options["resource"] == '/followers/list':
-                options['nodedata'] = 'users'
-            elif options["resource"] == '/friends/list':
-                options['nodedata'] = 'users'
-            else:
-                options['nodedata'] = None
-
         return options
     
     def initSession(self, no=0, renew=False):
@@ -2233,9 +2238,13 @@ class TwitterStreamingTab(ApiTab):
 
 
             while self.connected:
-                self.response = _send()
-                if self.response:
-                    for line in self.response.iter_lines():
+                response = _send()
+                if response:
+                    status = 'fetched' if response.ok else 'error'
+                    status = status + ' (' + str(response.status_code) + ')'
+                    headers = dict(list(response.headers.items()))
+
+                    for line in response.iter_lines():
                         if not self.connected:
                             break
                         if line:
@@ -2244,10 +2253,10 @@ class TwitterStreamingTab(ApiTab):
                             except ValueError:  # pragma: no cover
                                 raise Exception("Unable to decode response, not valid JSON")
                             else:
-                                yield data
+                                yield data, headers, status
                 else:
                     break
-            self.response.close()
+            response.close()
 
         except AttributeError:
             #This exception is thrown when canceling the connection
@@ -2260,7 +2269,11 @@ class TwitterStreamingTab(ApiTab):
     def disconnectSocket(self):
         """Used to hardly disconnect the streaming client"""
         self.connected = False
-        self.response.raw._fp.close()
+        while (len(self.sessions) > 0):
+            session = self.sessions.pop()
+            session.close()
+
+        #self.response.raw._fp.close()
         #self.response.close()
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
@@ -2276,13 +2289,18 @@ class TwitterStreamingTab(ApiTab):
                 options.get('access_token', ''), '')
             logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
+        # fallback option for data handling
+        if (options.get('nodedata') is None):
+            options['nodedata'] = self.defaults.get('key_nodedata')
+        if (options.get('objectid') is None):
+            options['objectid'] = self.defaults.get('key_objectid')
+
         # data
-        headers = None
         session_no = options.get('threadnumber',0)
-        for data in self.request(session_no, path=urlpath, args=urlparams):
+        for data, headers, status in self.request(session_no, path=urlpath, args=urlparams):
             # data
             options['querytime'] = str(datetime.now())
-            options['querystatus'] = 'stream'
+            options['querystatus'] = status
 
             logData(data, options, headers)
 

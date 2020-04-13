@@ -436,32 +436,23 @@ class PresetWindow(QDialog):
             root_item = root_item.parent()
             root_data = root_item.data(0, Qt.UserRole)
 
-        # Apply pipeline items
-        columns = []
+        # Create pipeline
+        pipeline = []
+
         for i in range(root_item.childCount()):
             item = root_item.child(i)
-            self.presetList.setCurrentItem(item)
-            data = item.data(0, Qt.UserRole)
-            module = self.mainWindow.getModule(data.get('module', None))
+
+            preset = item.data(0, Qt.UserRole)
+            module = self.mainWindow.getModule(preset.get('module', None))
             options = module.getOptions()
-            options.update(data.get('options', {}))
-            columns.extend(data.get('columns'))
+            options.update(preset.get('options', {}))
+            preset['options'] = options.copy()
+            preset['item'] = item
 
-            finished = self.mainWindow.actions.queryNodes(None, module, options)
+            pipeline.append(preset)
 
-            if not finished:
-                return False
-            else:
-                level = self.mainWindow.levelEdit.value()
-                self.mainWindow.levelEdit.setValue(level + 1)
-
-
-        # Set columns
-        columns = list(dict.fromkeys(columns))
-        self.mainWindow.fieldList.setPlainText("\n".join(columns))
-        self.mainWindow.actions.showColumns()
-
-        return True
+        # Process pipeline
+        return self.mainWindow.actions.queryPipeline(pipeline)
         #self.close()
 
 
@@ -585,9 +576,9 @@ class PresetWindow(QDialog):
             data_settings = {
                     'module':self.mainWindow.RequestTabs.currentWidget().name,
                     'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
+                    'columns': self.mainWindow.fieldList.toPlainText().splitlines(),
                     'speed':self.mainWindow.speedEdit.value(),
-                    'headers':self.mainWindow.headersCheckbox.isChecked(),
-                    'columns':self.mainWindow.fieldList.toPlainText().splitlines()
+                    'headers':self.mainWindow.headersCheckbox.isChecked()
             }
 
             self.currentData.update(data_meta)
@@ -604,9 +595,9 @@ class PresetWindow(QDialog):
                 else:
                     self.currentData.update(data_settings)
 
-            for k in list(self.currentData.keys()):
-              if not k in ['name','category','description','module','options','speed','headers','columns']:
-                self.currentData.pop(k)
+            # Sanitize and reorder
+            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'headers','columns']
+            self.currentData = {k: self.currentData.get(k, None) for k in keys}
 
             # Create folder
             if not os.path.exists(self.presetFolder):

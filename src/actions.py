@@ -141,20 +141,6 @@ class Actions(object):
             self.mainWindow.tree.loadData(self.mainWindow.database)
             self.mainWindow.actions.actionShowColumns.trigger()
 
-
-
-    @Slot()
-    def openDBFolder(self):
-        path = self.mainWindow.settings.value("lastpath",None)
-
-        if (path is not None) and (os.path.exists(path)):
-            if platform.system() == "Windows":
-                os.startfile(path)
-            elif platform.system() == "Darwin":
-                subprocess.Popen(["open", path])
-            else:
-                subprocess.Popen(["xdg-open", path])
-
     @Slot()
     def makeDB(self):
         #same as openDB-Slot, but now for creating a new one on the file system
@@ -414,7 +400,7 @@ class Actions(object):
         self.mainWindow.selectNodesWindow.showWindow()
 
 
-    def queryNodes(self, indexes=None, apimodule=False, options=False):
+    def queryNodes(self, indexes=None, apimodule=False, options=None):
         if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (indexes is not None)):
             return False
 
@@ -432,8 +418,7 @@ class Actions(object):
             globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
             globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
             globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
-            objecttypes = self.mainWindow.typesEdit.text().replace(' ','').split(',')
-            level = self.mainWindow.levelEdit.value() - 1
+
 
             # Get module option
             if isinstance(apimodule,str):
@@ -442,13 +427,17 @@ class Actions(object):
                 apimodule = self.mainWindow.RequestTabs.currentWidget()
             apimodule.getProxies(True)
 
-            if options == False:
+            if options is None:
                 options = apimodule.getOptions()
+            else:
+                options = options.copy()
             options.update(globaloptions)
 
 
             #Get selected nodes
             if indexes is None:
+                objecttypes = self.mainWindow.typesEdit.text().replace(' ', '').split(',')
+                level = self.mainWindow.levelEdit.value() - 1
                 select_all = globaloptions['allnodes']
                 select_filter = {'level': level, 'objecttype': objecttypes}
 
@@ -673,18 +662,21 @@ class Actions(object):
 
     @Slot()
     def setupTimer(self):
-        #Get data
+        # Get data
         level = self.mainWindow.levelEdit.value() - 1
         conditions = {'persistent': True,
-                      'filter': {'level': level,
-                                 'objecttype': ['seed', 'data', 'unpacked']}}
+                      'filter': {
+                          'level': level,
+                          'objecttype': ['seed', 'data', 'unpacked']
+                        }
+                      }
         indexes = self.mainWindow.tree.selectedIndexesAndChildren(conditions)
         module = self.mainWindow.RequestTabs.currentWidget()
         options = module.getOptions()
+        pipeline = [{'module': module, 'options': options}]
 
-        #show timer window
-        self.mainWindow.timerWindow.setupTimer(
-            {'indexes': list(indexes),  'module': module, 'options': options})
+        # Show timer window
+        self.mainWindow.timerWindow.setupTimer({'indexes': list(indexes), 'pipeline': pipeline})
 
     @Slot()
     def timerStarted(self, time):
@@ -705,7 +697,35 @@ class Actions(object):
     def timerFired(self, data):
         self.mainWindow.timerStatus.setText("Timer fired ")
         self.mainWindow.timerStatus.setStyleSheet("QLabel {color:red;}")
-        self.queryNodes(data.get('indexes', []), data.get('module', None), data.get('options', {}).copy())
+
+        pipeline = data.get('pipeline',[])
+        indexes =  data.get('indexes',[])
+        self.queryPipeline(pipeline, indexes)
+
+    def queryPipeline(self, pipeline, indexes=None):
+        columns = []
+        for preset in pipeline:
+            # Select item in preset window
+            item = preset.get('item')
+            if item is not None:
+                self.mainWindow.presetWindow.presetList.setCurrentItem(item)
+
+            columns.extend(preset.get('columns',[]))
+            module = preset.get('module')
+            options = preset.get('options')
+            finished = self.queryNodes(indexes, module, options)
+
+            # todo: increase level of indexes instead of levelEdit
+            if not finished or (indexes is not None):
+                return False
+            else:
+                level = self.mainWindow.levelEdit.value()
+                self.mainWindow.levelEdit.setValue(level + 1)
+
+        # Set columns
+        columns = list(dict.fromkeys(columns))
+        self.mainWindow.fieldList.setPlainText("\n".join(columns))
+        self.showColumns()
 
     @Slot()
     def treeNodeSelected(self, current):
