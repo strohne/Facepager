@@ -1,4 +1,5 @@
 ﻿#!/usr/bin/env python
+#!/usr/bin/env python
 """Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. All data is stored in a SQLite database and may be exported to csv. """
 
 # MIT License
@@ -323,9 +324,9 @@ class MainWindow(QMainWindow):
         fetchsettings.addRow("Select all nodes", self.allnodesCheckbox)
 
         #Object types
-        self.typesEdit = QLineEdit('seed,data')
-        self.typesEdit.setToolTip(wraptip("Based on the selected nodes, only fetch data for nodes with one of the listed object types (normally should not be changed)"))
-        fetchsettings.addRow("Object types",self.typesEdit)
+        self.typesEdit = QLineEdit('offcut')
+        self.typesEdit.setToolTip(wraptip("Skip nodes with these object types, comma separated list. Normally this should not be changed."))
+        fetchsettings.addRow("Exclude object types",self.typesEdit)
 
         # #-Empty nodes
         # self.emptynodesCheckbox = QCheckBox(self)
