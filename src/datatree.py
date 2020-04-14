@@ -720,6 +720,9 @@ class TreeModel(QAbstractItemModel):
 
         treeitem = index.internalPointer()
         for key, value in filter.items():
+            inverse = key[0] == '!'
+            key = key[1:] if key[0] == '!' else key
+
             if treeitem.data is not None and treeitem.data[key] is not None:
                 orlist = value if type(value) is list else [value]
                 data = treeitem.data[key]
@@ -728,8 +731,11 @@ class TreeModel(QAbstractItemModel):
 
                     # Exact match
                     if exact or not isinstance(data, str):
-                        if not data in orlist:
+                        if (inverse and data in orlist):
                             return False
+                        elif (not inverse and not data in orlist):
+                            return False
+                        
                     # Partial string match
                     elif not any(v in data for v in orlist):
                         return False

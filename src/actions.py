@@ -439,7 +439,7 @@ class Actions(object):
                 objecttypes = self.mainWindow.typesEdit.text().replace(' ', '').split(',')
                 level = self.mainWindow.levelEdit.value() - 1
                 select_all = globaloptions['allnodes']
-                select_filter = {'level': level, 'objecttype': objecttypes}
+                select_filter = {'level': level, '!objecttype': objecttypes}
 
                 self.progressUpdate = datetime.now()
                 def updateProgress(current, total, level=0):
@@ -664,10 +664,11 @@ class Actions(object):
     def setupTimer(self):
         # Get data
         level = self.mainWindow.levelEdit.value() - 1
+        objecttypes = self.mainWindow.typesEdit.text().replace(' ', '').split(',')
         conditions = {'persistent': True,
                       'filter': {
                           'level': level,
-                          'objecttype': ['seed', 'data', 'unpacked']
+                          '!objecttype': objecttypes
                         }
                       }
         indexes = self.mainWindow.tree.selectedIndexesAndChildren(conditions)
