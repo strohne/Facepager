@@ -1560,6 +1560,10 @@ class AuthTab(ApiTab):
             # build url
             method, urlpath, urlparams, payload, requestheaders  = self.buildUrl(nodedata, options, logProgress)
 
+            if not urlpath:
+                logMessage("Empty path, node skipped {0}.".format(nodedata['objectid']))
+                return False
+
             if options['logrequests']:
                 logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
                     options.get('access_token',''),'')
