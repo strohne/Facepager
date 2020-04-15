@@ -57,14 +57,18 @@ class ExportFileDialog(QFileDialog):
         self.setLayout(layout)
 
         if self.exec_():
-
-            if os.path.isfile(self.selectedFiles()[0]):
-                os.remove(self.selectedFiles()[0])
-            output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
-            if self.optionBOM.isChecked():
-                output.write('\ufeff')
-
             try:
+                if os.path.isfile(self.selectedFiles()[0]):
+                    os.remove(self.selectedFiles()[0])
+            except Exception as e:
+                QMessageBox.information(self,"Facepager","Could not overwrite file:"+str(e))
+                return False
+
+            output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
+            try:
+                if self.optionBOM.isChecked():
+                    output.write('\ufeff')
+
                 if self.optionAll.currentIndex() == 0:
                     self.exportAllNodes(output)
                 else:
@@ -92,15 +96,26 @@ class ExportFileDialog(QFileDialog):
             row = [str(val) for val in self.mainWindow.tree.treemodel.getRowHeader()]
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
-
+            row = ['path'] + row
             writer.writerow(row)
 
             #rows
-            for no in range(len(indexes)):
+            path = []
+            for index in indexes:
                 if progress.wasCanceled:
                     break
 
-                row = [str(val) for val in self.mainWindow.tree.treemodel.getRowData(indexes[no])]
+                # data
+                rowdata = self.mainWindow.tree.treemodel.getRowData(index)
+
+                # path of parents (#2=level;#3=object ID)
+                while rowdata[2] < len(path):
+                    path.pop()
+                path.append(rowdata[3])
+
+                # values
+                row = [str(val) for val in rowdata]
+                row = ["/".join(path)] + row
                 if self.optionLinebreaks.isChecked():
                     row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
 
