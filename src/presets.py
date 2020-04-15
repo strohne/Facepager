@@ -22,7 +22,7 @@ class PresetWindow(QDialog):
 
         self.mainWindow = parent
         self.setWindowTitle("Presets")
-        self.setMinimumWidth(700);
+        self.setMinimumWidth(800);
         self.setMinimumHeight(600);
 
         #layout
@@ -50,8 +50,14 @@ class PresetWindow(QDialog):
 
         # category / pipeline
         self.categoryWidget = QWidget()
+        p = self.categoryWidget.palette()
+        p.setColor(self.categoryWidget.backgroundRole(), Qt.white)
+        self.categoryWidget.setPalette(p)
         self.categoryWidget.setAutoFillBackground(True)
+
+
         self.categoryLayout=QVBoxLayout()
+        #self.categoryLayout.setContentsMargins(0, 0, 0, 0)
         self.categoryWidget.setLayout(self.categoryLayout)
 
         self.categoryView=QScrollArea()
@@ -59,6 +65,20 @@ class PresetWindow(QDialog):
         self.categoryView.setWidget(self.categoryWidget)
         central.addWidget(self.categoryView)
         central.setStretchFactor(1, 2)
+
+        # Pipeline header
+        self.pipelineName = QLabel('')
+        self.pipelineName.setWordWrap(True)
+        self.pipelineName.setStyleSheet("QLabel  {font-size:15pt;}")
+        self.categoryLayout.addWidget(self.pipelineName)
+
+        # Pipeline items
+        # self.pipelineWidget = QTreeWidget()
+        # self.pipelineWidget.setIndentation(0)
+        # self.pipelineWidget.setUniformRowHeights(True)
+        # self.pipelineWidget.setColumnCount(4)
+        # self.pipelineWidget.setHeaderLabels(['Name','Module','Basepath','Resource'])
+        # self.categoryLayout.addWidget(self.pipelineWidget)
 
         # preset widget
         self.presetWidget = QWidget()
@@ -159,7 +179,7 @@ class PresetWindow(QDialog):
         self.applyButton=QPushButton('Apply')
         self.applyButton.setDefault(True)
         self.applyButton.clicked.connect(self.applyPreset)
-        self.applyButton.setToolTip(wraptip("If a single preset is selected: load the selected preset. If a category is selected: Start fetching data with every preset in the selected category, one after another. The node level is increased step by step. Careful: EVERY preset in the category is applied, this will not work with the default presets."))
+        self.applyButton.setToolTip(wraptip("Load the selected preset."))
         buttons.addWidget(self.applyButton)
         layout.addLayout(buttons)
 
@@ -214,6 +234,7 @@ class PresetWindow(QDialog):
         if current and current.isSelected():
             data = current.data(0,Qt.UserRole)
 
+            # Single preset
             if not data.get('iscategory',False):
                 self.lastSelected = os.path.join(data.get('folder',''),data.get('filename',''))
 
@@ -224,8 +245,28 @@ class PresetWindow(QDialog):
                 self.detailColumns.setText("\r\n".join(data.get('columns', [])))
                 self.detailSpeed.setText(str(data.get('speed','')))
 
+                #self.applyButton.setText("Apply")
                 self.presetView.show()
+
+            # Category
             else:
+#                self.pipelineName.setText(str(data.get('category')))
+
+#                 self.pipelineWidget.clear()
+#                 for i in range(current.childCount()):
+#                     presetitem = current.child(i)
+#                     preset = presetitem.data(0, Qt.UserRole)
+#
+#                     treeitem = QTreeWidgetItem(self.pipelineWidget)
+#                     treeitem.setText(0,preset.get('name'))
+#                     treeitem.setText(1, preset.get('module'))
+#                     treeitem.setText(2, getDictValue(preset,'options.basepath'))
+#                     treeitem.setText(3, getDictValue(preset,'options.resource'))
+# #                   treeitem.setText(4, preset.get('description'))
+#
+#                     self.pipelineWidget.addTopLevelItem(treeitem)
+
+                #self.applyButton.setText("Run pipeline")
                 self.categoryView.show()
 
     def showPresets(self):
@@ -462,25 +503,25 @@ class PresetWindow(QDialog):
 
         data = self.presetList.currentItem().data(0,Qt.UserRole)
         if data.get('iscategory',False):
-            self.startPipeline()
-        else:
+            return False
+            #self.startPipeline()
 
-            #Find API module
-            module = data.get('module', '')
-            module = 'Generic' if module == 'Files' else module
+        #Find API module
+        module = data.get('module', '')
+        module = 'Generic' if module == 'Files' else module
 
-            tab = self.mainWindow.getModule(module)
-            if tab is not None:
-                tab.setOptions(data.get('options', {}))
-                self.mainWindow.RequestTabs.setCurrentWidget(tab)
+        tab = self.mainWindow.getModule(module)
+        if tab is not None:
+            tab.setOptions(data.get('options', {}))
+            self.mainWindow.RequestTabs.setCurrentWidget(tab)
 
-            #Set columns
-            self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
-            self.mainWindow.actions.showColumns()
+        #Set columns
+        self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
+        self.mainWindow.actions.showColumns()
 
-            #Set global settings
-            self.mainWindow.speedEdit.setValue(data.get('speed',200))
-            self.mainWindow.headersCheckbox.setChecked(data.get('headers',False))
+        #Set global settings
+        self.mainWindow.speedEdit.setValue(data.get('speed',200))
+        self.mainWindow.headersCheckbox.setChecked(data.get('headers',False))
 
         self.close()
 
