@@ -26,13 +26,13 @@ class DataTree(QTreeView):
     @Slot()
     def currentChanged(self, current, previous):
         super(DataTree, self).currentChanged(current, previous)
-        self.nodeSelected.emit(current) #,self.selectionModel().selectedRows()
+        self.nodeSelected.emit(current)
 
     @Slot()
     def selectionChanged(self, selected, deselected):
         super(DataTree, self).selectionChanged(selected, deselected)
         current = self.currentIndex()
-        self.nodeSelected.emit(current)  # ,self.selectionModel().selectedRows()
+        self.nodeSelected.emit(current)
 
     def selectedCount(self):
         indexes = self.selectionModel().selectedRows()
@@ -222,7 +222,8 @@ class TreeItem(object):
         elif hasDictValue(data,options['nodedata'], piped=True):
             subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
             name, nodes = extractValue(data, options['nodedata'], False)
-            offcut = filterDictValue(data, options['nodedata'], False, piped=True)
+            offcut = filterDictValue(data, options['nodedata'], False, piped=True) \
+                    if options.get('offcut', True) else None
         else:
             subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
             nodes = []
@@ -254,7 +255,7 @@ class TreeItem(object):
 
 
         #empty records
-        if len(nodes) == 0:
+        if (len(nodes) == 0) and options.get('empty', True):
             appendNode('empty', dbnode.objectid, {})
 
         #extracted nodes
@@ -268,16 +269,16 @@ class TreeItem(object):
             if o is None:
                 o = dbnode.objectid
 
-            appendNode('data', o, n, fieldsuffix)
+            objecttype = options.get('objecttype', 'data')
+            appendNode(objecttype, o, n, fieldsuffix)
 
         #Offcut
-        if offcut is not None:
+        if (offcut is not None) and  options.get('offcut', True):
             appendNode('offcut', dbnode.objectid, offcut)
 
         #Headers
         if options.get('saveheaders',False) and headers is not None:
             appendNode('headers',dbnode.objectid,headers)
-
 
         self.model.database.session.add_all(newnodes)
         self._childcountall += len(newnodes)
@@ -301,40 +302,19 @@ class TreeItem(object):
         return True
 
     def unpackList(self, key_nodes, key_objectid, delaycommit=False):
-        dbnode = Node.query.get(self.id)
+        options={
+            'nodedata':key_nodes,
+            'objectid':key_objectid,
+            'offcut': False,
+            'empty': True,
+            'objecttype': 'unpacked',
+            'querystatus': self.data.get("querystatus", ""),
+            'querytime': self.data.get("querytime", ""),
+            'querytype': self.data.get('querytype', '')
+            #'queryparams' : self.data.get('queryparams',{})
+        }
 
-        # extract nodes
-        name, nodes = extractValue(dbnode.response, key_nodes, dump=False)
-        if not (type(nodes) is list):
-            nodes = [nodes]
-
-        # add nodes
-        #subkey = key_nodes.split("|").pop(0).rsplit('.', 1)[0]
-        subkey_name, subkey_key, subkey_pipeline = parseKey(key_nodes)
-        subkey = subkey_name if subkey_name is not None else subkey_key.rsplit('.', 1)[0]
-        newnodes = []
-        for n in nodes:
-            objectid = extractValue(n, key_objectid)[1]
-            response = n if isinstance(n, Mapping) else {subkey : n}
-
-            new = Node(objectid, dbnode.id)
-            new.objecttype = 'unpacked'
-            new.response = response
-            new.level = dbnode.level + 1
-            new.querystatus = dbnode.querystatus
-            new.querytime = dbnode.querytime
-            new.querytype = dbnode.querytype
-            new.queryparams = dbnode.queryparams
-            newnodes.append(new)
-
-
-        self.model.database.session.add_all(newnodes)
-        self._childcountall += len(newnodes)
-        dbnode.childcount += len(newnodes)
-
-        self.model.newnodes += len(newnodes)
-        self.model.nodecounter += len(newnodes)
-        self.model.commitNewNodes(delaycommit)
+        self.appendNodes(self.data.get("response", {}), options, delaycommit=delaycommit)
 
     def __repr__(self):
         return self.id

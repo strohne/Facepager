@@ -104,8 +104,6 @@ class SelectNodesWindow(QDialog):
 
             QApplication.processEvents()
 
-
-
         return not self.canceled
 
     def finishProgress(self):

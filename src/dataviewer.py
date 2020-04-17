@@ -3,7 +3,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from progressbar import ProgressBar
-
+from datetime import datetime, timedelta
 import re
 import lxml.html
 import lxml.etree
@@ -35,7 +35,31 @@ class DataViewer(QDialog):
 
         # Object ID key input
         self.input_id = QLineEdit()
-        self.extractLayout.addRow("Key for Object ID:",self.input_id)
+        self.extractLayout.addRow("Key for Object ID:", self.input_id)
+
+        # Options
+        optionsLayout = QHBoxLayout()
+        self.extractLayout.addRow(optionsLayout)
+
+        self.allnodesCheckbox = QCheckBox("Select all nodes")
+        self.allnodesCheckbox.setToolTip(wraptip("Check if you want to extract data for all nodes."))
+        self.allnodesCheckbox.setChecked(False)
+        optionsLayout.addWidget(self.allnodesCheckbox)
+
+        self.levelEdit=QSpinBox()
+        self.levelEdit.setMinimum(1)
+        self.levelEdit.setToolTip(wraptip("Based on the selected nodes, only extract data for nodes and subnodes of the specified level (base level is 1)"))
+        self.levelEdit.valueChanged.connect(self.delayPreview)
+        optionsLayout.addWidget(QLabel("Node level"))
+        optionsLayout.addWidget(self.levelEdit)
+
+        self.objecttypeEdit = QLineEdit("offcut")
+        self.objecttypeEdit.setToolTip(wraptip("Skip nodes with these object types."))
+        self.objecttypeEdit.textChanged.connect(self.delayPreview)
+        optionsLayout.addWidget(QLabel("Exclude object types"))
+        optionsLayout.addWidget(self.objecttypeEdit)
+        #self.extractLayout.addRow("Exclude object types", self.objecttypeEdit)
+
 
         # Preview toggle
         previewLayout = QHBoxLayout()
@@ -68,6 +92,11 @@ class DataViewer(QDialog):
 
     def showValue(self, key = ''):
         self.input_extract.setText(key)
+
+        self.allnodesCheckbox.setChecked(self.mainWindow.allnodesCheckbox.isChecked())
+        self.levelEdit.setValue(self.mainWindow.levelEdit.value())
+        self.objecttypeEdit.setText(self.mainWindow.typesEdit.text())
+
         self.show()
         self.raise_()
 
@@ -76,13 +105,24 @@ class DataViewer(QDialog):
         self.previewTimer.stop()
         self.previewTimer.start(500)
 
+    def updateNode(self, current):
+        self.delayPreview()
+        level = current.model().getLevel(current) + 1
+        self.levelEdit.setValue(level)
+
     @Slot()
     def showPreview(self):
         if self.togglePreviewCheckbox.isChecked():
             try:
                 # Get nodes
                 key_nodes = self.input_extract.text()
-                selected = self.mainWindow.tree.selectionModel().selectedRows()
+                #selected = self.mainWindow.tree.selectionModel().selectedRows()
+
+                objecttypes = self.objecttypeEdit.text().replace(' ', '').split(',')
+                level = self.levelEdit.value() - 1
+                conditions = {'filter': {'level': level, '!objecttype': objecttypes}}
+                selected = self.mainWindow.tree.selectedIndexesAndChildren(conditions)
+
                 nodes = []
                 for item in selected:
                     if not item.isValid():
@@ -109,6 +149,30 @@ class DataViewer(QDialog):
             self.adjustSize()
         self.show()
 
+    def initProgress(self):
+        self.progressBar = ProgressBar("Extracting data...", self.mainWindow)
+        self.progressTotal = None
+        self.progressLevel = None
+        self.progressUpdate = datetime.now()
+
+    def updateProgress(self,current, total, level=0):
+        if datetime.now() >= self.progressUpdate:
+            if (self.progressLevel is None) or (level < self.progressLevel):
+                self.progressLevel = level
+                self.progressTotal = total
+
+            if (level == self.progressLevel) or (total > self.progressTotal):
+                self.progressBar.setMaximum(total)
+                self.progressBar.setValue(current)
+                self.progressUpdate = datetime.now() + timedelta(milliseconds=50)
+
+            QApplication.processEvents()
+
+        return not self.progressBar.wasCanceled
+
+    def finishProgress(self):
+        self.progressBar.close()
+
     @Slot()
     def createNodes(self):
         key_nodes = self.input_extract.text()
@@ -117,12 +181,16 @@ class DataViewer(QDialog):
             return False
 
         try:
-            progress = ProgressBar("Extracting data...", self.mainWindow)
-            selected = self.mainWindow.tree.selectionModel().selectedRows()
-            progress.setMaximum(len(selected))
+            self.initProgress()
+            objecttypes = self.objecttypeEdit.text().replace(' ', '').split(',')
+            level = self.levelEdit.value() - 1
+            allnodes = self.allnodesCheckbox.isChecked()
+            conditions = {'filter': {'level': level, '!objecttype': objecttypes},
+                          'selectall': allnodes}
+            selected = self.mainWindow.tree.selectedIndexesAndChildren(conditions, self.updateProgress)
+
             for item in selected:
-                progress.step()
-                if progress.wasCanceled:
+                if self.progressBar.wasCanceled:
                     break
                 if not item.isValid():
                     continue
@@ -132,7 +200,7 @@ class DataViewer(QDialog):
             self.mainWindow.logmessage(e)
         finally:
             self.mainWindow.tree.treemodel.commitNewNodes()
-            progress.close()
+            self.finishProgress()
 
         #self.close()
         return True

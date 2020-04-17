@@ -129,6 +129,7 @@ class Actions(object):
             datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
         if not os.path.exists(datadir):
             datadir = os.path.expanduser("~")
+        datadir = os.path.dirname(datadir)
 
         fldg = QFileDialog(caption="Open DB File", directory=datadir, filter="DB files (*.db)")
         fldg.setFileMode(QFileDialog.ExistingFile)
@@ -146,6 +147,7 @@ class Actions(object):
         #same as openDB-Slot, but now for creating a new one on the file system
         datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
         datadir = datadir if os.path.exists(datadir) else os.path.expanduser("~")
+        datadir = os.path.dirname(datadir)
         fldg = QFileDialog(caption="Save DB File", directory=datadir, filter="DB files (*.db)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("db")
@@ -738,7 +740,7 @@ class Actions(object):
 
         # update preview in extract data window
         if self.mainWindow.dataWindow.isVisible():
-            self.mainWindow.dataWindow.delayPreview()
+            self.mainWindow.dataWindow.updateNode(current)
 
         #select level
         level = 0

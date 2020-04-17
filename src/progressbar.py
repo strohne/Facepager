@@ -159,6 +159,7 @@ class ProgressBar(QDialog):
         '''
         set value of the progressbar
         '''
+        self.setMaximum(self.delayedmaximum, False)
         self.progressBar.setValue(progress)
         self.computeRate()
 
