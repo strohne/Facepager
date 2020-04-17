@@ -56,6 +56,14 @@ class ExportFileDialog(QFileDialog):
         layout.addWidget(self.optionAll,row+2,1,1,2)
         self.setLayout(layout)
 
+        datadir = self.mainWindow.database.filename
+        if not os.path.exists(datadir):
+            datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
+        if not os.path.exists(datadir):
+            datadir = os.path.expanduser("~")
+        datadir = os.path.dirname(datadir)
+        self.setDirectory(datadir)
+
         if self.exec_():
             try:
                 if os.path.isfile(self.selectedFiles()[0]):
