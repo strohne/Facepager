@@ -10,10 +10,7 @@ import sys
 class DictionaryTree(QTreeView):
     def __init__(self, parent=None, apiWindow = None):
         super(DictionaryTree, self).__init__(parent)
-        #self.setSortingEnabled(True)
-        #self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QTreeView.SelectRows)
-        #self.setHeaderHidden(True)
         self.setUniformRowHeights(True)
 
         delegate = DictionaryTreeItemDelegate()
@@ -21,6 +18,7 @@ class DictionaryTree(QTreeView):
 
         self.treemodel = DictionaryTreeModel(self,apiWindow)
         self.setModel(self.treemodel)
+        self.setColumnWidth(0, 200)
 
         # enable righklick-context menu
         self.setContextMenuPolicy(Qt.CustomContextMenu)
