@@ -190,6 +190,8 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 value = len(value)
             elif modifier == "timestamp":
                 value = [datetime.fromtimestamp(int(x)).isoformat() for x in value]
+            elif modifier == "shortdate":
+                value = [str(datetime.strptime(x, '%a %b %d %H:%M:%S %z %Y')) for x in value]
 
         # If modified in pipeline (otherwise already handled by getDictValue)...
         if dump and (type(value) is dict):
