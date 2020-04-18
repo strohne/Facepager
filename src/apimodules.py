@@ -1448,7 +1448,7 @@ class AuthTab(ApiTab):
         # paging by key (continue previous fetching process based on last fetched child offcut node)
         elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
             # Get cursor of last offcut node
-            offcut = getDictValueOrNone(options, 'offcut.response', dump=False)
+            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
             cursor = getDictValueOrNone(offcut,options.get('key_paging'))
             stopvalue = not extractValue(offcut,options.get('paging_stop'), dump = False, default = True)[1]
 
@@ -1462,7 +1462,7 @@ class AuthTab(ApiTab):
 
         # url based paging
         elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
-            offcut = getDictValueOrNone(options, 'offcut.response', dump=False)
+            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
             url = getDictValueOrNone(offcut,options.get('key_paging'))
 
             # Dont't fetch if already finished (=offcut without next cursor)
@@ -1475,7 +1475,7 @@ class AuthTab(ApiTab):
                 options['url'] = url
 
         elif (options.get('paging_type') == "decrease"):
-            node= getDictValueOrNone(options, 'offcut.response', dump=False)
+            node= getDictValueOrNone(options, 'lastdata.response', dump=False)
             cursor = getDictValueOrNone(node, options.get('key_paging'))
 
             if (node is not None):
@@ -1490,7 +1490,7 @@ class AuthTab(ApiTab):
 
         # break if "continue pagination" is checked and data already present
         elif options.get('resume',False):
-            offcut = getDictValueOrNone(options, 'offcut.response', dump=False)
+            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
 
             # Dont't fetch if already finished (=offcut)
             if (offcut is not None):

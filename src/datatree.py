@@ -675,11 +675,11 @@ class TreeModel(QAbstractItemModel):
         treeitem = index.internalPointer()
         if options.get('resume', False):
             filter = {'querystatus': "fetched (200)", 'objecttype': ["data", "offcut"]}
-            treeitem.offcut = self.getLastChildData(index, filter)
+            treeitem.lastdata = self.getLastChildData(index, filter)
 
             # Dont't fetch if already finished (=has offcut without next cursor)
-            if (treeitem.offcut is not None):
-                response = getDictValueOrNone(treeitem.offcut, 'response', dump=False)
+            if (treeitem.lastdata is not None):
+                response = getDictValueOrNone(treeitem.lastdata, 'response', dump=False)
                 cursor = getDictValueOrNone(response, options.get('key_paging'))
                 stopvalue = not extractValue(response, options.get('paging_stop'), dump=False, default=True)[1]
 
@@ -687,7 +687,7 @@ class TreeModel(QAbstractItemModel):
                 if (cursor is None) or stopvalue:
                     return False
         else:
-            treeitem.offcut = None
+            treeitem.lastdata = None
 
         return True
 
