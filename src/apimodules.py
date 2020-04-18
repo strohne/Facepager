@@ -1156,15 +1156,38 @@ class ApiTab(QScrollArea):
         layout = QVBoxLayout()
         layout.addWidget(self.authWidget)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         layout.addWidget(buttons)
         dialog.setLayout(layout)
 
         def close():
             dialog.close()
 
+        def apply():
+            # Auth type: 'Disable','API key','OAuth2', 'Twitter App-only','Cookie'
+            try:
+                if self.authTypeEdit.currentText() == 'Disable':
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('disable'))
+                    self.tokenNameEdit.setText('')
+                elif self.authTypeEdit.currentText() == 'API key':
+                    pass
+                elif self.authTypeEdit.currentText() == 'OAuth2':
+                    pass
+                elif self.authTypeEdit.currentText() == 'Twitter App-only':
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                    self.tokenNameEdit.setText('Authorization')
+                elif self.authTypeEdit.currentText() == 'Cookie':
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                    self.tokenNameEdit.setText('Cookie')
+
+            except AttributeError:
+                pass
+
+            dialog.close()
+
         #connect the nested functions above to the dialog-buttons
-        buttons.accepted.connect(close)
+        buttons.accepted.connect(apply)
+        buttons.rejected.connect(close)
         dialog.exec_()
 
     @Slot()
@@ -1290,7 +1313,7 @@ class AuthTab(ApiTab):
         self.authWidget.setLayout(authlayout)
 
         self.authTypeEdit = QComboBox()
-        self.authTypeEdit.addItems(['OAuth2', 'Twitter App-only','Cookie'])
+        self.authTypeEdit.addItems(['Disable','API key','OAuth2', 'Twitter App-only','Cookie'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.authURIEdit = QLineEdit()
@@ -1382,9 +1405,10 @@ class AuthTab(ApiTab):
             options['token_uri'] = self.defaults.get('token_uri', '')
 
         try:
-            options[
-                'auth'] = self.authEdit.currentText().strip() if self.authEdit.currentText() != "" else self.defaults.get(
-                'auth', 'disable')
+            options['auth'] = self.authEdit.currentText().strip() \
+                if self.authEdit.currentText() != "" \
+                else self.defaults.get('auth', 'disable')
+
             if self.tokenNameEdit.text() != "":
                 options['auth_tokenname'] = self.tokenNameEdit.text()
             else:
@@ -1659,6 +1683,10 @@ class AuthTab(ApiTab):
             self.doOAuth1Login(session_no)
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Cookie':
             self.doCookieLogin(session_no)
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'API key':
+            QMessageBox.information(self, "Facepager", "Manually enter your API key into the access token field or change the authentication method in the settings.")
+        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Disable':
+            QMessageBox.information(self, "Login disabled","No authentication method selected. Please choose a method in the settings.", QMessageBox.StandardButton.Ok)
         else:
             self.doOAuth2Login(session_no)
 
@@ -1950,6 +1978,10 @@ class FacebookTab(AuthTab):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FacebookTab, self).getOptions(purpose)
 
+        options['auth'] = 'param'
+        options['auth_prefix'] = ''  # todo: prefix in buildurl verwenden
+        options['auth_tokenname'] = 'access_token'
+
         if purpose != 'preset':
             options['pageid'] = self.pageIdEdit.text().strip()
 
@@ -2173,10 +2205,7 @@ class TwitterStreamingTab(ApiTab):
         self.consumerSecretEdit.setEchoMode(QLineEdit.Password)
         authlayout.addRow("Consumer Secret",self.consumerSecretEdit)
 
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(TwitterStreamingTab, self).getOptions(purpose)
-        return options
-    
+
     def initSession(self, no=0, renew=False):
         """
         Return session or create if necessary
@@ -2731,16 +2760,15 @@ class YoutubeTab(AuthTab):
         options = super(YoutubeTab, self).getOptions(purpose)
 
         if options.get('auth_type','OAuth2') == 'API key':
+            options['auth'] = 'param'
+            options['auth_prefix'] = '' #todo: prefix in buildurl verwenden
             options['auth_tokenname'] = 'key'
+        else:
+            options['auth'] = 'header'
+            options['auth_prefix'] = 'Bearer ' #todo: prefix in buildurl verwenden
+            options['auth_tokenname'] = 'Authorization'
 
         return options
-
-    @Slot()
-    def doLogin(self, session_no=0):
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'API key':
-            QMessageBox.information(self, "Facepager", "Manually enter your API key into the access token field or switch to OAuth2")
-        else:
-            super(YoutubeTab, self).doLogin()
 
 class GenericTab(AuthTab):
     def __init__(self, mainWindow=None):
