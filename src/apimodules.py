@@ -1891,7 +1891,7 @@ class AuthTab(ApiTab):
 
 
     @Slot()
-    def doTwitterAppLogin(self):
+    def doTwitterAppLogin(self, session_no=0):
         try:
             # See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
             clientid = self.clientIdEdit.text() # no defaults
@@ -2312,7 +2312,7 @@ class TwitterStreamingTab(ApiTab):
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         if not ('url' in options):
             urlpath = options["basepath"] + options["resource"] + ".json"
-            urlpath, urlparams, templateparams = self.getURL(urlpath, options["params"], nodedata,options)
+            urlpath, urlparams, templateparams = self.getURL(urlpath, options["params"], nodedata, options)
         else:
             urlpath = options['url']
             urlparams = options["params"]
