@@ -9,7 +9,7 @@ from progressbar import ProgressBar
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
-from collections import deque
+from collections import defaultdict
 import io
 import codecs
 import os
@@ -467,20 +467,15 @@ class Actions(object):
             self.mainWindow.tree.treemodel.nodecounter = 0
 
             #Init status messages
-            statuscount = {}
+            statuscount = defaultdict(int)
             errorcount = 0
             ratelimitcount = 0
-            allowedstatus = ['fetched (200)','downloaded (200)','fetched (202)','stream'] #,'error (400)'
-
+            allowedstatus = ['fetched (200)','downloaded (200)','fetched (202)']
 
             try:
                 #Spawn Threadpool
                 threadpool = ApiThreadPool(apimodule)
                 threadpool.spawnThreads(options.get("threads", 1))
-
-                #Init input Queue
-                #indexes = deque(list(indexes))
-
 
                 #Process Logging/Input/Output Queue
                 while True:
@@ -560,11 +555,7 @@ class Actions(object):
 
                             # Count status
                             status = job['options'].get('querystatus', 'empty')
-
-                            if not status in statuscount:
-                                statuscount[status] = 1
-                            else:
-                                statuscount[status] = statuscount[status]+1
+                            statuscount[status] += 1
 
                             # Collect errors for automatic retry
                             if not status in allowedstatus:
@@ -573,18 +564,17 @@ class Actions(object):
 
                             # Detect rate limit
                             ratelimit = job['options'].get('ratelimit', False)
+                            ratelimitcount += int(ratelimit)
+                            canretry = (ratelimitcount) or (status == "request error")
 
-                            if ratelimit:
-                                ratelimitcount += 1
-
-                            # Clear errors
-                            if not threadpool.suspended and (status in allowedstatus) and not ratelimit:
+                            # Clear errors when everything is ok
+                            if not threadpool.suspended and (status in allowedstatus) and (not ratelimit):
                                 threadpool.clearRetry()
                                 errorcount = 0
                                 ratelimitcount = 0
 
 
-                            # Suspend on error
+                            # Suspend on error or ratelimit
                             elif (errorcount > (globaloptions['errors']-1)) or (ratelimitcount > 0):
                                 threadpool.suspendJobs()
 
@@ -593,11 +583,11 @@ class Actions(object):
                                 else:
                                     msg = "{} consecutive errors occurred.\nPlease check your settings.".format(errorcount)
 
-                                timeout = 60 * 5 #5 minutes
+                                timeout = 60 * 5 # 5 minutes
 
                                 # Adjust progress
                                 progress.setRemaining(threadpool.getJobCount() + threadpool.getRetryCount())
-                                progress.showError(msg, timeout, ratelimitcount > 0)
+                                progress.showError(msg, timeout, canretry)
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
                             # Show info
