@@ -14,7 +14,7 @@ class ProgressBar(QDialog):
         self.timeout = 60
         self.timer = None
         self.countdown = False
-        self.retryoption = False
+        self.autoRetry = False
 
         self.rate_update_frequency = 3
         self.rate_interval = 30
@@ -66,20 +66,19 @@ class ProgressBar(QDialog):
         self.open()
         self.hideError()
 
-    def showError(self, msg, timeout = 60, retryoption = False):
+    def showError(self, msg, timeout=60, retry=False):
         if self.countdown == False:
             self.countdown = True
             self.wasResumed = False
             self.wasRetried = False
-            self.retryoption = retryoption
+            self.autoRetry = retry
             self.timeout = timeout
 
             self.errorLabel.setText(msg)
             self.errorLabel.show()
 
-            if self.retryoption:
-                self.retryButton.setText("Retry")
-                self.retryButton.show()
+            self.retryButton.setText("Retry")
+            self.retryButton.show()
 
             self.skipButton.setText("Skip")
             self.skipButton.show()
@@ -99,8 +98,12 @@ class ProgressBar(QDialog):
     def timerEvent(self):
         self.timeout -= 1
         if (self.timeout <= 0):
-            self.doretry()
-        elif self.retryoption:
+            if self.autoRetry:
+                self.doretry()
+            else:
+                self.doskip()
+
+        elif self.autoRetry:
             self.retryButton.setText("Retry [{}]".format(self.timeout))
             self.skipButton.setText("Skip")
             self.startCountdown()
