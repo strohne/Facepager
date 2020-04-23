@@ -4,6 +4,7 @@ from PySide2.QtWidgets import *
 
 import os
 import shutil
+from tempfile import TemporaryDirectory
 import sys
 import re
 import json
@@ -378,34 +379,36 @@ class ApiViewer(QDialog):
             progress = ProgressBar("Downloading default API definitions from GitHub...", self) if not silent else None
             QApplication.processEvents()
 
+            # Create temporary download folder
+            tmp = TemporaryDirectory(suffix='FacepagerDefaultAPIs')
             try:
-                #Create folder
-                if not os.path.exists(self.folderDefault):
-                    os.makedirs(self.folderDefault)
-
-                #Clear folder
-                for filename in os.listdir(self.folderDefault):
-                    os.remove(os.path.join(self.folderDefault, filename))
-
-                # # Copy
-                # folder = os.path.join(getResourceFolder(), 'apis')
-                # files = [f for f in os.listdir(folder) if f.endswith(tuple(self.filesSuffix))]
-                # for filename in files:
-                #     shutil.copy(os.path.join(folder,filename),self.folderDefault)
-
-                #Download
+                 #Download
                 files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/apis").json()
                 files = [f['path'] for f in files if f['path'].endswith(tuple(self.filesSuffix))]
                 if progress is not None:
                     progress.setMaximum(len(files))
                 for filename in files:
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
-                    with open(os.path.join(self.folderDefault, os.path.basename(filename)), 'wb') as f:
+                    if response.status_code != 200:
+                        raise(f"GitHub is not available (status code {response.status_code})")
+                    with open(os.path.join(tmp.name, os.path.basename(filename)), 'wb') as f:
                         f.write(response.content)
                     if progress is not None:
                         progress.step()
 
-                self.logmessage.emit("Default API definitions downloaded from GitHub.")
+                    # Create folder
+                 if not os.path.exists(self.folderDefault):
+                     os.makedirs(self.folderDefault)
+
+                     # Clear folder
+                 for filename in os.listdir(self.folderDefault):
+                     os.remove(os.path.join(self.folderDefault, filename))
+
+                 # Move files from tempfolder
+                 for filename in os.listdir(tmp.name):
+                     shutil.move(os.path.join(tmp.name, filename), self.folderDefault)
+                     
+                 self.logmessage.emit("Default API definitions downloaded from GitHub.")
             except Exception as e:
                 if not silent:
                     QMessageBox.information(self,"Facepager","Error downloading default API definitions:"+str(e))
@@ -417,6 +420,7 @@ class ApiViewer(QDialog):
                 self.filesDownloaded = True
                 return True
             finally:
+                tmp.cleanup()
                 if progress is not None:
                     progress.close()
 

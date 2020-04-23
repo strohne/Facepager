@@ -2,6 +2,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 
 import os
+import shutil
+from tempfile import TemporaryDirectory
 import re
 import json
 from textviewer import *
@@ -376,15 +378,9 @@ class PresetWindow(QDialog):
             progress = ProgressBar("Downloading default presets from GitHub...", self) if not silent else None
             QApplication.processEvents()
 
+            # Create temporary download folder
+            tmp = TemporaryDirectory(suffix='FacepagerDefaultPresets')
             try:
-                #Create folder
-                if not os.path.exists(self.presetFolderDefault):
-                    os.makedirs(self.presetFolderDefault)
-
-                #Clear folder
-                for filename in os.listdir(self.presetFolderDefault):
-                    os.remove(os.path.join(self.presetFolderDefault,filename))
-
                 #Download
                 files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
                 files = [f['path'] for f in files if f['path'].endswith(tuple(self.presetSuffix))]
@@ -393,10 +389,25 @@ class PresetWindow(QDialog):
 
                 for filename in files:
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
-                    with open(os.path.join(self.presetFolderDefault, os.path.basename(filename)), 'wb') as f:
+                    if response.status_code != 200:
+                        raise(f"GitHub is not available (status code {response.status_code})")
+                    with open(os.path.join(tmp.name, os.path.basename(filename)), 'wb') as f:
                         f.write(response.content)
                     if progress is not None:
                         progress.step()
+
+                #Create folder
+                if not os.path.exists(self.presetFolderDefault):
+                    os.makedirs(self.presetFolderDefault)
+
+                #Clear folder
+                for filename in os.listdir(self.presetFolderDefault):
+                    os.remove(os.path.join(self.presetFolderDefault,filename))
+
+                # Move files from tempfolder
+                for filename in os.listdir(tmp.name):
+                    shutil.move(os.path.join(tmp.name,filename), self.presetFolderDefault)
+
                 self.logmessage.emit("Default presets downloaded from GitHub.")
             except Exception as e:
                 if not silent:
@@ -407,6 +418,7 @@ class PresetWindow(QDialog):
                 self.presetsDownloaded = True
                 return True
             finally:
+                tmp.cleanup()
                 if progress is not None:
                     progress.close()
 
