@@ -397,18 +397,18 @@ class ApiViewer(QDialog):
                         progress.step()
 
                     # Create folder
-                 if not os.path.exists(self.folderDefault):
-                     os.makedirs(self.folderDefault)
+                if not os.path.exists(self.folderDefault):
+                    os.makedirs(self.folderDefault)
 
                      # Clear folder
-                 for filename in os.listdir(self.folderDefault):
-                     os.remove(os.path.join(self.folderDefault, filename))
+                for filename in os.listdir(self.folderDefault):
+                    os.remove(os.path.join(self.folderDefault, filename))
 
                  # Move files from tempfolder
-                 for filename in os.listdir(tmp.name):
-                     shutil.move(os.path.join(tmp.name, filename), self.folderDefault)
-                     
-                 self.logmessage.emit("Default API definitions downloaded from GitHub.")
+                for filename in os.listdir(tmp.name):
+                    shutil.move(os.path.join(tmp.name, filename), self.folderDefault)
+
+                self.logmessage.emit("Default API definitions downloaded from GitHub.")
             except Exception as e:
                 if not silent:
                     QMessageBox.information(self,"Facepager","Error downloading default API definitions:"+str(e))
