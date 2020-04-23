@@ -835,10 +835,10 @@ class ApiTab(QScrollArea):
 
         layout= QHBoxLayout()
         layout.addWidget(self.verbEdit)
-        layout.setStretch(0, 1);
+        layout.setStretch(0, 1)
         layout.addWidget(self.encodingLabel)
         layout.addWidget(self.encodingEdit)
-        layout.setStretch(2, 1);
+        layout.setStretch(2, 1)
         self.mainLayout.addRow("Method", layout)
         
         # Payload
@@ -1172,7 +1172,8 @@ class ApiTab(QScrollArea):
                 elif self.authTypeEdit.currentText() == 'API key':
                     pass
                 elif self.authTypeEdit.currentText() == 'OAuth2':
-                    pass
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                    self.tokenNameEdit.setText('Authorization')
                 elif self.authTypeEdit.currentText() == 'Twitter App-only':
                     self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
                     self.tokenNameEdit.setText('Authorization')
@@ -1313,7 +1314,7 @@ class AuthTab(ApiTab):
         self.authWidget.setLayout(authlayout)
 
         self.authTypeEdit = QComboBox()
-        self.authTypeEdit.addItems(['Disable','API key','OAuth2', 'Twitter App-only','Cookie'])
+        self.authTypeEdit.addItems(['Disable','API key','OAuth2', 'Cookie', 'Twitter App-only'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.authURIEdit = QLineEdit()
@@ -1349,12 +1350,13 @@ class AuthTab(ApiTab):
             self.authEdit = QComboBox(self)
             self.authEdit.addItems(['disable', 'param', 'header'])
             self.authEdit.setToolTip(wraptip(
-                "Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a bearer token header containing the access token will be sent."))
+                "Disable: no authorization. Param: an access_token parameter containing the access token will be added to the query. Header: a header containing the access token will be sent."))
             loginlayout.addWidget(self.authEdit)
 
             loginlayout.addWidget(QLabel("Name"))
             self.tokenNameEdit = QLineEdit()
-            self.tokenNameEdit.setToolTip(wraptip("The name of the access token parameter or the authorization header. If you leave this empty, the default value is 'access_token' for param-method and 'Authorization' for header-method. The authorization header value is automatically prefixed with 'Bearer '"))
+            self.tokenNameEdit.setToolTip(wraptip("The name of the access token parameter or the authorization header. If you select an authentication method different from API key (e.g. OAuth2 or Cookie), name the is overriden by the selected method."))
+            # If you leave this empty, the default value is 'access_token' for param-method and 'Authorization' for header-method.
             loginlayout.addWidget(self.tokenNameEdit,1)
 
             rowcaption = "Authorization"
@@ -1409,14 +1411,34 @@ class AuthTab(ApiTab):
                 if self.authEdit.currentText() != "" \
                 else self.defaults.get('auth', 'disable')
 
-            if self.tokenNameEdit.text() != "":
-                options['auth_tokenname'] = self.tokenNameEdit.text()
-            else:
-                options.pop('auth_tokenname', None)
+            options['auth_tokenname'] = self.tokenNameEdit.text()
 
         except AttributeError:
             options.pop('auth_tokenname',None)
             options['auth'] = self.defaults.get('auth', 'disable')
+
+        # Override authorization settings (token handling)
+        # based on authentication settings
+        if options['auth'] == 'disable':
+            options['auth_prefix'] = ''
+            options['auth_tokenname'] = ''
+        elif options.get('auth_type') == 'OAuth2':
+            options['auth'] = 'header'
+            options['auth_prefix'] = "Bearer "
+            options['auth_tokenname'] = "Authorization"
+        elif options.get('auth_type') == 'Twitter App-only':
+            options['auth'] = 'header'
+            options['auth_prefix'] = "Bearer "
+            options['auth_tokenname'] = "Authorization"
+        elif options.get('auth_type') == 'Twitter OAuth1':
+            options['auth'] = 'disable' # managed by Twitter module
+            options['auth_prefix'] = ''
+            options['auth_tokenname'] = ''
+        elif options.get('auth_type') == 'Cookie':
+            options['auth'] = 'header'
+            options['auth_prefix'] = ''
+            options['auth_tokenname'] = 'Cookie'
+
 
         return options
 
@@ -1636,20 +1658,16 @@ class AuthTab(ApiTab):
             urlpath = options["basepath"].strip() + options['resource'].strip() + options.get('pathextension', '')
             urlparams = {}
             urlparams.update(options['params'])
-
             urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
-
             requestheaders = options.get('headers', {})
 
-            if options.get('auth') == 'param':
-                urlparams[options.get('auth_tokenname', 'access_token')] = options['access_token']
-            elif (options.get('auth') == 'header') and options.get('auth_type') != 'Cookie':
-                requestheaders[options.get('auth_tokenname', 'Authorization')] = "Bearer " + options['access_token']
-            elif (options.get('auth') == 'header'):
-                requestheaders[options.get('auth_tokenname', 'Authorization')] = options['access_token']
-            # App auth
-            if options.get('auth_type','Twitter OAuth1') == 'Twitter App-only':
-                requestheaders["Authorization"] = "Bearer "+options['access_token']
+            # Authorization
+            if options.get('auth','disable') != 'disable':
+                token = options.get('auth_prefix') + options['access_token']
+                if options.get('auth') == 'param':
+                    urlparams[options.get('auth_tokenname')] = token
+                elif (options.get('auth') == 'header'):
+                    requestheaders[options.get('auth_tokenname')] = token
 
             method = options.get('verb', 'GET')
             payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options, logProgress)
@@ -1943,9 +1961,6 @@ class FacebookTab(AuthTab):
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
 
-        self.defaults['auth'] = 'param'
-        self.defaults['auth_tokenname'] = 'access_token'
-
         self.defaults['login_buttoncaption'] = " Login to Facebook "
 
         # Query Box
@@ -1979,7 +1994,7 @@ class FacebookTab(AuthTab):
         options = super(FacebookTab, self).getOptions(purpose)
 
         options['auth'] = 'param'
-        options['auth_prefix'] = ''  # todo: prefix in buildurl verwenden
+        options['auth_prefix'] = ''
         options['auth_tokenname'] = 'access_token'
 
         if purpose != 'preset':
@@ -2048,6 +2063,8 @@ class FacebookTab(AuthTab):
                 # see https://developers.facebook.com/docs/graph-api/advanced/rate-limiting/
                 if (code in ['4','17','32','613']) and (status in ['error (400)', 'error (403)']):
                     options['ratelimit'] = True
+                else:
+                    options['ratelimit'] = False
 
             # fallback option for data handling
             if (options.get('nodedata') is None):
@@ -2430,6 +2447,7 @@ class AmazonTab(AuthTab):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(AmazonTab, self).getOptions(purpose)
 
+        options['auth'] = 'disable'
         options['format'] = self.defaults.get('format', '')
         options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get('service', '')
         options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get(
@@ -2759,13 +2777,13 @@ class YoutubeTab(AuthTab):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(YoutubeTab, self).getOptions(purpose)
 
-        if options.get('auth_type','OAuth2') == 'API key':
+        if options.get('auth_type') == 'API key':
             options['auth'] = 'param'
-            options['auth_prefix'] = '' #todo: prefix in buildurl verwenden
+            options['auth_prefix'] = ''
             options['auth_tokenname'] = 'key'
-        else:
+        else: # OAuth2
             options['auth'] = 'header'
-            options['auth_prefix'] = 'Bearer ' #todo: prefix in buildurl verwenden
+            options['auth_prefix'] = 'Bearer '
             options['auth_tokenname'] = 'Authorization'
 
         return options
