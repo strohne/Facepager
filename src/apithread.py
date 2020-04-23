@@ -112,10 +112,10 @@ class ApiThreadPool():
     def retryJobs(self):
         while not self.errors.empty():
             newjob = self.errors.get()
-            if newjob['options'].get('ratelimit', False):
-                newjob['number'] = self.jobcount
-                self.jobcount += 1
-                self.input.appendleft(newjob)
+            #if newjob['options'].get('ratelimit', False):
+            newjob['number'] = self.jobcount
+            self.jobcount += 1
+            self.input.appendleft(newjob)
 
         self.resumeJobs()
 
