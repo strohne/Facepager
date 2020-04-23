@@ -579,7 +579,7 @@ class TreeModel(QAbstractItemModel):
             new._childcountallloaded = True
 
         self.endInsertRows()
-        parentItem.loaded = parentItem.childCountAll() == parentItem.childCount()
+        parentItem.loaded = parentItem.childCountAll() <= parentItem.childCount()
 
     def getLastChildData(self, index, filter=None):
         self.fetchMore(index)
