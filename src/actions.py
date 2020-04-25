@@ -569,13 +569,12 @@ class Actions(object):
 
                             # Clear errors when everything is ok
                             if not threadpool.suspended and (status in allowedstatus) and (not ratelimit):
-                                threadpool.clearRetry()
+                                #threadpool.clearRetry()
                                 errorcount = 0
                                 ratelimitcount = 0
 
-
                             # Suspend on error or ratelimit
-                            elif (errorcount > (globaloptions['errors']-1)) or (ratelimitcount > 0):
+                            elif (errorcount >= globaloptions['errors']) or (ratelimitcount > 0):
                                 threadpool.suspendJobs()
 
                                 if ratelimit:
@@ -586,7 +585,6 @@ class Actions(object):
                                 timeout = 60 * 5 # 5 minutes
 
                                 # Adjust progress
-                                progress.setRemaining(threadpool.getJobCount() + threadpool.getRetryCount())
                                 progress.showError(msg, timeout, canretry)
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
