@@ -565,7 +565,7 @@ class Actions(object):
                             # Detect rate limit
                             ratelimit = job['options'].get('ratelimit', False)
                             ratelimitcount += int(ratelimit)
-                            canretry = (ratelimitcount) or (status == "request error")
+                            autoretry = (ratelimitcount) or (status == "request error")
 
                             # Clear errors when everything is ok
                             if not threadpool.suspended and (status in allowedstatus) and (not ratelimit):
@@ -585,7 +585,7 @@ class Actions(object):
                                 timeout = 60 * 5 # 5 minutes
 
                                 # Adjust progress
-                                progress.showError(msg, timeout, canretry)
+                                progress.showError(msg, timeout, autoretry)
                                 self.mainWindow.tree.treemodel.commitNewNodes()
 
                             # Show info
@@ -610,8 +610,8 @@ class Actions(object):
                                 threadpool.retryJobs()
                             else:
                                 threadpool.clearRetry()
-                                errorcount = 0
-                                ratelimitcount = 0
+                                # errorcount = 0
+                                # ratelimitcount = 0
                                 threadpool.resumeJobs()
 
                             progress.setRemaining(threadpool.getJobCount())
@@ -620,6 +620,13 @@ class Actions(object):
                         # Continue
                         elif not threadpool.suspended:
                             threadpool.resumeJobs()
+
+                        # Finished with pending errors
+                        if not threadpool.hasJobs() and threadpool.hasErrorJobs():
+                            msg = "All nodes finished but you have {} pending errors. Skip or retry?".format(threadpool.getErrorJobsCount())
+                            autoretry = False
+                            timeout = 60 * 5  # 5 minutes
+                            progress.showError(msg, timeout, autoretry)
 
                         # Finished
                         if not threadpool.hasJobs():

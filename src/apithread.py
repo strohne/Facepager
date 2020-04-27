@@ -123,8 +123,11 @@ class ApiThreadPool():
         with self.errors.mutex:
             self.errors.queue.clear()
 
-    def getRetryCount(self):
+    def getErrorJobsCount(self):
         return self.errors.qsize()
+
+    def hasErrorJobs(self):
+        return not self.errors.empty()
 
     # Threads
     def addThread(self):
