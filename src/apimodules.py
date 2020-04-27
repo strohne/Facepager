@@ -1011,7 +1011,7 @@ class ApiTab(QScrollArea):
         def download(response,foldername=None,filename=None,fileext=None):
             if foldername is not None and filename is not None:
                 if fileext is None:
-                    guessed_ext = guess_all_extensions(response.headers["content-type"])
+                    guessed_ext = guess_all_extensions(response.headers.get("content-type"))
                     fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
 
                 fullfilename = makefilename(path,foldername, filename, fileext)
@@ -1069,7 +1069,14 @@ class ApiTab(QScrollArea):
                     if (not session):
                         raise Exception("No session available.")
 
-                    response = session.request(method,path, params=args,headers=headers,data=payload, timeout=self.timeout) # verify=False
+                    # Use cookie jar instead of header to persist redirects
+                    cookies = headers.pop('Cookie', None)
+                    if cookies is not None:
+                        cookies = dict(item.split("=") for item in cookies.split(";"))
+
+                    # Send request
+                    response = session.request(method,path, params=args, headers=headers, cookies=cookies,
+                                               data=payload, timeout=self.timeout) # verify=False
 
                 except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
