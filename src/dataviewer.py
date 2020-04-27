@@ -107,8 +107,9 @@ class DataViewer(QDialog):
 
     def updateNode(self, current):
         self.delayPreview()
-        level = current.model().getLevel(current) + 1
-        self.levelEdit.setValue(level)
+        if current.isValid():
+            level = current.model().getLevel(current) + 1
+            self.levelEdit.setValue(level)
 
     @Slot()
     def showPreview(self):
