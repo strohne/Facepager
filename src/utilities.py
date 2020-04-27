@@ -11,7 +11,6 @@ import urllib.parse
 from collections import OrderedDict
 from collections import Mapping
 from xmljson import BadgerFish
-
 import io
 
 def getResourceFolder():
@@ -23,6 +22,15 @@ def getResourceFolder():
         folder = os.getcwd()
 
     return folder
+
+def flattenList(items):
+    value = []
+    for item in items:
+        if type(item) is list:
+            value += item
+        else:
+            value.append(item)
+    return value
 
 def hasDictValue(data,multikey, piped=False):
     try:
@@ -124,19 +132,13 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 # Output if dump==True: list of strings
                 # Output if dump==False: list of dict, list, string or number
                 selector = modifier[5:]
-
+                items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
 
                 # Flatten list if not dumped
-                if dump:
-                    value = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+                if not dump:
+                    value = flattenList(items)
                 else:
-                    items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
-                    value = []
-                    for item in items:
-                        if type(item) is list:
-                            value += item
-                        else:
-                            value.append(item)
+                    value = items
 
             elif modifier.startswith('not:'):
                 selector = modifier[4:]
