@@ -1422,7 +1422,29 @@ class AuthTab(ApiTab):
         if options['auth'] == 'disable':
             options['auth_prefix'] = ''
             options['auth_tokenname'] = ''
-        elif options.get('auth_type') == 'OAuth2':
+
+        # elif options.get('auth_type') == 'OAuth2':
+        #     options['auth'] = 'header'
+        #     options['auth_prefix'] = "Bearer "
+        #     options['auth_tokenname'] = "Authorization"
+        # elif options.get('auth_type') == 'Twitter App-only':
+        #     options['auth'] = 'header'
+        #     options['auth_prefix'] = "Bearer "
+        #     options['auth_tokenname'] = "Authorization"
+        # elif options.get('auth_type') == 'Twitter OAuth1':
+        #     options['auth'] = 'disable' # managed by Twitter module
+        #     options['auth_prefix'] = ''
+        #     options['auth_tokenname'] = ''
+        # elif options.get('auth_type') == 'Cookie':
+        #     options['auth'] = 'header'
+        #     options['auth_prefix'] = ''
+        #     options['auth_tokenname'] = 'Cookie'
+
+        return options
+
+    def setOptions(self, options):
+        # Override defaults
+        if options.get('auth_type') == 'OAuth2':
             options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
             options['auth_tokenname'] = "Authorization"
@@ -1439,13 +1461,10 @@ class AuthTab(ApiTab):
             options['auth_prefix'] = ''
             options['auth_tokenname'] = 'Cookie'
 
-
-        return options
-
-    def setOptions(self, options):
         try:
-            self.authTypeEdit.setCurrentIndex(
-                self.authTypeEdit.findText(options.get('auth_type', self.defaults.get('auth_type', 'OAuth2'))))
+            self.authTypeEdit.setCurrentIndex( \
+                self.authTypeEdit.findText(options.get('auth_type', \
+                self.defaults.get('auth_type', 'Disable'))))
             self.authURIEdit.setText(options.get('auth_uri'))
             self.redirectURIEdit.setText(options.get('redirect_uri'))
             self.tokenURIEdit.setText(options.get('token_uri'))
@@ -1604,7 +1623,7 @@ class AuthTab(ApiTab):
 
 
             # build url
-            method, urlpath, urlparams, payload, requestheaders  = self.buildUrl(nodedata, options, logProgress)
+            method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if not urlpath:
                 logMessage("Empty path, node skipped {0}.".format(nodedata['objectid']))
@@ -1663,7 +1682,7 @@ class AuthTab(ApiTab):
 
             # Authorization
             if options.get('auth','disable') != 'disable':
-                token = options.get('auth_prefix') + options['access_token']
+                token = options.get('auth_prefix','') + options['access_token']
                 if options.get('auth') == 'param':
                     urlparams[options.get('auth_tokenname')] = token
                 elif (options.get('auth') == 'header'):
