@@ -1075,7 +1075,7 @@ class ApiTab(QScrollArea):
                         raise Exception("No session available.")
 
                     # Use cookie jar instead of header to persist redirects
-                    cookies = headers.pop('Cookie', None)
+                    cookies = headers.pop('Cookie', None) if headers is not None else None
                     if cookies is not None:
                         cookies = dict(item.split("=") for item in cookies.split(";"))
 
@@ -1705,7 +1705,7 @@ class AuthTab(ApiTab):
 
             # Authorization
             if options.get('auth','disable') != 'disable':
-                token = options.get('auth_prefix','') + options['access_token']
+                token = options.get('auth_prefix','') + options.get('access_token','')
                 if options.get('auth') == 'param':
                     urlparams[options.get('auth_tokenname')] = token
                 elif (options.get('auth') == 'header'):
@@ -1911,7 +1911,7 @@ class AuthTab(ApiTab):
                                                  authorization_response=str(url.toString()),
                                                  client_secret=clientsecret)
 
-                self.tokenEdit.setText(token['access_token'])
+                self.tokenEdit.setText(token.get('access_token',''))
 
                 try:
                     self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
@@ -2158,14 +2158,14 @@ class FacebookTab(AuthTab):
 
                 # Get page access token
                 pageid = self.pageIdEdit.text().strip()
-                if  pageid != '':
+                if pageid != '':
                     session_no = 0
                     self.closeSession(session_no)
                     data, headers, status = self.request(session_no, self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token[0])
                     if status != 'fetched (200)':
                         raise Exception("Could not authorize for page. Check page ID in the settings.")
 
-                    token = data['access_token']
+                    token = data.get('access_token','')
                     self.tokenEdit.setText(token)
 
                 else:
