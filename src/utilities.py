@@ -12,11 +12,7 @@ from collections import OrderedDict
 from collections import Mapping
 from xmljson import BadgerFish
 import io
-
-from slimit import ast
-from slimit.parser import Parser
-from slimit.visitors import nodevisitor
-
+import pyjsparser
 
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
@@ -114,20 +110,61 @@ def hasValue(data,key):
     else:
         return True
 
+def dict_generator(indict, pre=None):
+    pre = pre[:] if pre else []
+    if isinstance(indict, dict):
+        for key, value in indict.items():
+            if isinstance(value, dict):
+                for d in dict_generator(value,  pre + [key]):
+                    yield d
+            elif isinstance(value, list) or isinstance(value, tuple):
+                for k,v in enumerate(value):
+                    for d in dict_generator(v, pre + [key] + [k]):
+                        yield d
+            else:
+                yield pre + [key, value]
+    else:
+        yield indict
 
+def jsGetValue(value):
+    proptype = value.get('type')
+    if proptype == 'Literal':
+        return value.get('value')
+    elif proptype == 'Identifier':
+        return value.get('name')
+    elif proptype == 'ObjectExpression':
+        propvalues = value.get('properties', {})
+        outvalue = {}
+        for v in propvalues:
+            v = jsGetValue(v)
+            if isinstance(v, dict):
+                outvalue.update(v)
+        return outvalue
+    elif proptype == 'ArrayExpression':
+        propvalues = value.get('elements', {})
+        return [jsGetValue(v) for v in propvalues]
+    elif proptype == 'Property':
+        propname = jsGetValue(value.get('key',{}))
+        propvalue = jsGetValue(value.get('value', {}))
+        return {propname: propvalue}
+    else:
+        return None
 
-def getJsValue(node):
-    fields = {}
-    if hasattr(node,'value'):
-        fields = str(getattr(node, 'value', ''))
-        fields = fields.strip('"')
-    elif hasattr(node,'items'):
-        fields = getattr(node, 'items', [])
-        fields = [getJsValue(x) for x in fields]
-    elif hasattr(node,'properties'):
-        fields = {getJsValue(x.left):getJsValue(x.right)  for x in getattr(node, 'properties', []) if isinstance(x, ast.Assign)}
+def jsWalkValues(indict, pre=None):
+    pre = pre[:] if pre else []
+    if isinstance(indict, dict):
+        proptype = indict.get('type')
+        if proptype == 'Property':
+            yield jsGetValue(indict)
 
-    return fields
+        for key, value in indict.items():
+            if isinstance(value, dict):
+                for d in jsWalkValues(value,  pre + [key]):
+                    yield d
+            elif isinstance(value, list) or isinstance(value, tuple):
+                for k, v in enumerate(value):
+                    for d in jsWalkValues(v, pre + [key] + [k]):
+                        yield d
 
 
 def extractValue(data, key, dump=True, folder="", default=''):
@@ -148,7 +185,6 @@ def extractValue(data, key, dump=True, folder="", default=''):
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
 
-
             if modifier.startswith('js:'):
                 # Input: list of strings.
                 # Output if dump==True: list of strings
@@ -159,11 +195,9 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 for x in value:
                     try:
                         x = x.replace('\\\\"', '\\"')
-                        jsparser = Parser()
-                        tree = jsparser.parse(x)
-                        items += [{getJsValue(node.left) : getJsValue(node.right)}\
-                                 for node in nodevisitor.visit(tree) \
-                                 if isinstance(node, ast.Assign)]
+
+                        tree = pyjsparser.parse(x)
+                        items += jsWalkValues(tree)
                     except Exception as e:
                         items.append({'error':str(e)})
 
@@ -174,7 +208,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
                     value = flattenList(items)
                 else:
                     value = items
-
+                    
             elif modifier.startswith('json:'):
                 # Input: list of strings.
                 # Output if dump==True: list of strings
