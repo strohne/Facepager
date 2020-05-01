@@ -13,6 +13,11 @@ from collections import Mapping
 from xmljson import BadgerFish
 import io
 
+from slimit import ast
+from slimit.parser import Parser
+from slimit.visitors import nodevisitor
+
+
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
         folder = os.path.dirname(sys.executable)
@@ -110,6 +115,21 @@ def hasValue(data,key):
         return True
 
 
+
+def getJsValue(node):
+    fields = {}
+    if hasattr(node,'value'):
+        fields = str(getattr(node, 'value', ''))
+        fields = fields.strip('"')
+    elif hasattr(node,'items'):
+        fields = getattr(node, 'items', [])
+        fields = [getJsValue(x) for x in fields]
+    elif hasattr(node,'properties'):
+        fields = {getJsValue(x.left):getJsValue(x.right)  for x in getattr(node, 'properties', []) if isinstance(x, ast.Assign)}
+
+    return fields
+
+
 def extractValue(data, key, dump=True, folder="", default=''):
     """Extract value from dict and pipe through modifiers
     :param data:
@@ -117,6 +137,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
     :param dump:
     :return:
     """
+    #global jsparser
     try:
         # Parse key
         name, key, pipeline = parseKey(key)
@@ -127,7 +148,34 @@ def extractValue(data, key, dump=True, folder="", default=''):
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
 
-            if modifier.startswith('json:'):
+
+            if modifier.startswith('js:'):
+                # Input: list of strings.
+                # Output if dump==True: list of strings
+                # Output if dump==False: list of dict, list, string or number
+                selector = modifier[3:]
+
+                items = []
+                for x in value:
+                    try:
+                        x = x.replace('\\\\"', '\\"')
+                        jsparser = Parser()
+                        tree = jsparser.parse(x)
+                        items += [{getJsValue(node.left) : getJsValue(node.right)}\
+                                 for node in nodevisitor.visit(tree) \
+                                 if isinstance(node, ast.Assign)]
+                    except Exception as e:
+                        items.append({'error':str(e)})
+
+                items = [getDictValue(x, selector, dump=dump, default=[]) for x in items]
+
+                # Flatten list if not dumped
+                if not dump:
+                    value = flattenList(items)
+                else:
+                    value = items
+
+            elif modifier.startswith('json:'):
                 # Input: list of strings.
                 # Output if dump==True: list of strings
                 # Output if dump==False: list of dict, list, string or number
