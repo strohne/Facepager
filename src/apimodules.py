@@ -122,6 +122,8 @@ class ApiTab(QScrollArea):
     def parsePlaceholders(self,pattern,nodedata,paramdata={},options = {}):
         if not pattern:
             return pattern
+        elif isinstance(pattern,list):
+            return [self.parsePlaceholders(x, nodedata, paramdata, options) for x in pattern]
         else:
             pattern = str(pattern)
 
@@ -186,7 +188,10 @@ class ApiTab(QScrollArea):
             if not match:
                 # Replace placeholders in parameter value
                 value = self.parsePlaceholders(params[name], nodedata, templateparams, options)
-                urlparams[name] = str(value)
+                if isinstance(value,list):
+                    urlparams[name] = [str(x) for x in value]
+                else:
+                    urlparams[name] = str(value)
 
         # Replace placeholders in urlpath
         urlpath = self.parsePlaceholders(urlpath, nodedata, templateparams)
@@ -1604,6 +1609,18 @@ class AuthTab(ApiTab):
 
         return options
 
+    def getLogURL(self, urlpath, urlparams, options):
+        url = urlpath
+
+        # Convert to list of tuple to allow duplicated keys
+        if urlparams:
+            urltuples = dictToTuples(urlparams)
+            urltuples = urllib.parse.urlencode(urltuples)
+            urltuples = urltuples.replace(options.get('access_token', ''), '')
+            url += "?" + urltuples
+
+        return url
+
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         session_no = options.get('threadnumber',0)
         self.closeSession(session_no)
@@ -1637,8 +1654,7 @@ class AuthTab(ApiTab):
                 return False
 
             if options['logrequests']:
-                logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
-                    options.get('access_token',''),'')
+                logpath = self.getLogURL(urlpath,urlparams,options)
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data
@@ -2061,8 +2077,7 @@ class FacebookTab(AuthTab):
             method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
-                logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
-                    options.get('access_token',''),'')
+                logpath = self.getLogURL(urlpath, urlparams, options)
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data
@@ -2361,8 +2376,7 @@ class TwitterStreamingTab(ApiTab):
             urlparams = options["params"]
 
         if options['logrequests']:
-            logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
-                options.get('access_token', ''), '')
+            logpath = self.getLogURL(urlpath, urlparams, options)
             logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
         # fallback option for data handling
@@ -2696,8 +2710,7 @@ class TwitterTab(AuthTab):
             method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
-                logpath = urlpath + "?" + urllib.parse.urlencode(urlparams).replace( \
-                    options.get('access_token', ''), '')
+                logpath = self.getLogURL(urlpath, urlparams, options)
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data

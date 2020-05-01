@@ -46,7 +46,8 @@ class QParamEdit(QTableWidget):
         self.setNameOptionsAll(self.nameoptions)
 
         row = 0
-        for name in vals:
+        vals = dictToTuples(vals)
+        for name, value in vals:
             # Set name
             self.setValue(row,0, name)
 
@@ -56,7 +57,7 @@ class QParamEdit(QTableWidget):
             self.setValueOptions(row, options)
 
             # Set value
-            self.setValue(row,1, vals[name])
+            self.setValue(row,1, value)
             row = row+1
 
         self.calcRows()

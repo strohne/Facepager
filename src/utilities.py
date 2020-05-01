@@ -551,6 +551,15 @@ def wraptip(value):
         pass
     return value
 
+def dictToTuples(value):
+    tuples = []
+    for n, v in value.items():
+        if isinstance(v, list):
+            tuples.extend([(n, s) for s in v])
+        else:
+            tuples.append((n, v))
+    return tuples
+
 def formatdict(data):
     def getdictvalues(data, parentkeys = []):
         out = []
