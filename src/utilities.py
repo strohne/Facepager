@@ -208,7 +208,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
                     value = flattenList(items)
                 else:
                     value = items
-                    
+
             elif modifier.startswith('json:'):
                 # Input: list of strings.
                 # Output if dump==True: list of strings
