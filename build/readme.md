@@ -17,11 +17,11 @@ __Hints for solving errors:__
 
 - Create the build from scr-directory in folder-mode and with console option:  
 
-  pyinstaller --log-level=WARN --name "Facepager" --console --add-data "docs;docs" --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
+  pyinstaller --log-level=WARN --name "Facepager" --console --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
 	 
   If everthing works, replace option "--console" with "--windowed" and create new spec file by replacing pyinstaller with pyi-makespec:  
   
-  pyi-makespec --log-level=WARN --name "Facepager" --windowed --add-data "docs;docs" --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
+  pyi-makespec --log-level=WARN --name "Facepager" --windowed --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
   
  - Copy the following folders and files to dist folder (or any other missing files):
 	PySide2/resources  

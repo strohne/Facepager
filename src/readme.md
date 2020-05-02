@@ -19,6 +19,7 @@ Facepager depends on the following packages:
 - cchardet: pip install cchardet (GPL, LGPL, MPL 1.1)
 - json
 - datetime
+- pyjsparser: pip install pyjsparser (MIT)
 
 Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
@@ -39,7 +40,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ python -m venv pyenv  
   $ pyenv\Scripts\activate.bat  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser  
   $ pip install PySide2==5.11.1  
 
 - Start Facepager  
@@ -58,7 +59,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser  
   $ pip install PySide2==5.11.1  
 
 - Start Facepager  
@@ -81,7 +82,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
-  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet  
+  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser   
   $ pip3 install PySide2==5.11.1  
 
 - Start Facepager  
