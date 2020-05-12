@@ -154,7 +154,7 @@ def jsWalkValues(indict, pre=None):
     pre = pre[:] if pre else []
     if isinstance(indict, dict):
         proptype = indict.get('type')
-        if proptype == 'Property':
+        if proptype == 'ObjectExpression':
             yield jsGetValue(indict)
 
         for key, value in indict.items():
@@ -165,7 +165,6 @@ def jsWalkValues(indict, pre=None):
                 for k, v in enumerate(value):
                     for d in jsWalkValues(v, pre + [key] + [k]):
                         yield d
-
 
 def extractValue(data, key, dump=True, folder="", default=''):
     """Extract value from dict and pipe through modifiers
@@ -290,7 +289,32 @@ def extractValue(data, key, dump=True, folder="", default=''):
     except Exception as e:
         return (None, default)
 
-def getDictValue(data, multikey, dump=True, default = ''):
+def findDictValues(data, multikey, dump=True, default=''):
+    """
+    Recursively searches for the multikey
+    :param data:
+    :param multikey:
+    :param dump:
+    :param default:
+    :return:
+    """
+    if hasDictValue(data, multikey):
+        return [getDictValue(data, multikey, dump, default)]
+    elif isinstance(data, Mapping) and multikey != '':
+        values = []
+        for key, value in data,items():
+            values.extend(findDictValues(value, multikey, dump, default))
+        return values
+    elif isinstance(data, list) and multikey != '':
+        values = []
+        for value in data:
+            values.extend(findDictValues(value, multikey, dump, default))
+        return values
+    else:
+        return [default]
+
+
+def getDictValue(data, multikey, dump=True, default=''):
     """Extract value from dict
     :param data:
     :param multikey:
@@ -312,6 +336,9 @@ def getDictValue(data, multikey, dump=True, default = ''):
                     value=[]
                     for elem in data:
                         value.append(getDictValue(data[elem],listkey,dump, default))
+                elif keys[0] == '**':
+                    listkey = keys[1] if len(keys) > 1 else ''
+                    value = findDictValues(data, listkey, dump, default)
                 else:
                     value = default
 
@@ -321,14 +348,20 @@ def getDictValue(data, multikey, dump=True, default = ''):
                 if len(keys) > 1:
                     value = getDictValue(value,keys[1],dump, default)
             except:
-                if keys[0] == '*':
+                if keys[0] == '**':
                     listkey = keys[1] if len(keys) > 1 else ''
-                else:
-                    listkey = keys[0]
+                    value = findDictValues(data, listkey, dump, default)
 
-                value=[]
-                for elem in data:
-                    value.append(getDictValue(elem, listkey, dump, default))
+                else:
+                    if keys[0] == '*':
+                        listkey = keys[1] if len(keys) > 1 else ''
+                    else:
+                        listkey = keys[0]
+
+                    value=[]
+                    for elem in data:
+                        value.append(getDictValue(elem, listkey, dump, default))
+
         elif keys[0] == '':
             value = data
         else:
