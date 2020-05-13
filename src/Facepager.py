@@ -638,9 +638,10 @@ def startMain():
     app = QApplication(sys.argv)
 
     # Change styling for Mac
-    #if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
     if cmd_args.style is not None:
-        QApplication.setStyle(cmd_args.style) # Fusion
+        QApplication.setStyle(cmd_args.style)
+    elif sys.platform == 'darwin':
+        QApplication.setStyle('Fusion')
 
     # Word wrap tooltips (does not work yet, chrashes app)
     #tooltipfilter = QAwesomeTooltipEventFilter(app)
@@ -653,6 +654,7 @@ def startMain():
 
 
 if __name__ == "__main__":
+    # Logging
     try:
         logfolder = os.path.join(os.path.expanduser("~"),'Facepager','Logs')
         if not os.path.isdir(logfolder):
@@ -661,14 +663,12 @@ if __name__ == "__main__":
     except Exception as e:
         print("Error intitializing log file: {}".format(e.message))
 
-
+    # Command line options
     cmd_args = argparse.ArgumentParser(description='Run Facepager.')
     cmd_args.add_argument('database', help='Database file to open', nargs='?')
     cmd_args.add_argument('--style', dest='style', default=None, help='Select the PySide style, for example Fusion')
 
     cmd_args = cmd_args.parse_args()
-    print(cmd_args)
-
 
     # Locate the SSL certificate for requests
     os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(getResourceFolder() , 'ssl', 'cacert.pem')
