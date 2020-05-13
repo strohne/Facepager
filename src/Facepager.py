@@ -25,12 +25,12 @@
 # SOFTWARE.
 
 import sys
+import argparse
 import html
-
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QWidget
+from PySide2.QtWidgets import QWidget, QStyleFactory
 
 from icons import *
 from datatree import *
@@ -65,6 +65,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
         QApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton)
 
+
         # This is needed to display the app icon on the taskbar on Windows 7
         if os.name == 'nt':
             import ctypes
@@ -88,7 +89,7 @@ class MainWindow(QMainWindow):
     def createDB(self):
         self.database = Database(self)
 
-        dbname= sys.argv[1] if len(sys.argv) > 1 else None
+        dbname= cmd_args.database #sys.argv[1] if len(sys.argv) > 1 else None
         lastpath = self.settings.value("lastpath")
 
         if dbname and os.path.isfile(dbname):
@@ -636,6 +637,10 @@ class QAwesomeTooltipEventFilter(QObject):
 def startMain():
     app = QApplication(sys.argv)
 
+    # Change styling for Mac
+    #if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
+    if cmd_args.style is not None:
+        QApplication.setStyle(cmd_args.style) # Fusion
 
     # Word wrap tooltips (does not work yet, chrashes app)
     #tooltipfilter = QAwesomeTooltipEventFilter(app)
@@ -657,12 +662,15 @@ if __name__ == "__main__":
         print("Error intitializing log file: {}".format(e.message))
 
 
+    cmd_args = argparse.ArgumentParser(description='Run Facepager.')
+    cmd_args.add_argument('database', help='Database file to open', nargs='?')
+    cmd_args.add_argument('--style', dest='style', default=None, help='Select the PySide style, for example Fusion')
+
+    cmd_args = cmd_args.parse_args()
+    print(cmd_args)
+
+
     # Locate the SSL certificate for requests
     os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(getResourceFolder() , 'ssl', 'cacert.pem')
 
-    #cProfile.run('startMain()')
-    #yappi.start()
     startMain()
-    #yappi.print_stats()
-
-
