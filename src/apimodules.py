@@ -273,9 +273,12 @@ class ApiTab(QScrollArea):
             pass
 
         # Get doc key for lookup of data handling keys
-        doc_path = 'paths.' + options.get('resource', '') + '.get'
-        doc_response = doc_path +'.responses.200.content.application/json.schema.'
+        doc_resource = options.get('resource', '').strip()
+        if doc_resource == '':
+            doc_resource = '0'
 
+        doc_path = 'paths.' + doc_resource + '.get'
+        doc_response = doc_path +'.responses.200.content.application/json.schema.'
 
         #format
         try:
