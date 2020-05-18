@@ -12,7 +12,7 @@
   "name": "Get publications from arxiv.org",
   "options": {
     "auth": "disable",
-    "auth_type": "OAuth2",
+    "auth_type": "Disable",
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "basepath": "http://export.arxiv.org/api/query",
     "format": "xml",

@@ -7,7 +7,7 @@
   "name": "Extract links from webpage",
   "options": {
     "auth": "disable",
-    "auth_type": "OAuth2",
+    "auth_type": "Disable",
     "auth_uri": "",
     "basepath": "<Object ID>",
     "fileext": ".html",
