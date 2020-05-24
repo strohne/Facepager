@@ -289,6 +289,7 @@ class TreeItem(object):
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
+        return (len(nodes))
 
     def hasValues(self,filter = {}):
         if self.data is None:
