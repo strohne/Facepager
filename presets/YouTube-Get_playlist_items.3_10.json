@@ -1,0 +1,48 @@
+{
+  "name": "Get playlist items",
+  "category": "YouTube",
+  "description": "Each channel contains playlists and playlists contain playlist items. In the playlist items you find the videos.  Therefore, to get the videos in a channel, you first query the channel information and then fetch the items in the 'uploads' playlist.\n\nTo use this preset, add IDs of playlists as seed nodes. If you already fetched channel information, you can use those nodes as starting nodes and set the parameter playlistId to \"<contentDetails.relatedPlaylists.uploads>\"\n\nSee https://developers.google.com/youtube/v3/docs/playlists/list and https://developers.google.com/youtube/v3/docs/playlistItems/list for further information.\n",
+  "module": "YouTube",
+  "options": {
+    "basepath": "https://www.googleapis.com/youtube/v3",
+    "resource": "/playlistItems",
+    "params": {
+      "maxResults": "50",
+      "part": "snippet,id,contentDetails,status",
+      "playlistId": "<Object ID>"
+    },
+    "pages": 100,
+    "paging_type": "key",
+    "key_paging": "nextPageToken",
+    "paging_stop": null,
+    "param_paging": "pageToken",
+    "nodedata": null,
+    "objectid": null,
+    "scope": "https://www.googleapis.com/auth/youtube.readonly",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "redirect_uri": "https://localhost",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth": "header",
+    "auth_prefix": "Bearer ",
+    "auth_tokenname": "Authorization"
+  },
+  "speed": 200,
+  "headers": false,
+  "columns": [
+    "kind",
+    "snippet.publishedAt",
+    "snippet.title",
+    "snippet.description",
+    "snippet.thumbnails.default.url",
+    "snippet.playlistId",
+    "snippet.position",
+    "snippet.resourceId.kind",
+    "snippet.resourceId.videoId",
+    "snippet.channelId",
+    "snippet.channelTitle",
+    "contentDetails.videoId",
+    "contentDetails.videoPublishedAt",
+    "status.privacyStatus"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "Get replies",
+  "category": "YouTube",
+  "description": "YouTube videos and channels contain two type of comments. Top level comments are attached to a video and can be requested with the commentsThread endpoint. Replies are attached to parent comments and can be fetched with this preset\n\nAdd comment IDs as seed nodes or fetch comments with the respective preset first. Look at the settings: the parentId-parameter makes sure you get the replies instead of the comment itself.\n\nSee https://developers.google.com/youtube/v3/docs/comments/list for further information about replies and https://developers.google.com/youtube/v3/docs/commentThreads/list for information about getting top level comments.\n",
+  "module": "YouTube",
+  "options": {
+    "auth": "header",
+    "auth_prefix": "Bearer ",
+    "auth_tokenname": "Authorization",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "basepath": "https://www.googleapis.com/youtube/v3",
+    "key_paging": "nextPageToken",
+    "nodedata": null,
+    "objectid": null,
+    "pages": 5,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": "pageToken",
+    "params": {
+      "maxResults": "100",
+      "parentId": "<Object ID>",
+      "part": "snippet"
+    },
+    "redirect_uri": "https://localhost",
+    "resource": "/comments",
+    "scope": "https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube",
+    "token_uri": "https://accounts.google.com/o/oauth2/token"
+  },
+  "speed": 200,
+  "headers": false,
+  "columns": [
+    "snippet.topLevelComment.snippet.authorDisplayName",
+    "snippet.topLevelComment.snippet.textDisplay",
+    "snippet.topLevelComment.snippet.publishedAt",
+    "snippet.topLevelComment.snippet.updatedAt",
+    "snippet.topLevelComment.snippet.likeCount"
+  ]
+}
