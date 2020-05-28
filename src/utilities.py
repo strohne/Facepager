@@ -193,7 +193,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 items = []
                 for x in value:
                     try:
-                        x = x.replace('\\\\"', '\\"')
+                        #x = x.replace('\\\\"', '\\"')
 
                         tree = pyjsparser.parse(x)
                         items += jsWalkValues(tree)
