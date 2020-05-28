@@ -1612,14 +1612,15 @@ class AuthTab(ApiTab):
 
         return options
 
-    def getLogURL(self, urlpath, urlparams, options):
+    def getLogURL(self, urlpath, urlparams, options, removesecrets=True):
         url = urlpath
 
         # Convert to list of tuple to allow duplicated keys
         if urlparams:
             urltuples = dictToTuples(urlparams)
             urltuples = urllib.parse.urlencode(urltuples)
-            urltuples = urltuples.replace(options.get('access_token', ''), '')
+            if removesecrets:
+                urltuples = urltuples.replace(options.get('access_token', ''), '')
             url += "?" + urltuples
 
         return url
@@ -1698,7 +1699,7 @@ class AuthTab(ApiTab):
 
         return True
 
-    def buildUrl(self, nodedata, options, logProgress):
+    def buildUrl(self, nodedata, options, logProgress=None):
         if not ('url' in options):
             urlpath = options["basepath"].strip() + options['resource'].strip() + options.get('pathextension', '')
             urlparams = {}
@@ -2911,6 +2912,7 @@ class QWebPageCustom(QWebEnginePage):
         profile = self.profile()
         profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
         profile.clearHttpCache()
+        #print(profile.httpUserAgent())
 
         cookies = profile.cookieStore()
         profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)

@@ -401,6 +401,75 @@ class Actions(object):
     def selectNodes(self):
         self.mainWindow.selectNodesWindow.showWindow()
 
+    def getQueryOptions(self, apimodule=False, options=None):
+        # Get global options
+        globaloptions = {}
+        globaloptions['threads'] = self.mainWindow.threadsEdit.value()
+        globaloptions['speed'] = self.mainWindow.speedEdit.value()
+        globaloptions['errors'] = self.mainWindow.errorEdit.value()
+        globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
+        globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
+        globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
+        globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
+        globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
+
+        # Get module option
+        if isinstance(apimodule, str):
+            apimodule = self.mainWindow.getModule(apimodule)
+        if apimodule == False:
+            apimodule = self.mainWindow.RequestTabs.currentWidget()
+        apimodule.getProxies(True)
+
+        if options is None:
+            options = apimodule.getOptions()
+        else:
+            options = options.copy()
+        options.update(globaloptions)
+
+        return (apimodule, options)
+
+    def getIndexes(self, options= {}, indexes=None, progress=None):
+        # Get selected nodes
+        if indexes is None:
+            objecttypes = self.mainWindow.typesEdit.text().replace(' ', '').split(',')
+            level = self.mainWindow.levelEdit.value() - 1
+            select_all = options['allnodes']
+            select_filter = {'level': level, '!objecttype': objecttypes}
+            conditions = {'filter': select_filter,
+                          'selectall': select_all,
+                          'options': options}
+
+            self.progressUpdate = datetime.now()
+            def updateProgress(current, total, level=0):
+                if not progress:
+                    return True
+
+                if datetime.now() >= self.progressUpdate:
+                    progress.showInfo('input', "Adding nodes to queue ({}/{}).".format(current, total))
+                    QApplication.processEvents()
+                    self.progressUpdate = datetime.now() + timedelta(milliseconds=60)
+
+                return not progress.wasCanceled
+
+            indexes = self.mainWindow.tree.selectedIndexesAndChildren(conditions, updateProgress)
+
+        elif isinstance(indexes, list):
+            indexes = iter(indexes)
+
+        return indexes
+
+    # Copy node data and options
+    def prepareJob(self, index, options):
+        treenode = index.internalPointer()
+        node_data = deepcopy(treenode.data)
+        node_options = deepcopy(options)
+        node_options['lastdata'] = treenode.lastdata if hasattr(treenode, 'lastdata') else None
+
+        job = {'nodeindex': index,
+               'nodedata': node_data,
+               'options': node_options}
+
+        return job
 
     def queryNodes(self, indexes=None, apimodule=False, options=None):
         if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (indexes is not None)):
@@ -410,54 +479,8 @@ class Actions(object):
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
-            # Get global options
-            globaloptions = {}
-            globaloptions['threads'] = self.mainWindow.threadsEdit.value()
-            globaloptions['speed'] = self.mainWindow.speedEdit.value()
-            globaloptions['errors'] = self.mainWindow.errorEdit.value()
-            globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
-            globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
-            globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
-            globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
-            globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
-
-
-            # Get module option
-            if isinstance(apimodule,str):
-                apimodule = self.mainWindow.getModule(apimodule)
-            if apimodule == False:
-                apimodule = self.mainWindow.RequestTabs.currentWidget()
-            apimodule.getProxies(True)
-
-            if options is None:
-                options = apimodule.getOptions()
-            else:
-                options = options.copy()
-            options.update(globaloptions)
-
-
-            #Get selected nodes
-            if indexes is None:
-                objecttypes = self.mainWindow.typesEdit.text().replace(' ', '').split(',')
-                level = self.mainWindow.levelEdit.value() - 1
-                select_all = globaloptions['allnodes']
-                select_filter = {'level': level, '!objecttype': objecttypes}
-
-                self.progressUpdate = datetime.now()
-                def updateProgress(current, total, level=0):
-                    if datetime.now() >= self.progressUpdate:
-                        progress.showInfo('input', "Adding nodes to queue ({}/{}).".format(current, total))
-                        QApplication.processEvents()
-                        self.progressUpdate = datetime.now() + timedelta(milliseconds=60)
-
-                    return not progress.wasCanceled
-
-                conditions = {'filter': select_filter,
-                              'selectall': select_all,
-                              'options': options}
-                indexes = self.mainWindow.tree.selectedIndexesAndChildren(conditions, updateProgress)
-            elif isinstance(indexes,list):
-                indexes = iter(indexes)
+            apimodule, options = self.getQueryOptions(apimodule, options)
+            indexes = self.getIndexes(options, indexes, progress)
 
             # Update progress window
             self.mainWindow.logmessage("Start fetching data.")
@@ -488,22 +511,12 @@ class Actions(object):
                         # Jobs in: packages of 100 at a time
                         jobsin = 0
                         while hasindexes and (jobsin < 100):
-
                             index = next(indexes, False)
                             if index:
                                 jobsin += 1
                                 totalnodes += 1
                                 if index.isValid():
-                                    # Copy node data and options
-                                    treenode = index.internalPointer()
-                                    node_data = deepcopy(treenode.data)
-                                    node_options = deepcopy(options)
-                                    node_options['lastdata'] = treenode.lastdata if hasattr(treenode, 'lastdata') else None
-
-                                    # Add job
-                                    job = {'nodeindex': index,
-                                           'nodedata': node_data,
-                                           'options': node_options}
+                                    job = self.prepareJob(index, options)
                                     threadpool.addJob(job)
                             else:
                                 threadpool.applyJobs()
@@ -549,7 +562,7 @@ class Actions(object):
                             # Add data
                             treeindex = job['nodeindex']
                             treenode = treeindex.internalPointer()
-                            treenode.appendNodes(job['data'], job['options'], job['headers'], True)
+                            newcount = treenode.appendNodes(job['data'], job['options'], job['headers'], True)
                             if options.get('expand',False):
                                  self.mainWindow.tree.setExpanded(treeindex,True)
 
@@ -564,6 +577,7 @@ class Actions(object):
 
                             # Detect rate limit
                             ratelimit = job['options'].get('ratelimit', False)
+                            #ratelimit = ratelimit or (not newcount)
                             ratelimitcount += int(ratelimit)
                             autoretry = (ratelimitcount) or (status == "request error")
 
@@ -574,7 +588,7 @@ class Actions(object):
                                 ratelimitcount = 0
 
                             # Suspend on error or ratelimit
-                            elif (errorcount >= globaloptions['errors']) or (ratelimitcount > 0):
+                            elif (errorcount >= options['errors']) or (ratelimitcount > 0):
                                 threadpool.suspendJobs()
 
                                 if ratelimit:
@@ -656,6 +670,7 @@ class Actions(object):
     @Slot()
     def querySelectedNodes(self):
         self.queryNodes()
+
 
     @Slot()
     def setupTimer(self):
