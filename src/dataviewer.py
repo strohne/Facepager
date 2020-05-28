@@ -35,6 +35,7 @@ class DataViewer(QDialog):
 
         # Object ID key input
         self.input_id = QLineEdit()
+        self.input_id.textChanged.connect(self.delayPreview)
         self.extractLayout.addRow("Key for Object ID:", self.input_id)
 
         # Options
@@ -92,6 +93,7 @@ class DataViewer(QDialog):
 
     def showValue(self, key = ''):
         self.input_extract.setText(key)
+        #self.input_id.setText(key)
 
         self.allnodesCheckbox.setChecked(self.mainWindow.allnodesCheckbox.isChecked())
         self.levelEdit.setValue(self.mainWindow.levelEdit.value())
@@ -117,6 +119,8 @@ class DataViewer(QDialog):
             try:
                 # Get nodes
                 key_nodes = self.input_extract.text()
+                subkey = key_nodes.split('|').pop(0).rsplit('.', 1)[0]
+                key_id = self.input_id.text()
                 #selected = self.mainWindow.tree.selectionModel().selectedRows()
 
                 objecttypes = self.objecttypeEdit.text().replace(' ', '').split(',')
@@ -135,15 +139,21 @@ class DataViewer(QDialog):
                     break
 
                 # Dump nodes
-                value = ''
+                value = []
                 nodes = [nodes] if not (type(nodes) is list) else nodes
-                for n in nodes:
-                    n = json.dumps(n) if isinstance(n, Mapping) else n
-                    value += str(n) + '\n\n'
-            except Exception as e:
-                value = str(e)
 
-            self.dataEdit.setPlainText(value)
+                for n in nodes:
+                    n = n if isinstance(n, Mapping) else {subkey: n}
+                    objectid = extractValue(n, key_id, default=None)[1] if key_id != '' else ''
+                    nodedata = json.dumps(n) if isinstance(n, Mapping) else n
+                    value.append((str(objectid), str(nodedata)))
+            except Exception as e:
+                value = [('',str(e))]
+
+            value = ['<b>{}</b><p>{}</p><hr>'.format(html.escape(x),html.escape(y)) for x,y in value]
+            value = "\n\n".join(value)
+
+            self.dataEdit.setHtml(value)
 
         self.dataEdit.setVisible(self.togglePreviewCheckbox.isChecked())
         if not self.togglePreviewCheckbox.isChecked():
@@ -180,6 +190,8 @@ class DataViewer(QDialog):
         key_objectid = self.input_id.text()
         if key_nodes == '':
             return False
+        if key_objectid == '':
+            key_objectid = None
 
         try:
             self.initProgress()
