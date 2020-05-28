@@ -55,6 +55,10 @@ class Actions(object):
         self.actionQuery = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Query")
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
+        self.actionBrowse = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Open")
+        self.actionBrowse.setToolTip(wraptip("Open the resulting URL in the browser."))
+        self.actionBrowse.triggered.connect(self.openBrowser)
+
         self.actionTimer = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Time")
         self.actionTimer.setToolTip(wraptip("Time your data collection with a timer. Fetches the data for the selected node(s) in user-defined intervalls"))
         self.actionTimer.triggered.connect(self.setupTimer)
@@ -671,7 +675,6 @@ class Actions(object):
     def querySelectedNodes(self):
         self.queryNodes()
 
-
     @Slot()
     def setupTimer(self):
         # Get data
@@ -739,6 +742,29 @@ class Actions(object):
         columns = list(dict.fromkeys(columns))
         self.mainWindow.fieldList.setPlainText("\n".join(columns))
         self.showColumns()
+
+    @Slot()
+    def openBrowser(self):
+        apimodule, options = self.getQueryOptions()
+        indexes = self.getIndexes(options)
+        index = next(indexes, False)
+        if not index or not index.isValid():
+            return False
+
+        job = self.prepareJob(index, options)
+        options = job['options']
+        nodedata = job['nodedata']
+
+        options = apimodule.initPagingOptions(nodedata, options)
+        method, urlpath, urlparams, payload, requestheaders = apimodule.buildUrl(nodedata, options)
+
+        if not urlpath:
+            return False
+
+        url = apimodule.getLogURL(urlpath, urlparams, options, False)
+
+        caption = "Browser"
+        apimodule.showBrowser(caption, url, requestheaders)
 
     @Slot()
     def treeNodeSelected(self, current):

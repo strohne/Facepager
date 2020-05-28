@@ -12,9 +12,10 @@ from collections import OrderedDict
 import threading
 
 from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
+from PySide2.QtWebEngineCore import QWebEngineHttpRequest
 from PySide2.QtNetwork import QNetworkCookie
 from PySide2.QtWidgets import *
-from PySide2.QtCore import QUrl
+from PySide2.QtCore import Qt, QUrl, QByteArray
 
 import requests
 from requests.exceptions import *
@@ -1207,6 +1208,36 @@ class ApiTab(QScrollArea):
         dialog.exec_()
 
     @Slot()
+    def showBrowser(self, caption='', url='', headers={}, width=600, height=600):
+        self.browserWindow = QMainWindow(self.mainWindow)
+        self.browserWindow.setAttribute(Qt.WA_DeleteOnClose)
+        self.browserWindow.resize(width, height)
+        self.browserWindow.setWindowTitle(caption)
+        self.browserWindow.stopped = False
+        self.browserWindow.cookie = ''
+
+        # create WebView with Facebook log-Dialog, OpenSSL needed
+        self.browserStatus = self.browserWindow.statusBar()
+        self.browserWebview = QWebEngineView(self.browserWindow)
+        self.browserWindow.setCentralWidget(self.browserWebview)
+
+        # Use the custom- WebPage class
+        webpage = QWebPageCustom(self.browserWebview)
+        webpage.logmessage.connect(self.logMessage)
+        self.browserWebview.setPage(webpage)
+
+        request = QWebEngineHttpRequest(QUrl(url))
+        for key, val in headers.items():
+            key = key.encode('utf-8')
+            val = val.encode('utf-8')
+            request.setHeader(QByteArray(key), QByteArray(val))
+
+        self.browserWebview.load(request)
+        self.browserWebview.show()
+
+        self.browserWindow.show()
+
+    @Slot()
     def showLoginWindow(self, caption='', url='',width=600,height=600):
         """
         Create a SSL-capable WebView for the login-process
@@ -1215,6 +1246,7 @@ class ApiTab(QScrollArea):
         """
 
         self.loginWindow = QMainWindow(self.mainWindow)
+        self.loginWindow.setAttribute(Qt.WA_DeleteOnClose)
         self.loginWindow.resize(width, height)
         self.loginWindow.setWindowTitle(caption)
         self.loginWindow.stopped = False
@@ -1227,7 +1259,7 @@ class ApiTab(QScrollArea):
         self.loginWindow.setCentralWidget(self.login_webview)
 
         # Use the custom- WebPage class
-        webpage = QWebPageCustom(self)
+        webpage = QWebPageCustom(self.login_webview)
         webpage.logmessage.connect(self.logMessage)
         self.login_webview.setPage(webpage)
 
