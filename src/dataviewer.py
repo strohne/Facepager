@@ -143,9 +143,11 @@ class DataViewer(QDialog):
                 nodes = [nodes] if not (type(nodes) is list) else nodes
 
                 for n in nodes:
+                    nodedata = json.dumps(n) if isinstance(n, Mapping) else n
+
                     n = n if isinstance(n, Mapping) else {subkey: n}
                     objectid = extractValue(n, key_id, default=None)[1] if key_id != '' else ''
-                    nodedata = json.dumps(n) if isinstance(n, Mapping) else n
+
                     value.append((str(objectid), str(nodedata)))
             except Exception as e:
                 value = [('',str(e))]
