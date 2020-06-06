@@ -678,7 +678,11 @@ class Actions(object):
 
     @Slot()
     def querySelectedNodes(self):
-        self.queryNodes()
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            self.openBrowser()
+        else:
+            self.queryNodes()
 
     @Slot()
     def setupTimer(self):

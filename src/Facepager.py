@@ -419,7 +419,7 @@ class MainWindow(QMainWindow):
         f=QFont()
         f.setPointSize(11)
         button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
-        button.setToolTip(wraptip("Fetch data from the API with the current settings"))
+        button.setToolTip(wraptip("Fetch data from the API with the current settings. If you click the button with the control key pressed, a browser window is opened instead."))
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.actions.actionQuery.trigger)
