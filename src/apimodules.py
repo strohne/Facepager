@@ -987,6 +987,156 @@ class ApiTab(QScrollArea):
         #
         # return proxy
 
+    def initPagingOptions(self, data, options):
+        # paging by auto count
+        if (options.get('paging_type') == "count") and (options.get('param_paging', '') is not None):
+            offset = options.get('offset_start', 1)
+            options['params'][options.get('param_paging', '')] = offset
+
+        # paging by key (continue previous fetching process based on last fetched child offcut node)
+        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
+            # Get cursor of last offcut node
+            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
+            cursor = getDictValueOrNone(offcut,options.get('key_paging'))
+            stopvalue = not extractValue(offcut,options.get('paging_stop'), dump = False, default = True)[1]
+
+            # Dont't fetch if already finished (=offcut without next cursor)
+            if options.get('resume',False) and (offcut is not None) and ((cursor is None) or stopvalue):
+                return None
+
+            # Continue / start fetching
+            elif (cursor is not None) :
+                options['params'][options['param_paging']] = cursor
+
+        # url based paging
+        elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
+            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
+            url = getDictValueOrNone(offcut,options.get('key_paging'))
+
+            # Dont't fetch if already finished (=offcut without next cursor)
+            if options.get('resume',False) and (offcut is not None) and (url is None):
+                return None
+
+            if url is not None:
+                url, params = self.parseURL(url)
+                options['params'] = params
+                options['url'] = url
+
+        elif (options.get('paging_type') == "decrease"):
+            node= getDictValueOrNone(options, 'lastdata.response', dump=False)
+            cursor = getDictValueOrNone(node, options.get('key_paging'))
+
+            if (node is not None):
+                if cursor is None:
+                    return None
+
+                try:
+                    cursor = int(cursor) - 1
+                    options['params'][options['param_paging']] = cursor
+                except:
+                    return None
+
+        # break if "continue pagination" is checked and data already present
+        elif options.get('resume',False):
+            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
+
+            # Dont't fetch if already finished (=offcut)
+            if (offcut is not None):
+                return None
+
+        return options
+
+    def updatePagingOptions(self, data, options):
+        # Stop if result is empty
+        if (options['nodedata'] is not None) and not hasValue(data, options['nodedata']):
+            return None
+
+        # paging by auto count
+        if (options.get('paging_type') == "count") and (options.get('param_paging') is not None):
+            offset = options['params'][options['param_paging']]
+            offset = offset + options.get('offset_step', 1)
+            options['params'][options['param_paging']] = offset
+
+        # paging by key
+        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (
+                options.get('param_paging') is not None):
+            cursor = getDictValueOrNone(data, options['key_paging'])
+            if cursor is None:
+                return None
+
+            stopvalue = not extractValue(data, options.get('paging_stop'), dump=False, default=True)[1]
+            if stopvalue:
+                return None
+
+            options['params'][options['param_paging']] = cursor
+
+        # url based paging
+        elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
+            url = getDictValueOrNone(data, options['key_paging'])
+            if url is not None:
+                url, params = self.parseURL(url)
+                options['params'] = params
+                options['url'] = url
+            else:
+                return None
+        elif (options.get('paging_type') == "decrease"):
+            # manual paging with max-id
+            # if there are still statuses in the response, use the last ID-1 for further pagination
+
+            if isinstance(data, list) and (len(data) > 0):
+                node = data[-1]
+            else:
+                node = data
+
+            cursor = getDictValueOrNone(node, options['key_paging'])
+            if cursor is None:
+                return None
+
+            try:
+                cursor = int(cursor) - 1
+                options['params'][options['param_paging']] = cursor
+            except:
+                return None
+
+        # no pagination
+        else:
+            return None
+
+        return options
+
+    def buildUrl(self, nodedata, options, logProgress=None):
+        if not ('url' in options):
+            urlpath = options["basepath"].strip() + options['resource'].strip() + options.get('pathextension', '')
+            urlparams = {}
+            urlparams.update(options['params'])
+            urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
+            requestheaders = options.get('headers', {})
+
+            # Authorization
+            if options.get('auth','disable') != 'disable':
+                token = options.get('auth_prefix','') + options.get('access_token','')
+                if options.get('auth') == 'param':
+                    urlparams[options.get('auth_tokenname')] = token
+                elif (options.get('auth') == 'header'):
+                    requestheaders[options.get('auth_tokenname')] = token
+
+            method = options.get('verb', 'GET')
+            payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options, logProgress)
+            if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
+                requestheaders["Content-Type"] = payload.content_type
+        else:
+            method = options.get('verb', 'GET')
+            payload = None
+            urlpath = options['url']
+            urlparams = options['params']
+            requestheaders = {}
+
+        # sign request (for Amazon tab)
+        if hasattr(self, "signRequest"):
+            requestheaders = self.signRequest(urlpath, urlparams, requestheaders, method, payload, options)
+
+        return method, urlpath, urlparams, payload, requestheaders
+
     def initSession(self, no=0, renew=False):
         """
         Return existing session or create a new session if necessary
@@ -1540,122 +1690,7 @@ class AuthTab(ApiTab):
         super(AuthTab, self).setOptions(options)
 
 
-    def initPagingOptions(self, data, options):
-        # paging by auto count
-        if (options.get('paging_type') == "count") and (options.get('param_paging', '') is not None):
-            offset = options.get('offset_start', 1)
-            options['params'][options.get('param_paging', '')] = offset
 
-        # paging by key (continue previous fetching process based on last fetched child offcut node)
-        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
-            # Get cursor of last offcut node
-            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
-            cursor = getDictValueOrNone(offcut,options.get('key_paging'))
-            stopvalue = not extractValue(offcut,options.get('paging_stop'), dump = False, default = True)[1]
-
-            # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('resume',False) and (offcut is not None) and ((cursor is None) or stopvalue):
-                return None
-
-            # Continue / start fetching
-            elif (cursor is not None) :
-                options['params'][options['param_paging']] = cursor
-
-        # url based paging
-        elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
-            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
-            url = getDictValueOrNone(offcut,options.get('key_paging'))
-
-            # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('resume',False) and (offcut is not None) and (url is None):
-                return None
-
-            if url is not None:
-                url, params = self.parseURL(url)
-                options['params'] = params
-                options['url'] = url
-
-        elif (options.get('paging_type') == "decrease"):
-            node= getDictValueOrNone(options, 'lastdata.response', dump=False)
-            cursor = getDictValueOrNone(node, options.get('key_paging'))
-
-            if (node is not None):
-                if cursor is None:
-                    return None
-
-                try:
-                    cursor = int(cursor) - 1
-                    options['params'][options['param_paging']] = cursor
-                except:
-                    return None
-
-        # break if "continue pagination" is checked and data already present
-        elif options.get('resume',False):
-            offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
-
-            # Dont't fetch if already finished (=offcut)
-            if (offcut is not None):
-                return None
-
-        return options
-
-    def updatePagingOptions(self, data, options):
-        # Stop if result is empty
-        if (options['nodedata'] is not None) and not hasValue(data, options['nodedata']):
-            return None
-
-        # paging by auto count
-        if (options.get('paging_type') == "count") and (options.get('param_paging') is not None):
-            offset = options['params'][options['param_paging']]
-            offset = offset + options.get('offset_step', 1)
-            options['params'][options['param_paging']] = offset
-
-        # paging by key
-        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (
-                options.get('param_paging') is not None):
-            cursor = getDictValueOrNone(data, options['key_paging'])
-            if cursor is None:
-                return None
-
-            stopvalue = not extractValue(data, options.get('paging_stop'), dump=False, default=True)[1]
-            if stopvalue:
-                return None
-
-            options['params'][options['param_paging']] = cursor
-
-        # url based paging
-        elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
-            url = getDictValueOrNone(data, options['key_paging'])
-            if url is not None:
-                url, params = self.parseURL(url)
-                options['params'] = params
-                options['url'] = url
-            else:
-                return None
-        elif (options.get('paging_type') == "decrease"):
-            # manual paging with max-id
-            # if there are still statuses in the response, use the last ID-1 for further pagination
-
-            if isinstance(data, list) and (len(data) > 0):
-                node = data[-1]
-            else:
-                node = data
-
-            cursor = getDictValueOrNone(node, options['key_paging'])
-            if cursor is None:
-                return None
-
-            try:
-                cursor = int(cursor) - 1
-                options['params'][options['param_paging']] = cursor
-            except:
-                return None
-
-        # no pagination
-        else:
-            return None
-
-        return options
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         session_no = options.get('threadnumber',0)
@@ -1735,38 +1770,7 @@ class AuthTab(ApiTab):
 
         return True
 
-    def buildUrl(self, nodedata, options, logProgress=None):
-        if not ('url' in options):
-            urlpath = options["basepath"].strip() + options['resource'].strip() + options.get('pathextension', '')
-            urlparams = {}
-            urlparams.update(options['params'])
-            urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
-            requestheaders = options.get('headers', {})
 
-            # Authorization
-            if options.get('auth','disable') != 'disable':
-                token = options.get('auth_prefix','') + options.get('access_token','')
-                if options.get('auth') == 'param':
-                    urlparams[options.get('auth_tokenname')] = token
-                elif (options.get('auth') == 'header'):
-                    requestheaders[options.get('auth_tokenname')] = token
-
-            method = options.get('verb', 'GET')
-            payload = self.getPayload(options.get('payload', None), templateparams, nodedata, options, logProgress)
-            if isinstance(payload, MultipartEncoder) or isinstance(payload, MultipartEncoderMonitor):
-                requestheaders["Content-Type"] = payload.content_type
-        else:
-            method = options.get('verb', 'GET')
-            payload = None
-            urlpath = options['url']
-            urlparams = options['params']
-            requestheaders = {}
-
-        # sign request (for Amazon tab)
-        if hasattr(self, "signRequest"):
-            requestheaders = self.signRequest(urlpath, urlparams, requestheaders, method, payload, options)
-
-        return method, urlpath, urlparams, payload, requestheaders
 
     @Slot()
     def doLogin(self, session_no = 0):
