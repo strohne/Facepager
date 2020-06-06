@@ -254,12 +254,12 @@ class MainWindow(QMainWindow):
         # Log Settings
         self.logCheckbox = QCheckBox("Log all requests",self)
         self.logCheckbox.setToolTip(
-            wraptip("Check to see every request in status window; uncheck to hide request messages."))
+            wraptip("Check to see every request in the status log; uncheck to hide request messages."))
         self.settingsLayout.addRow( self.logCheckbox)
         self.logCheckbox.setChecked(str(self.settings.value('logrequests', 'true')) == 'true')
 
         # Clear setttings
-        self.clearCheckbox = QCheckBox("Clear settings when closing",self)
+        self.clearCheckbox = QCheckBox("Clear settings when closing.",self)
         self.settings.beginGroup("GlobalSettings")
         self.clearCheckbox.setChecked(str(self.settings.value('clearsettings', 'false')) == 'true')
         self.settings.endGroup()
