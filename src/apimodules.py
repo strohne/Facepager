@@ -1516,7 +1516,7 @@ class AuthTab(ApiTab):
 
         self.defaults['login_buttoncaption'] = " Login "
         self.defaults['login_window_caption'] = "Login Page"
-        self.defaults['auth_type'] = "OAuth2"
+        self.defaults['auth_type'] = "Disable"
 
     def initAuthSetupInputs(self):
         authlayout = QFormLayout()
@@ -2041,8 +2041,9 @@ class FacebookTab(AuthTab):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         #Defaults
+        self.defaults['auth_type'] = "OAuth2"
         self.defaults['scope'] = '' #user_groups
-        self.defaults['basepath'] = 'https://graph.facebook.com/v3.12'
+        self.defaults['basepath'] = 'https://graph.facebook.com/v3.2'
         self.defaults['resource'] = '/<Object ID>'
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
@@ -2810,6 +2811,7 @@ class YoutubeTab(AuthTab):
         super(YoutubeTab, self).__init__(mainWindow, "YouTube")
 
         # Defaults
+        self.defaults['auth_type'] = "OAuth2"
         self.defaults['auth_uri'] = 'https://accounts.google.com/o/oauth2/auth'
         self.defaults['token_uri'] = "https://accounts.google.com/o/oauth2/token"
         self.defaults['redirect_uri'] = 'https://localhost' #"urn:ietf:wg:oauth:2.0:oob" #, "http://localhost"
@@ -2874,6 +2876,9 @@ class YoutubeTab(AuthTab):
 class GenericTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(GenericTab, self).__init__(mainWindow, "Generic")
+
+        #Defaults
+        self.defaults['basepath'] = '<Object ID>'
 
         # Standard inputs
         self.initInputs()
