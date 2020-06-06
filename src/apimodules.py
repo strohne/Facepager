@@ -199,6 +199,19 @@ class ApiTab(QScrollArea):
 
         return urlpath, urlparams, templateparams
 
+    def getLogURL(self, urlpath, urlparams, options, removesecrets=True):
+        url = urlpath
+
+        # Convert to list of tuple to allow duplicated keys
+        if urlparams:
+            urltuples = dictToTuples(urlparams)
+            urltuples = urllib.parse.urlencode(urltuples)
+            if removesecrets:
+                urltuples = urltuples.replace(options.get('access_token', ''), '')
+            url += "?" + urltuples
+
+        return url
+
     def getPayload(self,payload, params, nodedata,options, logProgress=None):
         #Return nothing
         if (payload is None) or (payload == ''):            
@@ -1643,19 +1656,6 @@ class AuthTab(ApiTab):
             return None
 
         return options
-
-    def getLogURL(self, urlpath, urlparams, options, removesecrets=True):
-        url = urlpath
-
-        # Convert to list of tuple to allow duplicated keys
-        if urlparams:
-            urltuples = dictToTuples(urlparams)
-            urltuples = urllib.parse.urlencode(urltuples)
-            if removesecrets:
-                urltuples = urltuples.replace(options.get('access_token', ''), '')
-            url += "?" + urltuples
-
-        return url
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         session_no = options.get('threadnumber',0)
