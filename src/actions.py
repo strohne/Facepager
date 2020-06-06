@@ -55,6 +55,10 @@ class Actions(object):
         self.actionQuery = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Query")
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
+        self.actionSettings = self.dataActions.addAction(QIcon(":/icons/more.png"), "Preferences")
+        self.actionSettings.setToolTip(wraptip("Can't get enough? Here you will find even more settings."))
+        self.actionSettings.triggered.connect(self. openSettings)
+
         self.actionBrowse = self.dataActions.addAction(QIcon(":/icons/browser.png"), "Open")
         self.actionBrowse.setToolTip(wraptip("Open the resulting URL in the browser."))
         self.actionBrowse.triggered.connect(self.openBrowser)
@@ -71,12 +75,6 @@ class Actions(object):
 
         self.actionLoadAPIs = self.dataActions.addAction(QIcon(":/icons/apis.png"), "APIs")
         self.actionLoadAPIs.triggered.connect(self.loadAPIs)
-
-        self.actionShowColumns = self.dataActions.addAction("Show Columns")
-        self.actionShowColumns.triggered.connect(self.showColumns)
-
-        self.actionClearColumns = self.dataActions.addAction("Clear Columns")
-        self.actionClearColumns.triggered.connect(self.clearColumns)
 
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
@@ -102,6 +100,17 @@ class Actions(object):
         self.actionFieldDoc.setToolTip(wraptip("Open the documentation for the selected item if available."))
         self.actionFieldDoc.triggered.connect(self.showFieldDoc)
 
+        # Column setup actions
+        self.columnActions = QActionGroup(self.mainWindow)
+        self.actionShowColumns = self.columnActions.addAction(QIcon(":/icons/apply.png"), "Apply Column Setup")
+        self.actionShowColumns.setToolTip(wraptip(("Show the columns in the central data view. " +
+            "Scroll right or left to see hidden columns.")))
+        self.actionShowColumns.triggered.connect(self.showColumns)
+
+        self.actionClearColumns = self.columnActions.addAction(QIcon(":/icons/clear.png"), "Clear Columns")
+        self.actionClearColumns.setToolTip(wraptip("Remove all columns to get space for a new setup."))
+        self.actionClearColumns.triggered.connect(self.clearColumns)
+
         #Tree actions
         self.treeActions = QActionGroup(self.mainWindow)
         self.actionExpandAll = self.treeActions.addAction(QIcon(":/icons/expand.png"), "Expand nodes")
@@ -119,11 +128,6 @@ class Actions(object):
         self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/toclip.png"), "Copy Node(s) to Clipboard")
         self.actionClipboard.setToolTip(wraptip("Copy the selected nodes(s) to the clipboard"))
         self.actionClipboard.triggered.connect(self.clipboardNodes)
-
-        # Setting actions
-        self.actionSettings = self.treeActions.addAction(QIcon(":/icons/more.png"), "Preferences")
-        self.actionSettings.setToolTip(wraptip("Can't get enough? Here you will find even more settings."))
-        self.actionSettings.triggered.connect(self. openSettings)
 
 
     @Slot()

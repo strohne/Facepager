@@ -300,7 +300,7 @@ class MainWindow(QMainWindow):
         detailtoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         detailtoolbar.setIconSize(QSize(16,16))
         detailtoolbar.addActions(self.actions.detailActions.actions())
-        detailLayout.addWidget (detailtoolbar)
+        detailLayout.addWidget(detailtoolbar)
 
         #right sidebar - json viewer
         self.detailTree=DictionaryTree(self.mainWidget,self.apiWindow)
@@ -323,19 +323,12 @@ class MainWindow(QMainWindow):
 
         groupLayout.addWidget(self.fieldList)
 
-        columnlayout=QHBoxLayout()
-        groupLayout.addLayout(columnlayout)
-
-        button=QPushButton("Apply Column Setup")
-        button.setToolTip(wraptip("Apply the columns to the central data view. New columns may be hidden and are appended on the right side"))
-        button.clicked.connect(self.actions.actionShowColumns.trigger)
-        columnlayout.addWidget(button)
-
-        button=QPushButton("Clear Column Setup")
-        button.setToolTip(wraptip("Remove all columns to get space for a new setup."))
-        button.clicked.connect(self.actions.actionClearColumns.trigger)
-        columnlayout.addWidget(button)
-
+        #column setup toolbar
+        columntoolbar = QToolBar(self)
+        columntoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
+        columntoolbar.setIconSize(QSize(16,16))
+        columntoolbar.addActions(self.actions.columnActions.actions())
+        groupLayout.addWidget(columntoolbar)
 
         #Requests/Apimodules
         self.RequestTabs=QTabWidget()
@@ -406,7 +399,7 @@ class MainWindow(QMainWindow):
         fetchsettings.addRow("Maximum errors", self.errorEdit)
 
         #More
-        button=QPushButton(QIcon(":/icons/more.png"),"Preferences", self.mainWidget)
+        button=QPushButton(QIcon(":/icons/more.png"),"", self.mainWidget)
         button.setToolTip(wraptip("Can't get enough? Here you will find even more settings!"))
         # button.setMinimumSize(QSize(120,40))
         # button.setIconSize(QSize(32,32))
