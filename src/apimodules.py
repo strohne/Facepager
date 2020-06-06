@@ -1686,7 +1686,11 @@ class AuthTab(ApiTab):
             method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if not urlpath:
-                logMessage("Empty path, node skipped {0}.".format(nodedata['objectid']))
+                logMessage("Empty path, node {0} skipped.".format(nodedata['objectid']))
+                return False
+
+            if not urlpath.startswith(('https://','http://')):
+                logMessage("Http or https missing in path, node {0} skipped.".format(nodedata['objectid']))
                 return False
 
             if options['logrequests']:
