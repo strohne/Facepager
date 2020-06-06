@@ -229,6 +229,7 @@ class MainWindow(QMainWindow):
         #
         # Settings widget
         #
+
         self.settingsWidget = QWidget()
         self.settingsLayout = QFormLayout()
         self.settingsLayout.setContentsMargins(0, 0, 0, 0)
@@ -236,30 +237,31 @@ class MainWindow(QMainWindow):
 
         # Add headers
         self.headersCheckbox = QCheckBox("Create header nodes",self)
-        # self.headersCheckbox.setCheckState(Qt.Checked)
+
+        self.headersCheckbox.setChecked(str(self.settings.value('saveheaders', 'false')) == 'true')
+
         self.headersCheckbox.setToolTip(
             wraptip("Check if you want to create nodes containing headers of the response."))
         self.settingsLayout.addRow(self.headersCheckbox)
 
         # Expand Box
         self.autoexpandCheckbox = QCheckBox("Expand new nodes",self)
-        self.autoexpandCheckbox.setCheckState(Qt.Checked)
         self.autoexpandCheckbox.setToolTip(wraptip(
             "Check to automatically expand new nodes when fetching data. Disable for big queries to speed up the process."))
         self.settingsLayout.addRow(self.autoexpandCheckbox)
+        self.autoexpandCheckbox.setChecked(str(self.settings.value('expand', 'true')) == 'true')
 
         # Log Settings
         self.logCheckbox = QCheckBox("Log all requests",self)
-        self.logCheckbox.setCheckState(Qt.Checked)
         self.logCheckbox.setToolTip(
             wraptip("Check to see every request in status window; uncheck to hide request messages."))
         self.settingsLayout.addRow( self.logCheckbox)
+        self.logCheckbox.setChecked(str(self.settings.value('logrequests', 'true')) == 'true')
 
         # Clear setttings
         self.clearCheckbox = QCheckBox("Clear settings when closing",self)
         self.settings.beginGroup("GlobalSettings")
-        clear = self.settings.value('clearsettings', False)
-        self.clearCheckbox.setChecked(str(clear) == "true")
+        self.clearCheckbox.setChecked(str(self.settings.value('clearsettings', 'false')) == 'true')
         self.settings.endGroup()
 
         self.clearCheckbox.setToolTip(wraptip(
@@ -508,6 +510,10 @@ class MainWindow(QMainWindow):
         self.settings.setValue('columns',self.fieldList.toPlainText())
         self.settings.setValue('module',self.RequestTabs.currentWidget().name)
         self.settings.setValue("lastpath", self.database.filename)
+
+        self.settings.setValue('saveheaders', self.autoexpandCheckbox.isChecked())
+        self.settings.setValue('expand', self.autoexpandCheckbox.isChecked())
+        self.settings.setValue('logrequests', self.logCheckbox.isChecked())
         self.settings.setValue('style', self.styleEdit.currentText())
 
         self.settings.beginGroup("GlobalSettings")
