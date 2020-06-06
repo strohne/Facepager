@@ -55,7 +55,7 @@ class Actions(object):
         self.actionQuery = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Query")
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
-        self.actionBrowse = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Open")
+        self.actionBrowse = self.dataActions.addAction(QIcon(":/icons/browser.png"), "Open")
         self.actionBrowse.setToolTip(wraptip("Open the resulting URL in the browser."))
         self.actionBrowse.triggered.connect(self.openBrowser)
 
@@ -119,6 +119,11 @@ class Actions(object):
         self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/toclip.png"), "Copy Node(s) to Clipboard")
         self.actionClipboard.setToolTip(wraptip("Copy the selected nodes(s) to the clipboard"))
         self.actionClipboard.triggered.connect(self.clipboardNodes)
+
+        # Setting actions
+        self.actionSettings = self.treeActions.addAction(QIcon(":/icons/more.png"), "Preferences")
+        self.actionSettings.setToolTip(wraptip("Can't get enough? Here you will find even more settings."))
+        self.actionSettings.triggered.connect(self. openSettings)
 
 
     @Slot()
@@ -742,6 +747,23 @@ class Actions(object):
         columns = list(dict.fromkeys(columns))
         self.mainWindow.fieldList.setPlainText("\n".join(columns))
         self.showColumns()
+
+
+    @Slot()
+    def openSettings(self):
+
+        dialog = QDialog(self.mainWindow)
+        dialog.setWindowTitle("Preferences")
+        layout = QVBoxLayout()
+        dialog.setLayout(layout)
+
+        layout.addWidget(self.mainWindow.settingsWidget)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok)
+        layout.addWidget(buttons)
+
+        buttons.accepted.connect(dialog.close)
+        dialog.exec_()
 
     @Slot()
     def openBrowser(self):

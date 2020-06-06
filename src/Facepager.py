@@ -227,6 +227,57 @@ class MainWindow(QMainWindow):
         bottomSplitter.addWidget(statusWidget)
 
         #
+        # Settings widget
+        #
+        self.settingsWidget = QWidget()
+        self.settingsLayout = QFormLayout()
+        self.settingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.settingsWidget.setLayout(self.settingsLayout)
+
+        # Add headers
+        self.headersCheckbox = QCheckBox("Create header nodes",self)
+        # self.headersCheckbox.setCheckState(Qt.Checked)
+        self.headersCheckbox.setToolTip(
+            wraptip("Check if you want to create nodes containing headers of the response."))
+        self.settingsLayout.addRow(self.headersCheckbox)
+
+        # Expand Box
+        self.autoexpandCheckbox = QCheckBox("Expand new nodes",self)
+        self.autoexpandCheckbox.setCheckState(Qt.Unchecked)
+        self.autoexpandCheckbox.setToolTip(wraptip(
+            "Check to automatically expand new nodes when fetching data. Disable for big queries to speed up the process."))
+        self.settingsLayout.addRow(self.autoexpandCheckbox)
+
+        # Log Settings
+        self.logCheckbox = QCheckBox("Log all requests",self)
+        self.logCheckbox.setCheckState(Qt.Checked)
+        self.logCheckbox.setToolTip(
+            wraptip("Check to see every request in status window; uncheck to hide request messages."))
+        self.settingsLayout.addRow( self.logCheckbox)
+
+        # Clear setttings
+        self.clearCheckbox = QCheckBox("Clear settings when closing",self)
+        self.settings.beginGroup("GlobalSettings")
+        clear = self.settings.value('clearsettings', False)
+        self.clearCheckbox.setChecked(str(clear) == "true")
+        self.settings.endGroup()
+
+        self.clearCheckbox.setToolTip(wraptip(
+            "Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials."))
+        self.settingsLayout.addRow(self.clearCheckbox)
+
+        # Style
+        self.styleEdit = QComboBox(self)
+        self.styleEdit.setToolTip(wraptip("Choose the styling of Facepager."))
+        styles = ['<default>']
+        styles.extend(QStyleFactory.keys())
+        self.styleEdit.insertItems(0, styles)
+        self.styleEdit.setCurrentText(self.settings.value('style','<default>'))
+
+        self.styleEdit.currentIndexChanged.connect(self.setStyle)
+        self.settingsLayout.addRow('Style', self.styleEdit)
+
+        #
         #  Components
         #
 
@@ -268,16 +319,6 @@ class MainWindow(QMainWindow):
         self.fieldList.clear()
         self.fieldList.append('name')
         self.fieldList.append('message')
-#         self.fieldList.append('type')
-#         self.fieldList.append('metadata.type')
-#         self.fieldList.append('talking_about_count')
-#         self.fieldList.append('likes')
-#         self.fieldList.append('likes.count')
-#         self.fieldList.append('shares.count')
-#         self.fieldList.append('comments.count')
-#         self.fieldList.append('created_time')
-#         self.fieldList.append('updated_time')
-
         self.fieldList.setPlainText(self.settings.value('columns',self.fieldList.toPlainText()))
 
         groupLayout.addWidget(self.fieldList)
@@ -364,36 +405,13 @@ class MainWindow(QMainWindow):
         self.errorEdit.setToolTip(wraptip("Set the number of consecutive errors after which fetching will be cancelled. Please handle with care! Continuing with erroneous requests places stress on the servers."))
         fetchsettings.addRow("Maximum errors", self.errorEdit)
 
-
-        #Add headers
-        self.headersCheckbox = QCheckBox(self)
-        #self.headersCheckbox.setCheckState(Qt.Checked)
-        self.headersCheckbox.setToolTip(wraptip("Check if you want to create nodes containing headers of the response."))
-        fetchsettings.addRow("Header nodes", self.headersCheckbox)
-
-        #Expand Box
-        self.autoexpandCheckbox = QCheckBox(self)
-        self.autoexpandCheckbox.setCheckState(Qt.Unchecked)
-        self.autoexpandCheckbox.setToolTip(wraptip("Check to automatically expand new nodes when fetching data. Disable for big queries to speed up the process."))
-        fetchsettings.addRow("Expand new nodes", self.autoexpandCheckbox)
-
-        #Log Settings
-        self.logCheckbox = QCheckBox(self)
-        self.logCheckbox.setCheckState(Qt.Checked)
-        self.logCheckbox.setToolTip(wraptip("Check to see every request in status window; uncheck to hide request messages."))
-        fetchsettings.addRow("Log all requests", self.logCheckbox)
-
-        #Clear setttings
-        self.clearCheckbox = QCheckBox(self)
-        self.settings.beginGroup("GlobalSettings")
-        clear = self.settings.value('clearsettings',False)
-        self.clearCheckbox.setChecked(str(clear)=="true")
-        self.settings.endGroup()
-
-        self.clearCheckbox.setToolTip(wraptip("Check to clear all settings and access tokens when closing Facepager. You should check this on public machines to clear credentials."))
-        fetchsettings.addRow("Clear settings when closing", self.clearCheckbox)
-
-
+        #More
+        button=QPushButton(QIcon(":/icons/more.png"),"Preferences", self.mainWidget)
+        button.setToolTip(wraptip("Can't get enough? Here you will find even more settings!"))
+        # button.setMinimumSize(QSize(120,40))
+        # button.setIconSize(QSize(32,32))
+        button.clicked.connect(self.actions.actionSettings.trigger)
+        fetchsettings.addRow("More settings", button)
         
         #Fetch data
 
@@ -429,6 +447,15 @@ class MainWindow(QMainWindow):
         self.loglist.acceptRichText=False
         self.loglist.clear()
         groupLayout.addWidget(self.loglist)
+
+    def setStyle(self):
+        style = self.styleEdit.currentText()
+        try:
+            if style == '<default>':
+                style = self.styleEdit.itemText(1)
+            QApplication.setStyle(style)
+        except Exception as e:
+            self.logmessage(e)
 
     def databaseLabelClicked(self):
         if self.database.connected:
@@ -488,6 +515,7 @@ class MainWindow(QMainWindow):
         self.settings.setValue('columns',self.fieldList.toPlainText())
         self.settings.setValue('module',self.RequestTabs.currentWidget().name)
         self.settings.setValue("lastpath", self.database.filename)
+        self.settings.setValue('style', self.styleEdit.currentText())
 
         self.settings.beginGroup("GlobalSettings")
         self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
@@ -527,9 +555,9 @@ class MainWindow(QMainWindow):
             event.ignore()
 
     @Slot(str)
-    def logmessage(self,message):
+    def logmessage(self, message):
         with self.lock_logging:
-            if isinstance(message,Exception):
+            if isinstance(message, Exception):
                 self.loglist.append(str(datetime.now())+" Exception: "+str(message))
                 logging.exception(message)
 
@@ -634,22 +662,26 @@ class QAwesomeTooltipEventFilter(QObject):
         # Else, defer to the default superclass handling of this event.
         return super().eventFilter(widget, event)
 
+
+
 def startMain():
     app = QApplication(sys.argv)
-
-    # Change styling for Mac
-    if cmd_args.style is not None:
-        QApplication.setStyle(cmd_args.style)
-    elif sys.platform == 'darwin':
-        QApplication.setStyle('Fusion')
 
     # Word wrap tooltips (does not work yet, chrashes app)
     #tooltipfilter = QAwesomeTooltipEventFilter(app)
     #app.installEventFilter(tooltipfilter)
 
     main=MainWindow()
-    main.show()
 
+    # Change styling
+    if cmd_args.style is not None:
+        QApplication.setStyle(cmd_args.style)
+    #elif sys.platform == 'darwin':
+    #    QApplication.setStyle('Fusion')
+    elif main.settings.value('style', '<default>') != '<default>':
+        QApplication.setStyle(main.settings.value('style'))
+
+    main.show()
     sys.exit(app.exec_())
 
 
