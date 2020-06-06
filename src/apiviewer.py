@@ -650,20 +650,6 @@ class ApiViewer(QDialog):
 
                 break
 
-
-
-
-        pass
-
-            #
-            # #Set columns
-            # self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
-            # self.mainWindow.actions.showColumns()
-            # 
-            # #Set global settings
-            # self.mainWindow.speedEdit.setValue(data.get('speed',200))
-            # self.mainWindow.headersCheckbox.setChecked(data.get('headers',False))
-
         self.close()
 
 

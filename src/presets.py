@@ -533,7 +533,7 @@ class PresetWindow(QDialog):
 
         #Set global settings
         self.mainWindow.speedEdit.setValue(data.get('speed',200))
-        self.mainWindow.headersCheckbox.setChecked(data.get('headers',False))
+        self.mainWindow.headersCheckbox.setChecked(data.get('headers', False))
 
         self.close()
 
@@ -627,11 +627,11 @@ class PresetWindow(QDialog):
             }
 
             data_settings = {
-                    'module':self.mainWindow.RequestTabs.currentWidget().name,
-                    'options':self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
+                    'module': self.mainWindow.RequestTabs.currentWidget().name,
+                    'options': self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
                     'columns': self.mainWindow.fieldList.toPlainText().splitlines(),
-                    'speed':self.mainWindow.speedEdit.value(),
-                    'headers':self.mainWindow.headersCheckbox.isChecked()
+                    'speed': self.mainWindow.speedEdit.value(),
+                    'headers': self.mainWindow.headersCheckbox.isChecked()
             }
 
             self.currentData.update(data_meta)
