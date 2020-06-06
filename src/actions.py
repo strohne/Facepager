@@ -55,7 +55,7 @@ class Actions(object):
         self.actionQuery = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Query")
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
-        self.actionSettings = self.dataActions.addAction(QIcon(":/icons/more.png"), "Preferences")
+        self.actionSettings = self.dataActions.addAction(QIcon(":/icons/more.png"), "More settings")
         self.actionSettings.setToolTip(wraptip("Can't get enough? Here you will find even more settings."))
         self.actionSettings.triggered.connect(self. openSettings)
 
@@ -761,7 +761,7 @@ class Actions(object):
     def openSettings(self):
 
         dialog = QDialog(self.mainWindow)
-        dialog.setWindowTitle("Preferences")
+        dialog.setWindowTitle("More settings")
         layout = QVBoxLayout()
         dialog.setLayout(layout)
 
