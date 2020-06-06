@@ -243,7 +243,7 @@ class MainWindow(QMainWindow):
 
         # Expand Box
         self.autoexpandCheckbox = QCheckBox("Expand new nodes",self)
-        self.autoexpandCheckbox.setCheckState(Qt.Unchecked)
+        self.autoexpandCheckbox.setCheckState(Qt.Checked)
         self.autoexpandCheckbox.setToolTip(wraptip(
             "Check to automatically expand new nodes when fetching data. Disable for big queries to speed up the process."))
         self.settingsLayout.addRow(self.autoexpandCheckbox)
