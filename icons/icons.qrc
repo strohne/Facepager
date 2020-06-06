@@ -19,6 +19,10 @@
     <file>apis.png</file>
     <file>addcolumn.png</file>
     <file>search.png</file>
+    <file>browser.png</file>
+    <file>more.png</file>
+    <file>apply.png</file>
+    <file>clear.png</file>
   </qresource>
 </RCC>
 
