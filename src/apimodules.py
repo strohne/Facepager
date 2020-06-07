@@ -1244,7 +1244,7 @@ class ApiTab(QScrollArea):
                     # Use cookie jar instead of header to persist redirects
                     cookies = headers.pop('Cookie', None) if headers is not None else None
                     if cookies is not None:
-                        cookies = dict(item.split("=") for item in cookies.split(";"))
+                        cookies = dict(item.split("=",maxsplit=1) for item in cookies.split(";"))
 
                     # Send request
                     response = session.request(method,path, params=args, headers=headers, cookies=cookies,
