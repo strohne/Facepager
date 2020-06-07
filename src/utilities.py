@@ -246,6 +246,13 @@ def extractValue(data, key, dump=True, folder="", default=''):
                         else:
                             value.append(match)
 
+            # Example: encode:utf-8
+            elif modifier.startswith('encode:'):
+                # Input: list of strings.
+                # Output: list of strings
+                encoding = modifier[7:]
+                value = [x.encode(encoding) for x in value]
+
             elif modifier.startswith('css:'):
                 # Input: list of strings.
                 # Output: list of strings
@@ -557,7 +564,7 @@ def extractHtml(html, selector, type='css', dump=False):
 
     if html != '':
         try:
-            soup = lxml.html.fromstring(html.encode('utf-8'))
+            soup = lxml.html.fromstring(html) #html.encode('utf-8')
 
             if type == 'css':
                 for item in soup.cssselect(selector):
