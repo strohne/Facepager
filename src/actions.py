@@ -157,10 +157,13 @@ class Actions(object):
 
     @Slot()
     def makeDB(self):
-        #same as openDB-Slot, but now for creating a new one on the file system
-        datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
-        datadir = datadir if os.path.exists(datadir) else os.path.expanduser("~")
+        datadir = self.mainWindow.database.filename
+        if not os.path.exists(datadir):
+            datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
+        if not os.path.exists(datadir):
+            datadir = os.path.expanduser("~")
         datadir = os.path.dirname(datadir)
+
         fldg = QFileDialog(caption="Save DB File", directory=datadir, filter="DB files (*.db)")
         fldg.setAcceptMode(QFileDialog.AcceptSave)
         fldg.setDefaultSuffix("db")
