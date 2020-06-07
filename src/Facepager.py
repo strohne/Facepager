@@ -271,10 +271,12 @@ class MainWindow(QMainWindow):
         # Style
         self.styleEdit = QComboBox(self)
         self.styleEdit.setToolTip(wraptip("Choose the styling of Facepager."))
-        styles = ['<default>']
-        styles.extend(QStyleFactory.keys())
+
+        styles = [x for x in QStyleFactory.keys() if x != "Windows"]
+        styles = ['<default>'] + styles
+
         self.styleEdit.insertItems(0, styles)
-        self.styleEdit.setCurrentText(self.settings.value('style','<default>'))
+        self.styleEdit.setCurrentText(self.settings.value('style', '<default>'))
 
         self.styleEdit.currentIndexChanged.connect(self.setStyle)
         self.settingsLayout.addRow('Style', self.styleEdit)
