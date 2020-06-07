@@ -201,7 +201,7 @@ class PresetWindow(QDialog):
         self.folderButton.setText(self.presetFolder)
 
         self.presetsDownloaded = False
-        self.presetSuffix = ['.3_9.json','.3_10.json']
+        self.presetSuffix = ['.3_9.json','.3_10.json','.fp4.json']
         self.lastSelected = None
 
 #         if getattr(sys, 'frozen', False):
