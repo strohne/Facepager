@@ -564,7 +564,9 @@ def extractHtml(html, selector, type='css', dump=False):
 
     if html != '':
         try:
-            soup = lxml.html.fromstring(html) #html.encode('utf-8')
+            if isinstance(html, str):
+                html = html.encode('utf-8')
+            soup = lxml.html.fromstring(html)
 
             if type == 'css':
                 for item in soup.cssselect(selector):
