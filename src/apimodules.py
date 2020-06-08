@@ -1254,7 +1254,7 @@ class ApiTab(QScrollArea):
                     maxretries -= 1
 
                     # Try next request with new session
-                    if maxretries > 0:
+                    if (maxretries > 0) and (self.connected):
                         time.sleep(0.1)
                         session = self.initSession(session_no, True)
                         self.logMessage("Automatic retry: Request Error: {0}".format(str(e)))
