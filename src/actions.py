@@ -582,14 +582,10 @@ class Actions(object):
                             if options.get('expand',False):
                                  self.mainWindow.tree.setExpanded(treeindex,True)
 
-                            # Count status
+                            # Count status and errors
                             status = job['options'].get('querystatus', 'empty')
                             statuscount[status] += 1
-
-                            # Collect errors for automatic retry
-                            if not status in allowedstatus:
-                                threadpool.addError(job)
-                                errorcount += 1
+                            errorcount += int(not status in allowedstatus)
 
                             # Detect rate limit
                             ratelimit = job['options'].get('ratelimit', False)
@@ -617,6 +613,10 @@ class Actions(object):
                                 # Adjust progress
                                 progress.showError(msg, timeout, autoretry)
                                 self.mainWindow.tree.treemodel.commitNewNodes()
+
+                            # Add job for retry
+                            if not status in allowedstatus:
+                                threadpool.addError(job)
 
                             # Show info
                             progress.showInfo(status,"{} response(s) with status: {}".format(statuscount[status],status))
