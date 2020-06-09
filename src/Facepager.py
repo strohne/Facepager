@@ -85,6 +85,7 @@ class MainWindow(QMainWindow):
         self.createDB()
         self.updateUI()
         self.updateResources()
+        self.playCommands()
 
     def createDB(self):
         self.database = Database(self)
@@ -496,6 +497,27 @@ class MainWindow(QMainWindow):
         t = threading.Thread(target=getter)
         t.start()
 
+    # Process command line options (load preset, add nodes, fetch data)
+    def playCommands(self):
+        if not self.database.connected:
+            return False
+
+        if cmd_args.preset is not None:
+            pass
+        else:
+            return False
+
+        if cmd_args.addnode is not None:
+            pass
+        else:
+            return False
+
+        if cmd_args.fetch is not None:
+
+            return True
+        else:
+            return False
+
 
     def writeSettings(self):
         QCoreApplication.setOrganizationName("Strohne")
@@ -700,6 +722,10 @@ if __name__ == "__main__":
     cmd_args = argparse.ArgumentParser(description='Run Facepager.')
     cmd_args.add_argument('database', help='Database file to open', nargs='?')
     cmd_args.add_argument('--style', dest='style', default=None, help='Select the PySide style, for example Fusion')
+    cmd_args.add_argument('--addnode', dest='addnode', default=None, help='Add a node')
+    cmd_args.add_argument('--preset', dest='preset', default=None, help='Load a preset')
+    cmd_args.add_argument('--fetch', dest='fetch', default=None, help='Fetch data')
+
 
     cmd_args = cmd_args.parse_args()
 
