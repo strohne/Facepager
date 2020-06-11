@@ -321,6 +321,37 @@ def findDictValues(data, multikey, dump=True, default=''):
         return [default]
 
 
+def sliceData(data, headers=None, options={}):
+    """Filter response data and extract nodes"""
+    if options['nodedata'] is None:
+        subkey = 0
+        nodes = data
+        offcut = None
+    elif hasDictValue(data, options['nodedata'], piped=True):
+        subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
+        name, nodes = extractValue(data, options['nodedata'], False)
+        offcut = filterDictValue(data, options['nodedata'], False, piped=True) \
+            if options.get('offcut', True) else None
+    else:
+        subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
+        nodes = []
+        offcut = data
+    if not (type(nodes) is list):
+        nodes = [nodes]
+        fieldsuffix = ''
+    else:
+        fieldsuffix = '.*'
+
+    data={
+        'nodes': nodes,
+        'offcut': offcut,
+        'headers': headers,
+        'subkey': subkey,
+        'fieldsuffix': fieldsuffix
+    }
+
+    return data
+
 def getDictValue(data, multikey, dump=True, default=''):
     """Extract value from dict
     :param data:

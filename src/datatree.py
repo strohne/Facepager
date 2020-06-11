@@ -207,33 +207,12 @@ class TreeItem(object):
         return None
 
 
-    def appendNodes(self, data, options, headers=None, delaycommit=False):
+    def appendNodes(self, data, options, delaycommit=False):
         """Append nodes after fetching data
         """
         dbnode = Node.query.get(self.id)
         if not dbnode:
             return False
-
-        #filter response
-        if options['nodedata'] is None:
-            subkey = 0
-            nodes = data
-            offcut = None
-        elif hasDictValue(data,options['nodedata'], piped=True):
-            subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
-            name, nodes = extractValue(data, options['nodedata'], False)
-            offcut = filterDictValue(data, options['nodedata'], False, piped=True) \
-                    if options.get('offcut', True) else None
-        else:
-            subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
-            nodes = []
-            offcut = data
-
-        if not (type(nodes) is list):
-            nodes = [nodes]
-            fieldsuffix = ''
-        else:
-            fieldsuffix = '.*'
 
         newnodes = []
 
@@ -255,12 +234,12 @@ class TreeItem(object):
 
 
         #empty records
-        if (len(nodes) == 0) and options.get('empty', True):
+        if (len(data['nodes']) == 0) and options.get('empty', True):
             appendNode('empty', dbnode.objectid, {})
 
         #extracted nodes
-        for n in nodes:
-            n = n if isinstance(n, Mapping) else {subkey: n}
+        for n in data['nodes']:
+            n = n if isinstance(n, Mapping) else {data['subkey']: n}
 
             # Extract Object ID or use parent id if no key present
             o = options.get('objectid')
@@ -270,15 +249,15 @@ class TreeItem(object):
                 o = dbnode.objectid
 
             objecttype = options.get('objecttype', 'data')
-            appendNode(objecttype, o, n, fieldsuffix)
+            appendNode(objecttype, o, n, data['fieldsuffix'])
 
         #Offcut
-        if (offcut is not None) and  options.get('offcut', True):
-            appendNode('offcut', dbnode.objectid, offcut)
+        if (data['offcut'] is not None) and  options.get('offcut', True):
+            appendNode('offcut', dbnode.objectid, data['offcut'])
 
         #Headers
-        if options.get('saveheaders',False) and headers is not None:
-            appendNode('headers',dbnode.objectid,headers)
+        if options.get('saveheaders',False) and data['headers'] is not None:
+            appendNode('headers', dbnode.objectid, data['headers'])
 
         self.model.database.session.add_all(newnodes)
         self._childcountall += len(newnodes)
@@ -289,7 +268,7 @@ class TreeItem(object):
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
-        return (len(nodes))
+        return (len(data['nodes']))
 
     def hasValues(self,filter = {}):
         if self.data is None:
@@ -315,7 +294,8 @@ class TreeItem(object):
             #'queryparams' : self.data.get('queryparams',{})
         }
 
-        self.appendNodes(self.data.get("response", {}), options, delaycommit=delaycommit)
+        data = sliceData(self.data.get("response", {}), None, options)
+        self.appendNodes(data, options, delaycommit=delaycommit)
 
     def __repr__(self):
         return self.id

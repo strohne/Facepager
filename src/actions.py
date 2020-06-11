@@ -578,7 +578,8 @@ class Actions(object):
                             # Add data
                             treeindex = job['nodeindex']
                             treenode = treeindex.internalPointer()
-                            newcount = treenode.appendNodes(job['data'], job['options'], job['headers'], True)
+
+                            newcount = treenode.appendNodes(job['data'], job['options'], True)
                             if options.get('expand',False):
                                  self.mainWindow.tree.setExpanded(treeindex,True)
 

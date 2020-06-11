@@ -3,6 +3,7 @@ import collections
 import threading
 import time
 from copy import deepcopy
+from utilities import *
 
 class ApiThreadPool():
     def __init__(self, module):
@@ -193,7 +194,8 @@ class ApiThread(threading.Thread):
 
     def run(self):
         def logData(data, options, headers):
-            out = {'nodeindex': job['nodeindex'], 'nodedata' : job['nodedata'], 'data': data, 'options': options, 'headers': headers}
+            data = sliceData(data, headers, options)
+            out = {'nodeindex': job['nodeindex'], 'nodedata' : job['nodedata'], 'data': data, 'options': options}
             self.output.put(out)
 
         def logMessage(msg):
