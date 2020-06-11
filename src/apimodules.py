@@ -1724,7 +1724,7 @@ class AuthTab(ApiTab):
                 logMessage("Empty path, node {0} skipped.".format(nodedata['objectid']))
                 return False
 
-            if not urlpath.startswith(('https://','http://')):
+            if not urlpath.startswith(('https://','http://','file://')):
                 logMessage("Http or https missing in path, node {0} skipped.".format(nodedata['objectid']))
                 return False
 
