@@ -216,7 +216,7 @@ class TreeItem(object):
 
         newnodes = []
 
-        def appendNode(objecttype, objectid, response, fieldsuffix = ''):
+        def appendNode(objecttype, objectid, response, fieldsuffix=''):
             new = Node(str(objectid), dbnode.id)
             new.objecttype = objecttype
             new.response = response
@@ -232,10 +232,9 @@ class TreeItem(object):
 
             newnodes.append(new)
 
-
         #empty records
-        if (len(data['nodes']) == 0) and options.get('empty', True):
-            appendNode('empty', dbnode.objectid, {})
+        if data['empty'] is not None:
+            appendNode('empty', dbnode.objectid, data['empty'])
 
         #extracted nodes
         for n in data['nodes']:
@@ -251,12 +250,12 @@ class TreeItem(object):
             objecttype = options.get('objecttype', 'data')
             appendNode(objecttype, o, n, data['fieldsuffix'])
 
-        #Offcut
-        if (data['offcut'] is not None) and  options.get('offcut', True):
+        #offcut
+        if data['offcut'] is not None:
             appendNode('offcut', dbnode.objectid, data['offcut'])
 
-        #Headers
-        if options.get('saveheaders',False) and data['headers'] is not None:
+        #headers
+        if data['headers'] is not None:
             appendNode('headers', dbnode.objectid, data['headers'])
 
         self.model.database.session.add_all(newnodes)

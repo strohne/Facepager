@@ -342,9 +342,24 @@ def sliceData(data, headers=None, options={}):
     else:
         fieldsuffix = '.*'
 
+    #empty records
+    if (len(nodes) == 0) and options.get('empty', True):
+        empty = {}
+    else:
+        empty = None
+
+    # offcut
+    if not options.get('offcut', True):
+        offcut = None
+
+    # headers
+    if not options.get('saveheaders', False):
+        headers = None
+
     data={
         'nodes': nodes,
         'offcut': offcut,
+        'empty': empty,
         'headers': headers,
         'subkey': subkey,
         'fieldsuffix': fieldsuffix
