@@ -2736,6 +2736,16 @@ class TwitterTab(AuthTab):
         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
         authlayout.addRow("Consumer Secret", self.clientSecretEdit)
 
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(TwitterTab, self).getOptions(purpose)
+
+        if options.get('auth_type','disable') == 'Twitter App-only':
+            options['auth'] = 'header'
+            options['auth_prefix'] = "Bearer "
+            options['auth_tokenname'] = "Authorization"
+
+        return options
+
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         self.connected = True
         self.speed = options.get('speed', None)
