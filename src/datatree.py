@@ -201,8 +201,9 @@ class TreeItem(object):
             return self.data['level']
 
     def row(self):
-        if self.parentItem is not None:
-            return self.parentItem.childItems.index(self)
+        return self._row
+        # if self.parentItem is not None:
+        #     return self.parentItem.childItems.index(self)
 
         return None
 
@@ -432,14 +433,19 @@ class TreeModel(QAbstractItemModel):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
-        parentNode = self.getItemFromIndex(parent)
-        childItem = parentNode.child(row)
+        if not parent.isValid():
+            return self.createIndex(row, column, self.rootItem.childItems[row])
+
+        parentNode = parent.internalPointer()
+        childItem = parentNode.childItems[row]
 
         return self.createIndex(row, column, childItem)
 
     def parent(self, index):
-        node = index.internalPointer()
+        if not index.isValid():
+            return QModelIndex()
 
+        node = index.internalPointer()
         parentNode = node.parent()
 
         if parentNode == self.rootItem:
