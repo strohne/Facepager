@@ -608,7 +608,7 @@ def extractLinks(data,baseurl):
 def extractHtml(html, selector, type='css', dump=False):
     items = []
 
-    if html != '':
+    if html.strip() != '':
         try:
             if isinstance(html, str):
                 html = html.encode('utf-8')
