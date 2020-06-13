@@ -2409,6 +2409,54 @@
 					}
 				}
 			}				
+		},
+		"/tweets/search/fullarchive/{label}": {
+            "get" : {
+                "summary" : "Full-Archive API provides you with Tweets since the first one posted in 2006. Tweets are matched and sent back to you based on the query you specify in your request. A query is a rule in which you define what the Tweet you get back should contain.",
+                "externalDocs": {
+                    "url":"https://developer.twitter.com/en/docs/tweets/search/api-reference/premium-search"
+                },
+                "parameters" : [
+                    {
+                      "name" : "label",
+                      "in" : "path",
+                      "description" : "The (case-sensitive) label associated with your search developer environment, as displayed at https://developer.twitter.com/en/account/environments.",
+                      "required" : true,
+                      "schema":{"type":"string"},
+					  "example": "dev"
+                    }
+				],
+				"x-facepager-pagination": {
+					"method" : "key",
+					"param" : "next",
+					"key" : "next",
+					"stop" : "next"
+				},
+                "responses" : {
+                    "200" : {
+                        "description" : "A collection of relevant Tweets matching a specified query.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+                                    "x-facepager-extract" : "results",
+                                    "properties" : {
+                                        "results" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/tweet/properties"
+												}
+											}
+										}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+			}
 		}
 	},
 	"components": {

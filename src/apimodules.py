@@ -260,6 +260,7 @@ class ApiTab(QScrollArea):
             return payload
 
     def getFromDoc(self, dockey, defaultkey = None):
+        dockey = dockey.replace("<", "{").replace(">", "}")
         value = getDictValue(self.apidoc, dockey, dump=False, default=None)
         if (value is None) and (defaultkey is not None):
             value = self.defaults.get(defaultkey)
