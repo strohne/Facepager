@@ -39,6 +39,7 @@ from database import *
 from actions import *
 from apimodules import *
 from help import *
+from progressbar import ProgressBar
 from presets import *
 from timer import *
 from apiviewer import *
@@ -109,6 +110,7 @@ class MainWindow(QMainWindow):
         #  Windows
         #
 
+        self.progressWindow = None
         self.helpwindow=HelpWindow(self)
         self.presetWindow=PresetWindow(self)
         self.presetWindow.logmessage.connect(self.logmessage)
@@ -296,6 +298,9 @@ class MainWindow(QMainWindow):
         self.tree=DataTree(self.mainWidget)
         self.tree.nodeSelected.connect(self.actions.treeNodeSelected)
         self.tree.logmessage.connect(self.logmessage)
+        self.tree.showprogress.connect(self.showprogress)
+        self.tree.hideprogress.connect(self.hideprogress)
+        self.tree.stepprogress.connect(self.stepprogress)
         dataLayout.addWidget(self.tree)
 
 
@@ -565,6 +570,28 @@ class MainWindow(QMainWindow):
             else:
                 self.loglist.append(str(datetime.now())+" "+message)
             time.sleep(0)
+
+    @Slot(str)
+    def showprogress(self, maximum=None):
+        pass
+        # if self.progressWindow is None:
+        #     self.progressWindow = ProgressBar("Loading nodes...",self)
+        #
+        # self.progressWindow.setMaximum(maximum)
+
+
+    @Slot(str)
+    def stepprogress(self):
+        pass
+        # if (self.progressWindow is not None):
+        #     self.progressWindow.step()
+
+    @Slot(str)
+    def hideprogress(self):
+        pass
+        # if self.progressWindow is not None:
+        #     self.progressWindow.close()
+        #     self.progressWindow = None
 
 class Toolbar(QToolBar):
     """
