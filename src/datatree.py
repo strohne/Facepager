@@ -8,6 +8,9 @@ class DataTree(QTreeView):
 
     nodeSelected = Signal(list)
     logmessage = Signal(str)
+    showprogress = Signal(int)
+    stepprogress = Signal()
+    hideprogress = Signal()
 
     def __init__(self, parent=None):
         super(DataTree, self).__init__(parent)
@@ -21,6 +24,9 @@ class DataTree(QTreeView):
     def loadData(self, database):
         self.treemodel = TreeModel(database)
         self.treemodel.logmessage.connect(self.logmessage)
+        self.treemodel.showprogress.connect(self.showprogress.emit)
+        self.treemodel.hideprogress.connect(self.hideprogress.emit)
+        self.treemodel.stepprogress.connect(self.stepprogress.emit)
         self.setModel(self.treemodel)
 
     @Slot()
@@ -201,43 +207,23 @@ class TreeItem(object):
             return self.data['level']
 
     def row(self):
-        if self.parentItem is not None:
-            return self.parentItem.childItems.index(self)
+        return self._row
+        # if self.parentItem is not None:
+        #     return self.parentItem.childItems.index(self)
 
         return None
 
 
-    def appendNodes(self, data, options, headers=None, delaycommit=False):
+    def appendNodes(self, data, options, delaycommit=False):
         """Append nodes after fetching data
         """
         dbnode = Node.query.get(self.id)
         if not dbnode:
             return False
 
-        #filter response
-        if options['nodedata'] is None:
-            subkey = 0
-            nodes = data
-            offcut = None
-        elif hasDictValue(data,options['nodedata'], piped=True):
-            subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
-            name, nodes = extractValue(data, options['nodedata'], False)
-            offcut = filterDictValue(data, options['nodedata'], False, piped=True) \
-                    if options.get('offcut', True) else None
-        else:
-            subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
-            nodes = []
-            offcut = data
-
-        if not (type(nodes) is list):
-            nodes = [nodes]
-            fieldsuffix = ''
-        else:
-            fieldsuffix = '.*'
-
         newnodes = []
 
-        def appendNode(objecttype, objectid, response, fieldsuffix = ''):
+        def appendNode(objecttype, objectid, response, fieldsuffix=''):
             new = Node(str(objectid), dbnode.id)
             new.objecttype = objecttype
             new.response = response
@@ -253,14 +239,13 @@ class TreeItem(object):
 
             newnodes.append(new)
 
-
         #empty records
-        if (len(nodes) == 0) and options.get('empty', True):
-            appendNode('empty', dbnode.objectid, {})
+        if data['empty'] is not None:
+            appendNode('empty', dbnode.objectid, data['empty'])
 
         #extracted nodes
-        for n in nodes:
-            n = n if isinstance(n, Mapping) else {subkey: n}
+        for n in data['nodes']:
+            n = n if isinstance(n, Mapping) else {data['subkey']: n}
 
             # Extract Object ID or use parent id if no key present
             o = options.get('objectid')
@@ -270,15 +255,15 @@ class TreeItem(object):
                 o = dbnode.objectid
 
             objecttype = options.get('objecttype', 'data')
-            appendNode(objecttype, o, n, fieldsuffix)
+            appendNode(objecttype, o, n, data['fieldsuffix'])
 
-        #Offcut
-        if (offcut is not None) and  options.get('offcut', True):
-            appendNode('offcut', dbnode.objectid, offcut)
+        #offcut
+        if data['offcut'] is not None:
+            appendNode('offcut', dbnode.objectid, data['offcut'])
 
-        #Headers
-        if options.get('saveheaders',False) and headers is not None:
-            appendNode('headers',dbnode.objectid,headers)
+        #headers
+        if data['headers'] is not None:
+            appendNode('headers', dbnode.objectid, data['headers'])
 
         self.model.database.session.add_all(newnodes)
         self._childcountall += len(newnodes)
@@ -289,7 +274,7 @@ class TreeItem(object):
         self.model.commitNewNodes(delaycommit)
         # self.model.database.session.commit()
         # self.model.layoutChanged.emit()
-        return (len(nodes))
+        return (len(data['nodes']))
 
     def hasValues(self,filter = {}):
         if self.data is None:
@@ -315,13 +300,18 @@ class TreeItem(object):
             #'queryparams' : self.data.get('queryparams',{})
         }
 
-        self.appendNodes(self.data.get("response", {}), options, delaycommit=delaycommit)
+        data = sliceData(self.data.get("response", {}), None, options)
+        self.appendNodes(data, options, delaycommit=delaycommit)
 
     def __repr__(self):
         return self.id
 
 class TreeModel(QAbstractItemModel):
     logmessage = Signal(str)
+    showprogress = Signal(int)
+    hideprogress = Signal()
+    stepprogress = Signal()
+
 
     def __init__(self, database, parent=None):
         super(TreeModel, self).__init__(parent)
@@ -453,14 +443,19 @@ class TreeModel(QAbstractItemModel):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
-        parentNode = self.getItemFromIndex(parent)
-        childItem = parentNode.child(row)
+        if not parent.isValid():
+            return self.createIndex(row, column, self.rootItem.childItems[row])
+
+        parentNode = parent.internalPointer()
+        childItem = parentNode.childItems[row]
 
         return self.createIndex(row, column, childItem)
 
     def parent(self, index):
-        node = index.internalPointer()
+        if not index.isValid():
+            return QModelIndex()
 
+        node = index.internalPointer()
         parentNode = node.parent()
 
         if parentNode == self.rootItem:
@@ -569,18 +564,27 @@ class TreeModel(QAbstractItemModel):
             return False
 
         parentItem = self.getItemFromIndex(parent)
-        lastRow = parentItem.childCount()
+        if parentItem == self.rootItem:
+            self.showprogress.emit(len(records))
+        try:
+            lastRow = parentItem.childCount()
 
-        self.beginInsertRows(parent, lastRow, lastRow + len(records) - 1)
+            self.beginInsertRows(parent, lastRow, lastRow + len(records) - 1)
 
-        for record in records:
-            itemdata = self.getItemDataFromRecord(record)
-            new = TreeItem(self, parentItem, record.id, itemdata)
-            new._childcountall = record.childcount
-            new._childcountallloaded = True
+            for record in records:
+                itemdata = self.getItemDataFromRecord(record)
+                new = TreeItem(self, parentItem, record.id, itemdata)
+                new._childcountall = record.childcount
+                new._childcountallloaded = True
 
-        self.endInsertRows()
-        parentItem.loaded = parentItem.childCountAll() <= parentItem.childCount()
+                if parentItem == self.rootItem:
+                    self.stepprogress.emit()
+
+            self.endInsertRows()
+            parentItem.loaded = parentItem.childCountAll() <= parentItem.childCount()
+        finally:
+            if parentItem == self.rootItem:
+                self.hideprogress.emit()
 
     def getLastChildData(self, index, filter=None):
         self.fetchMore(index)
