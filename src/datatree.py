@@ -8,6 +8,9 @@ class DataTree(QTreeView):
 
     nodeSelected = Signal(list)
     logmessage = Signal(str)
+    showprogress = Signal(int)
+    stepprogress = Signal()
+    hideprogress = Signal()
 
     def __init__(self, parent=None):
         super(DataTree, self).__init__(parent)
@@ -21,6 +24,9 @@ class DataTree(QTreeView):
     def loadData(self, database):
         self.treemodel = TreeModel(database)
         self.treemodel.logmessage.connect(self.logmessage)
+        self.treemodel.showprogress.connect(self.showprogress.emit)
+        self.treemodel.hideprogress.connect(self.hideprogress.emit)
+        self.treemodel.stepprogress.connect(self.stepprogress.emit)
         self.setModel(self.treemodel)
 
     @Slot()
@@ -302,6 +308,10 @@ class TreeItem(object):
 
 class TreeModel(QAbstractItemModel):
     logmessage = Signal(str)
+    showprogress = Signal(int)
+    hideprogress = Signal()
+    stepprogress = Signal()
+
 
     def __init__(self, database, parent=None):
         super(TreeModel, self).__init__(parent)
@@ -554,18 +564,27 @@ class TreeModel(QAbstractItemModel):
             return False
 
         parentItem = self.getItemFromIndex(parent)
-        lastRow = parentItem.childCount()
+        if parentItem == self.rootItem:
+            self.showprogress.emit(len(records))
+        try:
+            lastRow = parentItem.childCount()
 
-        self.beginInsertRows(parent, lastRow, lastRow + len(records) - 1)
+            self.beginInsertRows(parent, lastRow, lastRow + len(records) - 1)
 
-        for record in records:
-            itemdata = self.getItemDataFromRecord(record)
-            new = TreeItem(self, parentItem, record.id, itemdata)
-            new._childcountall = record.childcount
-            new._childcountallloaded = True
+            for record in records:
+                itemdata = self.getItemDataFromRecord(record)
+                new = TreeItem(self, parentItem, record.id, itemdata)
+                new._childcountall = record.childcount
+                new._childcountallloaded = True
 
-        self.endInsertRows()
-        parentItem.loaded = parentItem.childCountAll() <= parentItem.childCount()
+                if parentItem == self.rootItem:
+                    self.stepprogress.emit()
+
+            self.endInsertRows()
+            parentItem.loaded = parentItem.childCountAll() <= parentItem.childCount()
+        finally:
+            if parentItem == self.rootItem:
+                self.hideprogress.emit()
 
     def getLastChildData(self, index, filter=None):
         self.fetchMore(index)
