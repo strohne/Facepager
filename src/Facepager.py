@@ -47,6 +47,7 @@ from dataviewer import *
 from selectnodes import *
 import logging
 import threading
+from server import Server, RequestHandler
 
 # Some hackery required for pyInstaller
 # See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/#could-not-find-qtwebengineprocessexe-on-windows
@@ -87,6 +88,7 @@ class MainWindow(QMainWindow):
         self.updateUI()
         self.updateResources()
         self.playCommands()
+        self.startServer()
 
     def createDB(self):
         self.database = Database(self)
@@ -523,6 +525,12 @@ class MainWindow(QMainWindow):
         else:
             return False
 
+    def startServer(self):
+        server_port = 8009
+        print('Starting httpd on port %d...' % server_port)
+        self.serverInstance = Server(server_port, self.actions)
+        self.serverThread = threading.Thread(target=self.serverInstance.serve_forever)
+        self.serverThread.start()
 
     def writeSettings(self):
         QCoreApplication.setOrganizationName("Strohne")
@@ -578,6 +586,8 @@ class MainWindow(QMainWindow):
                 self.deleteSettings()
             else:
                 self.writeSettings()
+
+            self.serverInstance.shutdown()
             event.accept()
         else:
             event.ignore()

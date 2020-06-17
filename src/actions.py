@@ -11,10 +11,8 @@ from apimodules import *
 from apithread import ApiThreadPool
 from collections import defaultdict
 import io
-import codecs
 import os
-import platform
-import subprocess
+
 
 from export import ExportFileDialog
 if sys.version_info.major < 3:
@@ -174,6 +172,8 @@ class Actions(object):
             self.mainWindow.database.createconnect(fldg.selectedFiles()[0])
             self.mainWindow.updateUI()
 
+    def getDatabaseName(self):
+        return (self.mainWindow.database.filename)
 
 
     @Slot()
@@ -337,6 +337,9 @@ class Actions(object):
 
         dialog.exec_()
 
+    def addNodes(self, newnodes=[]):
+        self.mainWindow.tree.treemodel.addSeedNodes(newnodes, True)
+        self.mainWindow.tree.selectLastRow()
 
     @Slot()
     def showColumns(self):
