@@ -5,9 +5,9 @@ from datetime import timedelta
 
 class ProgressBar(QDialog):
 
-    def __init__(self, mainmessage, parent=None):
+    def __init__(self, mainmessage, parent=None, hidden=False):
         #Init dialog
-        super(ProgressBar,self).__init__(parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        super(ProgressBar, self).__init__(parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle(mainmessage)
 
@@ -63,7 +63,8 @@ class ProgressBar(QDialog):
         self.wasCanceled = False
 
         #show
-        self.open()
+        if not hidden:
+            self.open()
         self.hideError()
 
     def showError(self, msg, timeout=60, retry=False):
@@ -156,7 +157,7 @@ class ProgressBar(QDialog):
 
     def close(self):
         self.stopCountdown()
-        return super(ProgressBar,self).close()
+        return super(ProgressBar, self).close()
 
     def setValue(self, progress):
         '''
