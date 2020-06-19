@@ -20,7 +20,18 @@ if sys.version_info.major < 3:
 else:
     from urllib.request import pathname2url
 
-class Actions(object):
+class ApiActions(object):
+    """
+    Actions called by GuiActions or Http clients
+    """
+    def __init__(self, mainWindow):
+        self.mainWindow = mainWindow
+
+
+class GuiActions(object):
+    """
+    Actions triggered by the user interface (buttons)
+    """
     def __init__(self, mainWindow):
 
         self.mainWindow = mainWindow
@@ -151,7 +162,7 @@ class Actions(object):
             self.mainWindow.updateUI()
 
             self.mainWindow.tree.loadData(self.mainWindow.database)
-            self.mainWindow.actions.actionShowColumns.trigger()
+            self.mainWindow.guiactions.actionShowColumns.trigger()
 
     @Slot()
     def makeDB(self):

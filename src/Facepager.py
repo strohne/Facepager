@@ -102,10 +102,11 @@ class MainWindow(QMainWindow):
             self.database.connect(self.settings.value("lastpath"))
 
         self.tree.loadData(self.database)
-        self.actions.actionShowColumns.trigger()
+        self.guiactions.actionShowColumns.trigger()
 
     def createActions(self):
-        self.actions=Actions(self)
+        self.guiactions=GuiActions(self)
+        self.apiactions = ApiActions(self)
 
 
     def createUI(self):
@@ -123,10 +124,10 @@ class MainWindow(QMainWindow):
         self.timerWindow=TimerWindow(self)
         self.selectNodesWindow=SelectNodesWindow(self)
 
-        self.timerWindow.timerstarted.connect(self.actions.timerStarted)
-        self.timerWindow.timerstopped.connect(self.actions.timerStopped)
-        self.timerWindow.timercountdown.connect(self.actions.timerCountdown)
-        self.timerWindow.timerfired.connect(self.actions.timerFired)
+        self.timerWindow.timerstarted.connect(self.guiactions.timerStarted)
+        self.timerWindow.timerstopped.connect(self.guiactions.timerStopped)
+        self.timerWindow.timercountdown.connect(self.guiactions.timerCountdown)
+        self.timerWindow.timerfired.connect(self.guiactions.timerFired)
 
         #
         #  Statusbar and toolbar
@@ -295,11 +296,11 @@ class MainWindow(QMainWindow):
         treetoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         treetoolbar.setIconSize(QSize(16,16))
 
-        treetoolbar.addActions(self.actions.treeActions.actions())
+        treetoolbar.addActions(self.guiactions.treeActions.guiactions())
         dataLayout.addWidget (treetoolbar)
 
         self.tree=DataTree(self.mainWidget)
-        self.tree.nodeSelected.connect(self.actions.treeNodeSelected)
+        self.tree.nodeSelected.connect(self.guiactions.treeNodeSelected)
         self.tree.logmessage.connect(self.logmessage)
         self.tree.showprogress.connect(self.showprogress)
         self.tree.hideprogress.connect(self.hideprogress)
@@ -311,7 +312,7 @@ class MainWindow(QMainWindow):
         detailtoolbar = QToolBar(self)
         detailtoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         detailtoolbar.setIconSize(QSize(16,16))
-        detailtoolbar.addActions(self.actions.detailActions.actions())
+        detailtoolbar.addActions(self.guiactions.detailActions.actions())
         detailLayout.addWidget(detailtoolbar)
 
         #right sidebar - json viewer
@@ -339,7 +340,7 @@ class MainWindow(QMainWindow):
         columntoolbar = QToolBar(self)
         columntoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         columntoolbar.setIconSize(QSize(16,16))
-        columntoolbar.addActions(self.actions.columnActions.actions())
+        columntoolbar.addActions(self.guiactions.columnActions.actions())
         groupLayout.addWidget(columntoolbar)
 
         #Requests/Apimodules
@@ -415,7 +416,7 @@ class MainWindow(QMainWindow):
         button.setToolTip(wraptip("Can't get enough? Here you will find even more settings!"))
         # button.setMinimumSize(QSize(120,40))
         # button.setIconSize(QSize(32,32))
-        button.clicked.connect(self.actions.actionSettings.trigger)
+        button.clicked.connect(self.guiactions.actionSettings.trigger)
         fetchsettings.addRow("More settings", button)
         
         #Fetch data
@@ -427,7 +428,7 @@ class MainWindow(QMainWindow):
         button.setToolTip(wraptip("Fetch data from the API with the current settings. If you click the button with the control key pressed, a browser window is opened instead."))
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))
-        button.clicked.connect(self.actions.actionQuery.trigger)
+        button.clicked.connect(self.guiactions.actionQuery.trigger)
         button.setFont(f)
         fetchdata.addWidget(button,1)
 
@@ -436,7 +437,7 @@ class MainWindow(QMainWindow):
         button.setIcon(QIcon(":/icons/timer.png"))
         button.setMinimumSize(QSize(40,40))
         button.setIconSize(QSize(25,25))
-        button.clicked.connect(self.actions.actionTimer.trigger)
+        button.clicked.connect(self.guiactions.actionTimer.trigger)
         fetchdata.addWidget(button,1)
 
         #Status
@@ -481,8 +482,8 @@ class MainWindow(QMainWindow):
 
     def updateUI(self):
         #disable buttons that do not work without an opened database
-        self.actions.databaseActions.setEnabled(self.database.connected)
-        self.actions.actionQuery.setEnabled(self.tree.selectedCount() > 0)
+        self.guiactions.databaseActions.setEnabled(self.database.connected)
+        self.guiactions.actionQuery.setEnabled(self.tree.selectedCount() > 0)
 
         if self.database.connected:
             #self.statusBar().showMessage(self.database.filename)
@@ -528,7 +529,7 @@ class MainWindow(QMainWindow):
     def startServer(self):
         server_port = 8009
         print('Starting httpd on port %d...' % server_port)
-        self.serverInstance = Server(server_port, self.actions)
+        self.serverInstance = Server(server_port, self.apiactions)
         self.serverThread = threading.Thread(target=self.serverInstance.serve_forever)
         self.serverThread.start()
 
@@ -635,17 +636,17 @@ class Toolbar(QToolBar):
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         self.setIconSize(QSize(24,24))
 
-        self.addActions(self.mainWindow.actions.basicActions.actions())
+        self.addActions(self.mainWindow.guiactions.basicActions.actions())
         self.addSeparator()
-        self.addActions(self.mainWindow.actions.databaseActions.actions())
+        self.addActions(self.mainWindow.guiactions.databaseActions.actions())
 
         self.addSeparator()
         #self.addAction(self.mainWindow.actions.actionExpandAll)
         #self.addAction(self.mainWindow.actions.actionCollapseAll)
         #self.addAction(self.mainWindow.actions.actionSelectNodes)
-        self.addAction(self.mainWindow.actions.actionLoadPreset)
-        self.addAction(self.mainWindow.actions.actionLoadAPIs)
-        self.addAction(self.mainWindow.actions.actionHelp)
+        self.addAction(self.mainWindow.guiactions.actionLoadPreset)
+        self.addAction(self.mainWindow.guiactions.actionLoadAPIs)
+        self.addAction(self.mainWindow.guiactions.actionHelp)
 
 
 
