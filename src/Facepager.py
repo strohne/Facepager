@@ -295,7 +295,7 @@ class MainWindow(QMainWindow):
         treetoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         treetoolbar.setIconSize(QSize(16,16))
 
-        treetoolbar.addActions(self.guiActions.treeActions.guiActions())
+        treetoolbar.addActions(self.guiActions.treeActions.actions())
         dataLayout.addWidget (treetoolbar)
 
         self.tree=DataTree(self.mainWidget)
