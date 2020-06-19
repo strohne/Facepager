@@ -301,7 +301,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
-									"x-facepager-objectid" : "",
+									"x-facepager-objectid" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array"
@@ -426,7 +426,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
-									"x-facepager-objectid" : "",
+									"x-facepager-objectid" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array",
@@ -543,7 +543,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
-									"x-facepager-objectid" : "",
+									"x-facepager-objectid" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array",
@@ -654,7 +654,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
-									"x-facepager-objectid" : "",
+									"x-facepager-objectid" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array"
@@ -1872,7 +1872,7 @@
                                 "schema": {
                                     "type": "object",
                                     "x-facepager-extract" : "ids",
-									"x-facepager-objectid" : "",
+									"x-facepager-objectid" : "ids",
 									"properties": {
 										"ids": {
 											"type": "array"
