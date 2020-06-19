@@ -505,7 +505,7 @@ class PresetWindow(QDialog):
             pipeline.append(preset)
 
         # Process pipeline
-        return self.mainWindow.guiactions.queryPipeline(pipeline)
+        return self.mainWindow.guiActions.queryPipeline(pipeline)
         #self.close()
 
 
@@ -529,7 +529,7 @@ class PresetWindow(QDialog):
 
         #Set columns
         self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
-        self.mainWindow.guiactions.showColumns()
+        self.mainWindow.guiActions.showColumns()
 
         #Set global settings
         self.mainWindow.speedEdit.setValue(data.get('speed',200))

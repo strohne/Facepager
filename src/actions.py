@@ -32,9 +32,10 @@ class GuiActions(object):
     """
     Actions triggered by the user interface (buttons)
     """
-    def __init__(self, mainWindow):
+    def __init__(self, mainWindow, apiActions):
 
         self.mainWindow = mainWindow
+        self.apiActions = apiActions
 
         #Basic actions
         self.basicActions = QActionGroup(self.mainWindow)
@@ -162,7 +163,7 @@ class GuiActions(object):
             self.mainWindow.updateUI()
 
             self.mainWindow.tree.loadData(self.mainWindow.database)
-            self.mainWindow.guiactions.actionShowColumns.trigger()
+            self.mainWindow.guiActions.actionShowColumns.trigger()
 
     @Slot()
     def makeDB(self):
