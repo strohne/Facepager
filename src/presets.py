@@ -505,7 +505,7 @@ class PresetWindow(QDialog):
             pipeline.append(preset)
 
         # Process pipeline
-        return self.mainWindow.guiActions.queryPipeline(pipeline)
+        return self.mainWindow.apiActions.queryPipeline(pipeline)
         #self.close()
 
 
