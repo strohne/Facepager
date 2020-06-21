@@ -49,6 +49,7 @@ class DataTree(QTreeView):
         
         model = self.model()
         parent = QModelIndex()
+        model.fetchMore(parent)
         row = model.rowCount(parent)-1
          
         index = model.index(row, 0, parent)

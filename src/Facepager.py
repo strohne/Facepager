@@ -87,7 +87,6 @@ class MainWindow(QMainWindow):
         self.createDB()
         self.updateUI()
         self.updateResources()
-        self.playCommands()
         self.startServer()
 
     def createDB(self):
@@ -106,7 +105,8 @@ class MainWindow(QMainWindow):
 
     def createActions(self):
         self.apiActions = ApiActions(self)
-        self.guiActions=GuiActions(self, self.apiActions)
+        self.guiActions = GuiActions(self, self.apiActions)
+        self.serverActions = ServerActions(self, self.apiActions)
 
     def createUI(self):
         #
@@ -504,31 +504,10 @@ class MainWindow(QMainWindow):
         t = threading.Thread(target=getter)
         t.start()
 
-    # Process command line options (load preset, add nodes, fetch data)
-    def playCommands(self):
-        if not self.database.connected:
-            return False
-
-        if cmd_args.preset is not None:
-            pass
-        else:
-            return False
-
-        if cmd_args.addnode is not None:
-            pass
-        else:
-            return False
-
-        if cmd_args.fetch is not None:
-
-            return True
-        else:
-            return False
-
     def startServer(self):
         server_port = 8009
         print('Starting httpd on port %d...' % server_port)
-        self.serverInstance = Server(server_port, self.apiActions)
+        self.serverInstance = Server(server_port, self.apiActions, self.serverActions.action)
         self.serverThread = threading.Thread(target=self.serverInstance.serve_forever)
         self.serverThread.start()
 

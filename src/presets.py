@@ -517,23 +517,8 @@ class PresetWindow(QDialog):
         if data.get('iscategory',False):
             return False
             #self.startPipeline()
-
-        #Find API module
-        module = data.get('module', '')
-        module = 'Generic' if module == 'Files' else module
-
-        tab = self.mainWindow.getModule(module)
-        if tab is not None:
-            tab.setOptions(data.get('options', {}))
-            self.mainWindow.RequestTabs.setCurrentWidget(tab)
-
-        #Set columns
-        self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
-        self.mainWindow.guiActions.showColumns()
-
-        #Set global settings
-        self.mainWindow.speedEdit.setValue(data.get('speed',200))
-        self.mainWindow.headersCheckbox.setChecked(data.get('headers', False))
+        else:
+            self.mainWindow.apiActions.applySettings(data)
 
         self.close()
 

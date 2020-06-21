@@ -12,7 +12,7 @@ from apithread import ApiThreadPool
 from collections import defaultdict
 import io
 import os
-
+import json
 
 from export import ExportFileDialog
 if sys.version_info.major < 3:
@@ -26,11 +26,32 @@ class ApiActions(object):
     """
     def __init__(self, mainWindow):
         self.mainWindow = mainWindow
+        self.state = "idle"
 
+    """ Only execute one action at a time"""
+    def blockState(func):
+        def wrapper(self, *args, **kwargs):
+            if self.state == "idle":
+                self.state = func.__name__
+                result = func(self, *args, **kwargs)
+                self.state = "idle"
+                return result
+
+        return wrapper
+
+    def getState(self):
+        return self.state
+
+    @blockState
     def getDatabaseName(self):
         return (self.mainWindow.database.filename)
 
+    @blockState
     def openDatabase(self, filename):
+        # Don't create new databases
+        if not os.path.isfile(filename):
+            return False
+
         self.mainWindow.timerWindow.cancelTimer()
         self.mainWindow.tree.treemodel.clear()
         self.mainWindow.database.connect(filename)
@@ -38,12 +59,69 @@ class ApiActions(object):
 
         self.mainWindow.tree.loadData(self.mainWindow.database)
         self.mainWindow.guiActions.actionShowColumns.trigger()
+        return True
 
+    @blockState
+    def createDatabase(self, filename):
+        # Don't overwrite existing files
+        if os.path.isfile(filename):
+            return False
+
+        self.mainWindow.timerWindow.cancelTimer()
+        self.mainWindow.tree.treemodel.clear()
+        self.mainWindow.database.createconnect(filename)
+        self.mainWindow.updateUI()
+        return True
+
+    def loadPreset(self, filename):
+        with open(filename, 'r', encoding="utf-8") as input:
+            settings = json.load(input)
+            return self.applySettings(settings)
+
+    @blockState
+    def applySettings(self, settings = {}):
+        # Find API module
+        module = settings.get('module', '')
+        module = 'Generic' if module == 'Files' else module
+
+        tab = self.mainWindow.getModule(module)
+        if tab is not None:
+            tab.setOptions(settings.get('options', {}))
+            self.mainWindow.RequestTabs.setCurrentWidget(tab)
+
+        # Set columns
+        self.mainWindow.fieldList.setPlainText("\n".join(settings.get('columns', [])))
+        self.mainWindow.guiActions.showColumns()
+
+        # Set global settings
+        self.mainWindow.speedEdit.setValue(settings.get('speed', 200))
+        self.mainWindow.headersCheckbox.setChecked(settings.get('headers', False))
+
+        return True
+
+    @blockState
     def addNodes(self, newnodes=[]):
         self.mainWindow.tree.treemodel.addSeedNodes(newnodes, True)
         self.mainWindow.tree.selectLastRow()
+        return True
 
-    def queryNodes(self, indexes=None, apimodule=False, options=None):
+    @blockState
+    def addCsv(self, filename):
+        progress = ProgressBar("Adding nodes...", self.mainWindow)
+        try:
+
+            with open(filename, encoding="UTF-8-sig") as csvfile:
+                rows = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
+                self.mainWindow.tree.treemodel.addSeedNodes(rows, progress=updateProgress)
+                self.mainWindow.tree.selectLastRow()
+                dialog.close()
+
+            self.mainWindow.tree.selectLastRow()
+        finally:
+            progress.close()
+
+    @blockState
+    def fetchData(self, indexes=None, apimodule=False, options=None):
         if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (indexes is not None)):
             return False
 
@@ -310,6 +388,7 @@ class ApiActions(object):
 
         return job
 
+    @blockState
     def queryPipeline(self, pipeline, indexes=None):
         columns = []
         for preset in pipeline:
@@ -321,7 +400,7 @@ class ApiActions(object):
             columns.extend(preset.get('columns',[]))
             module = preset.get('module')
             options = preset.get('options')
-            finished = self.queryNodes(indexes, module, options)
+            finished = self.fetchData(indexes, module, options)
 
             # todo: increase level of indexes instead of levelEdit
             if not finished or (indexes is not None):
@@ -334,6 +413,30 @@ class ApiActions(object):
         columns = list(dict.fromkeys(columns))
         self.mainWindow.fieldList.setPlainText("\n".join(columns))
         self.showColumns()
+
+class ServerActions(object):
+    """
+    Actions triggered by the web server
+    """
+
+    def __init__(self, mainWindow, apiActions):
+        self.mainWindow = mainWindow
+        self.apiActions = apiActions
+
+    @Slot()
+    def action(self, action, param, payload):
+        if action == "opendatabase":
+            self.apiActions.openDatabase(param)
+        elif action == "loadpreset":
+            self.apiActions.loadPreset(param)
+        elif action == "addcsv":
+            self.apiActions.addCsv(param)
+        elif action == "addnodes":
+            self.apiActions.addNodes(payload)
+        elif action == "fetchdata":
+            self.apiActions.fetchData()
+        else:
+            self.mainWindow.logmessage("Invalid request from server.")
 
 class GuiActions(object):
     """
@@ -388,7 +491,7 @@ class GuiActions(object):
         self.actionHelp.triggered.connect(self.help)
 
         self.actionLoadPreset = self.dataActions.addAction(QIcon(":/icons/presets.png"), "Presets")
-        self.actionLoadPreset.triggered.connect(self.loadPreset)
+        self.actionLoadPreset.triggered.connect(self.openPresets)
 
         self.actionLoadAPIs = self.dataActions.addAction(QIcon(":/icons/apis.png"), "APIs")
         self.actionLoadAPIs.triggered.connect(self.loadAPIs)
@@ -480,10 +583,7 @@ class GuiActions(object):
         fldg.setDefaultSuffix("db")
 
         if fldg.exec_():
-            self.mainWindow.timerWindow.cancelTimer()
-            self.mainWindow.tree.treemodel.clear()
-            self.mainWindow.database.createconnect(fldg.selectedFiles()[0])
-            self.mainWindow.updateUI()
+            self.apiActions.createDatabase(fldg.selectedFiles()[0])
 
     @Slot()
     def deleteNodes(self):
@@ -597,21 +697,7 @@ class GuiActions(object):
             filename, filetype = QFileDialog.getOpenFileName(dialog, "Load CSV", datadir, "CSV files (*.csv)")
             if filename != "":
                 dialog.close()
-
-                progress = ProgressBar("Adding nodes...", self.mainWindow)
-                try:
-
-                    with open(filename, encoding="UTF-8-sig") as csvfile:
-                        rows = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
-                        #rows = [row for row in csvreader]
-                        self.mainWindow.tree.treemodel.addSeedNodes(rows, progress=updateProgress)
-                        self.mainWindow.tree.selectLastRow()
-                        dialog.close()
-
-                    self.mainWindow.tree.selectLastRow()
-                finally:
-                    progress.close()
-
+                self.apiActions.addCsv(filename)
 
         def loadFilenames():
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
@@ -684,7 +770,7 @@ class GuiActions(object):
             progress.close()
 
     @Slot()
-    def loadPreset(self):
+    def openPresets(self):
         self.mainWindow.presetWindow.showPresets()
 
     @Slot()
@@ -730,7 +816,7 @@ class GuiActions(object):
         if modifiers == Qt.ControlModifier:
             self.openBrowser()
         else:
-            self.apiActions.queryNodes()
+            self.apiActions.fetchData()
 
     @Slot()
     def setupTimer(self):
