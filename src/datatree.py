@@ -369,7 +369,7 @@ class TreeModel(QAbstractItemModel):
                         return False
 
                 if isinstance(nodedata, Mapping):
-                    objectid = list(nodedata.values())[0]
+                    objectid = nodedata.pop(list(nodedata.keys())[0])
                     response = nodedata
 
                 elif extended:
