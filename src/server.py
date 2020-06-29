@@ -1,29 +1,33 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import cgi
-from PySide2.QtCore import QObject, Signal
+from PySide2.QtCore import QObject, Signal, Slot
 from urllib.parse import urlparse, parse_qs, unquote
 
-class Server(ThreadingHTTPServer):
+class Server(ThreadingHTTPServer, QObject):
+    action = Signal(str, str, dict)
 
-    def __init__(self, port, api, callback):
-        HandlerClass = self.requestHandlerFactory(api, callback)
-        super(Server, self).__init__(('localhost', port), HandlerClass)
+    def __init__(self, port, api):
+        QObject.__init__(self)
+        HandlerClass = self.requestHandlerFactory(api, self.actionCallback)
+        ThreadingHTTPServer.__init__(self,('localhost', port), HandlerClass)
+
+    def actionCallback(self, action=None, param=None, payload=None):
+        self.action.emit(action, param, payload)
 
     def requestHandlerFactory(self, api, callback):
         """Factory method to pass parameters to request handler"""
+
         class CustomHandler(RequestHandler):
             def __init__(self, *args, **kwargs):
                 self.api = api
-                self.action.connect(callback)
-                super(CustomHandler, self).__init__(*args, **kwargs)
-
+                self.actionCallback = callback
+                super(RequestHandler, self).__init__(*args, **kwargs)
 
         return CustomHandler
 
 
-class RequestHandler(BaseHTTPRequestHandler, QObject):
-    action = Signal(str, str, dict)
+class RequestHandler(BaseHTTPRequestHandler):
 
     def __init__(self, *args, **kwargs):
         super(RequestHandler, self).__init__(*args, **kwargs)
@@ -96,12 +100,12 @@ class RequestHandler(BaseHTTPRequestHandler, QObject):
                 if not filename:
                     result = "Missing filename."
                 else:
-                    self.action.emit(action['action'], filename)
+                    self.actionCallback(action['action'], filename)
                     result = "Scheduled"
 
             elif action['action'] == "addnodes":
                 nodes = action['body'].get('nodes',[])
-                self.action.emit(action['action'], None, nodes)
+                self.actionCallback(action['action'], None, nodes)
                 result = "Scheduled"
 
             elif action['action'] == "addcsv":
@@ -109,7 +113,7 @@ class RequestHandler(BaseHTTPRequestHandler, QObject):
                 if not filename:
                     result = "Missing filename."
                 else:
-                    self.action.emit(action['action'], filename)
+                    self.actionCallback(action['action'], filename)
                     result = "Scheduled"
 
             elif action['action'] == "loadpreset":
@@ -117,11 +121,11 @@ class RequestHandler(BaseHTTPRequestHandler, QObject):
                 if not filename:
                     result = "Missing filename."
                 else:
-                    self.action.emit(action['action'], filename)
+                    self.actionCallback(action['action'], filename)
                     result = "Scheduled"
 
             elif action['action'] == "fetchdata":
-                self.action.emit(action['action'])
+                self.actionCallback(action['action'])
                 result = "Scheduled"
 
             else:
@@ -139,4 +143,3 @@ class RequestHandler(BaseHTTPRequestHandler, QObject):
 
         self.send_answer(response)
         return True
-

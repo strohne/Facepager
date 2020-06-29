@@ -33,8 +33,10 @@ class ApiActions(object):
         def wrapper(self, *args, **kwargs):
             if self.state == "idle":
                 self.state = func.__name__
-                result = func(self, *args, **kwargs)
-                self.state = "idle"
+                try:
+                    result = func(self, *args, **kwargs)
+                finally:
+                    self.state = "idle"
                 return result
 
         return wrapper
