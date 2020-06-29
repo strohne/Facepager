@@ -506,11 +506,10 @@ class MainWindow(QMainWindow):
 
     def startServer(self):
         server_port = 8009
-        print('Starting httpd on port %d...' % server_port)
-        self.serverInstance = Server(server_port, self.apiActions)
-        self.serverInstance.action.connect(self.serverActions.action)
+        self.serverInstance = Server(server_port, self.serverActions)
         self.serverThread = threading.Thread(target=self.serverInstance.serve_forever)
         self.serverThread.start()
+        self.logmessage('Server started on http://localhost:%d.' % server_port)
 
     def writeSettings(self):
         QCoreApplication.setOrganizationName("Strohne")
