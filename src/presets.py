@@ -27,6 +27,8 @@ class PresetWindow(QDialog):
         self.setMinimumWidth(800);
         self.setMinimumHeight(600);
 
+        self.progress=None
+
         #layout
         layout = QVBoxLayout(self)
         self.setLayout(layout)
@@ -375,7 +377,7 @@ class PresetWindow(QDialog):
                 return False
 
             # Progress
-            progress = ProgressBar("Downloading default presets from GitHub...", self) if not silent else None
+            self.progress = ProgressBar("Downloading default presets from GitHub...", self, hidden=silent)
             QApplication.processEvents()
 
             # Create temporary download folder
@@ -384,8 +386,8 @@ class PresetWindow(QDialog):
                 #Download
                 files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
                 files = [f['path'] for f in files if f['path'].endswith(tuple(self.presetSuffix))]
-                if progress is not None:
-                    progress.setMaximum(len(files))
+                if self.progress is not None:
+                    self.progress.setMaximum(len(files))
 
                 for filename in files:
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
@@ -393,8 +395,8 @@ class PresetWindow(QDialog):
                         raise(f"GitHub is not available (status code {response.status_code})")
                     with open(os.path.join(tmp.name, os.path.basename(filename)), 'wb') as f:
                         f.write(response.content)
-                    if progress is not None:
-                        progress.step()
+                    if self.progress is not None:
+                        self.progress.step()
 
                 #Create folder
                 if not os.path.exists(self.presetFolderDefault):
@@ -419,8 +421,9 @@ class PresetWindow(QDialog):
                 return True
             finally:
                 tmp.cleanup()
-                if progress is not None:
-                    progress.close()
+                if self.progress is not None:
+                    self.progress.close()
+                    self.progress=None
 
     def reloadPresets(self):
         self.presetsDownloaded = False
@@ -437,6 +440,9 @@ class PresetWindow(QDialog):
         self.categoryView.hide()
 
         selectitem = None
+
+        if self.progress is not None:
+            self.progress.open()
 
         while not self.presetsDownloaded:
             QApplication.processEvents()
