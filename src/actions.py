@@ -97,7 +97,7 @@ class ApiActions(object):
 
         # Set global settings
         self.mainWindow.speedEdit.setValue(settings.get('speed', 200))
-        self.mainWindow.headersCheckbox.setChecked(settings.get('headers', False))
+        self.mainWindow.headersCheckbox.setChecked(bool(settings.get('headers', False)))
 
         return True
 
