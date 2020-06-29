@@ -539,7 +539,7 @@ class PresetWindow(QDialog):
 
         #Set global settings
         self.mainWindow.speedEdit.setValue(data.get('speed',200))
-        self.mainWindow.headersCheckbox.setChecked(data.get('headers', False))
+        self.mainWindow.headersCheckbox.setChecked(bool(data.get('headers', False)))
 
         self.close()
 
