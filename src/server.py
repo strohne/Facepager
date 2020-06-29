@@ -9,19 +9,22 @@ class Server(ThreadingHTTPServer, QObject):
 
     def __init__(self, port, api):
         QObject.__init__(self)
-        HandlerClass = self.requestHandlerFactory(api, self.actionCallback)
+        self.api = api
+        HandlerClass = self.requestHandlerFactory(self.api.getState, self.actionCallback)
         ThreadingHTTPServer.__init__(self,('localhost', port), HandlerClass)
+        self.action.connect(self.api.action)
 
     def actionCallback(self, action=None, param=None, payload=None):
         self.action.emit(action, param, payload)
 
-    def requestHandlerFactory(self, api, callback):
+
+    def requestHandlerFactory(self, stateCallback, actionCallback):
         """Factory method to pass parameters to request handler"""
 
         class CustomHandler(RequestHandler):
             def __init__(self, *args, **kwargs):
-                self.api = api
-                self.actionCallback = callback
+                self.stateCallback = stateCallback
+                self.actionCallback = actionCallback
                 super(RequestHandler, self).__init__(*args, **kwargs)
 
         return CustomHandler
@@ -29,7 +32,10 @@ class Server(ThreadingHTTPServer, QObject):
 
 class RequestHandler(BaseHTTPRequestHandler):
 
+
     def __init__(self, *args, **kwargs):
+        #self.actionCallback = None
+        #self.stateCallback = None
         super(RequestHandler, self).__init__(*args, **kwargs)
 
     def set_headers(self, status=200):
@@ -77,8 +83,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     # Sends back the state and database name
     def do_GET(self):
         response = {}
-        response['database'] = self.api.getDatabaseName()
-        response['state'] = self.api.getState()
+        response = self.stateCallback('options')
         self.send_answer(response)
 
     def do_POST(self):
@@ -91,7 +96,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
 
         action = self.parseAction()
-        response = {}
 
         # Handle actions
         try:
@@ -101,12 +105,14 @@ class RequestHandler(BaseHTTPRequestHandler):
                     result = "Missing filename."
                 else:
                     self.actionCallback(action['action'], filename)
-                    result = "Scheduled"
+                    result = "ok"
 
             elif action['action'] == "addnodes":
                 nodes = action['body'].get('nodes',[])
+                if not (type(nodes) is list):
+                    nodes = [nodes]
                 self.actionCallback(action['action'], None, nodes)
-                result = "Scheduled"
+                result = "ok"
 
             elif action['action'] == "addcsv":
                 filename = action['query'].get('filename', []).pop()
@@ -114,7 +120,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     result = "Missing filename."
                 else:
                     self.actionCallback(action['action'], filename)
-                    result = "Scheduled"
+                    result = "ok"
 
             elif action['action'] == "loadpreset":
                 filename = action['query'].get('filename', []).pop()
@@ -122,11 +128,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                     result = "Missing filename."
                 else:
                     self.actionCallback(action['action'], filename)
-                    result = "Scheduled"
+                    result = "ok"
 
             elif action['action'] == "fetchdata":
                 self.actionCallback(action['action'])
-                result = "Scheduled"
+                result = "ok"
 
             else:
                 self.send_response(404, "No valid action!")
@@ -137,8 +143,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return False
 
-        response['database'] = self.api.getDatabaseName()
-        response['state'] = self.api.getState()
+        # Resonse
+        response = self.stateCallback()
         response['result'] = result
 
         self.send_answer(response)

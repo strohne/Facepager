@@ -38,9 +38,11 @@ class ApiActions(object):
                 finally:
                     self.state = "idle"
                 return result
-
+            else:
+                return None
         return wrapper
 
+    """ Return current action name """
     def getState(self):
         return self.state
 
@@ -75,10 +77,6 @@ class ApiActions(object):
         self.mainWindow.updateUI()
         return True
 
-    def loadPreset(self, filename):
-        with open(filename, 'r', encoding="utf-8") as input:
-            settings = json.load(input)
-            return self.applySettings(settings)
 
     @blockState
     def applySettings(self, settings = {}):
@@ -100,6 +98,11 @@ class ApiActions(object):
         self.mainWindow.headersCheckbox.setChecked(bool(settings.get('headers', False)))
 
         return True
+
+    def loadPreset(self, filename):
+        with open(filename, 'r', encoding="utf-8") as input:
+            settings = json.load(input)
+            return self.applySettings(settings)
 
     @blockState
     def addNodes(self, newnodes=[]):
@@ -320,6 +323,32 @@ class ApiActions(object):
             progress.close()
             return not progress.wasCanceled
 
+    @blockState
+    def queryPipeline(self, pipeline, indexes=None):
+        columns = []
+        for preset in pipeline:
+            # Select item in preset window
+            item = preset.get('item')
+            if item is not None:
+                self.mainWindow.presetWindow.presetList.setCurrentItem(item)
+
+            columns.extend(preset.get('columns', []))
+            module = preset.get('module')
+            options = preset.get('options')
+            finished = self.fetchData(indexes, module, options)
+
+            # todo: increase level of indexes instead of levelEdit
+            if not finished or (indexes is not None):
+                return False
+            else:
+                level = self.mainWindow.levelEdit.value()
+                self.mainWindow.levelEdit.setValue(level + 1)
+
+        # Set columns
+        columns = list(dict.fromkeys(columns))
+        self.mainWindow.fieldList.setPlainText("\n".join(columns))
+        self.showColumns()
+
     def getQueryOptions(self, apimodule=False, options=None):
         # Get global options
         globaloptions = {}
@@ -390,32 +419,6 @@ class ApiActions(object):
 
         return job
 
-    @blockState
-    def queryPipeline(self, pipeline, indexes=None):
-        columns = []
-        for preset in pipeline:
-            # Select item in preset window
-            item = preset.get('item')
-            if item is not None:
-                self.mainWindow.presetWindow.presetList.setCurrentItem(item)
-
-            columns.extend(preset.get('columns',[]))
-            module = preset.get('module')
-            options = preset.get('options')
-            finished = self.fetchData(indexes, module, options)
-
-            # todo: increase level of indexes instead of levelEdit
-            if not finished or (indexes is not None):
-                return False
-            else:
-                level = self.mainWindow.levelEdit.value()
-                self.mainWindow.levelEdit.setValue(level + 1)
-
-        # Set columns
-        columns = list(dict.fromkeys(columns))
-        self.mainWindow.fieldList.setPlainText("\n".join(columns))
-        self.showColumns()
-
 class ServerActions(object):
     """
     Actions triggered by the web server
@@ -439,6 +442,19 @@ class ServerActions(object):
             self.apiActions.fetchData()
         else:
             self.mainWindow.logmessage("Invalid request from server.")
+
+    def getState(self, snippets=None):
+        response = {}
+        response['database'] = self.apiActions.getDatabaseName()
+        response['state'] = self.apiActions.getState()
+
+        if snippets == 'options':
+            module, options = self.apiActions.getQueryOptions()
+            options['module'] = module.name
+            response['options'] = options
+
+        return response
+
 
 class GuiActions(object):
     """
