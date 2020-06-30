@@ -99,7 +99,7 @@ class TimerWindow(QDialog):
         #if self.nextdata.get('nodecount',0) > 0:
         self.cancelTimer()
         self.data = self.nextdata
-        self.interval = self.intervalTimeEdit.time().minute() * 60 + self.intervalTimeEdit.time().second()
+        self.interval =  (self.intervalTimeEdit.time().hour() * 60 * 60) + self.intervalTimeEdit.time().minute() * 60
         self.firetime = QDateTime.currentDateTime()
         self.firetime.setTime(self.startTimeEdit.time())
         #self.calcFiretime()
@@ -111,7 +111,8 @@ class TimerWindow(QDialog):
         self.close()
 
     def onFire(self):
-        if (self.state != TIMER_INACTIVE): self.updateTimer()
+        if (self.state != TIMER_INACTIVE):
+            self.updateTimer()
 
     def calcFiretime(self):
         while (QDateTime.currentDateTime().addSecs(5) > self.firetime):
