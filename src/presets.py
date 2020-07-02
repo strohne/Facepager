@@ -278,8 +278,13 @@ class PresetWindow(QDialog):
         self.show()
         QApplication.processEvents()
 
+        if self.progress is not None:
+            self.progress.setModal(True)
+            self.progress.show()
+
         self.initPresets()
         self.raise_()
+
 
     def addPresetItem(self,folder,filename,default=False,online=False):
         try:
@@ -441,9 +446,6 @@ class PresetWindow(QDialog):
 
         selectitem = None
 
-        if self.progress is not None:
-            self.progress.open()
-
         while not self.presetsDownloaded:
             QApplication.processEvents()
 
@@ -470,8 +472,6 @@ class PresetWindow(QDialog):
 
         self.applyButton.setDefault(True)
         self.loadingIndicator.hide()
-
-        #self.currentChanged()
 
     def getCategories(self):
         categories = []
