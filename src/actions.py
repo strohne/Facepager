@@ -913,8 +913,8 @@ class GuiActions(object):
 
     @Slot()
     def openBrowser(self):
-        apimodule, options = self.getQueryOptions('fetch')
-        indexes = self.getIndexes(options)
+        apimodule, options = self.apiActions.getQueryOptions('fetch')
+        indexes = self.apiActions.getIndexes(options)
         index = next(indexes, False)
         if not index or not index.isValid():
             return False
