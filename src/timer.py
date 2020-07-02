@@ -127,7 +127,6 @@ class TimerWindow(QDialog):
             
             self.calcFiretime()
             self.updateTimer()
-            
 
         elif  (self.remaining < 10):
             self.state = TIMER_COUNTDOWN
@@ -138,4 +137,3 @@ class TimerWindow(QDialog):
             self.state = TIMER_ACTIVE
             self.timer.start((self.remaining - 10) * 1000)
             self.timerstarted.emit(self.firetime)
-            

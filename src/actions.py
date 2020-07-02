@@ -118,7 +118,7 @@ class ApiActions(object):
         return True
 
     @blockState
-    def addCsv(self, filename):
+    def addCsv(self, filename, updateProgress=None):
         progress = ProgressBar("Adding nodes...", self.mainWindow)
         try:
 
@@ -126,7 +126,6 @@ class ApiActions(object):
                 rows = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
                 self.mainWindow.tree.treemodel.addSeedNodes(rows, progress=updateProgress)
                 self.mainWindow.tree.selectLastRow()
-                dialog.close()
 
             self.mainWindow.tree.selectLastRow()
         finally:
@@ -723,8 +722,8 @@ class GuiActions(object):
 
             filename, filetype = QFileDialog.getOpenFileName(dialog, "Load CSV", datadir, "CSV files (*.csv)")
             if filename != "":
-                dialog.close()
-                self.apiActions.addCsv(filename)
+                self.apiActions.addCsv(filename,updateProgress)
+            dialog.close()
 
         def loadFilenames():
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
