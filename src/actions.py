@@ -13,6 +13,7 @@ from collections import defaultdict
 import io
 import os
 import json
+import threading
 
 from export import ExportFileDialog
 if sys.version_info.major < 3:
@@ -27,18 +28,23 @@ class ApiActions(object):
     def __init__(self, mainWindow):
         self.mainWindow = mainWindow
         self.state = "idle"
+        self.lock = threading.Lock()
 
     """ Only execute one action at a time"""
     def blockState(func):
         def wrapper(self, *args, **kwargs):
-            if self.state == "idle":
-                self.state = func.__name__
+            if self.lock.acquire(False):
                 try:
+                    self.state = func.__name__
                     result = func(self, *args, **kwargs)
                 finally:
                     self.state = "idle"
+                    self.lock.release()
+
                 return result
+
             else:
+                self.mainWindow.logmessage("Call of {} skipped because the operation {} is still active.".format(func.__name__, self.state))
                 return None
         return wrapper
 
@@ -46,6 +52,7 @@ class ApiActions(object):
     def getState(self):
         return self.state
 
+    # Blocking methods
     @blockState
     def getDatabaseName(self):
         return (self.mainWindow.database.filename)
@@ -66,9 +73,9 @@ class ApiActions(object):
         return True
 
     @blockState
-    def createDatabase(self, filename):
+    def createDatabase(self, filename, overwrite=False):
         # Don't overwrite existing files
-        if os.path.isfile(filename):
+        if os.path.isfile(filename) and not overwrite:
             return False
 
         self.mainWindow.timerWindow.cancelTimer()
@@ -134,7 +141,7 @@ class ApiActions(object):
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
-            apimodule, options = self.getQueryOptions(apimodule, options)
+            apimodule, options = self.getQueryOptions('fetch', apimodule, options)
             indexes = self.getIndexes(options, indexes, progress)
 
             # Update progress window
@@ -323,7 +330,7 @@ class ApiActions(object):
             progress.close()
             return not progress.wasCanceled
 
-    @blockState
+    # Non-blocking methods (that may call blocking methods)
     def queryPipeline(self, pipeline, indexes=None):
         columns = []
         for preset in pipeline:
@@ -349,7 +356,7 @@ class ApiActions(object):
         self.mainWindow.fieldList.setPlainText("\n".join(columns))
         self.showColumns()
 
-    def getQueryOptions(self, apimodule=False, options=None):
+    def getQueryOptions(self, purpose='fetch', apimodule=False, options=None):
         # Get global options
         globaloptions = {}
         globaloptions['threads'] = self.mainWindow.threadsEdit.value()
@@ -369,7 +376,7 @@ class ApiActions(object):
         apimodule.getProxies(True)
 
         if options is None:
-            options = apimodule.getOptions()
+            options = apimodule.getOptions(purpose)
         else:
             options = options.copy()
         options.update(globaloptions)
@@ -449,9 +456,11 @@ class ServerActions(object):
         response['state'] = self.apiActions.getState()
 
         if snippets == 'options':
-            module, options = self.apiActions.getQueryOptions()
+            module, options = self.apiActions.getQueryOptions('preset')
             options['module'] = module.name
             response['options'] = options
+        elif snippets == 'log':
+            response['log'] = self.mainWindow.getlog()
 
         return response
 
@@ -601,7 +610,7 @@ class GuiActions(object):
         fldg.setDefaultSuffix("db")
 
         if fldg.exec_():
-            self.apiActions.createDatabase(fldg.selectedFiles()[0])
+            self.apiActions.createDatabase(fldg.selectedFiles()[0], True)
 
     @Slot()
     def deleteNodes(self):
@@ -876,8 +885,15 @@ class GuiActions(object):
         self.mainWindow.timerStatus.setStyleSheet("QLabel {color:red;}")
 
         pipeline = data.get('pipeline',[])
-        indexes =  data.get('indexes',[])
-        self.apiActions.queryPipeline(pipeline, indexes)
+        indexes = data.get('indexes',[])
+
+        for preset in pipeline:
+            module = preset.get('module')
+            options = preset.get('options')
+
+            self.fetchData(indexes, module, options)
+
+            break
 
     @Slot()
     def openSettings(self):
@@ -897,13 +913,13 @@ class GuiActions(object):
 
     @Slot()
     def openBrowser(self):
-        apimodule, options = self.getQueryOptions()
+        apimodule, options = self.getQueryOptions('fetch')
         indexes = self.getIndexes(options)
         index = next(indexes, False)
         if not index or not index.isValid():
             return False
 
-        job = self.prepareJob(index, options)
+        job = self.apiActions.prepareJob(index, options)
         options = job['options']
         nodedata = job['nodedata']
 

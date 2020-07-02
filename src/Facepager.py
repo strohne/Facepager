@@ -582,6 +582,10 @@ class MainWindow(QMainWindow):
                 self.loglist.append(str(datetime.now())+" "+message)
             time.sleep(0)
 
+    def getlog(self):
+        with self.lock_logging:
+            return self.loglist.toPlainText()
+
     @Slot(str)
     def showprogress(self, maximum=None):
         pass
