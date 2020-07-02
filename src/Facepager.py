@@ -242,9 +242,7 @@ class MainWindow(QMainWindow):
 
         # Add headers
         self.headersCheckbox = QCheckBox("Create header nodes",self)
-
         self.headersCheckbox.setChecked(str(self.settings.value('saveheaders', 'false')) == 'true')
-
         self.headersCheckbox.setToolTip(
             wraptip("Check if you want to create nodes containing headers of the response."))
         self.settingsLayout.addRow(self.headersCheckbox)
@@ -584,7 +582,7 @@ class MainWindow(QMainWindow):
 
     def getlog(self):
         with self.lock_logging:
-            return self.loglist.toPlainText()
+            return self.loglist.toPlainText().splitlines()
 
     @Slot(str)
     def showprogress(self, maximum=None):

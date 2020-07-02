@@ -32,21 +32,17 @@ class Server(ThreadingHTTPServer, QObject):
 
 class RequestHandler(BaseHTTPRequestHandler):
 
-
     def __init__(self, *args, **kwargs):
-        #self.actionCallback = None
-        #self.stateCallback = None
         super(RequestHandler, self).__init__(*args, **kwargs)
 
-    def set_headers(self, status=200):
-        self.send_response(status)
+    def send_answer(self, content, status=200, message=None):
+        self.send_response(status, message)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
 
-    def send_answer(self, content, status=200):
-        self.set_headers(status)
-        response = json.dumps(content)
-        self.wfile.write(response.encode('utf-8'))
+        if content is not None:
+            response = json.dumps(content)
+            self.wfile.write(response.encode('utf-8'))
 
     def parseAction(self):
         action = {}
@@ -67,24 +63,40 @@ class RequestHandler(BaseHTTPRequestHandler):
             action['path'] = url.path.strip("/").split("/")
             action['path'] = [unquote(x) for x in action['path']]
             action['action'] = action['path'].pop(0)
-            action['query'] = parse_qs(url.query)
 
-            # Read post data
+            # Parse query
+            action['query'] = parse_qs(url.query)
+            filenames = action['query'].get('filename')
+            if filenames is not None:
+                action['filename'] = filenames.pop()
+
+            # Get post data
             length = int(self.headers.get('content-length'))
             action['body'] = json.loads(self.rfile.read(length))
+
         except Exception as e:
             action['error'] = str(e)
 
         return action
 
-    def do_HEAD(self):
-        self.set_headers()
-
     # Sends back the state and database name
     def do_GET(self):
-        response = {}
-        response = self.stateCallback('options')
-        self.send_answer(response)
+        """
+        Get state
+
+        The first component of the URL path is the snippet name.
+        Supported snippets are : settings, log
+        An empty snipped just returns the database name and the state
+        """
+
+        try:
+            action = self.parseAction()
+            response = self.stateCallback(action['action'])
+        except:
+            self.send_answer(None, 500, "Could not process request.")
+        else:
+            self.send_answer(response)
+
 
     def do_POST(self):
         """
@@ -95,57 +107,56 @@ class RequestHandler(BaseHTTPRequestHandler):
         Additional data ist provided in the payload.
         """
 
-        action = self.parseAction()
-
         # Handle actions
         try:
-            if action['action'] == "opendatabase":
-                filename = action['query'].get('filename', []).pop()
-                if not filename:
-                    result = "Missing filename."
+            action = self.parseAction()
+
+            # Open database
+            if action['action'] == "database":
+                if action.get('filename') is not None:
+                    self.actionCallback('opendatabase', action.get('filename'))
+                    result = "ok"
                 else:
-                    self.actionCallback(action['action'], filename)
+                    result = "Missing filename."
+
+            # Post nodes: csv file or nodes in the payload
+            elif action['action'] == "nodes":
+                if action.get('filename') is not None:
+                    self.actionCallback('addcsv', action.get('filename'))
+                    result = "ok"
+                elif action.get('body') is not None:
+                    nodes = action['body'].get('nodes', [])
+                    if not (type(nodes) is list):
+                        nodes = [nodes]
+                    self.actionCallback('addnodes', nodes)
                     result = "ok"
 
-            elif action['action'] == "addnodes":
-                nodes = action['body'].get('nodes',[])
-                if not (type(nodes) is list):
-                    nodes = [nodes]
-                self.actionCallback(action['action'], None, nodes)
-                result = "ok"
-
-            elif action['action'] == "addcsv":
-                filename = action['query'].get('filename', []).pop()
-                if not filename:
-                    result = "Missing filename."
-                else:
-                    self.actionCallback(action['action'], filename)
+            # Post settings: preset file or settings in the payload
+            elif action['action'] == "settings":
+                if action.get('filename') is not None:
+                    self.actionCallback('loadpreset', action.get('filename'))
                     result = "ok"
-
-            elif action['action'] == "loadpreset":
-                filename = action['query'].get('filename', []).pop()
-                if not filename:
-                    result = "Missing filename."
-                else:
-                    self.actionCallback(action['action'], filename)
+                elif action.get('body') is not None:
+                    self.actionCallback('applysettings', action.get('body'))
                     result = "ok"
+                else:
+                    result = "Missing filename or data."
 
+            # Fetch data
             elif action['action'] == "fetchdata":
-                self.actionCallback(action['action'])
+                self.actionCallback('fetchdata')
                 result = "ok"
 
             else:
-                self.send_response(404, "No valid action!")
-                self.end_headers()
+                self.send_answer(None, 404, "No valid action!")
                 return False
+
+            # Response
+            response = self.stateCallback()
+            response['result'] = result
         except Exception as e:
-            self.send_response(500, "Server error!")
-            self.end_headers()
+            self.send_answer(None, 500, "Server error!")
             return False
-
-        # Resonse
-        response = self.stateCallback()
-        response['result'] = result
-
-        self.send_answer(response)
-        return True
+        else:
+            self.send_answer(response)
+            return True

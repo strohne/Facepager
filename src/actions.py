@@ -86,7 +86,7 @@ class ApiActions(object):
 
 
     @blockState
-    def applySettings(self, settings = {}):
+    def applySettings(self, settings={}):
         # Find API module
         module = settings.get('module', '')
         module = 'Generic' if module == 'Files' else module
@@ -97,12 +97,19 @@ class ApiActions(object):
             self.mainWindow.RequestTabs.setCurrentWidget(tab)
 
         # Set columns
-        self.mainWindow.fieldList.setPlainText("\n".join(settings.get('columns', [])))
-        self.mainWindow.guiActions.showColumns()
+        columns = settings.get('columns')
+        if columns is not None:
+            self.mainWindow.fieldList.setPlainText("\n".join(columns))
+            self.mainWindow.guiActions.showColumns()
 
         # Set global settings
-        self.mainWindow.speedEdit.setValue(settings.get('speed', 200))
-        self.mainWindow.headersCheckbox.setChecked(bool(settings.get('headers', False)))
+        speed = settings.get('speed') # default 200
+        if speed is not None:
+            self.mainWindow.speedEdit.setValue(speed)
+
+        headers = settings.get('headers', None) # default None
+        if headers is not None:
+            self.mainWindow.headersCheckbox.setChecked(bool(headers))
 
         return True
 
@@ -440,6 +447,8 @@ class ServerActions(object):
             self.apiActions.openDatabase(param)
         elif action == "loadpreset":
             self.apiActions.loadPreset(param)
+        elif action == "loadsettings":
+            self.apiActions.loadSettings(payload)
         elif action == "addcsv":
             self.apiActions.addCsv(param)
         elif action == "addnodes":
@@ -454,10 +463,10 @@ class ServerActions(object):
         response['database'] = self.apiActions.getDatabaseName()
         response['state'] = self.apiActions.getState()
 
-        if snippets == 'options':
+        if snippets == 'settings':
             module, options = self.apiActions.getQueryOptions('preset')
             options['module'] = module.name
-            response['options'] = options
+            response['settings'] = options
         elif snippets == 'log':
             response['log'] = self.mainWindow.getlog()
 
