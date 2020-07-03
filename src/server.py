@@ -14,9 +14,8 @@ class Server(ThreadingHTTPServer, QObject):
         ThreadingHTTPServer.__init__(self,('localhost', port), HandlerClass)
         self.action.connect(self.api.action)
 
-    def actionCallback(self, action=None, param=None, payload=None):
-        self.action.emit(action, param, payload)
-
+    def actionCallback(self, action=None, filename=None, payload=None):
+        self.action.emit(action, filename, payload)
 
     def requestHandlerFactory(self, stateCallback, actionCallback):
         """Factory method to pass parameters to request handler"""
@@ -114,7 +113,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Open database
             if action['action'] == "database":
                 if action.get('filename') is not None:
-                    self.actionCallback('opendatabase', action.get('filename'))
+                    self.actionCallback('opendatabase', filename=action.get('filename'))
                     result = "ok"
                 else:
                     result = "Missing filename."
@@ -122,22 +121,22 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Post nodes: csv file or nodes in the payload
             elif action['action'] == "nodes":
                 if action.get('filename') is not None:
-                    self.actionCallback('addcsv', action.get('filename'))
+                    self.actionCallback('addcsv', filename=action.get('filename'))
                     result = "ok"
                 elif action.get('body') is not None:
                     nodes = action['body'].get('nodes', [])
                     if not (type(nodes) is list):
                         nodes = [nodes]
-                    self.actionCallback('addnodes', nodes)
+                    self.actionCallback('addnodes', payload=nodes)
                     result = "ok"
 
             # Post settings: preset file or settings in the payload
             elif action['action'] == "settings":
                 if action.get('filename') is not None:
-                    self.actionCallback('loadpreset', action.get('filename'))
+                    self.actionCallback('loadpreset', filename=action.get('filename'))
                     result = "ok"
                 elif action.get('body') is not None:
-                    self.actionCallback('applysettings', action.get('body'))
+                    self.actionCallback('applysettings', payload=action.get('body'))
                     result = "ok"
                 else:
                     result = "Missing filename or data."

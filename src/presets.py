@@ -617,14 +617,7 @@ class PresetWindow(QDialog):
                     'description':description.toPlainText()
             }
 
-            data_settings = {
-                    'module': self.mainWindow.RequestTabs.currentWidget().name,
-                    'options': self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
-                    'columns': self.mainWindow.fieldList.toPlainText().splitlines(),
-                    'speed': self.mainWindow.speedEdit.value(),
-                    'headers': self.mainWindow.headersCheckbox.isChecked()
-            }
-
+            data_settings = self.mainWindow.apiActions.getPresetOptions()
             self.currentData.update(data_meta)
 
             if self.currentFilename is None:
@@ -640,7 +633,7 @@ class PresetWindow(QDialog):
                     self.currentData.update(data_settings)
 
             # Sanitize and reorder
-            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'headers','columns']
+            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'saveheaders','columns']
             self.currentData = {k: self.currentData.get(k, None) for k in keys}
 
             # Create folder

@@ -103,13 +103,7 @@ class ApiActions(object):
             self.mainWindow.guiActions.showColumns()
 
         # Set global settings
-        speed = settings.get('speed') # default 200
-        if speed is not None:
-            self.mainWindow.speedEdit.setValue(speed)
-
-        headers = settings.get('headers', None) # default None
-        if headers is not None:
-            self.mainWindow.headersCheckbox.setChecked(bool(headers))
+        self.setGlobalOptions(settings)
 
         return True
 
@@ -147,7 +141,7 @@ class ApiActions(object):
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
-            apimodule, options = self.getQueryOptions('fetch', apimodule, options)
+            apimodule, options = self.getQueryOptions(apimodule, options)
             indexes = self.getIndexes(options, indexes, progress)
 
             # Update progress window
@@ -362,17 +356,80 @@ class ApiActions(object):
         self.mainWindow.fieldList.setPlainText("\n".join(columns))
         self.showColumns()
 
-    def getQueryOptions(self, purpose='fetch', apimodule=False, options=None):
+    def getGlobalOptions(self):
         # Get global options
-        globaloptions = {}
-        globaloptions['threads'] = self.mainWindow.threadsEdit.value()
-        globaloptions['speed'] = self.mainWindow.speedEdit.value()
-        globaloptions['errors'] = self.mainWindow.errorEdit.value()
-        globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
-        globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
-        globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
-        globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
-        globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
+        settings = {}
+        settings['nodelevel'] = self.mainWindow.levelEdit.value()
+        settings['excludetypes'] = self.mainWindow.typesEdit.text()
+        settings['threads'] = self.mainWindow.threadsEdit.value()
+        settings['speed'] = self.mainWindow.speedEdit.value()
+        settings['errors'] = self.mainWindow.errorEdit.value()
+        settings['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
+        settings['logrequests'] = self.mainWindow.logCheckbox.isChecked()
+        settings['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
+        settings['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
+        settings['resume'] = self.mainWindow.resumeCheckbox.isChecked()
+
+        return settings
+
+    def setGlobalOptions(self, settings):
+        value = settings.get('nodelevel', None) # default None
+        if value is not None:
+            self.mainWindow.levelEdit.setValue(int(value))
+
+        value = settings.get('excludetypes', None) # default None
+        if value is not None:
+            self.mainWindow.typesEdit.setText(str(value))
+
+        value = settings.get('threads', None) # default None
+        if value is not None:
+            self.mainWindow.threadsEdit.setValue(int(value))
+
+        value = settings.get('speed') # default 200
+        if value is not None:
+            self.mainWindow.speedEdit.setValue(int(value))
+
+        value = settings.get('errors', None) # default None
+        if value is not None:
+            self.mainWindow.errorEdit.setValue(int(value))
+
+        value = settings.get('expand', None) # default None
+        if value is not None:
+            self.mainWindow.autoexpandCheckbox.setChecked(bool(value))
+
+        value = settings.get('saveheaders', None) # default None
+        if value is not None:
+            self.mainWindow.headersCheckbox.setChecked(bool(value))
+
+        value = settings.get('logrequests', None) # default None
+        if value is not None:
+            self.mainWindow.logCheckbox.setChecked(bool(value))
+
+        value = settings.get('allnodes', None) # default None
+        if value is not None:
+            self.mainWindow.allnodesCheckbox.setChecked(bool(value))
+
+        value = settings.get('resume', None) # default None
+        if value is not None:
+            self.mainWindow.resumeCheckbox.setChecked(bool(value))
+
+    def getPresetOptions(self):
+        # Global options
+        settings = self.getGlobalOptions()
+
+        # Columns
+        settings['columns'] = self.mainWindow.fieldList.toPlainText().splitlines()
+
+        # Module option
+        apimodule = self.mainWindow.RequestTabs.currentWidget()
+        settings['module'] = apimodule.name
+        settings['options'] = apimodule.getOptions('preset')
+
+        return settings
+
+    def getQueryOptions(self, apimodule=False, options=None):
+        # Get global options
+        globaloptions = self.getGlobalOptions()
 
         # Get module option
         if isinstance(apimodule, str):
@@ -382,7 +439,7 @@ class ApiActions(object):
         apimodule.getProxies(True)
 
         if options is None:
-            options = apimodule.getOptions(purpose)
+            options = apimodule.getOptions('fetch')
         else:
             options = options.copy()
         options.update(globaloptions)
@@ -442,21 +499,24 @@ class ServerActions(object):
         self.apiActions = apiActions
 
     @Slot()
-    def action(self, action, param, payload):
-        if action == "opendatabase":
-            self.apiActions.openDatabase(param)
-        elif action == "loadpreset":
-            self.apiActions.loadPreset(param)
-        elif action == "loadsettings":
-            self.apiActions.loadSettings(payload)
-        elif action == "addcsv":
-            self.apiActions.addCsv(param)
-        elif action == "addnodes":
-            self.apiActions.addNodes(payload)
-        elif action == "fetchdata":
-            self.apiActions.fetchData()
-        else:
-            self.mainWindow.logmessage("Invalid request from server.")
+    def action(self, action, filename, payload):
+        try:
+            if action == "opendatabase":
+                self.apiActions.openDatabase(filename)
+            elif action == "loadpreset":
+                self.apiActions.loadPreset(filename)
+            elif action == "applysettings":
+                self.apiActions.applySettings(payload)
+            elif action == "addcsv":
+                self.apiActions.addCsv(filename)
+            elif action == "addnodes":
+                self.apiActions.addNodes(payload)
+            elif action == "fetchdata":
+                self.apiActions.fetchData()
+            else:
+                self.mainWindow.logmessage("Invalid action from remote control.")
+        except Exception as e:
+            self.mainWindow.logmessage("Invalid request from remote control.")
 
     def getState(self, snippets=None):
         response = {}
@@ -464,8 +524,7 @@ class ServerActions(object):
         response['state'] = self.apiActions.getState()
 
         if snippets == 'settings':
-            module, options = self.apiActions.getQueryOptions('preset')
-            options['module'] = module.name
+            options = self.apiActions.getPresetOptions()
             response['settings'] = options
         elif snippets == 'log':
             response['log'] = self.mainWindow.getlog()
@@ -921,7 +980,7 @@ class GuiActions(object):
 
     @Slot()
     def openBrowser(self):
-        apimodule, options = self.apiActions.getQueryOptions('fetch')
+        apimodule, options = self.apiActions.getQueryOptions()
         indexes = self.apiActions.getIndexes(options)
         index = next(indexes, False)
         if not index or not index.isValid():
