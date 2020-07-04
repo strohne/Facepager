@@ -1,0 +1,40 @@
+{
+  "name": "Get tweets with the Premium API",
+  "category": "Twitter",
+  "description": "In order to use the Premium API, you need to register an app at Twitter and create a fullarchive environment. See https://developer.twitter.com/en/premium-apis\n\nThen set the client ID and client secret of your premium account in the settings and click Login to get an access token. Change the <label> parameter to the name of your environment.\n\nCareful: you have only 50 free requests per month.\n\nThe preset fetches tweets where a user was addressed. Add user IDs or screen names as seed nodes and change or remove the fromDate and toDate parameters.\n\nTwitter documentation: https://developer.twitter.com/en/docs/tweets/search/api-reference/premium-search\n\n",
+  "module": "Twitter",
+  "options": {
+    "basepath": "https://api.twitter.com/1.1",
+    "resource": "/tweets/search/fullarchive/<label>",
+    "params": {
+      "<label>": "dev",
+      "fromDate": "201912260000",
+      "maxResults": "100",
+      "query": "to:<Object ID>",
+      "toDate": "201912290000"
+    },
+    "pages": 20,
+    "paging_type": "key",
+    "key_paging": "next",
+    "paging_stop": "next",
+    "param_paging": "next",
+    "nodedata": "results",
+    "objectid": null,
+    "auth_type": "Twitter App-only",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "header",
+    "auth_prefix": "Bearer ",
+    "auth_tokenname": "Authorization"
+  },
+  "speed": 200,
+  "headers": true,
+  "columns": [
+    "in_reply_to_status_id",
+    "tweet_id=id",
+    "screen_name=user.screen_name",
+    "user_id=user.id",
+    "created_at=created_at|shortdate"
+  ]
+}
