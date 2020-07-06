@@ -503,11 +503,21 @@ class MainWindow(QMainWindow):
         t.start()
 
     def startServer(self):
-        server_port = 8009
-        self.serverInstance = Server(server_port, self.serverActions)
+        port = cmd_args.port
+        if port is None:
+            self.serverInstance = None
+            self.serverThread = None
+            return False
+
+        self.serverInstance = Server(port, self.serverActions)
         self.serverThread = threading.Thread(target=self.serverInstance.serve_forever)
         self.serverThread.start()
-        self.logmessage('Server started on http://localhost:%d.' % server_port)
+        self.logmessage('Server started on http://localhost:%d.' % port)
+
+    def stopServer(self):
+        if self.serverInstance is not None:
+            self.serverInstance.shutdown()
+            self.logmessage("Server stopped")
 
     def writeSettings(self):
         QCoreApplication.setOrganizationName("Strohne")
@@ -564,7 +574,7 @@ class MainWindow(QMainWindow):
             else:
                 self.writeSettings()
 
-            self.serverInstance.shutdown()
+            self.stopServer()
             event.accept()
         else:
             event.ignore()
@@ -738,12 +748,10 @@ if __name__ == "__main__":
 
     # Command line options
     cmd_args = argparse.ArgumentParser(description='Run Facepager.')
+
     cmd_args.add_argument('database', help='Database file to open', nargs='?')
     cmd_args.add_argument('--style', dest='style', default=None, help='Select the PySide style, for example Fusion')
-    cmd_args.add_argument('--addnode', dest='addnode', default=None, help='Add a node')
-    cmd_args.add_argument('--preset', dest='preset', default=None, help='Load a preset')
-    cmd_args.add_argument('--fetch', dest='fetch', default=None, help='Fetch data')
-
+    cmd_args.add_argument('--server', dest='port', default=None, type=int, help='Start a local server at the given port') #8009
 
     cmd_args = cmd_args.parse_args()
 
