@@ -245,10 +245,12 @@ class ApiActions(object):
                                 #threadpool.clearRetry()
                                 errorcount = 0
                                 ratelimitcount = 0
+                                self.state = 'fetchdata'
 
                             # Suspend on error or ratelimit
                             elif (errorcount >= options['errors']) or (ratelimitcount > 0):
                                 threadpool.suspendJobs()
+                                self.state = 'ratelimit'
 
                                 if ratelimit:
                                     msg = "You reached the rate limit of the API."
