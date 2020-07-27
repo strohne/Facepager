@@ -54,10 +54,6 @@ class ApiActions(object):
 
     # Blocking methods
     @blockState
-    def getDatabaseName(self):
-        return (self.mainWindow.database.filename)
-
-    @blockState
     def openDatabase(self, filename):
         # Don't create new databases
         if not os.path.isfile(filename):
@@ -333,6 +329,9 @@ class ApiActions(object):
             return not progress.wasCanceled
 
     # Non-blocking methods (that may call blocking methods)
+    def getDatabaseName(self):
+        return (self.mainWindow.database.filename)
+
     def queryPipeline(self, pipeline, indexes=None):
         columns = []
         for preset in pipeline:
@@ -505,6 +504,8 @@ class ServerActions(object):
         try:
             if action == "opendatabase":
                 self.apiActions.openDatabase(filename)
+            elif action == "createdatabase":
+                self.apiActions.createDatabase(filename)
             elif action == "loadpreset":
                 self.apiActions.loadPreset(filename)
             elif action == "applysettings":

@@ -113,7 +113,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Open database
             if action['action'] == "database":
                 if action.get('filename') is not None:
-                    self.actionCallback('opendatabase', filename=action.get('filename'))
+                    if action['query'].get('create', False):
+                        self.actionCallback('createdatabase', filename=action.get('filename'))
+                    else:
+                        self.actionCallback('opendatabase', filename=action.get('filename'))
                     result = "ok"
                 else:
                     result = "Missing filename."
