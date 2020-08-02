@@ -1655,7 +1655,7 @@
 					  },
 					{
                       "name" : "exclude_replies",
-                      "in" : "path",
+                      "in" : "query",
                       "description" : "This parameter will prevent replies from appearing in the returned timeline. Using exclude_replies with the count parameter will mean you will receive up-to count Tweets - this is because the count parameter retrieves that many Tweets before filtering out retweets and replies.",
                       "schema":{"type":"string"}
 					},
@@ -1791,7 +1791,7 @@
 					  },
 					{
                       "name" : "count",
-                      "in" : "path",
+                      "in" : "query",
 					  "description" : "Specifies the number of records to retrieve. Must be less than or equal to 100.",
                       "schema":{"type":"string"}
 					  },
