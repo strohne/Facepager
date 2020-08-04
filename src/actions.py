@@ -610,6 +610,7 @@ class Actions(object):
                                     msg = "{} consecutive errors occurred.\nPlease check your settings.".format(errorcount)
 
                                 timeout = 60 * 5 # 5 minutes
+                                #timeout = 1 # 1 second
 
                                 # Adjust progress
                                 progress.showError(msg, timeout, autoretry)
