@@ -1,0 +1,40 @@
+{
+  "name": "Scrape teaser texts from Zeit Online",
+  "category": "Scraping",
+  "description": "Add search terms as seed nodes and fetch data.\n\nThis preset uses the search of https://www.zeit.de/suche/index?q=corona&p=1 to fetch a list of articles vom Zeit Online. \n\nSee the wiki for information about using CSS and XPath selectors with Facepager: https://github.com/strohne/Facepager/wiki/Webscraping",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_type": "OAuth2",
+    "auth_uri": "",
+    "basepath": "https://www.zeit.de/",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "text",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "text|css:article.zon-teaser-standard",
+    "objectid": "text|css:a.zon-teaser-standard__combined-link|xpath:@href",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 3,
+    "paging_type": "count",
+    "param_paging": "p",
+    "params": {
+      "q": "<Object ID>"
+    },
+    "redirect_uri": "",
+    "resource": "suche/index",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": null,
+  "columns": [
+    "kicker=text|css:span.zon-teaser-standard__kicker|xpath:string()",
+    "header=text|css:span.zon-teaser-standard__title|xpath:string()",
+    "teaser=text|css:p.zon-teaser-standard__text|xpath:string()",
+    "date=text|css:time.zon-teaser-standard__datetime|xpath:@datetime"
+  ]
+}
