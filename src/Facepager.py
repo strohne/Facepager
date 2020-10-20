@@ -47,6 +47,7 @@ from dataviewer import *
 from selectnodes import *
 import logging
 import threading
+from server import Server, RequestHandler
 
 # Some hackery required for pyInstaller
 # See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/#could-not-find-qtwebengineprocessexe-on-windows
@@ -86,6 +87,7 @@ class MainWindow(QMainWindow):
         self.createDB()
         self.updateUI()
         self.updateResources()
+        self.startServer()
 
     def createDB(self):
         self.database = Database(self)
@@ -99,11 +101,12 @@ class MainWindow(QMainWindow):
             self.database.connect(self.settings.value("lastpath"))
 
         self.tree.loadData(self.database)
-        self.actions.actionShowColumns.trigger()
+        self.guiActions.actionShowColumns.trigger()
 
     def createActions(self):
-        self.actions=Actions(self)
-
+        self.apiActions = ApiActions(self)
+        self.guiActions = GuiActions(self, self.apiActions)
+        self.serverActions = ServerActions(self, self.apiActions)
 
     def createUI(self):
         #
@@ -120,10 +123,10 @@ class MainWindow(QMainWindow):
         self.timerWindow=TimerWindow(self)
         self.selectNodesWindow=SelectNodesWindow(self)
 
-        self.timerWindow.timerstarted.connect(self.actions.timerStarted)
-        self.timerWindow.timerstopped.connect(self.actions.timerStopped)
-        self.timerWindow.timercountdown.connect(self.actions.timerCountdown)
-        self.timerWindow.timerfired.connect(self.actions.timerFired)
+        self.timerWindow.timerstarted.connect(self.guiActions.timerStarted)
+        self.timerWindow.timerstopped.connect(self.guiActions.timerStopped)
+        self.timerWindow.timercountdown.connect(self.guiActions.timerCountdown)
+        self.timerWindow.timerfired.connect(self.guiActions.timerFired)
 
         #
         #  Statusbar and toolbar
@@ -239,9 +242,7 @@ class MainWindow(QMainWindow):
 
         # Add headers
         self.headersCheckbox = QCheckBox("Create header nodes",self)
-
         self.headersCheckbox.setChecked(str(self.settings.value('saveheaders', 'false')) == 'true')
-
         self.headersCheckbox.setToolTip(
             wraptip("Check if you want to create nodes containing headers of the response."))
         self.settingsLayout.addRow(self.headersCheckbox)
@@ -292,11 +293,11 @@ class MainWindow(QMainWindow):
         treetoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         treetoolbar.setIconSize(QSize(16,16))
 
-        treetoolbar.addActions(self.actions.treeActions.actions())
+        treetoolbar.addActions(self.guiActions.treeActions.actions())
         dataLayout.addWidget (treetoolbar)
 
         self.tree=DataTree(self.mainWidget)
-        self.tree.nodeSelected.connect(self.actions.treeNodeSelected)
+        self.tree.nodeSelected.connect(self.guiActions.treeNodeSelected)
         self.tree.logmessage.connect(self.logmessage)
         self.tree.showprogress.connect(self.showprogress)
         self.tree.hideprogress.connect(self.hideprogress)
@@ -308,7 +309,7 @@ class MainWindow(QMainWindow):
         detailtoolbar = QToolBar(self)
         detailtoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         detailtoolbar.setIconSize(QSize(16,16))
-        detailtoolbar.addActions(self.actions.detailActions.actions())
+        detailtoolbar.addActions(self.guiActions.detailActions.actions())
         detailLayout.addWidget(detailtoolbar)
 
         #right sidebar - json viewer
@@ -336,7 +337,7 @@ class MainWindow(QMainWindow):
         columntoolbar = QToolBar(self)
         columntoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         columntoolbar.setIconSize(QSize(16,16))
-        columntoolbar.addActions(self.actions.columnActions.actions())
+        columntoolbar.addActions(self.guiActions.columnActions.actions())
         groupLayout.addWidget(columntoolbar)
 
         #Requests/Apimodules
@@ -412,7 +413,7 @@ class MainWindow(QMainWindow):
         button.setToolTip(wraptip("Can't get enough? Here you will find even more settings!"))
         # button.setMinimumSize(QSize(120,40))
         # button.setIconSize(QSize(32,32))
-        button.clicked.connect(self.actions.actionSettings.trigger)
+        button.clicked.connect(self.guiActions.actionSettings.trigger)
         fetchsettings.addRow("More settings", button)
         
         #Fetch data
@@ -424,7 +425,7 @@ class MainWindow(QMainWindow):
         button.setToolTip(wraptip("Fetch data from the API with the current settings. If you click the button with the control key pressed, a browser window is opened instead."))
         button.setMinimumSize(QSize(120,40))
         button.setIconSize(QSize(32,32))
-        button.clicked.connect(self.actions.actionQuery.trigger)
+        button.clicked.connect(self.guiActions.actionQuery.trigger)
         button.setFont(f)
         fetchdata.addWidget(button,1)
 
@@ -433,7 +434,7 @@ class MainWindow(QMainWindow):
         button.setIcon(QIcon(":/icons/timer.png"))
         button.setMinimumSize(QSize(40,40))
         button.setIconSize(QSize(25,25))
-        button.clicked.connect(self.actions.actionTimer.trigger)
+        button.clicked.connect(self.guiActions.actionTimer.trigger)
         fetchdata.addWidget(button,1)
 
         #Status
@@ -478,8 +479,8 @@ class MainWindow(QMainWindow):
 
     def updateUI(self):
         #disable buttons that do not work without an opened database
-        self.actions.databaseActions.setEnabled(self.database.connected)
-        self.actions.actionQuery.setEnabled(self.tree.selectedCount() > 0)
+        self.guiActions.databaseActions.setEnabled(self.database.connected)
+        self.guiActions.actionQuery.setEnabled(self.tree.selectedCount() > 0)
 
         if self.database.connected:
             #self.statusBar().showMessage(self.database.filename)
@@ -501,6 +502,22 @@ class MainWindow(QMainWindow):
         t = threading.Thread(target=getter)
         t.start()
 
+    def startServer(self):
+        port = cmd_args.port
+        if port is None:
+            self.serverInstance = None
+            self.serverThread = None
+            return False
+
+        self.serverInstance = Server(port, self.serverActions)
+        self.serverThread = threading.Thread(target=self.serverInstance.serve_forever)
+        self.serverThread.start()
+        self.logmessage('Server started on http://localhost:%d.' % port)
+
+    def stopServer(self):
+        if self.serverInstance is not None:
+            self.serverInstance.shutdown()
+            self.logmessage("Server stopped")
 
     def writeSettings(self):
         QCoreApplication.setOrganizationName("Strohne")
@@ -556,6 +573,8 @@ class MainWindow(QMainWindow):
                 self.deleteSettings()
             else:
                 self.writeSettings()
+
+            self.stopServer()
             event.accept()
         else:
             event.ignore()
@@ -570,6 +589,10 @@ class MainWindow(QMainWindow):
             else:
                 self.loglist.append(str(datetime.now())+" "+message)
             time.sleep(0)
+
+    def getlog(self):
+        with self.lock_logging:
+            return self.loglist.toPlainText().splitlines()
 
     @Slot(str)
     def showprogress(self, maximum=None):
@@ -603,17 +626,17 @@ class Toolbar(QToolBar):
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
         self.setIconSize(QSize(24,24))
 
-        self.addActions(self.mainWindow.actions.basicActions.actions())
+        self.addActions(self.mainWindow.guiActions.basicActions.actions())
         self.addSeparator()
-        self.addActions(self.mainWindow.actions.databaseActions.actions())
+        self.addActions(self.mainWindow.guiActions.databaseActions.actions())
 
         self.addSeparator()
         #self.addAction(self.mainWindow.actions.actionExpandAll)
         #self.addAction(self.mainWindow.actions.actionCollapseAll)
         #self.addAction(self.mainWindow.actions.actionSelectNodes)
-        self.addAction(self.mainWindow.actions.actionLoadPreset)
-        self.addAction(self.mainWindow.actions.actionLoadAPIs)
-        self.addAction(self.mainWindow.actions.actionHelp)
+        self.addAction(self.mainWindow.guiActions.actionLoadPreset)
+        self.addAction(self.mainWindow.guiActions.actionLoadAPIs)
+        self.addAction(self.mainWindow.guiActions.actionHelp)
 
 
 
@@ -725,8 +748,10 @@ if __name__ == "__main__":
 
     # Command line options
     cmd_args = argparse.ArgumentParser(description='Run Facepager.')
+
     cmd_args.add_argument('database', help='Database file to open', nargs='?')
     cmd_args.add_argument('--style', dest='style', default=None, help='Select the PySide style, for example Fusion')
+    cmd_args.add_argument('--server', dest='port', default=None, type=int, help='Start a local server at the given port') #8009
 
     cmd_args = cmd_args.parse_args()
 

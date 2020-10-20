@@ -278,8 +278,13 @@ class PresetWindow(QDialog):
         self.show()
         QApplication.processEvents()
 
+        if self.progress is not None:
+            self.progress.setModal(True)
+            self.progress.show()
+
         self.initPresets()
         self.raise_()
+
 
     def addPresetItem(self,folder,filename,default=False,online=False):
         try:
@@ -441,9 +446,6 @@ class PresetWindow(QDialog):
 
         selectitem = None
 
-        if self.progress is not None:
-            self.progress.open()
-
         while not self.presetsDownloaded:
             QApplication.processEvents()
 
@@ -470,8 +472,6 @@ class PresetWindow(QDialog):
 
         self.applyButton.setDefault(True)
         self.loadingIndicator.hide()
-
-        #self.currentChanged()
 
     def getCategories(self):
         categories = []
@@ -511,7 +511,7 @@ class PresetWindow(QDialog):
             pipeline.append(preset)
 
         # Process pipeline
-        return self.mainWindow.actions.queryPipeline(pipeline)
+        return self.mainWindow.apiActions.queryPipeline(pipeline)
         #self.close()
 
 
@@ -523,23 +523,8 @@ class PresetWindow(QDialog):
         if data.get('iscategory',False):
             return False
             #self.startPipeline()
-
-        #Find API module
-        module = data.get('module', '')
-        module = 'Generic' if module == 'Files' else module
-
-        tab = self.mainWindow.getModule(module)
-        if tab is not None:
-            tab.setOptions(data.get('options', {}))
-            self.mainWindow.RequestTabs.setCurrentWidget(tab)
-
-        #Set columns
-        self.mainWindow.fieldList.setPlainText("\n".join(data.get('columns',[])))
-        self.mainWindow.actions.showColumns()
-
-        #Set global settings
-        self.mainWindow.speedEdit.setValue(data.get('speed',200))
-        self.mainWindow.headersCheckbox.setChecked(bool(data.get('headers', False)))
+        else:
+            self.mainWindow.apiActions.applySettings(data)
 
         self.close()
 
@@ -632,14 +617,7 @@ class PresetWindow(QDialog):
                     'description':description.toPlainText()
             }
 
-            data_settings = {
-                    'module': self.mainWindow.RequestTabs.currentWidget().name,
-                    'options': self.mainWindow.RequestTabs.currentWidget().getOptions('preset'),
-                    'columns': self.mainWindow.fieldList.toPlainText().splitlines(),
-                    'speed': self.mainWindow.speedEdit.value(),
-                    'headers': self.mainWindow.headersCheckbox.isChecked()
-            }
-
+            data_settings = self.mainWindow.apiActions.getPresetOptions()
             self.currentData.update(data_meta)
 
             if self.currentFilename is None:
@@ -655,7 +633,7 @@ class PresetWindow(QDialog):
                     self.currentData.update(data_settings)
 
             # Sanitize and reorder
-            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'headers','columns']
+            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'saveheaders','columns']
             self.currentData = {k: self.currentData.get(k, None) for k in keys}
 
             # Create folder

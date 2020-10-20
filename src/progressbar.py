@@ -7,7 +7,7 @@ class ProgressBar(QDialog):
 
     def __init__(self, mainmessage, parent=None, hidden=False):
         #Init dialog
-        super(ProgressBar, self).__init__(parent,Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        super(ProgressBar, self).__init__(parent, Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle(mainmessage)
 

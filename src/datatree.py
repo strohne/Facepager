@@ -49,6 +49,7 @@ class DataTree(QTreeView):
         
         model = self.model()
         parent = QModelIndex()
+        model.fetchMore(parent)
         row = model.rowCount(parent)-1
          
         index = model.index(row, 0, parent)
@@ -679,7 +680,7 @@ class TreeModel(QAbstractItemModel):
         # Find last offcut or data node
         treeitem = index.internalPointer()
         if options.get('resume', False):
-            filter = {'querystatus': "fetched (200)", 'objecttype': ["data", "offcut"]}
+            filter = {'querystatus': "fetched (200)", 'objecttype': ["data", "offcut", "empty"]}
             treeitem.lastdata = self.getLastChildData(index, filter)
 
             # Dont't fetch if already finished (=has offcut without next cursor)
