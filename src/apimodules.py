@@ -1,6 +1,8 @@
 import urllib.parse
 import urllib.request, urllib.parse, urllib.error
 
+
+import secrets
 import hashlib, hmac, base64
 from mimetypes import guess_all_extensions
 from datetime import datetime
@@ -35,6 +37,7 @@ import dateutil.parser
 from folder import SelectFolderDialog
 from paramedit import *
 from utilities import *
+from authorize import *
 
 try:
     from credentials import *
@@ -101,6 +104,9 @@ class ApiTab(QScrollArea):
             self.defaults = credentials.get(name.lower().replace(' ','_'),{})
         except NameError:
             self.defaults = {}
+
+        # Authorization
+        self.userauthorized = True
 
     def idtostr(self, val):
         """
@@ -1138,6 +1144,38 @@ class ApiTab(QScrollArea):
 
         return method, urlpath, urlparams, payload, requestheaders
 
+    def authorizeUser(self, userid):
+        # User ID
+        if userid is None:
+            self.userauthorized = False
+            return False
+
+        # App salt
+        salt = getDictValueOrNone(credentials,'facepager.salt')
+        if salt is None:
+            self.userauthorized = False
+            return False
+
+        # Create token
+        usertoken = hashlib.pbkdf2_hmac(
+            'sha256',  # The hash digest algorithm for HMAC
+            userid.encode("utf-8"),
+            salt.encode("utf-8"),
+            100000  # It is recommended to use at least 100,000 iterations of SHA-256
+        )
+
+        # Check token
+        authurl = getDictValueOrNone(credentials, 'facepager.url')
+        if authurl is None:
+            self.userauthorized = False
+            return False
+
+        authurl += '?module='+self.name.lower()+'&usertoken='+usertoken.hex()
+        data, headers, status = self.request(None, authurl)
+        self.userauthorized = status == 'fetched (200)'
+
+        return self.userauthorized
+
     def initSession(self, no=0, renew=False):
         """
         Return existing session or create a new session if necessary
@@ -1232,6 +1270,10 @@ class ApiTab(QScrollArea):
                 pause = ((60 * 1000) / float(self.speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
 
         self.lastrequest = QDateTime.currentDateTime()
+
+        if session_no is None:
+            session_no = 0
+            self.closeSession(session_no)
 
         session = self.initSession(session_no)
 
@@ -2014,9 +2056,8 @@ class AuthTab(ApiTab):
             payload = 'grant_type=client_credentials'
             headers = {'Authorization': 'Basic ' + basicauth,
                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
-            session_no = 0
-            self.closeSession(session_no)
-            data, headers, status = self.request(session_no, path, payload=payload, headers=headers, method="POST")
+
+            data, headers, status = self.request(None, path, payload=payload, headers=headers, method="POST")
 
             token = data.get('access_token', '')
             self.tokenEdit.setText(token)
@@ -2040,6 +2081,9 @@ class AuthTab(ApiTab):
 class FacebookTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
+
+        # Authorization
+        self.userauthorized = False
 
         #Defaults
         self.defaults['auth_type'] = "OAuth2"
@@ -2098,8 +2142,12 @@ class FacebookTab(AuthTab):
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         # Preconditions
+        if not self.userauthorized:
+            raise Exception('You are not authorized, login please!')
+
         if options.get('access_token','') == '':
             raise Exception('Access token is missing, login please!')
+
         self.connected = True
         self.speed = options.get('speed',None)
         session_no = options.get('threadnumber', 0)
@@ -2202,12 +2250,21 @@ class FacebookTab(AuthTab):
                 token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
                 self.tokenEdit.setText(token[0])
 
+                # Get user ID
+                data, headers, status = self.request(
+                    None, self.basepathEdit.currentText().strip() +
+                    '/me?fields=id&access_token=' + token[0])
+                if status != 'fetched (200)':
+                    raise Exception("Could not retrieve user ID. Check settings and try again.")
+
+                self.authorizeUser(data.get('id'))
+                if not self.userauthorized:
+                    raise Exception("You are not registered at Facepager.")
+
                 # Get page access token
                 pageid = self.pageIdEdit.text().strip()
                 if pageid != '':
-                    session_no = 0
-                    self.closeSession(session_no)
-                    data, headers, status = self.request(session_no, self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token[0])
+                    data, headers, status = self.request(None, self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token[0])
                     if status != 'fetched (200)':
                         raise Exception("Could not authorize for page. Check page ID in the settings.")
 
