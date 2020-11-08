@@ -35,9 +35,9 @@ else:
 import dateutil.parser
 
 from folder import SelectFolderDialog
+from webdialog import WebDialog
 from paramedit import *
 from utilities import *
-from authorize import *
 
 try:
     from credentials import *
@@ -105,8 +105,10 @@ class ApiTab(QScrollArea):
         except NameError:
             self.defaults = {}
 
-        # Authorization
-        self.userauthorized = True
+        # Authorization / use preregistered app
+        self.auth_userauthorized = True
+        self.auth_preregistered = True
+
 
     def idtostr(self, val):
         """
@@ -1147,13 +1149,13 @@ class ApiTab(QScrollArea):
     def authorizeUser(self, userid):
         # User ID
         if userid is None:
-            self.userauthorized = False
+            self.auth_userauthorized = False
             return False
 
         # App salt
         salt = getDictValueOrNone(credentials,'facepager.salt')
         if salt is None:
-            self.userauthorized = False
+            self.auth_userauthorized = False
             return False
 
         # Create token
@@ -1167,14 +1169,14 @@ class ApiTab(QScrollArea):
         # Check token
         authurl = getDictValueOrNone(credentials, 'facepager.url')
         if authurl is None:
-            self.userauthorized = False
+            self.auth_userauthorized = False
             return False
 
         authurl += '?module='+self.name.lower()+'&usertoken='+usertoken.hex()
         data, headers, status = self.request(None, authurl)
-        self.userauthorized = status == 'fetched (200)'
+        self.auth_userauthorized = status == 'fetched (200)'
 
-        return self.userauthorized
+        return self.auth_userauthorized
 
     def initSession(self, no=0, renew=False):
         """
@@ -2083,7 +2085,7 @@ class FacebookTab(AuthTab):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
 
         # Authorization
-        self.userauthorized = False
+        self.auth_userauthorized = False
 
         #Defaults
         self.defaults['auth_type'] = "OAuth2"
@@ -2142,7 +2144,7 @@ class FacebookTab(AuthTab):
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         # Preconditions
-        if not self.userauthorized:
+        if not self.auth_userauthorized:
             raise Exception('You are not authorized, login please!')
 
         if options.get('access_token','') == '':
@@ -2230,7 +2232,17 @@ class FacebookTab(AuthTab):
     def doLogin(self, session_no = 0):
         try:
             #use credentials from input if provided
-            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+            if self.clientIdEdit.text() != "":
+                self.auth_preregistered = False
+                clientid = self.clientIdEdit.text()
+            else:
+                self.auth_preregistered = True
+                clientid = self.defaults.get('client_id','')
+
+                proceedDlg = WebDialog(self.mainWindow,"Login to Facepager","https://strohne.github.io/Facepager/")
+                if proceedDlg.show() != QDialog.Accepted:
+                    return False
+
             scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
             
             if clientid  == '':
@@ -2247,32 +2259,31 @@ class FacebookTab(AuthTab):
         if url.toString().startswith(self.defaults['redirect_uri']):
             try:
                 url = urllib.parse.parse_qs(url.toString())
-                token = url.get(self.defaults['redirect_uri']+"#access_token",[''])
-                self.tokenEdit.setText(token[0])
+                token = url.get(self.defaults['redirect_uri']+"#access_token",[''])[0]
 
                 # Get user ID
-                data, headers, status = self.request(
-                    None, self.basepathEdit.currentText().strip() +
-                    '/me?fields=id&access_token=' + token[0])
-                if status != 'fetched (200)':
-                    raise Exception("Could not retrieve user ID. Check settings and try again.")
+                if not self.auth_preregistered:
+                    data, headers, status = self.request(
+                        None, self.basepathEdit.currentText().strip() +
+                        '/me?fields=id&access_token=' + token[0])
+                    if status != 'fetched (200)':
+                        raise Exception("Could not retrieve user ID. Check settings and try again.")
 
-                self.authorizeUser(data.get('id'))
-                if not self.userauthorized:
-                    raise Exception("You are not registered at Facepager.")
+                    self.authorizeUser(data.get('id'))
+                    if not self.auth_userauthorized:
+                        raise Exception("You are not registered at Facepager.")
 
                 # Get page access token
                 pageid = self.pageIdEdit.text().strip()
                 if pageid != '':
-                    data, headers, status = self.request(None, self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token[0])
+                    data, headers, status = self.request(None, self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token)
                     if status != 'fetched (200)':
                         raise Exception("Could not authorize for page. Check page ID in the settings.")
 
                     token = data.get('access_token','')
-                    self.tokenEdit.setText(token)
 
-                else:
-                    self.tokenEdit.setText(token[0])
+                # Set token
+                self.tokenEdit.setText(token)
             except Exception as e:
                 QMessageBox.critical(self,"Login error",
                                      str(e),QMessageBox.StandardButton.Ok)
