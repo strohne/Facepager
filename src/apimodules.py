@@ -2242,7 +2242,8 @@ class FacebookTab(AuthTab):
                 if clientid == '':
                     raise Exception('Client ID missing, please adjust settings!')
 
-                proceedDlg = WebDialog(self.mainWindow,"Login to Facepager","https://strohne.github.io/Facepager/login_facebook.html")
+                termsurl = self.defaults.get('termsurl','')
+                proceedDlg = WebDialog(self.mainWindow,"Login to Facepager",termsurl)
                 if proceedDlg.show() != QDialog.Accepted:
                     return False
 
