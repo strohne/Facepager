@@ -2239,15 +2239,16 @@ class FacebookTab(AuthTab):
                 self.auth_preregistered = True
                 clientid = self.defaults.get('client_id','')
 
-                proceedDlg = WebDialog(self.mainWindow,"Login to Facepager","https://strohne.github.io/Facepager/")
+                if clientid == '':
+                    raise Exception('Client ID missing, please adjust settings!')
+
+                proceedDlg = WebDialog(self.mainWindow,"Login to Facepager","https://strohne.github.io/Facepager/login_facebook.html")
                 if proceedDlg.show() != QDialog.Accepted:
                     return False
 
             scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
             
-            if clientid  == '':
-                 raise Exception('Client ID missing, please adjust settings!')
-            
+
             url = self.defaults['auth_uri'] +"?client_id=" + clientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
             caption = "Facebook Login Page"
             self.showLoginWindow(caption, url)

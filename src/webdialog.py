@@ -18,7 +18,7 @@ class WebDialog(QDialog):
 
         self.setWindowTitle(caption)
         self.setMinimumWidth(600);
-        self.setMinimumHeight(600);
+        self.setMinimumHeight(500);
 
         vLayout = QVBoxLayout()
         self.setLayout(vLayout)
