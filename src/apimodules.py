@@ -2243,9 +2243,10 @@ class FacebookTab(AuthTab):
                     raise Exception('Client ID missing, please adjust settings!')
 
                 termsurl = self.defaults.get('termsurl','')
-                proceedDlg = WebDialog(self.mainWindow,"Login to Facepager",termsurl)
-                if proceedDlg.show() != QDialog.Accepted:
-                    return False
+                if termsurl != '':
+                    proceedDlg = WebDialog(self.mainWindow,"Login to Facepager",termsurl)
+                    if proceedDlg.show() != QDialog.Accepted:
+                        return False
 
             scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
             
@@ -2264,7 +2265,7 @@ class FacebookTab(AuthTab):
                 token = url.get(self.defaults['redirect_uri']+"#access_token",[''])[0]
 
                 # Get user ID
-                if not self.auth_preregistered:
+                if self.auth_preregistered:
                     data, headers, status = self.request(
                         None, self.basepathEdit.currentText().strip() +
                         '/me?fields=id&access_token=' + token[0])
