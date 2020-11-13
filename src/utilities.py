@@ -634,7 +634,7 @@ def extractHtml(html, selector, type='css', dump=False):
 
 def xmlToJson(data):
     bf = BadgerFish(dict_type=OrderedDict)
-    xml = lxml.html.fromstring(data)
+    xml = lxml.html.fromstring(data.encode('utf-8'))
     data = bf.data(xml)
     return data
 

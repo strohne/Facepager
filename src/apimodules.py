@@ -35,7 +35,7 @@ else:
 import dateutil.parser
 
 from folder import SelectFolderDialog
-from webdialog import WebDialog
+from webdialog import WebDialog, BrowserDialog, QWebPageCustom
 from paramedit import *
 from utilities import *
 
@@ -922,21 +922,54 @@ class ApiTab(QScrollArea):
             self.folderwidget.show()
             self.mainLayout.labelForField(self.folderwidget).show()                        
 
-    def initResponseInputs(self):
+    def initResponseInputs(self, format=False):
         layout= QHBoxLayout()
-        
-        #Extract
-        self.extractEdit = QLineEdit(self)
-        layout.addWidget(self.extractEdit)
-        layout.setStretch(0, 1)
 
-        layout.addWidget(QLabel("Key for Object ID"))
-        self.objectidEdit = QLineEdit(self)
-        layout.addWidget(self.objectidEdit)
-        layout.setStretch(2, 1)
-                    
-        #Add layout                
-        self.extraLayout.addRow("Key to extract", layout)
+        if not format:
+            #Extract
+            self.extractEdit = QLineEdit(self)
+            layout.addWidget(self.extractEdit)
+            layout.setStretch(0, 1)
+
+            layout.addWidget(QLabel("Key for Object ID"))
+            self.objectidEdit = QLineEdit(self)
+            layout.addWidget(self.objectidEdit)
+            layout.setStretch(2, 1)
+
+            #Add layout
+            self.extraLayout.addRow("Key to extract", layout)
+        else:
+            # Format
+            self.formatEdit = QComboBox(self)
+            self.formatEdit.addItems(['json', 'text', 'links','xml','file'])
+            self.formatEdit.setToolTip("<p>JSON: default option, data will be parsed as JSON. </p> \
+                                        <p>Text: data will not be parsed and embedded in JSON. </p> \
+                                        <p>Links: data will be parsed as xml and links will be extracted (set key to extract to 'links' and key for Object ID to 'url'). </p> \
+                                        <p>XML: data will be parsed as XML and converted to JSON. </p> \
+                                        <p>File: data will only be downloaded to files, specify download folder and filename.</p>")
+            layout.addWidget(self.formatEdit)
+            layout.setStretch(0, 0)
+            # self.formatEdit.currentIndexChanged.connect(self.formatChanged)
+
+            # Extract
+            layout.addWidget(QLabel("Key to extract"))
+            self.extractEdit = QLineEdit(self)
+            self.extractEdit.setToolTip(wraptip(
+                "If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
+            layout.addWidget(self.extractEdit)
+            layout.setStretch(1, 0)
+            layout.setStretch(2, 2)
+
+            layout.addWidget(QLabel("Key for Object ID"))
+            self.objectidEdit = QLineEdit(self)
+            self.objectidEdit.setToolTip(
+                wraptip("If your data contains unique IDs for every node, define the corresponding key."))
+            layout.addWidget(self.objectidEdit)
+            layout.setStretch(3, 0)
+            layout.setStretch(4, 2)
+
+            # Add layout
+            self.extraLayout.addRow("Response", layout)
 
     @Slot()
     def onChangedRelation(self, index = None):
@@ -1356,14 +1389,14 @@ class ApiTab(QScrollArea):
                     # try:
                     #     data = xmlToJson(response.text)
                     # except:
-                    data = {'error': 'Data could not be converted to JSON','response': response.text}
+                    data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
 
             # JSON
             elif format == 'xml':
                 try:
                     data = xmlToJson(response.text)
-                except:
-                    data = {'error': 'Data could not be converted to JSON','response': response.text}
+                except Exception as e:
+                    data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
 
             return data, headers, status
 
@@ -1417,33 +1450,9 @@ class ApiTab(QScrollArea):
 
     @Slot()
     def showBrowser(self, caption='', url='', headers={}, width=600, height=600):
-        self.browserWindow = QMainWindow(self.mainWindow)
-        self.browserWindow.setAttribute(Qt.WA_DeleteOnClose)
-        self.browserWindow.resize(width, height)
-        self.browserWindow.setWindowTitle(caption)
-        self.browserWindow.stopped = False
-        self.browserWindow.cookie = ''
-
-        # create WebView with Facebook log-Dialog, OpenSSL needed
-        self.browserStatus = self.browserWindow.statusBar()
-        self.browserWebview = QWebEngineView(self.browserWindow)
-        self.browserWindow.setCentralWidget(self.browserWebview)
-
-        # Use the custom- WebPage class
-        webpage = QWebPageCustom(self.browserWebview)
-        webpage.logmessage.connect(self.logMessage)
-        self.browserWebview.setPage(webpage)
-
-        request = QWebEngineHttpRequest(QUrl(url))
-        for key, val in headers.items():
-            key = key.encode('utf-8')
-            val = val.encode('utf-8')
-            request.setHeader(QByteArray(key), QByteArray(val))
-
-        self.browserWebview.load(request)
-        self.browserWebview.show()
-
-        self.browserWindow.show()
+        self.browserWindow = BrowserDialog(self.mainWindow,  caption, width, height)
+        self.browserWindow.logmessage.connect(self.logMessage)
+        self.browserWindow.loadPage(url, headers)
 
     @Slot()
     def showLoginWindow(self, caption='', url='',width=600,height=600):
@@ -2268,7 +2277,7 @@ class FacebookTab(AuthTab):
                 if self.auth_preregistered:
                     data, headers, status = self.request(
                         None, self.basepathEdit.currentText().strip() +
-                        '/me?fields=id&access_token=' + token[0])
+                        '/me?fields=id&access_token=' + token)
                     if status != 'fetched (200)':
                         raise Exception("Could not retrieve user ID. Check settings and try again.")
 
@@ -2563,7 +2572,7 @@ class AmazonTab(AuthTab):
         self.initUploadFolderInput()
 
         # Extract input
-        self.initResponseInputs()
+        self.initResponseInputs(True)
 
         # Pages Box
         self.initPagingInputs(True, True)
@@ -2605,7 +2614,7 @@ class AmazonTab(AuthTab):
         options = super(AmazonTab, self).getOptions(purpose)
 
         options['auth'] = 'disable'
-        options['format'] = self.defaults.get('format', '')
+        #options['format'] = self.defaults.get('format', '')
         options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get('service', '')
         options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get(
             'region', '')
@@ -2972,7 +2981,7 @@ class GenericTab(AuthTab):
 
         # Extract input
         self.initPagingInputs(True, True)
-        self.initResponseInputs()
+        self.initResponseInputs(True)
 
         self.initFileInputs()
 
@@ -2984,39 +2993,6 @@ class GenericTab(AuthTab):
         self.loadSettings()
         self.timeout = 15
 
-    def initResponseInputs(self):
-        layout = QHBoxLayout()
-
-        #Format
-        self.formatEdit = QComboBox(self)
-        self.formatEdit.addItems(['json','text','links','file'])
-        self.formatEdit.setToolTip("<p>JSON: default option, data will be parsed as JSON or converted from XML to JSON. </p> \
-                                    <p>Text: data will not be parsed and embedded in JSON. </p> \
-                                    <p>Links: data will be parsed as xml and links will be extracted (set key to extract to 'links' and key for Object ID to 'url'). </p> \
-                                    <p>File: data will only be downloaded to files, specify download folder and filename.</p>")
-        layout.addWidget(self.formatEdit)
-        layout.setStretch(0, 0)
-        #self.formatEdit.currentIndexChanged.connect(self.formatChanged)
-
-        # Extract
-        layout.addWidget(QLabel("Key to extract"))
-        self.extractEdit = QLineEdit(self)
-        self.extractEdit.setToolTip(wraptip("If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
-        layout.addWidget(self.extractEdit)
-        layout.setStretch(1, 0)
-        layout.setStretch(2, 2)
-
-        layout.addWidget(QLabel("Key for Object ID"))
-        self.objectidEdit = QLineEdit(self)
-        self.objectidEdit.setToolTip(wraptip("If your data contains unique IDs for every node, define the corresponding key."))
-        layout.addWidget(self.objectidEdit)
-        layout.setStretch(3, 0)
-        layout.setStretch(4, 2)
-
-        # Add layout
-        self.extraLayout.addRow("Response", layout)
-
-
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(GenericTab, self).getOptions(purpose)
 
@@ -3024,77 +3000,6 @@ class GenericTab(AuthTab):
             options['querytype'] = self.name + ':'+options['basepath']+options['resource']
 
         return options
-
-class QWebPageCustom(QWebEnginePage):
-    logmessage = Signal(str)
-    urlNotFound = Signal(QUrl)
-    cookieChanged = Signal(str, str)
-
-    def __init__(self, parent):
-        #super(QWebPageCustom, self).__init__(*args, **kwargs)
-        super(QWebPageCustom, self).__init__(parent)
-
-        self.cookiecache = {}
-
-        profile = self.profile()
-        profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
-        profile.clearHttpCache()
-        #print(profile.httpUserAgent())
-
-        cookies = profile.cookieStore()
-        profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
-        cookies.deleteAllCookies()
-        cookies.cookieAdded.connect(self.cookieAdded)
-
-
-    @Slot()
-    def cookieAdded(self, cookie):
-        """
-        Save cookies in cookie jar and emit cookie signal
-        :param cookie:
-        :return:
-        """
-        #value = cookie.toRawForm(QNetworkCookie.NameAndValueOnly).data().decode()
-
-        cookieid = cookie.domain() + cookie.path()
-        domain = cookie.domain().strip(".")
-        name = cookie.name().data().decode()
-        value = cookie.value().data().decode()
-
-        cookies = self.cookiecache.get(cookieid,{})
-        cookies[name] = value
-        self.cookiecache[cookieid] = cookies
-
-        fullcookie = '; '.join(['{}={}'.format(k, v) for k, v in cookies.items()])
-
-        self.cookieChanged.emit(domain, fullcookie)
-
-    def supportsExtension(self, extension):
-        if extension == QWebEnginePage.ErrorPageExtension:
-            return True
-        else:
-            return False
-
-    def extension(self, extension, option=0, output=0):
-        if extension != QWebEnginePage.ErrorPageExtension: return False
-
-        if option.domain == QWebEnginePage.QtNetwork:
-            #msg = "Network error (" + str(option.error) + "): " + option.errorString
-            #self.logmessage.emit(msg)
-            self.urlNotFound.emit(option.url)
-
-        elif option.domain == QWebEnginePage.Http:
-            msg = "HTTP error (" + str(option.error) + "): " + option.errorString
-            self.logmessage.emit(msg)
-
-        elif option.domain == QWebEnginePage.WebKit:
-            msg = "WebKit error (" + str(option.error) + "): " + option.errorString
-            self.logmessage.emit(msg)
-        else:
-            msg = option.errorString
-            self.logmessage.emit(msg)
-
-        return True
 
     # def onSslErrors(self, reply, errors):
     #     url = str(reply.url().toString())

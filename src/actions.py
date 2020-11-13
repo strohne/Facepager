@@ -133,11 +133,16 @@ class ApiActions(object):
         if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (indexes is not None)):
             return False
 
+        apimodule, options = self.getQueryOptions(apimodule, options)
+        if not apimodule.auth_userauthorized:
+            msg = 'You are not authorized, login please!'
+            QMessageBox.critical(self.mainWindow, "Not authorized",msg,QMessageBox.StandardButton.Ok)
+            return False
+
         #Show progress window
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
-            apimodule, options = self.getQueryOptions(apimodule, options)
             indexes = self.getIndexes(options, indexes, progress)
 
             # Update progress window
