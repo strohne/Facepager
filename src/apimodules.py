@@ -1,5 +1,5 @@
 import urllib.parse
-import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error
 
 
 import secrets
@@ -1488,9 +1488,6 @@ class ApiTab(QScrollArea):
         # Connect to the loadFinished-Slot for an error message
         self.login_webview.loadFinished.connect(self.loadFinished)
 
-        # Connect the cookieChanged-Slot to get cookies
-        webpage.cookieChanged.connect(self.cookieChanged)
-
         self.login_webview.load(QUrl(url))
         #self.login_webview.resize(window.size())
         self.login_webview.show()
@@ -1508,21 +1505,6 @@ class ApiTab(QScrollArea):
         if (not success and not self.loginWindow.stopped):
             self.logMessage('Error loading web page')
 
-    @Slot()
-    def cookieChanged(self, domain, cookie):
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Cookie':
-            try:
-                options = self.getOptions()
-                targeturl= options.get('auth_uri', '')
-                targeturl= urllib.parse.urlparse(targeturl)
-                targetdomain = targeturl.netloc
-            except:
-                targetdomain = None
-
-            if domain == targetdomain:
-                self.tokenEdit.setText(cookie)
-                self.loginStatus.showMessage("Domain: "+domain+". Cookie: "+cookie)
-                print("Domain: "+domain+". Cookie: "+cookie)
 
     def selectFolder(self):
         datadir = self.folderEdit.text()
@@ -1857,8 +1839,6 @@ class AuthTab(ApiTab):
             return False
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
             self.getOAuth1Token()
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Cookie':
-            self.getCookieToken(url)
         else:
             self.getOAuth2Token(url)
 
@@ -2026,6 +2006,10 @@ class AuthTab(ApiTab):
 
     @Slot()
     def doCookieLogin(self, session_no=0):
+        def newCookie(domain, cookie):
+            self.tokenEdit.setText(cookie)
+            # print("Domain: "+domain+". Cookie: "+cookie)
+
         try:
             options = self.getOptions()
             url= options.get('auth_uri', '')
@@ -2033,21 +2017,21 @@ class AuthTab(ApiTab):
             if url == '':
                 raise Exception('Login URL is missing, please adjust settings!')
 
-            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
-                                 url,
-                                 self.defaults.get('login_window_width', 600),
-                                 self.defaults.get('login_window_height', 600)
-                                 )
+            self.loginWindow = BrowserDialog(
+                self.mainWindow,
+                self.defaults.get('login_window_caption', 'Login'),
+                self.defaults.get('login_window_width', 600),
+                self.defaults.get('login_window_height', 600)
+            )
+
+            self.loginWindow.logMessage.connect(self.logMessage)
+            self.loginWindow.activateCookieButton(newCookie)
+            self.loginWindow.loadPage(url)
 
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
                                  str(e),
                                  QMessageBox.StandardButton.Ok)
-
-    @Slot(QUrl)
-    def getCookieToken(self, url):
-        pass
-
 
     @Slot()
     def doTwitterAppLogin(self, session_no=0):

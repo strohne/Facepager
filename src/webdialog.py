@@ -1,12 +1,13 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QDialog, QMainWindow
+from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QDialog, QMainWindow, QLabel
 from PySide2.QtWebEngineCore import QWebEngineHttpRequest
 from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
 
 import os
 import sys
 import webbrowser
+import urllib.parse
 
 class WebDialog(QDialog):
     def __init__(self, parent=None, caption = "", url=""):
@@ -67,7 +68,7 @@ class MyQWebEnginePage(QWebEnginePage):
 class BrowserDialog(QMainWindow):
     logMessage = Signal(str)
     scrapeData = Signal(str)
-    cookieChanged = Signal(str, str)
+    newCookie = Signal(str, str)
     loadFinished = Signal(bool)
     urlChanged = Signal(str)
     urlNotFound = Signal(QUrl)
@@ -80,7 +81,8 @@ class BrowserDialog(QMainWindow):
         self.resize(width, height)
         self.setWindowTitle(caption)
 
-        self.url = ""
+        self.url = None
+        self.domain = None
         self.headers = {}
         self.stopped = False
         self.cookie = ''
@@ -105,25 +107,27 @@ class BrowserDialog(QMainWindow):
         #self.browserWebview.loadFinished.connect(self.loadFinished)
 
         # Buttons
-        hLayout = QHBoxLayout()
-        hLayout.addStretch(5)
-        self.mainLayout.addLayout(hLayout)
-
-
-        buttonScrape = QPushButton(self)
-        buttonScrape.setText("Scrape data")
-        buttonScrape.setDefault(True)
-        buttonScrape.clicked.connect(self.scrapeDataClicked)
-        hLayout.addWidget(buttonScrape)
+        self.buttonLayout = QHBoxLayout()
+        self.mainLayout.addLayout(self.buttonLayout)
+        self.statusLabel = QLabel()
+        self.buttonLayout.addWidget(self.statusLabel)
+        self.buttonLayout.addStretch(5)
 
         buttonDismiss = QPushButton(self)
         buttonDismiss.setText("Close")
+        buttonDismiss.setDefault(True)
         buttonDismiss.clicked.connect(self.close)
-        hLayout.addWidget(buttonDismiss)
+        self.buttonLayout.addWidget(buttonDismiss)
 
     def loadPage(self, url="", headers={}):
         self.url = url
         self.headers = headers
+
+        try:
+            targeturl = urllib.parse.urlparse(url)
+            self.domain = targeturl.netloc
+        except:
+            self.domain = None
 
         request = QWebEngineHttpRequest(QUrl(self.url))
         for key, val in self.headers.items():
@@ -135,12 +139,42 @@ class BrowserDialog(QMainWindow):
         self.show()
 
     # Scrape HTML
-    def newHtmlData(self, data):
-        self.scrapeData.emit(data)
+    def activateScrapeButton(self, handler):
+        self.scrapeData.connect(handler)
 
+        buttonScrape = QPushButton(self)
+        buttonScrape.setText("Scrape data")
+        buttonScrape.setDefault(True)
+        buttonScrape.clicked.connect(self.scrapeDataClicked)
+        self.buttonLayout.addWidget(buttonScrape)
+
+    @Slot()
     def scrapeDataClicked(self):
         self.webpage.toHtml(self.newHtmlData)
 
+    def newHtmlData(self, data):
+        self.scrapeData.emit(data)
+
+
+    # Get cookie from initial domain
+    def activateCookieButton(self, handler):
+        self.newCookie.connect(handler)
+
+        buttonCookie = QPushButton(self)
+        buttonCookie.setText("Transfer cookie")
+        buttonCookie.setDefault(True)
+        buttonCookie.clicked.connect(self.transferCookieClicked)
+        self.buttonLayout.addWidget(buttonCookie)
+
+    @Slot()
+    def transferCookieClicked(self):
+        self.newCookie.emit(self.domain, self.cookie)
+
+    @Slot(str, str)
+    def cookieChanged(self, domain, cookie):
+        if domain == self.domain:
+            self.cookie = cookie
+            self.statusLabel.setText("Domain: "+domain+". Cookie: "+cookie)
 
 
 class QWebPageCustom(QWebEnginePage):

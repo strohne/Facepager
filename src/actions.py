@@ -1290,7 +1290,7 @@ class GuiActions(object):
 
         caption = "Browser"
         browser = apimodule.showBrowser(caption, url, requestheaders)
-        browser.scrapeData.connect(scrapeData)
+        browser.activateScrapeButton(scrapeData)
 
 
     @Slot()
