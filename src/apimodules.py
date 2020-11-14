@@ -1451,8 +1451,9 @@ class ApiTab(QScrollArea):
     @Slot()
     def showBrowser(self, caption='', url='', headers={}, width=600, height=600):
         self.browserWindow = BrowserDialog(self.mainWindow,  caption, width, height)
-        self.browserWindow.logmessage.connect(self.logMessage)
+        self.browserWindow.logMessage.connect(self.logMessage)
         self.browserWindow.loadPage(url, headers)
+        return self.browserWindow
 
     @Slot()
     def showLoginWindow(self, caption='', url='',width=600,height=600):
@@ -1477,7 +1478,7 @@ class ApiTab(QScrollArea):
 
         # Use the custom- WebPage class
         webpage = QWebPageCustom(self.login_webview)
-        webpage.logmessage.connect(self.logMessage)
+        webpage.logMessage.connect(self.logMessage)
         self.login_webview.setPage(webpage)
 
         #Connect to the getToken-method

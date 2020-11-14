@@ -6,7 +6,7 @@ from collections import defaultdict
 
 class DataTree(QTreeView):
 
-    nodeSelected = Signal(list)
+    nodeSelected = Signal(QModelIndex)
     logmessage = Signal(str)
     showprogress = Signal(int)
     stepprogress = Signal()

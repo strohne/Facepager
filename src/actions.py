@@ -1273,8 +1273,25 @@ class GuiActions(object):
 
         url = apimodule.getLogURL(urlpath, urlparams, options, False)
 
+        def scrapeData(html):
+            item = self.mainWindow.tree.currentIndex()
+            if not item.isValid():
+                return False
+            treenode = item.internalPointer()
+            data = {
+                'nodes':[{'text': html}],
+                'empty':None,
+                'offcut':None,
+                'headers':None,
+                'fieldsuffix':''
+            }
+            options = {}
+            treenode.appendNodes(data,options)
+
         caption = "Browser"
-        apimodule.showBrowser(caption, url, requestheaders)
+        browser = apimodule.showBrowser(caption, url, requestheaders)
+        browser.scrapeData.connect(scrapeData)
+
 
     @Slot()
     def treeNodeSelected(self, current):

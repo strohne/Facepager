@@ -4,8 +4,6 @@ from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QD
 from PySide2.QtWebEngineCore import QWebEngineHttpRequest
 from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
 
-
-
 import os
 import sys
 import webbrowser
@@ -67,7 +65,13 @@ class MyQWebEnginePage(QWebEnginePage):
         return True
 
 class BrowserDialog(QMainWindow):
-    logmessage = Signal(str)
+    logMessage = Signal(str)
+    scrapeData = Signal(str)
+    cookieChanged = Signal(str, str)
+    loadFinished = Signal(bool)
+    urlChanged = Signal(str)
+    urlNotFound = Signal(QUrl)
+
 
     def __init__(self, parent=None, caption = "",  width=600, height=600):
         super(BrowserDialog,self).__init__(parent)
@@ -84,31 +88,38 @@ class BrowserDialog(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
         self.mainLayout = QVBoxLayout(central)
-        self.browserStatus = self.statusBar()
+        #self.browserStatus = self.statusBar()
 
         # Create WebView
         self.browserWebview = QWebEngineView(self)
-        webpage = QWebPageCustom(self.browserWebview)
-        webpage.logmessage.connect(self.logmessage)
-        self.browserWebview.setPage(webpage)
+        self.webpage = QWebPageCustom(self.browserWebview)
+        self.browserWebview.setPage(self.webpage)
         self.mainLayout.addWidget(self.browserWebview)
         self.browserWebview.show()
+
+        # Signals
+        self.webpage.logMessage.connect(self.logMessage)
+        self.webpage.cookieChanged.connect(self.cookieChanged)
+        #self.browserWebview.urlChanged.connect(self.urlChanged)
+        #self.webpage.urlNotFound.connect(self.urlNotFound)
+        #self.browserWebview.loadFinished.connect(self.loadFinished)
 
         # Buttons
         hLayout = QHBoxLayout()
         hLayout.addStretch(5)
         self.mainLayout.addLayout(hLayout)
 
+
+        buttonScrape = QPushButton(self)
+        buttonScrape.setText("Scrape data")
+        buttonScrape.setDefault(True)
+        buttonScrape.clicked.connect(self.scrapeDataClicked)
+        hLayout.addWidget(buttonScrape)
+
         buttonDismiss = QPushButton(self)
         buttonDismiss.setText("Close")
         buttonDismiss.clicked.connect(self.close)
         hLayout.addWidget(buttonDismiss)
-
-        # buttonFetch = QPushButton(self)
-        # buttonFetch.setText("Load data")
-        # buttonFetch.setDefault(True)
-        # buttonFetch.clicked.connect(self.fetchData)
-        # hLayout.addWidget(buttonFetch)
 
     def loadPage(self, url="", headers={}):
         self.url = url
@@ -123,11 +134,17 @@ class BrowserDialog(QMainWindow):
         self.browserWebview.load(request)
         self.show()
 
-    def fetchData(self):
-        pass
+    # Scrape HTML
+    def newHtmlData(self, data):
+        self.scrapeData.emit(data)
+
+    def scrapeDataClicked(self):
+        self.webpage.toHtml(self.newHtmlData)
+
+
 
 class QWebPageCustom(QWebEnginePage):
-    logmessage = Signal(str)
+    logMessage = Signal(str)
     urlNotFound = Signal(QUrl)
     cookieChanged = Signal(str, str)
 
@@ -181,18 +198,18 @@ class QWebPageCustom(QWebEnginePage):
 
         if option.domain == QWebEnginePage.QtNetwork:
             #msg = "Network error (" + str(option.error) + "): " + option.errorString
-            #self.logmessage.emit(msg)
+            #self.logMessage.emit(msg)
             self.urlNotFound.emit(option.url)
 
         elif option.domain == QWebEnginePage.Http:
             msg = "HTTP error (" + str(option.error) + "): " + option.errorString
-            self.logmessage.emit(msg)
+            self.logMessage.emit(msg)
 
         elif option.domain == QWebEnginePage.WebKit:
             msg = "WebKit error (" + str(option.error) + "): " + option.errorString
-            self.logmessage.emit(msg)
+            self.logMessage.emit(msg)
         else:
             msg = option.errorString
-            self.logmessage.emit(msg)
+            self.logMessage.emit(msg)
 
         return True
