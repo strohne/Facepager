@@ -756,6 +756,7 @@ if __name__ == "__main__":
     cmd_args = cmd_args.parse_args()
 
     # Locate the SSL certificate for requests
-    os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(getResourceFolder() , 'ssl', 'cacert.pem')
+    # todo: no longer necessary because requests uses certifi? https://requests.readthedocs.io/en/master/user/advanced/#ca-certificates
+    # os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(getResourceFolder() , 'ssl', 'cacert.pem')
 
     startMain()
