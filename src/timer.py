@@ -56,7 +56,7 @@ class TimerWindow(QDialog):
         settingsLayout.addRow("Start Time (hh:mm)",self.startTimeEdit)
         
         #Interval
-        intervalLayout = QHBoxLayout(self)
+        intervalLayout = QHBoxLayout()
 
         self.intervalHoursEdit = QSpinBox(self)
         self.intervalHoursEdit.setMinimum(0)
