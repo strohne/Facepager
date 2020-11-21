@@ -19,6 +19,12 @@ from utilities import wraptip, formatdict
 class PresetWindow(QDialog):
     logmessage = Signal(str)
 
+    progressStart = Signal()
+    progressShow = Signal()
+    progressMax = Signal(int)
+    progressStep = Signal()
+    progressStop = Signal()
+
     def __init__(self, parent=None):
         super(PresetWindow,self).__init__(parent)
 
@@ -202,13 +208,41 @@ class PresetWindow(QDialog):
         self.presetSuffix = ['.3_9.json','.3_10.json','.fp4.json']
         self.lastSelected = None
 
-        # Progress bar
-        self.progress = ProgressBar("Downloading default presets from GitHub...", self, hidden=silent)
-
+        # Progress bar (sync with download thread by signals
+        self.progress = ProgressBar("Downloading default presets from GitHub...", self, hidden=True)
+        self.progressStart.connect(self.setProgressStart)
+        self.progressShow.connect(self.setProgressShow)
+        self.progressMax.connect(self.setProgressMax)
+        self.progressStep.connect(self.setProgressStep)
+        self.progressStop.connect(self.setProgressStop)
 #         if getattr(sys, 'frozen', False):
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
 #         elif __file__:
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(__file__),'presets')
+
+    # Sycn progress bar with download thread
+    @Slot()
+    def setProgressStart(self):
+        if self.progress is None:
+            self.progress = ProgressBar("Downloading default presets from GitHub...", self, hidden=True)
+
+    def setProgressShow(self):
+        if self.progress is not None:
+            self.progress.setModal(True)
+            self.progress.show()
+        QApplication.processEvents()
+
+    def setProgressMax(self, maximum):
+        if self.progress is not None:
+            self.progress.setMaximum(maximum)
+
+    def setProgressStep(self):
+        if self.progress is not None:
+            self.progress.step()
+
+    def setProgressStop(self):
+        self.progress.close()
+        self.progress = None
 
     def statusBarClicked(self):
         if not os.path.exists(self.presetFolder):
@@ -277,9 +311,7 @@ class PresetWindow(QDialog):
         self.show()
         QApplication.processEvents()
 
-        if self.progress is not None:
-            self.progress.setModal(True)
-            self.progress.show()
+        self.progressShow.emit()
 
         self.initPresets()
         self.raise_()
@@ -381,7 +413,9 @@ class PresetWindow(QDialog):
                 return False
 
             # Progress
-            QApplication.processEvents()
+            self.progressStart.emit()
+            if not silent:
+                self.progressShow.emit()
 
             # Create temporary download folder
             tmp = TemporaryDirectory(suffix='FacepagerDefaultPresets')
@@ -389,8 +423,7 @@ class PresetWindow(QDialog):
                 #Download
                 files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
                 files = [f['path'] for f in files if f['path'].endswith(tuple(self.presetSuffix))]
-                if self.progress is not None:
-                    self.progress.setMaximum(len(files))
+                self.progressMax.emit(len(files))
 
                 for filename in files:
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
@@ -398,8 +431,8 @@ class PresetWindow(QDialog):
                         raise(f"GitHub is not available (status code {response.status_code})")
                     with open(os.path.join(tmp.name, os.path.basename(filename)), 'wb') as f:
                         f.write(response.content)
-                    if self.progress is not None:
-                        self.progress.step()
+
+                    self.progressStep.emit()
 
                 #Create folder
                 if not os.path.exists(self.presetFolderDefault):
@@ -424,9 +457,7 @@ class PresetWindow(QDialog):
                 return True
             finally:
                 tmp.cleanup()
-                if self.progress is not None:
-                    self.progress.close()
-                    self.progress=None
+                self.progressStop.emit()
 
     def reloadPresets(self):
         self.presetsDownloaded = False
