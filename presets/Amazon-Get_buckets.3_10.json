@@ -29,9 +29,7 @@
   "speed": 200,
   "saveheaders": false,
   "columns": [
-    "listallmybucketsresult.items.1.buckets.items.0.bucket.items",
-    "listallmybucketsresult.items.1.buckets.items.0.bucket.items.0.name.text",
-    "listallmybucketsresult.items.1.buckets.items",
-    "bucket.items.0.name"
+    "name.$",
+    "creationdate.$"
   ]
 }

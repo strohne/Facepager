@@ -31,8 +31,9 @@
   "speed": 200,
   "saveheaders": false,
   "columns": [
-    "listbucketresult.items.0.name",
-    "listbucketresult.items.5.contents",
-    "contents.0.key"
+    "lastmodified.$",
+    "etag.$",
+    "size.$",
+    "storageclass.$"
   ]
 }
