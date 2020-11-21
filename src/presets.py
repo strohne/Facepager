@@ -27,8 +27,6 @@ class PresetWindow(QDialog):
         self.setMinimumWidth(800);
         self.setMinimumHeight(600);
 
-        self.progress=None
-
         #layout
         layout = QVBoxLayout(self)
         self.setLayout(layout)
@@ -110,7 +108,6 @@ class PresetWindow(QDialog):
 
         self.presetLayout.addWidget(self.detailName)
 
-
         self.detailDescription = TextViewer()
         self.presetLayout.addWidget(self.detailDescription)
 
@@ -167,7 +164,6 @@ class PresetWindow(QDialog):
 
         #layout.addWidget(buttons,1)
 
-
         buttons.addStretch()
 
         self.reloadButton=QPushButton('Reload')
@@ -205,6 +201,9 @@ class PresetWindow(QDialog):
         self.presetsDownloaded = False
         self.presetSuffix = ['.3_9.json','.3_10.json','.fp4.json']
         self.lastSelected = None
+
+        # Progress bar
+        self.progress = ProgressBar("Downloading default presets from GitHub...", self, hidden=silent)
 
 #         if getattr(sys, 'frozen', False):
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
@@ -382,7 +381,6 @@ class PresetWindow(QDialog):
                 return False
 
             # Progress
-            self.progress = ProgressBar("Downloading default presets from GitHub...", self, hidden=silent)
             QApplication.processEvents()
 
             # Create temporary download folder
