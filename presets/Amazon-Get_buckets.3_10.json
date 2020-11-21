@@ -1,24 +1,37 @@
 {
   "category": "Amazon",
+  "description": "Add arbitrary node and fetch data.\n\nYou need to register at Amazon AWS to obtain access key and secret.\n\nReference: https://docs.aws.amazon.com/de_de/AmazonS3/latest/API/Welcome.html\n\n",
+  "module": "Amazon",
+  "name": "Get buckets",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_uri": "",
+    "basepath": "http://s3.amazonaws.com",
+    "format": "xml",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "listallmybucketsresult.buckets.bucket",
+    "objectid": "name.$",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {},
+    "redirect_uri": "",
+    "region": "us-east-1",
+    "resource": "",
+    "service": "s3",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
   "columns": [
     "listallmybucketsresult.items.1.buckets.items.0.bucket.items",
     "listallmybucketsresult.items.1.buckets.items.0.bucket.items.0.name.text",
     "listallmybucketsresult.items.1.buckets.items",
     "bucket.items.0.name"
-  ],
-  "description": "Add arbitrary node and fetch data.\n\nYou need to register at Amazon AWS to obtain access key and secret.\n\nReference: https://docs.aws.amazon.com/de_de/AmazonS3/latest/API/Welcome.html\n\n",
-  "module": "Amazon",
-  "name": "Get buckets",
-  "options": {
-    "basepath": "http://s3.amazonaws.com",
-    "headers": {},
-    "nodedata": "listallmybucketsresult.items.1.buckets",
-    "objectid": "bucket.0.name",
-    "params": {},
-    "region": "us-east-1",
-    "resource": "",
-    "service": "s3",
-    "verb": "GET"
-  },
-  "speed": 200
+  ]
 }

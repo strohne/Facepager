@@ -1,25 +1,38 @@
 {
   "category": "Amazon",
-  "columns": [
-    "listbucketresult.items.0.name",
-    "listbucketresult.items.5.contents",
-    "contents.0.key"
-  ],
   "description": "Add bucket name as node or fetch buckets with another preset. You can see yout buckets in the web browser as well: https://s3.console.aws.amazon.com\n\nBe aware oif region settings. You get an error if the wrong region is set.\n\nRegister at Amazon AWS to obtain access key and secret. Reference: https://docs.aws.amazon.com/de_de/AmazonS3/latest/API/Welcome.html\n\n\n\n",
   "module": "Amazon",
   "name": "Get bucket content",
   "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_uri": "",
     "basepath": "http://<Object ID>.s3.amazonaws.com",
+    "format": "xml",
     "headers": {},
-    "nodedata": "listbucketresult.items.5",
-    "objectid": "contents.0.key",
+    "key_paging": null,
+    "nodedata": "listbucketresult.contents",
+    "objectid": "key.$",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
     "params": {
       "list-type": "2"
     },
+    "redirect_uri": "",
     "region": "eu-central-1",
     "resource": "",
     "service": "s3",
+    "token_uri": "",
     "verb": "GET"
   },
-  "speed": 200
+  "speed": 200,
+  "saveheaders": false,
+  "columns": [
+    "listbucketresult.items.0.name",
+    "listbucketresult.items.5.contents",
+    "contents.0.key"
+  ]
 }
