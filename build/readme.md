@@ -130,12 +130,16 @@ __Hints for solving errors:__
 If drafting a new version adjust version numbers in:  
 - src/Facepager.py
 
+# SSL
+SSL certificates come from the certifi package included in the requests library. Update before building:
+`pip install certifi --upgrade`
+
+
 # How to deploy builds
 
 _Don't forget to adjust the tag name and message below_
 
 - Create a git tag on the command line with `git tag -a v3.9.2 -m "Version 3.9.2"`
-  (if this fails, try without -m option)
 - Upload the tag to GitHib with `git push origin v3.9.2`
 - For major releases draft a new release on GitHub, for minor releases edit the last release.
 - Enter the tag into the corresponding field, edit release notes, upload binary files.
