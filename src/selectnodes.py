@@ -20,7 +20,7 @@ class SelectNodesWindow(QDialog):
         self.running = False
 
         #layout
-        layout = QVBoxLayout(self)        
+        layout = QVBoxLayout()
         central = QHBoxLayout()
         layout.addLayout(central, 1)
         self.setLayout(layout)

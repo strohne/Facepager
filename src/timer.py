@@ -40,7 +40,7 @@ class TimerWindow(QDialog):
         self.timer.timeout.connect(self.onFire)
         
         #layout
-        layout = QVBoxLayout(self)        
+        layout = QVBoxLayout()
         central = QHBoxLayout()
         layout.addLayout(central,1)
         self.setLayout(layout)

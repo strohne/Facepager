@@ -1,5 +1,4 @@
 ﻿#!/usr/bin/env python
-#!/usr/bin/env python
 """Facepager was made for fetching public available data from Facebook, Twitter and other JSON-based API. All data is stored in a SQLite database and may be exported to csv. """
 
 # MIT License
