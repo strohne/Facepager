@@ -8,14 +8,14 @@ from tempfile import TemporaryDirectory
 import sys
 import re
 import json
-from textviewer import *
+from widgets.textviewer import *
 from urllib.parse import urlparse
 import requests
 import threading
 import webbrowser
 import platform
 from utilities import *
-from progressbar import ProgressBar
+from widgets.progressbar import ProgressBar
 
 class ApiViewer(QDialog):
     logmessage = Signal(str)

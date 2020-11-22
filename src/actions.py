@@ -5,7 +5,7 @@ from PySide2.QtWidgets import QActionGroup
 from datetime import datetime, timedelta
 import csv
 from copy import deepcopy
-from progressbar import ProgressBar
+from widgets.progressbar import ProgressBar
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
@@ -15,7 +15,7 @@ import os
 import json
 import threading
 
-from export import ExportFileDialog
+from dialogs.export import ExportFileDialog
 if sys.version_info.major < 3:
     from urllib import pathname2url
 else:

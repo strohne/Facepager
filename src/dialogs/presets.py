@@ -1,19 +1,19 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-
+from PySide2.QtWidgets import *
 import os
 import shutil
 from tempfile import TemporaryDirectory
 import re
 import json
-from textviewer import *
+from widgets.textviewer import *
 from urllib.parse import urlparse
 import requests
 import threading
 import webbrowser
 import platform
-from dictionarytree import *
-from progressbar import ProgressBar
+from widgets.dictionarytree import DictionaryTree
+from widgets.progressbar import ProgressBar
 from utilities import wraptip, formatdict
 
 class PresetWindow(QDialog):

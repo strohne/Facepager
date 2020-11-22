@@ -34,9 +34,9 @@ else:
 
 import dateutil.parser
 
-from folder import SelectFolderDialog
-from webdialog import WebDialog, BrowserDialog, QWebPageCustom
-from paramedit import *
+from dialogs.folder import SelectFolderDialog
+from dialogs.webdialog import WebDialog, BrowserDialog, QWebPageCustom
+from widgets.paramedit import *
 from utilities import *
 
 try:

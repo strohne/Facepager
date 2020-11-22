@@ -2,7 +2,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from progressbar import ProgressBar
+from widgets.progressbar import ProgressBar
 from datetime import datetime, timedelta
 import re
 import lxml.html

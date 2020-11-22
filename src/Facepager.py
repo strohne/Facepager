@@ -31,19 +31,19 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QWidget, QStyleFactory
 
+
 from icons import *
-from datatree import *
-from dictionarytree import *
-from database import *
+from widgets.datatree import DataTree
+from widgets.dictionarytree import DictionaryTree
 from actions import *
 from apimodules import *
-from help import *
-from progressbar import ProgressBar
-from presets import *
-from timer import *
-from apiviewer import *
-from dataviewer import *
-from selectnodes import *
+from dialogs.help import *
+from widgets.progressbar import ProgressBar
+from dialogs.presets import *
+from dialogs.timer import *
+from dialogs.apiviewer import *
+from dialogs.dataviewer import *
+from dialogs.selectnodes import *
 import logging
 import threading
 from server import Server, RequestHandler
