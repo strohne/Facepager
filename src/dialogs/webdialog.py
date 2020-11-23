@@ -1,13 +1,15 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QDialog, QMainWindow, QLabel
+from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QDialog, QMainWindow, QLabel, QScrollArea, QLineEdit, QSizePolicy
 from PySide2.QtWebEngineCore import QWebEngineHttpRequest
-from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
+from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile, QWebEngineSettings
 
 import os
 import sys
 import webbrowser
 import urllib.parse
+from datetime import datetime
+from utilities import makefilename
 
 class WebDialog(QDialog):
     def __init__(self, parent=None, caption = "", url=""):
@@ -67,10 +69,10 @@ class MyQWebEnginePage(QWebEnginePage):
 
 class BrowserDialog(QMainWindow):
     logMessage = Signal(str)
-    scrapeData = Signal(str)
+    scrapeData = Signal(dict,dict)
     newCookie = Signal(str, str)
     loadFinished = Signal(bool)
-    urlChanged = Signal(str)
+    #urlChanged = Signal(str)
     urlNotFound = Signal(QUrl)
 
 
@@ -92,36 +94,52 @@ class BrowserDialog(QMainWindow):
         self.mainLayout = QVBoxLayout(central)
         #self.browserStatus = self.statusBar()
 
+        # Adress bar
+        self.addressBar = QLineEdit()
+        self.addressBar.returnPressed.connect(self.addressChanged)
+        self.mainLayout.addWidget(self.addressBar)
+        self.addressBar.setVisible(False)
+
         # Create WebView
-        self.browserWebview = QWebEngineView(self)
-        self.webpage = QWebPageCustom(self.browserWebview)
-        self.browserWebview.setPage(self.webpage)
-        self.mainLayout.addWidget(self.browserWebview)
-        self.browserWebview.show()
+        self.webview = QWebEngineView(self)
+        QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.ScreenCaptureEnabled, True)
+        self.webpage = QWebPageCustom(self.webview)
+        self.webview.setPage(self.webpage)
+        self.mainLayout.addWidget(self.webview)
+        self.webview.show()
 
         # Signals
         self.webpage.logMessage.connect(self.logMessage)
         self.webpage.cookieChanged.connect(self.cookieChanged)
-        #self.browserWebview.urlChanged.connect(self.urlChanged)
+        self.webview.urlChanged.connect(self.urlChanged)
         #self.webpage.urlNotFound.connect(self.urlNotFound)
         #self.browserWebview.loadFinished.connect(self.loadFinished)
+        #self.browserWebview.loadStarted.connect(self.loadStarted)
 
-        # Buttons
+        # Button layout
         self.buttonLayout = QHBoxLayout()
         self.mainLayout.addLayout(self.buttonLayout)
-        self.statusLabel = QLabel()
-        self.buttonLayout.addWidget(self.statusLabel)
-        self.buttonLayout.addStretch(5)
 
+        # Status label
+        self.statusLabel = QScrollLabel()
+
+        self.statusLabel.setSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Ignored)
+        self.buttonLayout.addWidget(self.statusLabel)
+        self.statusLabel.textVisible(False)
+
+        # Buttons
         buttonDismiss = QPushButton(self)
         buttonDismiss.setText("Close")
         buttonDismiss.setDefault(True)
         buttonDismiss.clicked.connect(self.close)
         self.buttonLayout.addWidget(buttonDismiss)
 
-    def loadPage(self, url="", headers={}):
+    def loadPage(self, url="", headers={}, strip="", screenshotfolder=None):
         self.url = url
         self.headers = headers
+        self.strip = strip
+        self.screenshotfolder = screenshotfolder
 
         try:
             targeturl = urllib.parse.urlparse(url)
@@ -135,8 +153,19 @@ class BrowserDialog(QMainWindow):
             val = val.encode('utf-8')
             request.setHeader(QByteArray(key), QByteArray(val))
 
-        self.browserWebview.load(request)
+        self.webview.load(request)
         self.show()
+
+    @Slot()
+    def urlChanged(self, url):
+        url = url.toString().replace(self.strip,'')
+        self.addressBar.setText(url)
+
+    @Slot()
+    def addressChanged(self):
+        url = self.addressBar.text()
+        request = QWebEngineHttpRequest(QUrl(url))
+        self.webview.load(request)
 
     # Scrape HTML
     def activateScrapeButton(self, handler):
@@ -148,18 +177,53 @@ class BrowserDialog(QMainWindow):
         buttonScrape.clicked.connect(self.scrapeDataClicked)
         self.buttonLayout.addWidget(buttonScrape)
 
+        self.addressBar.setVisible(True)
+
     @Slot()
     def scrapeDataClicked(self):
         self.webpage.toHtml(self.newHtmlData)
 
-    def newHtmlData(self, data):
-        self.scrapeData.emit(data)
+
+    # https://stackoverflow.com/questions/55231170/taking-a-screenshot-of-a-web-page-in-pyqt5
+    #screenshots: https://stackoverrun.com/de/q/12970119
+
+    def doScreenShot(self, filename):
+        size = self.webpage.contentsSize().toSize()
+        self.webview.resize(size)
+        self.webview.show()
+        pixmap = self.webview.grab() #.save(tmp, b'PNG')
+        pixmap.save(filename, 'PNG')
+        return filename
+
+
+    def newHtmlData(self, html):
+        data = {}
+        data['title'] = self.webpage.title()
+
+        data['url'] = {
+            'final': self.webpage.url().toString().replace(self.strip,''),
+            'requested':self.webpage.requestedUrl().toString().replace(self.strip,'')
+        }
+        data['html'] = html
+
+        if self.screenshotfolder is not None:
+            fullfilename = makefilename(data['url']['final'],self.screenshotfolder, fileext='.png',appendtime=True)
+            data['screenshot'] = self.doScreenShot(fullfilename)
+
+        options = {}
+        options['querytime'] = str(datetime.now())
+        options['querystatus'] = 'captured'
+        options['querytype'] = 'captured'
+        options['objectid'] = 'url.final'
+
+        self.scrapeData.emit(data, options)
 
 
     # Get cookie from initial domain
     def activateCookieButton(self, handler):
         self.newCookie.connect(handler)
 
+        self.statusLabel.textVisible(True)
         buttonCookie = QPushButton(self)
         buttonCookie.setText("Transfer cookie")
         buttonCookie.setDefault(True)
@@ -174,7 +238,7 @@ class BrowserDialog(QMainWindow):
     def cookieChanged(self, domain, cookie):
         if domain == self.domain:
             self.cookie = cookie
-            self.statusLabel.setText("Domain: "+domain+". Cookie: "+cookie)
+            self.statusLabel.setText("Cookie for domain: "+domain+": "+cookie)
 
 
 class QWebPageCustom(QWebEnginePage):
@@ -247,3 +311,24 @@ class QWebPageCustom(QWebEnginePage):
             self.logMessage.emit(msg)
 
         return True
+
+class QScrollLabel(QScrollArea):
+    def __init__(self, parent=None, text=''):
+        super(QScrollLabel,self).__init__(parent)
+
+        self.setStyleSheet("QScrollArea {border: 0px;}")
+
+        self.label = QLabel(text)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setWidgetResizable(True)
+        self.setWidget(self.label)
+
+    def setText(self,text):
+        self.label.setText(text)
+
+    def getText(self,text):
+        self.label.getText()
+
+    def textVisible(self,visible):
+        self.label.setVisible(visible)
