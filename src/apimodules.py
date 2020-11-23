@@ -1449,10 +1449,10 @@ class ApiTab(QScrollArea):
         dialog.exec_()
 
     @Slot()
-    def showBrowser(self, caption='', url='', headers={}, width=600, height=600):
+    def showBrowser(self, caption='', url='', headers={}, strip="", foldername=None, width=600, height=600):
         self.browserWindow = BrowserDialog(self.mainWindow,  caption, width, height)
         self.browserWindow.logMessage.connect(self.logMessage)
-        self.browserWindow.loadPage(url, headers)
+        self.browserWindow.loadPage(url, headers, strip, foldername)
         return self.browserWindow
 
     @Slot()

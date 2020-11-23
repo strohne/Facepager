@@ -638,7 +638,7 @@ def xmlToJson(data):
     data = bf.data(xml)
     return data
 
-
+#' Create a new filename from an URL
 def makefilename(url = None, foldername=None, filename=None, fileext=None, appendtime=False):  # Create file name
     url_filename, url_fileext = os.path.splitext(os.path.basename(url))
     if fileext is None:

@@ -1255,6 +1255,7 @@ class GuiActions(object):
 
     @Slot()
     def openBrowser(self):
+        # Assemble URL
         apimodule, options = self.apiActions.getQueryOptions()
         indexes = self.apiActions.getIndexes(options)
         index = next(indexes, False)
@@ -1266,30 +1267,33 @@ class GuiActions(object):
         nodedata = job['nodedata']
 
         options = apimodule.initPagingOptions(nodedata, options)
-        method, urlpath, urlparams, payload, requestheaders = apimodule.buildUrl(nodedata, options)
-
+        method, urlpath, urlparams, payload, headers = apimodule.buildUrl(nodedata, options)
         if not urlpath:
             return False
 
         url = apimodule.getLogURL(urlpath, urlparams, options, False)
+        strip = options.get('access_token', '')
 
-        def scrapeData(html):
+        # Screenshot folder
+        foldername, filename, fileext = apimodule.getFileFolderName(options, nodedata)
+
+        # Open browser
+        def scrapeData(data, options):
             item = self.mainWindow.tree.currentIndex()
             if not item.isValid():
                 return False
             treenode = item.internalPointer()
             data = {
-                'nodes':[{'text': html}],
+                'nodes':[data],
                 'empty':None,
                 'offcut':None,
                 'headers':None,
                 'fieldsuffix':''
             }
-            options = {}
             treenode.appendNodes(data,options)
 
         caption = "Browser"
-        browser = apimodule.showBrowser(caption, url, requestheaders)
+        browser = apimodule.showBrowser(caption, url, headers, strip, foldername)
         browser.activateScrapeButton(scrapeData)
 
 
