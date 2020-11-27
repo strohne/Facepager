@@ -172,7 +172,7 @@ class BrowserDialog(QMainWindow):
         self.scrapeData.connect(handler)
 
         buttonScrape = QPushButton(self)
-        buttonScrape.setText("Scrape data")
+        buttonScrape.setText("Capture")
         buttonScrape.setDefault(True)
         buttonScrape.clicked.connect(self.scrapeDataClicked)
         self.buttonLayout.addWidget(buttonScrape)
@@ -218,9 +218,9 @@ class BrowserDialog(QMainWindow):
             # self.webView.resize(oldSize)
 
             # VErsion 2
-            size = self.webpage.contentsSize().toSize()
-            self.webview.resize(size)
-            self.webview.show()
+            #size = self.webpage.contentsSize().toSize()
+            #self.webview.resize(size)
+            #self.webview.show()
             pixmap = self.webview.grab() #.save(tmp, b'PNG')
             pixmap.save(filename, 'PNG')
 
