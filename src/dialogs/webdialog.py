@@ -69,7 +69,7 @@ class MyQWebEnginePage(QWebEnginePage):
 
 class BrowserDialog(QMainWindow):
     logMessage = Signal(str)
-    scrapeData = Signal(dict,dict)
+    scrapeData = Signal(dict,dict,dict)
     newCookie = Signal(str, str)
     loadFinished = Signal(bool)
     #urlChanged = Signal(str)
@@ -135,11 +135,12 @@ class BrowserDialog(QMainWindow):
         buttonDismiss.clicked.connect(self.close)
         self.buttonLayout.addWidget(buttonDismiss)
 
-    def loadPage(self, url="", headers={}, strip="", screenshotfolder=None):
+    def loadPage(self, url="", headers={}, strip="", foldername=None, filename=None, fileext=None):
+
         self.url = url
         self.headers = headers
         self.strip = strip
-        self.screenshotfolder = screenshotfolder
+        self.screenshotfolder = foldername
 
         try:
             targeturl = urllib.parse.urlparse(url)
@@ -249,8 +250,11 @@ class BrowserDialog(QMainWindow):
         options['querystatus'] = 'captured'
         options['querytype'] = 'captured'
         options['objectid'] = 'url.final'
+        options['nodedata'] = None
 
-        self.scrapeData.emit(data, options)
+        headers = {}
+
+        self.scrapeData.emit(data, options, headers)
 
 
     # Get cookie from initial domain

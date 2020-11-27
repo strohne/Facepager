@@ -384,7 +384,7 @@ class ApiTab(QScrollArea):
             pass
 
 
-                # Options not saved to preset but to settings
+        # Options not saved to preset but to settings
         if purpose != 'preset':
             # query type
             options['querytype'] = self.name + ':' + self.resourceEdit.currentText()            
@@ -1449,11 +1449,56 @@ class ApiTab(QScrollArea):
         dialog.exec_()
 
     @Slot()
-    def showBrowser(self, caption='', url='', headers={}, strip="", foldername=None, width=600, height=600):
-        self.browserWindow = BrowserDialog(self.mainWindow,  caption, width, height)
-        self.browserWindow.logMessage.connect(self.logMessage)
-        self.browserWindow.loadPage(url, headers, strip, foldername)
-        return self.browserWindow
+
+    def captureData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        session_no = options.get('threadnumber',0)
+        self.connected = True
+
+        # Init pagination
+        options = self.initPagingOptions(nodedata, options)
+        if options is None:
+            return False
+
+        # file settings
+        foldername, filename, fileext = self.getFileFolderName(options, nodedata)
+
+        format = options.get('format', 'json')
+        if format == 'file':
+            if (foldername is None) or (not os.path.isdir(foldername)):
+                raise Exception("Folder does not exists, select download folder, please!")
+
+        # build url
+        method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
+        strip = options.get('access_token', '')
+
+        if not urlpath:
+            logMessage("Empty path, node {0} skipped.".format(nodedata['objectid']))
+            return False
+
+        if not urlpath.startswith(('https://','http://','file://')):
+            logMessage("Http or https missing in path, node {0} skipped.".format(nodedata['objectid']))
+            return False
+
+        if options['logrequests']:
+            logpath = self.getLogURL(urlpath,urlparams,options)
+            logMessage("Capturing data for {0} from {1}".format(nodedata['objectid'], logpath))
+
+        # Show browser
+        self.browserWindow = BrowserDialog(self.mainWindow, "Browser", 800, 600)
+        self.browserWindow.logMessage.connect(logMessage)
+        self.browserWindow.activateScrapeButton(logData)
+        url = urlpath + urllib.parse.urlencode(urlparams)
+        self.browserWindow.loadPage(url, requestheaders, strip, foldername, filename, fileext)
+
+        # for data, headers, status in self.browserWindow.capturePage(
+        #         session_no,urlpath, urlparams, requestheaders, method, payload,
+        #         foldername, filename, fileext, format=format, strip):
+        #     options['querytime'] = str(datetime.now())
+        #     options['querystatus'] = status
+        #     logData(data, options, headers)
+
+        return True
+
 
     @Slot()
     def showLoginWindow(self, caption='', url='',width=600,height=600):

@@ -130,9 +130,11 @@ class ApiActions(object):
 
     @blockState
     def fetchData(self, indexes=None, apimodule=False, options=None):
+        # Check seed nodes
         if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (indexes is not None)):
             return False
 
+        # Get options
         apimodule, options = self.getQueryOptions(apimodule, options)
         if not apimodule.auth_userauthorized:
             msg = 'You are not authorized, login please!'
@@ -143,6 +145,7 @@ class ApiActions(object):
         progress = ProgressBar("Fetching Data", parent=self.mainWindow)
 
         try:
+            # Get seed nodes
             indexes = self.getIndexes(options, indexes, progress)
 
             # Update progress window
@@ -1254,48 +1257,41 @@ class GuiActions(object):
         dialog.exec_()
 
     @Slot()
-    def openBrowser(self):
-        # Assemble URL
-        apimodule, options = self.apiActions.getQueryOptions()
-        indexes = self.apiActions.getIndexes(options)
+    def openBrowser(self, indexes=None, apimodule=False, options=None):
+        # Check seed nodes
+        if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (
+                indexes is not None)):
+            return False
+
+        # Get options
+        apimodule, options = self.apiActions.getQueryOptions(apimodule, options)
+        if not apimodule.auth_userauthorized:
+            msg = 'You are not authorized, login please!'
+            QMessageBox.critical(self.mainWindow, "Not authorized",msg,QMessageBox.StandardButton.Ok)
+            return False
+
+        # Get seed nodes
+        indexes = self.apiActions.getIndexes(options, indexes)
         index = next(indexes, False)
         if not index or not index.isValid():
             return False
 
+        # Prepare job
         job = self.apiActions.prepareJob(index, options)
-        options = job['options']
-        nodedata = job['nodedata']
-
-        options = apimodule.initPagingOptions(nodedata, options)
-        method, urlpath, urlparams, payload, headers = apimodule.buildUrl(nodedata, options)
-        if not urlpath:
-            return False
-
-        url = apimodule.getLogURL(urlpath, urlparams, options, False)
-        strip = options.get('access_token', '')
-
-        # Screenshot folder
-        foldername, filename, fileext = apimodule.getFileFolderName(options, nodedata)
 
         # Open browser
-        def scrapeData(data, options):
-            item = self.mainWindow.tree.currentIndex()
-            if not item.isValid():
-                return False
-            treenode = item.internalPointer()
-            data = {
-                'nodes':[data],
-                'empty':None,
-                'offcut':None,
-                'headers':None,
-                'fieldsuffix':''
-            }
-            treenode.appendNodes(data,options)
+        def logData(data, options, headers):
+            data = sliceData(data, headers, options)
 
-        caption = "Browser"
-        browser = apimodule.showBrowser(caption, url, headers, strip, foldername)
-        browser.activateScrapeButton(scrapeData)
+            # Add data
+            treeindex = job['nodeindex']
+            treenode = treeindex.internalPointer()
 
+            newcount = treenode.appendNodes(data, options, False)
+            if options.get('expand', False):
+                self.mainWindow.tree.setExpanded(treeindex, True)
+
+        apimodule.captureData(job['nodedata'], job['options'], logData, self.mainWindow.logmessage, logProgress=None)
 
     @Slot()
     def treeNodeSelected(self, current):
