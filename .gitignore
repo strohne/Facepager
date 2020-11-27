@@ -7,7 +7,7 @@ src/dist
 src/hooks
 src/*.pyc
 src/*.pyo
-src/__pycache__
+__pycache__
 src/credentials.py
 build/windows/PySide2
 build/osx/copyfromvm.bat
