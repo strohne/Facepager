@@ -188,11 +188,45 @@ class BrowserDialog(QMainWindow):
     #screenshots: https://stackoverrun.com/de/q/12970119
 
     def doScreenShot(self, filename):
-        size = self.webpage.contentsSize().toSize()
-        self.webview.resize(size)
-        self.webview.show()
-        pixmap = self.webview.grab() #.save(tmp, b'PNG')
-        pixmap.save(filename, 'PNG')
+        try:
+            # page = self.webview.page()
+            # oldSize = self.webview.size()
+            # size = page.contentsSize().toSize()
+
+            # Version 1
+            # oldSize = self.webview.size()
+            # self.webview.setAttribute(Qt.WA_DontShowOnScreen)
+            # # self.webview.settings().setAttribute(QWebEngineSettings.ShowScrollBars, False)
+            # self.webview.resize(self.webpage.contentsSize().toSize())
+            # self.webview.show()
+            #
+            #
+            # rect = self.webview.contentsRect()
+            # size = rect.size()
+            # img = QImage(size, QImage.Format_ARGB32_Premultiplied)
+            # img.fill(Qt.transparent)
+            # painter = QPainter()
+            # painter.begin(img)
+            # painter.setRenderHint(QPainter.Antialiasing, True)
+            # painter.setRenderHint(QPainter.TextAntialiasing, True)
+            # painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+            #
+            # self.webview.render(painter, QPoint(0, 0))
+            # painter.end()
+            # img.save(filename)
+            #
+            # self.webView.resize(oldSize)
+
+            # VErsion 2
+            size = self.webpage.contentsSize().toSize()
+            self.webview.resize(size)
+            self.webview.show()
+            pixmap = self.webview.grab() #.save(tmp, b'PNG')
+            pixmap.save(filename, 'PNG')
+
+        except Exception as e:
+            self.logMessage(str(e))
+
         return filename
 
 
