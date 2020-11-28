@@ -1,11 +1,12 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QDialog, QMainWindow, QLabel, QScrollArea, QLineEdit, QSizePolicy
+from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QDialog, QMainWindow, QLabel, QScrollArea, QLineEdit, QSizePolicy, QApplication
 from PySide2.QtWebEngineCore import QWebEngineHttpRequest
 from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile, QWebEngineSettings
 
 import os
 import sys
+import time
 import webbrowser
 import urllib.parse
 from datetime import datetime
@@ -92,7 +93,7 @@ class BrowserDialog(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
         self.mainLayout = QVBoxLayout(central)
-        #self.browserStatus = self.statusBar()
+        self.statusBar = self.statusBar()
 
         # Adress bar
         self.addressBar = QLineEdit()
@@ -113,6 +114,9 @@ class BrowserDialog(QMainWindow):
         self.webpage.logMessage.connect(self.logMessage)
         self.webpage.cookieChanged.connect(self.cookieChanged)
         self.webview.urlChanged.connect(self.urlChanged)
+        self.webpage.loadFinished.connect(self.loadFinished)
+        self.webpage.loadStarted.connect(self.loadStarted)
+
         #self.webpage.urlNotFound.connect(self.urlNotFound)
         #self.browserWebview.loadFinished.connect(self.loadFinished)
         #self.browserWebview.loadStarted.connect(self.loadStarted)
@@ -158,6 +162,17 @@ class BrowserDialog(QMainWindow):
         self.show()
 
     @Slot()
+    def loadStarted(self):
+        self.statusBar.showMessage('Loading...')
+
+    @Slot()
+    def loadFinished(self, ok):
+        if ok:
+            self.statusBar.showMessage('Loading finished.')
+        else:
+            self.statusBar.showMessage('Loading failed.')
+
+    @Slot()
     def urlChanged(self, url):
         url = url.toString().replace(self.strip,'')
         self.addressBar.setText(url)
@@ -182,56 +197,8 @@ class BrowserDialog(QMainWindow):
 
     @Slot()
     def scrapeDataClicked(self):
-        self.webpage.toHtml(self.newHtmlData)
 
-
-    # https://stackoverflow.com/questions/55231170/taking-a-screenshot-of-a-web-page-in-pyqt5
-    #screenshots: https://stackoverrun.com/de/q/12970119
-
-    def doScreenShot(self, filename):
-        try:
-            # page = self.webview.page()
-            # oldSize = self.webview.size()
-            # size = page.contentsSize().toSize()
-
-            # Version 1
-            # oldSize = self.webview.size()
-            # self.webview.setAttribute(Qt.WA_DontShowOnScreen)
-            # # self.webview.settings().setAttribute(QWebEngineSettings.ShowScrollBars, False)
-            # self.webview.resize(self.webpage.contentsSize().toSize())
-            # self.webview.show()
-            #
-            #
-            # rect = self.webview.contentsRect()
-            # size = rect.size()
-            # img = QImage(size, QImage.Format_ARGB32_Premultiplied)
-            # img.fill(Qt.transparent)
-            # painter = QPainter()
-            # painter.begin(img)
-            # painter.setRenderHint(QPainter.Antialiasing, True)
-            # painter.setRenderHint(QPainter.TextAntialiasing, True)
-            # painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-            #
-            # self.webview.render(painter, QPoint(0, 0))
-            # painter.end()
-            # img.save(filename)
-            #
-            # self.webView.resize(oldSize)
-
-            # VErsion 2
-            #size = self.webpage.contentsSize().toSize()
-            #self.webview.resize(size)
-            #self.webview.show()
-            pixmap = self.webview.grab() #.save(tmp, b'PNG')
-            pixmap.save(filename, 'PNG')
-
-        except Exception as e:
-            self.logMessage(str(e))
-
-        return filename
-
-
-    def newHtmlData(self, html):
+        # Metadata
         data = {}
         data['title'] = self.webpage.title()
 
@@ -239,12 +206,21 @@ class BrowserDialog(QMainWindow):
             'final': self.webpage.url().toString().replace(self.strip,''),
             'requested':self.webpage.requestedUrl().toString().replace(self.strip,'')
         }
-        data['html'] = html
 
+        # Fetch HTML
+        data['html'] = self.getHtml()
+
+        # Screenshot
         if self.screenshotfolder is not None:
             fullfilename = makefilename(data['url']['final'],self.screenshotfolder, fileext='.png',appendtime=True)
-            data['screenshot'] = self.doScreenShot(fullfilename)
+            data['screenshot'] = self.getScreenShot(fullfilename)
 
+        # # PDF
+        # if self.screenshotfolder is not None:
+        #     fullfilename = makefilename(data['url']['final'],self.screenshotfolder, fileext='.pdf',appendtime=True)
+        #     data['pdf'] = self.webpage.printToPdf(fullfilename)
+
+        # Options
         options = {}
         options['querytime'] = str(datetime.now())
         options['querystatus'] = 'captured'
@@ -252,10 +228,62 @@ class BrowserDialog(QMainWindow):
         options['objectid'] = 'url.final'
         options['nodedata'] = None
 
+        # Headers
         headers = {}
 
         self.scrapeData.emit(data, options, headers)
 
+
+
+    def getHtml(self):
+        def newHtmlData(html):
+            self.capturedhtml = html
+
+        self.capturedhtml = None
+        self.webpage.toHtml(newHtmlData)
+
+        waitstart = QDateTime.currentDateTime()
+        while (self.capturedhtml is None) and (waitstart.msecsTo(QDateTime.currentDateTime()) < 1000):
+            QApplication.processEvents()
+            time.sleep(0.01)
+
+        return self.capturedhtml
+
+
+    # https://stackoverflow.com/questions/55231170/taking-a-screenshot-of-a-web-page-in-pyqt5
+    #screenshots: https://stackoverrun.com/de/q/12970119
+
+    def getScreenShot(self, filename):
+        try:
+            # Resize
+            oldSize = self.webview.size()
+            newSize = self.webpage.contentsSize().toSize()
+            self.webview.settings().setAttribute(QWebEngineSettings.ShowScrollBars, False)
+            self.webview.setAttribute(Qt.WA_DontShowOnScreen, True)
+            self.webview.resize(newSize)
+            #self.webview.repaint()
+            #self.webview.show()
+
+            # Wait for resize
+            waitstart = QDateTime.currentDateTime()
+            while (waitstart.msecsTo(QDateTime.currentDateTime()) < 500):
+                QApplication.processEvents()
+                time.sleep(0.01)
+
+            # Capture
+            pixmap = QPixmap(newSize)
+            self.webview.render(pixmap, QPoint(0, 0))
+            pixmap.save(filename, 'PNG')
+
+            self.webview.resize(oldSize)
+            self.webview.setAttribute(Qt.WA_DontShowOnScreen, False)
+            self.webview.settings().setAttribute(QWebEngineSettings.ShowScrollBars, True)
+            self.repaint()
+
+        except Exception as e:
+            self.logMessage.emit(str(e))
+
+        return filename
 
     # Get cookie from initial domain
     def activateCookieButton(self, handler):
