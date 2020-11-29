@@ -646,7 +646,7 @@ def makefilename(url = None, foldername=None, filename=None, fileext=None, appen
     if filename is None:
         filename = url_filename
 
-    filename = re.sub(r'[^a-zA-Z0-9_.-]+', '', filename)
+    filename = re.sub(r'[^a-zA-Z0-9_.-]+', '_', filename.strip())
     fileext = re.sub(r'[^a-zA-Z0-9_.-]+', '', fileext)
 
     filetime = time.strftime("%Y-%m-%d-%H-%M-%S")

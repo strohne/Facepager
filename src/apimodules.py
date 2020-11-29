@@ -1469,7 +1469,6 @@ class ApiTab(QScrollArea):
 
         # build url
         method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
-        strip = options.get('access_token', '')
 
         if not urlpath:
             logMessage("Empty path, node {0} skipped.".format(nodedata['objectid']))
@@ -1486,9 +1485,9 @@ class ApiTab(QScrollArea):
         # Show browser
         self.browserWindow = BrowserDialog(self.mainWindow, "Browser", 800, 600)
         self.browserWindow.logMessage.connect(logMessage)
-        self.browserWindow.activateScrapeButton(logData)
+        self.browserWindow.activateCaptureButton(logData)
         url = urlpath + urllib.parse.urlencode(urlparams)
-        self.browserWindow.loadPage(url, requestheaders, strip, foldername, filename, fileext)
+        self.browserWindow.loadPage(url, requestheaders, options, foldername, filename, fileext)
 
         # for data, headers, status in self.browserWindow.capturePage(
         #         session_no,urlpath, urlparams, requestheaders, method, payload,
