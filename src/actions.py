@@ -838,7 +838,9 @@ class GuiActions(object):
 
     @Slot()
     def showColumns(self):
-        self.mainWindow.tree.treemodel.setCustomColumns(self.mainWindow.fieldList.toPlainText().splitlines())
+        cols = self.mainWindow.fieldList.toPlainText().splitlines()
+        cols = [x.strip() for x in cols]
+        self.mainWindow.tree.treemodel.setCustomColumns(cols)
 
     @Slot()
     def clearColumns(self):
