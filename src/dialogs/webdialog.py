@@ -12,9 +12,9 @@ import urllib.parse
 from datetime import datetime
 from utilities import makefilename
 
-class WebDialog(QDialog):
+class PreLoginWebDialog(QDialog):
     def __init__(self, parent=None, caption = "", url=""):
-        super(WebDialog,self).__init__(parent)
+        super(PreLoginWebDialog, self).__init__(parent)
 
         self.url = url
 
@@ -25,7 +25,8 @@ class WebDialog(QDialog):
         vLayout = QVBoxLayout()
         self.setLayout(vLayout)
 
-        self.page = MyQWebEnginePage()
+        self.page = WebPageCustom()
+        self.page.allowLinks = False
         self.browser = QWebEngineView(self)
         self.browser.setPage(self.page)
         vLayout.addWidget(self.browser)
@@ -55,18 +56,6 @@ class WebDialog(QDialog):
     def show(self):
         #super(WebDialog, self).show()
         return self.exec_()
-
-class MyQWebEnginePage(QWebEnginePage):
-    def __init__(self, parent=None):
-        super(MyQWebEnginePage,self).__init__(parent)
-
-    def acceptNavigationRequest(self, url, type, isMainFrame):
-        if (type == QWebEnginePage.NavigationTypeLinkClicked):
-            url = url.toString()
-            webbrowser.open(url)
-            return False
-
-        return True
 
 class BrowserDialog(QMainWindow):
     logMessage = Signal(str)
@@ -119,7 +108,7 @@ class BrowserDialog(QMainWindow):
         self.webview = QWebEngineView(self)
         QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
         QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.ScreenCaptureEnabled, True)
-        self.webpage = QWebPageCustom(self.webview)
+        self.webpage = WebPageCustom(self.webview)
         self.webview.setPage(self.webpage)
         self.mainLayout.addWidget(self.webview)
         self.webview.show()
@@ -217,23 +206,39 @@ class BrowserDialog(QMainWindow):
         data = {}
         data['title'] = self.webpage.title()
 
-        data['url'] = {
-            'final': self.webpage.url().toString().replace(self.strip,''),
-            'requested':self.webpage.requestedUrl().toString().replace(self.strip,'')
-        }
+        try:
+            data['url'] = {
+                'final': self.webpage.url().toString().replace(self.strip,''),
+                'requested':self.webpage.requestedUrl().toString().replace(self.strip,'')
+            }
 
-        # Fetch HTML
-        data['html'] = self.getHtml()
+            # Fetch HTML
+            data['text'] = self.getHtml()
 
-        # Screenshot
-        if self.foldername is not None:
-            fullfilename = makefilename(data['url']['final'], self.foldername, self.filename, fileext='.png', appendtime=True)
-            data['screenshot'] = self.getScreenShot(fullfilename)
 
-        # # PDF
-        # if self.foldername is not None:
-        #     fullfilename = makefilename(data['url']['final'],self.foldername,self.filename, fileext='.pdf',appendtime=True)
-        #     data['pdf'] = self.webpage.printToPdf(fullfilename)
+            if self.foldername is not None:
+
+                # Screenshot
+                fullfilename = makefilename(data['url']['final'], self.foldername, self.filename, fileext='.png', appendtime=True)
+                data['screenshot'] = self.getScreenShot(fullfilename)
+
+                # HTML file
+                fullfilename = makefilename(data['url']['final'], self.foldername, self.filename,self.fileext, appendtime=True)
+                file = open(fullfilename, 'wb')
+                if file is not None:
+                    try:
+                        file.write(data['text'].encode())
+                    finally:
+                        file.close()
+
+            # # PDF
+            # if self.foldername is not None:
+            #     fullfilename = makefilename(data['url']['final'],self.foldername,self.filename, fileext='.pdf',appendtime=True)
+            #     data['pdf'] = self.webpage.printToPdf(fullfilename)
+
+        except Exception as e:
+            data['error'] = str(e)
+            self.logMessage.emit(str(e))
 
         # Options
         options = self.options
@@ -247,8 +252,6 @@ class BrowserDialog(QMainWindow):
         headers = {}
 
         self.captureData.emit(data, options, headers)
-
-
 
     def getHtml(self):
         def newHtmlData(html):
@@ -311,6 +314,8 @@ class BrowserDialog(QMainWindow):
         buttonCookie.clicked.connect(self.transferCookieClicked)
         self.buttonLayout.addWidget(buttonCookie)
 
+        self.addressBar.setVisible(True)
+
     @Slot()
     def transferCookieClicked(self):
         self.newCookie.emit(self.domain, self.cookie)
@@ -322,15 +327,16 @@ class BrowserDialog(QMainWindow):
             self.cookieLabel.setText("Cookie for domain: " + domain + ": " + cookie)
 
 
-class QWebPageCustom(QWebEnginePage):
+class WebPageCustom(QWebEnginePage):
     logMessage = Signal(str)
     urlNotFound = Signal(QUrl)
     cookieChanged = Signal(str, str)
 
     def __init__(self, parent):
         #super(QWebPageCustom, self).__init__(*args, **kwargs)
-        super(QWebPageCustom, self).__init__(parent)
+        super(WebPageCustom, self).__init__(parent)
 
+        self.allowLinks = True
         self.cookiecache = {}
 
         profile = self.profile()
@@ -373,7 +379,8 @@ class QWebPageCustom(QWebEnginePage):
             return False
 
     def extension(self, extension, option=0, output=0):
-        if extension != QWebEnginePage.ErrorPageExtension: return False
+        if extension != QWebEnginePage.ErrorPageExtension:
+            return False
 
         if option.domain == QWebEnginePage.QtNetwork:
             #msg = "Network error (" + str(option.error) + "): " + option.errorString
@@ -390,6 +397,16 @@ class QWebPageCustom(QWebEnginePage):
         else:
             msg = option.errorString
             self.logMessage.emit(msg)
+
+        return True
+
+    def acceptNavigationRequest(self, url, type, isMainFrame):
+        if self.allowLinks == True:
+            return True
+        elif (type == QWebEnginePage.NavigationTypeLinkClicked):
+            url = url.toString()
+            webbrowser.open(url)
+            return False
 
         return True
 

@@ -35,7 +35,7 @@ else:
 import dateutil.parser
 
 from dialogs.folder import SelectFolderDialog
-from dialogs.webdialog import WebDialog, BrowserDialog, QWebPageCustom
+from dialogs.webdialog import PreLoginWebDialog, BrowserDialog, WebPageCustom
 from widgets.paramedit import *
 from utilities import *
 
@@ -742,38 +742,52 @@ class ApiTab(QScrollArea):
         if self.pagingTypeEdit.currentText() == "count":
             self.pagingStepsWidget.show()
             self.pagingKeyWidget.hide()
+        elif self.pagingTypeEdit.currentText() == "url":
+            self.pagingStepsWidget.hide()
+            self.pagingKeyWidget.show()
+            self.pagingParamWidget.hide()
+
         else:
             self.pagingStepsWidget.hide()
             self.pagingKeyWidget.show()
+            self.pagingParamWidget.show()
 
         if self.pagingTypeEdit.count() < 2:
             self.pagingTypeEdit.hide()
 
 
-    def initPagingInputs(self,keys = False, count = False):
+    def initPagingInputs(self,keys = False):
         layout= QHBoxLayout()
         
-        if keys or count:
+        if keys:
             # Paging type
 
             self.pagingTypeEdit = QComboBox(self)
 
-            if keys:
-                self.pagingTypeEdit.addItem('key')
-            if count:
-                self.pagingTypeEdit.addItem('count')
+            self.pagingTypeEdit.addItem('key')
+            self.pagingTypeEdit.addItem('count')
+            self.pagingTypeEdit.addItem('url')
 
-            self.pagingTypeEdit.setToolTip(wraptip("Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount."))
+            self.pagingTypeEdit.setToolTip(wraptip("Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount. Select 'url' if the response contains a complete URL to the next page."))
             self.pagingTypeEdit.currentIndexChanged.connect(self.pagingChanged)
             layout.addWidget(self.pagingTypeEdit)
             layout.setStretch(0, 0)
 
-            layout.addWidget(QLabel("Param"))
+            # Paging param
+            self.pagingParamWidget = QWidget()
+            self.pagingParamLayout = QHBoxLayout()
+            self.pagingParamLayout .setContentsMargins(0, 0, 0, 0)
+            self.pagingParamWidget.setLayout(self.pagingParamLayout)
+
+            self.pagingParamLayout.addWidget(QLabel("Param"))
             self.pagingparamEdit = QLineEdit(self)
-            self.pagingparamEdit.setToolTip(wraptip("This parameter will be added to the query. The value is extracted by the paging key."))
-            layout.addWidget(self.pagingparamEdit)
-            layout.setStretch(1, 0)
-            layout.setStretch(2, 1)
+            self.pagingparamEdit.setToolTip(wraptip("This parameter will be added to the query if you select key-pagination. The value is extracted by the paging key."))
+            self.pagingParamLayout.addWidget(self.pagingparamEdit)
+            self.pagingParamLayout.setStretch(0,0)
+            self.pagingParamLayout.setStretch(1, 0)
+
+            layout.addWidget(self.pagingParamWidget)
+            layout.setStretch(1, 2)
 
             # Paging key
             self.pagingKeyWidget = QWidget()
@@ -783,13 +797,13 @@ class ApiTab(QScrollArea):
 
             self.pagingKeyLayout.addWidget(QLabel("Paging key"))
             self.pagingkeyEdit = QLineEdit(self)
-            self.pagingkeyEdit.setToolTip(wraptip("If the respsonse contains data about the next page, specify the key. The value will be added as paging parameter."))
+            self.pagingkeyEdit.setToolTip(wraptip("If the respsonse contains data about the next page, specify the key. The value will be added as paging parameter or used as the URL."))
             self.pagingKeyLayout.addWidget(self.pagingkeyEdit)
             self.pagingKeyLayout.setStretch(0, 0)
             self.pagingKeyLayout.setStretch(1, 1)
 
             layout.addWidget(self.pagingKeyWidget)
-            layout.setStretch(3, 2)
+            layout.setStretch(2, 2)
 
             # Page steps
             self.pagingStepsWidget = QWidget()
@@ -814,15 +828,15 @@ class ApiTab(QScrollArea):
             self.pagingStepsLayout.setStretch(3, 1)
 
             layout.addWidget(self.pagingStepsWidget)
-            layout.setStretch(4, 1)
+            layout.setStretch(3, 1)
 
             # Stop if
             layout.addWidget(QLabel("Stop key"))
             self.pagingstopEdit = QLineEdit(self)
             self.pagingstopEdit.setToolTip(wraptip("Stops fetching data as soon as the given key is present but empty or false. For example, stops fetching if the value of 'hasNext' ist false, none or an empty list. Usually you can leave the field blank, since fetching will stop anyway when the paging key is empty."))
             layout.addWidget(self.pagingstopEdit)
-            layout.setStretch(5, 0)
-            layout.setStretch(6, 1)
+            layout.setStretch(4, 0)
+            layout.setStretch(5, 1)
 
             #Page count
             layout.addWidget(QLabel("Maximum pages"))
@@ -831,8 +845,8 @@ class ApiTab(QScrollArea):
             self.pagesEdit.setMaximum(50000)
             self.pagesEdit.setToolTip(wraptip("Number of maximum pages."))
             layout.addWidget(self.pagesEdit)
+            layout.setStretch(6, 0)
             layout.setStretch(7, 0)
-            layout.setStretch(8, 0)
 
             rowcaption = "Paging"
 
@@ -1521,7 +1535,7 @@ class ApiTab(QScrollArea):
         self.loginWindow.setCentralWidget(self.login_webview)
 
         # Use the custom- WebPage class
-        webpage = QWebPageCustom(self.login_webview)
+        webpage = WebPageCustom(self.login_webview)
         webpage.logMessage.connect(self.logMessage)
         self.login_webview.setPage(webpage)
 
@@ -2282,7 +2296,7 @@ class FacebookTab(AuthTab):
 
                 termsurl = self.defaults.get('termsurl','')
                 if termsurl != '':
-                    proceedDlg = WebDialog(self.mainWindow,"Login to Facepager",termsurl)
+                    proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
                     if proceedDlg.show() != QDialog.Accepted:
                         return False
 
@@ -2604,7 +2618,7 @@ class AmazonTab(AuthTab):
         self.initResponseInputs(True)
 
         # Pages Box
-        self.initPagingInputs(True, True)
+        self.initPagingInputs(True)
 
         # Login inputs
         self.initLoginInputs()
@@ -3009,7 +3023,7 @@ class GenericTab(AuthTab):
         self.initUploadFolderInput()
 
         # Extract input
-        self.initPagingInputs(True, True)
+        self.initPagingInputs(True)
         self.initResponseInputs(True)
 
         self.initFileInputs()
