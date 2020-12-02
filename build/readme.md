@@ -17,7 +17,7 @@ __Hints for solving errors:__
 
 - Create the build from scr-directory in folder-mode and with console option:  
 
-  pyinstaller --log-level=WARN --name "Facepager" --console --add-data "ssl;ssl" --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
+  pyinstaller --log-level=WARN --name "Facepager" --console --add-binary "../build/windows/PySide2;PySide2" --icon "../icons/icon_facepager.ico" Facepager.py  
 	 
   If everthing works, replace option "--console" with "--windowed" and create new spec file by replacing pyinstaller with pyi-makespec:  
   
@@ -30,6 +30,7 @@ __Hints for solving errors:__
 	PySide2/qt.conf	
 
 - See https://pyinstaller.readthedocs.io
+- See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/ for PySide2 issues
 
     
 ## macOS High Sierra
