@@ -25,9 +25,9 @@ class PreLoginWebDialog(QDialog):
         vLayout = QVBoxLayout()
         self.setLayout(vLayout)
 
-        self.page = WebPageCustom()
-        self.page.allowLinks = False
         self.browser = QWebEngineView(self)
+        self.page = WebPageCustom(self.browser)
+        self.page.allowLinks = False
         self.browser.setPage(self.page)
         vLayout.addWidget(self.browser)
 
@@ -222,22 +222,31 @@ class BrowserDialog(QMainWindow):
             if self.foldername is not None:
 
                 # Screenshot
-                fullfilename = makefilename(data['url']['final'], self.foldername, self.filename, fileext='.png', appendtime=True)
-                data['screenshot'] = self.getScreenShot(fullfilename)
+                try:
+                    fullfilename = makefilename(data['url']['final'], self.foldername, self.filename, fileext='.png', appendtime=True)
+                    data['screenshot'] = self.getScreenShot(fullfilename)
+                except Exception as e:
+                    self.logMessage.emit('Error capturing screenshot: '+str(e))
 
                 # HTML file
-                fullfilename = makefilename(data['url']['final'], self.foldername, self.filename,self.fileext, appendtime=True)
-                file = open(fullfilename, 'wb')
-                if file is not None:
-                    try:
-                        file.write(data['text'].encode())
-                    finally:
-                        file.close()
+                try:
+                    fullfilename = makefilename(data['url']['final'], self.foldername, self.filename,self.fileext, appendtime=True)
+                    file = open(fullfilename, 'wb')
+                    if file is not None:
+                        try:
+                            file.write(data['text'].encode())
+                        finally:
+                            file.close()
+                except Exception as e:
+                    self.logMessage.emit('Error saving HTML: '+str(e))
 
-            # PDF
-            if self.foldername is not None:
-                fullfilename = makefilename(data['url']['final'],self.foldername,self.filename, fileext='.pdf',appendtime=True)
-                data['pdf'] = self.webpage.printToPdf(fullfilename)
+                # PDF
+                try:
+                    fullfilename = makefilename(data['url']['final'],self.foldername,self.filename, fileext='.pdf',appendtime=True)
+                    self.webpage.printToPdf(fullfilename)
+                    data['pdf'] = fullfilename
+                except Exception as e:
+                    self.logMessage.emit('Error printing to PDF: ' + str(e))
 
         except Exception as e:
             data['error'] = str(e)
