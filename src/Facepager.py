@@ -50,12 +50,12 @@ from server import Server, RequestHandler
 
 # Some hackery required for pyInstaller
 # See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/#could-not-find-qtwebengineprocessexe-on-windows
-if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
-    os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.normpath(os.path.join(
-        sys._MEIPASS, 'PySide2', 'Qt', 'lib',
-        'QtWebEngineCore.framework', 'Helpers', 'QtWebEngineProcess.app',
-        'Contents', 'MacOS', 'QtWebEngineProcess'
-    ))
+# if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
+#     os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.normpath(os.path.join(
+#         sys._MEIPASS, 'PySide2', 'Qt', 'lib',
+#         'QtWebEngineCore.framework', 'Helpers', 'QtWebEngineProcess.app',
+#         'Contents', 'MacOS', 'QtWebEngineProcess'
+#     ))
 
 class MainWindow(QMainWindow):
 
