@@ -41,7 +41,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ pyenv\Scripts\activate.bat  
   
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser  
-  $ pip install PySide2==5.11.1  
+  $ pip install PySide2==5.11.1  # try: pip install PySide2==5.15.2
 
 - Start Facepager  
   $ cd src  
@@ -60,7 +60,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ source pyenv/bin/activate  
   
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser  
-  $ pip install PySide2==5.11.1  
+  $ pip install PySide2==5.11.1  # try: pip install PySide2==5.15.2 
 
 - Start Facepager  
   $ cd src  
@@ -83,7 +83,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ source pyenv/bin/activate  
   
   $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser   
-  $ pip3 install PySide2==5.11.1  
+  $ pip3 install PySide2==5.11.1  # try: pip install PySide2==5.15.2
 
 - Start Facepager  
   $ cd src  

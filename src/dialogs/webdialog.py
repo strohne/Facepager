@@ -213,7 +213,10 @@ class BrowserDialog(QMainWindow):
             }
 
             # Fetch HTML
-            data['text'] = self.getHtml()
+            data['html'] = self.getHtml()
+
+            # Fetch plain text
+            data['text'] = self.getText()
 
 
             if self.foldername is not None:
@@ -231,10 +234,10 @@ class BrowserDialog(QMainWindow):
                     finally:
                         file.close()
 
-            # # PDF
-            # if self.foldername is not None:
-            #     fullfilename = makefilename(data['url']['final'],self.foldername,self.filename, fileext='.pdf',appendtime=True)
-            #     data['pdf'] = self.webpage.printToPdf(fullfilename)
+            # PDF
+            if self.foldername is not None:
+                fullfilename = makefilename(data['url']['final'],self.foldername,self.filename, fileext='.pdf',appendtime=True)
+                data['pdf'] = self.webpage.printToPdf(fullfilename)
 
         except Exception as e:
             data['error'] = str(e)
@@ -267,6 +270,20 @@ class BrowserDialog(QMainWindow):
 
         return self.capturedhtml
 
+    def getText(self):
+
+        def newTextData(txt):
+            self.capturedtext = txt
+
+        self.capturedtext = None
+        self.webpage.toPlainText(newTextData)
+
+        waitstart = QDateTime.currentDateTime()
+        while (self.capturedtext is None) and (waitstart.msecsTo(QDateTime.currentDateTime()) < 1000):
+            QApplication.processEvents()
+            time.sleep(0.01)
+
+        return self.capturedtext
 
     # https://stackoverflow.com/questions/55231170/taking-a-screenshot-of-a-web-page-in-pyqt5
     #screenshots: https://stackoverrun.com/de/q/12970119
