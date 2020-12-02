@@ -4,7 +4,7 @@ Facepager 4 is developed for Python 3.7 (64 bit) and PySide2 (Qt5)
 
 Facepager depends on the following packages:
 
-- PySide2: pip install PySide2==5.11.1 (Licence LGPLv3/GPLv2)
+- PySide2: pip install PySide2==5.15.2 (Licence LGPLv3/GPLv2)
 - SQLAlchemy: pip install SQLAlchemy (Licence: MIT)
 - dateutil: pip install python-dateutil (PSF License)
 - requests: pip install requests (Apache2 License)
@@ -41,7 +41,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ pyenv\Scripts\activate.bat  
   
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser  
-  $ pip install PySide2==5.11.1  # try: pip install PySide2==5.15.2
+  $ pip install PySide2==5.15.2
 
 - Start Facepager  
   $ cd src  
@@ -60,7 +60,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ source pyenv/bin/activate  
   
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser  
-  $ pip install PySide2==5.11.1  # try: pip install PySide2==5.15.2 
+  $ pip install PySide2==5.15.2 
 
 - Start Facepager  
   $ cd src  
@@ -83,7 +83,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ source pyenv/bin/activate  
   
   $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser   
-  $ pip3 install PySide2==5.11.1  # try: pip install PySide2==5.15.2
+  $ pip3 install PySide2==5.15.2
 
 - Start Facepager  
   $ cd src  
