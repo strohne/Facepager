@@ -14,7 +14,7 @@ If you want to run from source, see [src/readme.md](https://github.com/strohne/F
 
 ### Getting help
 
-Try the help button built into Facepager or directly go to the [Wiki](https://github.com/strohne/Facepager/wiki). There you find everything to [get you started](https://github.com/strohne/Facepager/wiki/Getting-Started).
+Try the help button built into Facepager or directly go to the [Wiki](https://github.com/strohne/Facepager/wiki). There you find everything to [get you started](https://github.com/strohne/Facepager/wiki/Getting-Started). Further, you will find some [Tutorials on YouTube](https://www.youtube.com/channel/UCiIbKv5b5rz-6LPTLQgVGug).
 
 You can get help regarding specific problems in the [Facepager Usergroup on Facebook](https://www.facebook.com/groups/136224396995428/). If you want to be informed about updates please follow the [Facebook Page](https://www.facebook.com/facepagerpage).
 
