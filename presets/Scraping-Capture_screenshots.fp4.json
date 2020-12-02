@@ -1,0 +1,41 @@
+{
+  "name": "Capture screenshots",
+  "category": "Scraping",
+  "description": "This preset can be used to capture a screenshot, a PDF print, plain text and rendered HTML from single pages. Capturing is an experimental feature (version 4.3.2 only). Maybe it will be enhanced, maybe removed.\n\n1. Adjust the Download folder in the Generic module.\n\n2. Add an URL as seed node, for example https://en.wikipedia.org/wiki/Api_(mountain)\n\n3. Select the seed node and Ctrl-Click (Windows, Linux) or Command-Click (Mac) onto Fetch Data. Hopefully, a browser window will open. \n\n4. When the page is loaded, as seen in the status bar, click Capture. You will get a new child node containing plain text, HTML, path to the screenshot and to the PDF. The files are stored in the choosen download folder.\n\nYou can browse other pages by entering an URL into the adress bar and clicking the Enter key. Every time you click Capture, an new child node and new files will be created.\n",
+  "module": "Generic",
+  "options": {
+    "basepath": "<Object ID>",
+    "resource": "",
+    "params": {},
+    "headers": {},
+    "verb": "GET",
+    "format": "text",
+    "filename": "<Object ID>",
+    "fileext": ".html",
+    "pages": 1,
+    "paging_type": "key",
+    "key_paging": null,
+    "paging_stop": null,
+    "param_paging": null,
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "proxy": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "disable",
+    "auth_tokenname": "",
+    "auth_prefix": ""
+  },
+  "speed": 200,
+  "saveheaders": true,
+  "columns": [
+    "title",
+    "url.final",
+    "url.requested",
+    "screenshot",
+    "pdf"
+  ]
+}
