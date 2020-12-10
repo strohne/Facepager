@@ -740,17 +740,17 @@ class ApiTab(QScrollArea):
 
     def pagingChanged(self):
         if self.pagingTypeEdit.currentText() == "count":
+            self.pagingParamWidget.show()
             self.pagingStepsWidget.show()
             self.pagingKeyWidget.hide()
         elif self.pagingTypeEdit.currentText() == "url":
-            self.pagingStepsWidget.hide()
-            self.pagingKeyWidget.show()
             self.pagingParamWidget.hide()
-
-        else:
             self.pagingStepsWidget.hide()
             self.pagingKeyWidget.show()
+        else:
             self.pagingParamWidget.show()
+            self.pagingStepsWidget.hide()
+            self.pagingKeyWidget.show()
 
         if self.pagingTypeEdit.count() < 2:
             self.pagingTypeEdit.hide()
@@ -821,6 +821,7 @@ class ApiTab(QScrollArea):
 
             self.pagingStepsLayout.addWidget(QLabel("Step"))
             self.offsetStepEdit = QSpinBox(self)
+            self.offsetStepEdit.setMaximum(10000)
             self.offsetStepEdit.setValue(1)
             self.offsetStepEdit.setToolTip(wraptip("Amount to increase for each page, defaults to 1"))
             self.pagingStepsLayout.addWidget(self.offsetStepEdit)
