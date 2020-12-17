@@ -1,0 +1,41 @@
+{
+  "name": "Get target of short links",
+  "category": "Scraping",
+  "description": "Add shortlinks as seed nodes. You can add other URLs as well, if you are interested in the final URL after redirections. \n\nNote: The preset uses the HEAD verb, supported by Facepager v4.3.3 or greater.\n",
+  "module": "Generic",
+  "options": {
+    "basepath": "<Object ID>",
+    "resource": "",
+    "params": {},
+    "headers": {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+    },
+    "verb": "HEAD",
+    "format": "text",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 1,
+    "paging_type": "key",
+    "key_paging": null,
+    "paging_stop": null,
+    "param_paging": null,
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "proxy": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "disable",
+    "auth_tokenname": "",
+    "auth_prefix": ""
+  },
+  "speed": 2000,
+  "saveheaders": false,
+  "columns": [
+    "finalurl",
+    "sourcepath",
+    "content-type"
+  ]
+}
