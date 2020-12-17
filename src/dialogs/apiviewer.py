@@ -469,6 +469,7 @@ class ApiViewer(QDialog):
 
             # Add file item
             itemData = {}
+            itemData = {k:v for (k,v) in data.items() if k.startswith('x-facepager-')}
             itemData['type'] = 'file'
             itemData['filename'] = filename
             itemData['folder'] = folder
@@ -641,6 +642,20 @@ class ApiViewer(QDialog):
                     'basepath' : getDictValue(data, 'info.servers.0.url',''),
                     'resource' : path
                 }
+
+                if module == 'Generic':
+                    options['nodedata'] = getDictValue(data,'x-facepager-extract')
+                    options['objectid'] = getDictValue(data,'x-facepager-objectid')
+
+                    options['paging_type'] = getDictValue(data,'x-facepager-pagination.method')
+                    options['key_paging'] = getDictValue(data,'x-facepager-pagination.key')
+                    options['paging_stop'] = getDictValue(data,'x-facepager-pagination.stop')
+                    options['param_paging'] = getDictValue(data,'x-facepager-pagination.param')
+
+                    options['auth'] = getDictValue(data,'x-facepager-authorization.auth')
+                    options['auth_tokenname'] = getDictValue(data,'x-facepager-authorization.auth_tokenname')
+                    options['auth_type'] = getDictValue(data,'x-facepager-authorization.auth_type')
+
                 tab.setOptions(options)
 
                 params = getDictValue(data, "operations.get.parameters", [])
