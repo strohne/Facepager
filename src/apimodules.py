@@ -870,7 +870,7 @@ class ApiTab(QScrollArea):
     def initVerbInputs(self):
         # Verb and encoding
         self.verbEdit = QComboBox(self)
-        self.verbEdit.addItems(['GET','POST','PUT','PATCH','DELETE'])
+        self.verbEdit.addItems(['GET','HEAD','POST','PUT','PATCH','DELETE'])
         self.verbEdit.currentIndexChanged.connect(self.verbChanged)
 
         self.encodingLabel = QLabel("Encoding")
@@ -906,7 +906,7 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Payload", self.payloadWidget)
 
     def verbChanged(self):
-        if self.verbEdit.currentText() in ['GET','DELETE']:
+        if self.verbEdit.currentText() in ['GET','DELETE','HEAD']:
             self.payloadWidget.hide()
             self.mainLayout.labelForField(self.payloadWidget).hide()
             
