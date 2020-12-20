@@ -677,9 +677,14 @@ class TreeModel(QAbstractItemModel):
         if not index.isValid():
             return False
 
-        # Find last offcut or data node
         treeitem = index.internalPointer()
-        if options.get('resume', False):
+
+        # Check if empty
+        if options.get('emptyonly', False):
+            return treeitem.childCountAll() == 0
+
+        # Find last offcut or data node
+        elif options.get('resume', False):
             filter = {'querystatus': "fetched (200)", 'objecttype': ["data", "offcut", "empty"]}
             treeitem.lastdata = self.getLastChildData(index, filter)
 

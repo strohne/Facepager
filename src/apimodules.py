@@ -1045,6 +1045,13 @@ class ApiTab(QScrollArea):
         # return proxy
 
     def initPagingOptions(self, data, options):
+
+        # only empty if requested
+        if options.get('emptyonly', False):
+            lastdata = getDictValueOrNone(options, 'lastdata', dump=False)
+            if lastdata is not None:
+                return None
+
         # paging by auto count
         if (options.get('paging_type') == "count") and (options.get('param_paging', '') is not None):
             offset = options.get('offset_start', 1)
@@ -1793,6 +1800,7 @@ class AuthTab(ApiTab):
         self.closeSession(session_no)
         self.connected = True
         self.speed = options.get('speed', None)
+        self.timeout = options.get('timeout', 15)
 
         # Init pagination
         options = self.initPagingOptions(nodedata, options)
@@ -2205,6 +2213,7 @@ class FacebookTab(AuthTab):
 
         self.connected = True
         self.speed = options.get('speed',None)
+        self.timeout = options.get('timeout', 15)
         session_no = options.get('threadnumber', 0)
 
         # Init pagination
@@ -2555,6 +2564,8 @@ class TwitterStreamingTab(ApiTab):
         if (options.get('objectid') is None):
             options['objectid'] = self.defaults.get('key_objectid')
 
+        self.timeout = options.get('timeout',30)
+
         # data
         session_no = options.get('threadnumber',0)
         for data, headers, status in self.request(session_no, path=urlpath, args=urlparams):
@@ -2874,6 +2885,7 @@ class TwitterTab(AuthTab):
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         self.connected = True
         self.speed = options.get('speed', None)
+        self.timeout = options.get('timeout', 15)
         session_no = options.get('threadnumber',0)
 
         # Init pagination
@@ -3013,6 +3025,7 @@ class GenericTab(AuthTab):
         super(GenericTab, self).__init__(mainWindow, "Generic")
 
         #Defaults
+        self.timeout = 60
         self.defaults['basepath'] = '<Object ID>'
 
         # Standard inputs
@@ -3035,7 +3048,7 @@ class GenericTab(AuthTab):
 
         self.loadDoc()
         self.loadSettings()
-        self.timeout = 15
+
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(GenericTab, self).getOptions(purpose)

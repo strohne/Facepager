@@ -246,6 +246,15 @@ class MainWindow(QMainWindow):
             wraptip("Check if you want to create nodes containing headers of the response."))
         self.settingsLayout.addRow(self.headersCheckbox)
 
+        # Timeout
+        self.timeoutEdit = QSpinBox(self)
+        self.timeoutEdit.setMinimum(1)
+        self.timeoutEdit.setMaximum(300)
+        self.timeoutEdit.setToolTip(
+            wraptip("How many seconds will you wait for a response?"))
+        self.timeoutEdit.setValue(self.settings.value('timeout',15))
+        self.settingsLayout.addRow('Request timeout',self.timeoutEdit)
+
         # Expand Box
         self.autoexpandCheckbox = QCheckBox("Expand new nodes",self)
         self.autoexpandCheckbox.setToolTip(wraptip(
@@ -367,16 +376,16 @@ class MainWindow(QMainWindow):
         self.allnodesCheckbox.setToolTip(wraptip("Check if you want to fetch data for all nodes. This helps with large datasets because manually selecting all nodes slows down Facepager."))
         fetchsettings.addRow("Select all nodes", self.allnodesCheckbox)
 
+        #-Empty nodes
+        self.emptyCheckbox = QCheckBox(self)
+        self.emptyCheckbox.setCheckState(Qt.Unchecked)
+        self.emptyCheckbox.setToolTip(wraptip("Check if you want process only empty nodes."))
+        fetchsettings.addRow("Only empty nodes", self.emptyCheckbox)
+
         #Object types
         self.typesEdit = QLineEdit('offcut')
         self.typesEdit.setToolTip(wraptip("Skip nodes with these object types, comma separated list. Normally this should not be changed."))
         fetchsettings.addRow("Exclude object types",self.typesEdit)
-
-        # #-Empty nodes
-        # self.emptynodesCheckbox = QCheckBox(self)
-        # self.emptynodesCheckbox.setCheckState(Qt.Unchecked)
-        # self.emptynodesCheckbox.setToolTip(wraptip("Check if you want to fetch data only for nodes without children. This can be used to continue cancelled data collection."))
-        # fetchsettings.addRow("Select only empty nodes", self.emptynodesCheckbox)
 
         #-Continue pagination
         self.resumeCheckbox = QCheckBox(self)

@@ -376,8 +376,10 @@ class ApiActions(object):
         settings['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
         settings['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         settings['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
+        settings['timeout'] = self.mainWindow.timeoutEdit.value()
         settings['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
         settings['resume'] = self.mainWindow.resumeCheckbox.isChecked()
+        settings['emptyonly'] = self.mainWindow.emptyCheckbox.isChecked()
 
         return settings
 
@@ -410,6 +412,10 @@ class ApiActions(object):
         if value is not None:
             self.mainWindow.headersCheckbox.setChecked(bool(value))
 
+        value = settings.get('timeout') # default 15
+        if value is not None:
+            self.mainWindow.timeoutEdit.setValue(int(value))
+
         value = settings.get('logrequests', None) # default None
         if value is not None:
             self.mainWindow.logCheckbox.setChecked(bool(value))
@@ -421,6 +427,10 @@ class ApiActions(object):
         value = settings.get('resume', None) # default None
         if value is not None:
             self.mainWindow.resumeCheckbox.setChecked(bool(value))
+
+        value = settings.get('emptyonly', None) # default None
+        if value is not None:
+            self.mainWindow.emptyCheckbox.setChecked(bool(value))
 
     def getPresetOptions(self):
         # Global options
@@ -582,7 +592,7 @@ class GuiActions(object):
 
         self.actionSettings = self.dataActions.addAction(QIcon(":/icons/more.png"), "More settings")
         self.actionSettings.setToolTip(wraptip("Can't get enough? Here you will find even more settings."))
-        self.actionSettings.triggered.connect(self. openSettings)
+        self.actionSettings.triggered.connect(self.openSettings)
 
         self.actionBrowse = self.dataActions.addAction(QIcon(":/icons/browser.png"), "Open")
         self.actionBrowse.setToolTip(wraptip("Open the resulting URL in the browser."))
@@ -926,8 +936,10 @@ class GuiActions(object):
         globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
         globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
+        globaloptions['timeout'] = self.mainWindow.timeoutEdit.value()
         globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
         globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
+        globaloptions['emptyonly'] = self.mainWindow.emptyCheckbox.isChecked()
 
         # Get module option
         if isinstance(apimodule, str):
