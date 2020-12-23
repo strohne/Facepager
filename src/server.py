@@ -162,3 +162,55 @@ class RequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_answer(response)
             return True
+
+#
+# Server for listening at local ports for OAuth Login redirects
+#
+
+class LoginServer(ThreadingHTTPServer, QObject):
+    def __init__(self, port, callback):
+        QObject.__init__(self)
+        HandlerClass = self.requestHandlerFactory(callback)
+        ThreadingHTTPServer.__init__(self,('localhost', port), HandlerClass)
+
+    def requestHandlerFactory(self, callback):
+        """Factory method to pass parameters to request handler"""
+
+        class CustomHandler(LoginRequestHandler):
+            def __init__(self, *args, **kwargs):
+                self.callback = callback
+                super(LoginRequestHandler, self).__init__(*args, **kwargs)
+
+        return CustomHandler
+
+class LoginRequestHandler(BaseHTTPRequestHandler):
+
+    def __init__(self, *args, **kwargs):
+        super(LoginRequestHandler, self).__init__(*args, **kwargs)
+
+    def send_answer(self, content, status=200, message=None):
+        self.send_response(status, message)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+
+        if content is not None:
+            response = json.dumps(content)
+            self.wfile.write(response.encode('utf-8'))
+
+    def send_redirect(self, url):
+        self.send_response(303,'Redirect')
+        self.send_header('Location', url)
+        self.end_headers()
+
+
+    # Receives redirect URL, calls callback and sends back a message to close the browser
+    def do_GET(self):
+        try:
+            response = self.callback(self.path)
+        except:
+            self.send_answer(None, 500, "Could not process request.")
+        else:
+            if response is None:
+                self.send_answer(None, 404, "Not found.")
+            else:
+                self.send_redirect(response)

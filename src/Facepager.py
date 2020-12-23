@@ -527,6 +527,10 @@ class MainWindow(QMainWindow):
             self.serverInstance.shutdown()
             self.logmessage("Server stopped")
 
+    def cleanupModules(self):
+        for i in range(self.RequestTabs.count()):
+            self.RequestTabs.widget(i).cleanup()
+
     def writeSettings(self):
         QCoreApplication.setOrganizationName("Strohne")
         QCoreApplication.setApplicationName("Facepager")
@@ -583,6 +587,7 @@ class MainWindow(QMainWindow):
                 self.writeSettings()
 
             self.stopServer()
+            self.cleanupModules()
             event.accept()
         else:
             event.ignore()
