@@ -1528,56 +1528,6 @@ class ApiTab(QScrollArea):
 
         return True
 
-
-    @Slot()
-    def showLoginWindow(self, caption='', url='',width=600,height=600):
-        """
-        Create a SSL-capable WebView for the login-process
-        Uses a Custom QT-Webpage Implementation
-        Supply a getToken-Slot to fetch the API-Token
-        """
-
-        self.loginWindow = QMainWindow(self.mainWindow)
-        self.loginWindow.setAttribute(Qt.WA_DeleteOnClose)
-        self.loginWindow.resize(width, height)
-        self.loginWindow.setWindowTitle(caption)
-        self.loginWindow.stopped = False
-        self.loginWindow.cookie = ''
-
-
-        #create WebView with Facebook log-Dialog, OpenSSL needed
-        self.loginStatus = self.loginWindow.statusBar()
-        self.login_webview = QWebEngineView(self.loginWindow)
-        self.loginWindow.setCentralWidget(self.login_webview)
-
-        # Use the custom- WebPage class
-        webpage = WebPageCustom(self.login_webview)
-        webpage.logMessage.connect(self.logMessage)
-        self.login_webview.setPage(webpage)
-
-        #Connect to the getToken-method
-        self.login_webview.urlChanged.connect(self.getToken)
-        webpage.urlNotFound.connect(self.getToken) #catch redirects to localhost or nonexistent uris
-
-        # Connect to the loadFinished-Slot for an error message
-        self.login_webview.loadFinished.connect(self.loadFinished)
-
-        self.login_webview.load(QUrl(url))
-        #self.login_webview.resize(window.size())
-        self.login_webview.show()
-
-        self.loginWindow.show()
-
-    @Slot()
-    def closeLoginWindow(self):
-        if self.loginWindow is None:
-            return False
-
-        self.loginWindow.stopped = True
-        self.login_webview.stop()
-        self.loginWindow.close()
-        self.loginWindow = None
-
     @Slot()
     def loadFinished(self, success):
         if (not success and not self.loginWindow.stopped):
@@ -1919,15 +1869,95 @@ class AuthTab(ApiTab):
             self.doOAuth2Login(session_no)
 
     @Slot()
-    def getToken(self, url=False):
-        # if url is not False:
-        #    self.loginStatus.showMessage(url.toDisplayString() )
+    def showLoginWindow(self, caption='', url='',width=600,height=600):
+        """
+        Create a SSL-capable WebView for the login-process
+        Uses a Custom QT-Webpage Implementation
+        Supply a onLoginWindowChanged-Slot to fetch the API-Token
+        """
+
+        self.loginWindow = QMainWindow(self.mainWindow)
+        self.loginWindow.setAttribute(Qt.WA_DeleteOnClose)
+        self.loginWindow.resize(width, height)
+        self.loginWindow.setWindowTitle(caption)
+        self.loginWindow.stopped = False
+        self.loginWindow.cookie = ''
+
+
+        #create WebView with Facebook log-Dialog, OpenSSL needed
+        self.loginStatus = self.loginWindow.statusBar()
+        self.login_webview = QWebEngineView(self.loginWindow)
+        self.loginWindow.setCentralWidget(self.login_webview)
+
+        # Use the custom- WebPage class
+        webpage = WebPageCustom(self.login_webview)
+        webpage.logMessage.connect(self.logMessage)
+        self.login_webview.setPage(webpage)
+
+        #Connect to the onLoginWindowChanged-method
+        self.login_webview.urlChanged.connect(self.onLoginWindowChanged)
+        webpage.urlNotFound.connect(self.onLoginWindowChanged) #catch redirects to localhost or nonexistent uris
+
+        # Connect to the loadFinished-Slot for an error message
+        self.login_webview.loadFinished.connect(self.loadFinished)
+
+        self.login_webview.load(QUrl(url))
+        self.login_webview.show()
+        self.loginWindow.show()
+
+    @Slot()
+    def closeLoginWindow(self):
+        if self.loginWindow is None:
+            return False
+
+        self.loginWindow.stopped = True
+        self.login_webview.stop()
+        self.loginWindow.close()
+        self.loginWindow = None
+
+    @Slot()
+    def onLoginWindowChanged(self, url=False):
         if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
             return False
         elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
-            self.getOAuth1Token()
+            url = self.login_webview.url().toString()
+            success = self.getOAuth1Token(url)
+            if success:
+                self.closeLoginWindow()
         else:
-            self.getOAuth2Token(url)
+            url = url.toString()
+            options = self.getOptions()
+            if url.startswith(options['redirect_uri']):
+                if self.getOAuth2Token(url):
+                    self.closeLoginWindow()
+
+    @Slot()
+    def startLoginServer(self, port):
+        self.stopLoginServer()
+        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+        self.loginServerInstance = LoginServer(port, self.onLoginServerRedirect)
+        self.loginServerThread = threading.Thread(target=self.loginServerInstance.serve_forever)
+        self.loginServerThread.start()
+        port = self.loginServerInstance.server_port
+        self.defaults['redirect_uri'] = 'http://localhost:%d' % port
+        self.logMessage('Login server listening at http://localhost:%d.' % port)
+
+    @Slot()
+    def stopLoginServer(self):
+        if self.loginServerInstance is not None:
+            self.loginServerInstance.shutdown()
+            self.logMessage('Login server stopped.')
+            self.loginServerInstance = None
+
+    def onLoginServerRedirect(self, path):
+        options = self.getOptions()
+        url = options['redirect_uri'] + path
+        if self.getOAuth2Token(url):
+            self.stopLoginServer()
+            return "https://strohne.github.io/Facepager/oauth_feedback.html"
+        else:
+            return None
 
     @Slot()
     def initSession(self, no=0, renew=False):
@@ -1963,9 +1993,9 @@ class AuthTab(ApiTab):
                                  str(e),
                                  QMessageBox.StandardButton.Ok)
 
-    @Slot()
-    def getOAuth1Token(self):
-        url = urllib.parse.parse_qs(self.login_webview.url().toString())
+    def getOAuth1Token(self, url):
+        success = False
+        url = urllib.parse.parse_qs(url)
         if "oauth_verifier" in url:
             token = url["oauth_verifier"]
             if token:
@@ -1980,7 +2010,9 @@ class AuthTab(ApiTab):
                 self.tokensecretEdit.setText(session.access_token_secret)
 
                 self.closeSession()
-                self.closeLoginWindow()
+                success = True
+        return success
+
 
     def getOAuth1Service(self):
         if not hasattr(self,'oauthdata'):
@@ -2059,13 +2091,11 @@ class AuthTab(ApiTab):
                                  str(e),
                                  QMessageBox.StandardButton.Ok)
 
-    @Slot(QUrl)
     def getOAuth2Token(self, url):
         success = False
         try:
             options = self.getOptions()
 
-            url = url.toString()
             urlparsed = urlparse(url)
             query = parse_qs(urlparsed.query)
 
@@ -2093,11 +2123,11 @@ class AuthTab(ApiTab):
                     success = True
                 finally:
                     session.close()
-                    self.closeLoginWindow()
         except Exception as e:
             self.logMessage(e)
 
         return success
+
 
     def initOAuth2Session(self, no=0, renew=False):
         return super(AuthTab, self).initSession(no, renew)
@@ -2117,8 +2147,11 @@ class AuthTab(ApiTab):
             if clientid == '':
                 raise Exception('Client Id is missing, please adjust settings!')
 
+            self.startLoginServer(0)
+            redirect_uri = "http://localhost:"+str(self.loginServerInstance.server_port)
+
             params = {'client_id': clientid,
-                      'redirect_uri': options['redirect_uri'],
+                      'redirect_uri': redirect_uri,
                       'response_type': options.get('response_type', 'code')}
 
             if scope is not None:
@@ -2127,42 +2160,14 @@ class AuthTab(ApiTab):
             params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
             url = loginurl + "?" + params
 
-            self.loginPort = 50000
-            self.startLoginServer(self.loginPort)
             webbrowser.open(url)
-
-            self.showLoginWindow("Waiting for login", "https://strohne.github.io/Facepager/oauth_waiting.html")
 
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
                                  str(e),
                                  QMessageBox.StandardButton.Ok)
 
-    @Slot()
-    def startLoginServer(self,port):
-        self.stopLoginServer()
-        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-        self.loginServerInstance = LoginServer(port, self.getOAuth2RedirectToken)
-        self.loginServerThread = threading.Thread(target=self.loginServerInstance.serve_forever)
-        self.loginServerThread.start()
-        self.logMessage('Login server listening at http://localhost:%d.' % port)
-
-    @Slot()
-    def stopLoginServer(self):
-        if self.loginServerInstance is not None:
-            self.loginServerInstance.shutdown()
-            self.logMessage('Login server stopped.')
-
-    @Slot()
-    def getOAuth2RedirectToken(self, path):
-        options = self.getOptions()
-        url = options.get('redirect_uri') + path
-        if self.getOAuth2Token(QUrl(url)):
-            self.stopLoginServer()
-            return "https://strohne.github.io/Facepager/oauth_feedback.html"
-        else:
-            return None
 
     @Slot()
     def doCookieLogin(self, session_no=0):
@@ -2413,7 +2418,7 @@ class FacebookTab(AuthTab):
             QMessageBox.critical(self, "Login canceled",str(e),QMessageBox.StandardButton.Ok)
 
     @Slot(QUrl)
-    def getToken(self,url):
+    def onLoginWindowChanged(self, url):
         if url.toString().startswith(self.defaults['redirect_uri']):
             try:
                 url = urllib.parse.parse_qs(url.toString())
@@ -2684,7 +2689,7 @@ class TwitterStreamingTab(ApiTab):
                                             QMessageBox.StandardButton.Ok)
 
     @Slot()
-    def getToken(self):
+    def onLoginWindowChanged(self):
         url = urllib.parse.parse_qs(self.login_webview.url().toString())
         if 'oauth_verifier' in url:
             token = url['oauth_verifier']
@@ -3050,11 +3055,14 @@ class YoutubeTab(AuthTab):
 
         super(YoutubeTab, self).__init__(mainWindow, "YouTube")
 
+        # Authorization
+        self.auth_userauthorized = False
+
         # Defaults
         self.defaults['auth_type'] = "OAuth2 External"
         self.defaults['auth_uri'] = 'https://accounts.google.com/o/oauth2/auth'
         self.defaults['token_uri'] = "https://accounts.google.com/o/oauth2/token"
-        self.defaults['redirect_uri'] = 'http://localhost:50000' #"urn:ietf:wg:oauth:2.0:oob" #, "http://localhost"
+        self.defaults['redirect_uri'] = 'http://localhost' #"urn:ietf:wg:oauth:2.0:oob" #, "http://localhost"
         self.defaults['scope'] = "https://www.googleapis.com/auth/youtube.readonly" #,"https://www.googleapis.com/auth/youtube.force-ssl"
         self.defaults['response_type'] = "code"
 

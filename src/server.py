@@ -168,17 +168,32 @@ class RequestHandler(BaseHTTPRequestHandler):
 #
 
 class LoginServer(ThreadingHTTPServer, QObject):
-    def __init__(self, port, callback):
-        QObject.__init__(self)
-        HandlerClass = self.requestHandlerFactory(callback)
-        ThreadingHTTPServer.__init__(self,('localhost', port), HandlerClass)
+    action = Signal(int)
+    logmessage = Signal(str)
 
-    def requestHandlerFactory(self, callback):
+    # getCallback: function with redirect URL as return value
+    #                careful, the action is called from a different thread
+    #                do not change the user interface within the callback
+    # responseCallback: called after sending the response, carrying the status code.
+    #                   Since a signal is emitted, callback is synchronized with the user interface.
+    def __init__(self, port, getCallback, responseCallback=None):
+        QObject.__init__(self)
+
+        HandlerClass = self.requestHandlerFactory(getCallback, self.responseCallback)
+        ThreadingHTTPServer.__init__(self,('localhost', port), HandlerClass)
+        if responseCallback is not None:
+            self.action.connect(responseCallback)
+
+    def responseCallback(self, status=None):
+        self.action.emit(status)
+
+    def requestHandlerFactory(self, getCallback,responseCallback = None):
         """Factory method to pass parameters to request handler"""
 
         class CustomHandler(LoginRequestHandler):
             def __init__(self, *args, **kwargs):
-                self.callback = callback
+                self.getCallback = getCallback
+                self.responseCallback = responseCallback
                 super(LoginRequestHandler, self).__init__(*args, **kwargs)
 
         return CustomHandler
@@ -188,29 +203,30 @@ class LoginRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super(LoginRequestHandler, self).__init__(*args, **kwargs)
 
-    def send_answer(self, status=200, message=None, content=None):
+    def send_answer(self, status=200, message=None):
         self.send_response(status, message)
-        self.send_header('Content-type', 'application/json')
+        self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
 
-        if content is not None:
-            response = json.dumps(content)
-            self.wfile.write(response.encode('utf-8'))
+        self.responseCallback(status)
 
     def send_redirect(self, status, url):
-        self.send_response(status,None)
+        self.send_response(status, None)
+        self.send_header('Content-type', 'text/html; charset=utf-8')
         self.send_header('Location', url)
         self.end_headers()
 
+        self.responseCallback(status)
 
-    # Receives redirect URL, calls callback and sends back a message to close the browser
+
+    # Receives redirect URL, calls callback, and sends back a redirect
     def do_GET(self):
         try:
-            response = self.callback(self.path)
-        except:
+            redirecturl = self.getCallback(self.path)
+        except Exception as e:
             self.send_answer(500, "Could not process request.")
         else:
-            if response is None:
+            if redirecturl is None:
                 self.send_answer(404, "Not found.")
             else:
-                self.send_redirect(303, response)
+                self.send_redirect(303, redirecturl)
