@@ -188,7 +188,7 @@ class LoginRequestHandler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super(LoginRequestHandler, self).__init__(*args, **kwargs)
 
-    def send_answer(self, content, status=200, message=None):
+    def send_answer(self, status=200, message=None, content=None):
         self.send_response(status, message)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
@@ -197,8 +197,8 @@ class LoginRequestHandler(BaseHTTPRequestHandler):
             response = json.dumps(content)
             self.wfile.write(response.encode('utf-8'))
 
-    def send_redirect(self, url):
-        self.send_response(303,'Redirect')
+    def send_redirect(self, status, url):
+        self.send_response(status,None)
         self.send_header('Location', url)
         self.end_headers()
 
@@ -208,9 +208,9 @@ class LoginRequestHandler(BaseHTTPRequestHandler):
         try:
             response = self.callback(self.path)
         except:
-            self.send_answer(None, 500, "Could not process request.")
+            self.send_answer(500, "Could not process request.")
         else:
             if response is None:
-                self.send_answer(None, 404, "Not found.")
+                self.send_answer(404, "Not found.")
             else:
-                self.send_redirect(response)
+                self.send_redirect(303, response)

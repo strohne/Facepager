@@ -2094,7 +2094,6 @@ class AuthTab(ApiTab):
                 finally:
                     session.close()
                     self.closeLoginWindow()
-                    self.stopLoginServer()
         except Exception as e:
             self.logMessage(e)
 
@@ -2160,6 +2159,7 @@ class AuthTab(ApiTab):
         options = self.getOptions()
         url = options.get('redirect_uri') + path
         if self.getOAuth2Token(QUrl(url)):
+            self.stopLoginServer()
             return "https://strohne.github.io/Facepager/oauth_feedback.html"
         else:
             return None
