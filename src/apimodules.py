@@ -2061,7 +2061,23 @@ class AuthTab(ApiTab):
         try:
             options = self.getOptions()
 
-            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+            # use credentials from input if provided
+            if self.clientIdEdit.text() != "":
+                self.auth_preregistered = False
+                clientid = self.clientIdEdit.text()
+            else:
+                self.auth_preregistered = True
+                clientid = self.defaults.get('client_id', '')
+
+                if clientid == '':
+                    raise Exception('Client ID missing, please adjust settings!')
+
+                termsurl = self.defaults.get('termsurl', '')
+                if termsurl != '':
+                    proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
+                    if proceedDlg.show() != QDialog.Accepted:
+                        return False
+
             scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
             loginurl = options.get('auth_uri', '')
 
@@ -2137,7 +2153,23 @@ class AuthTab(ApiTab):
         try:
             options = self.getOptions()
 
-            clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else self.defaults.get('client_id','')
+            #use credentials from input if provided
+            if self.clientIdEdit.text() != "":
+                self.auth_preregistered = False
+                clientid = self.clientIdEdit.text()
+            else:
+                self.auth_preregistered = True
+                clientid = self.defaults.get('client_id','')
+
+                if clientid == '':
+                    raise Exception('Client ID missing, please adjust settings!')
+
+                termsurl = self.defaults.get('termsurl','')
+                if termsurl != '':
+                    proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
+                    if proceedDlg.show() != QDialog.Accepted:
+                        return False
+
             scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
             loginurl = options.get('auth_uri', '')
 
