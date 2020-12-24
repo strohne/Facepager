@@ -1209,6 +1209,12 @@ class ApiTab(QScrollArea):
 
         return method, urlpath, urlparams, payload, requestheaders
 
+    # Retrieves a user ID from the API that
+    # later is hashed for maintaining the
+    # anonymized user list. REimplement in the modules.
+    def getUserId(self):
+        return None
+
     def authorizeUser(self, userid):
         # User ID
         if userid is None:
@@ -2129,6 +2135,16 @@ class AuthTab(ApiTab):
                                                      authorization_response=str(url),
                                                      client_secret=clientsecret)
 
+                    # Get user ID
+                    if self.auth_preregistered:
+                        userid = self.getUserId(token.get('access_token',''))
+                        if userid is None:
+                            raise Exception("Could not retrieve user ID. Check settings and try again.")
+
+                        self.authorizeUser(userid)
+                        if not self.auth_userauthorized:
+                            raise Exception("You are not registered at Facepager.")
+
                     self.tokenEdit.setText(token.get('access_token',''))
 
                     try:
@@ -2139,6 +2155,7 @@ class AuthTab(ApiTab):
                     success = True
                 finally:
                     session.close()
+
         except Exception as e:
             self.logMessage(e)
 
@@ -2449,6 +2466,15 @@ class FacebookTab(AuthTab):
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",str(e),QMessageBox.StandardButton.Ok)
 
+    def getUserId(self, token):
+        data, headers, status = self.request(
+            None, self.basepathEdit.currentText().strip() +
+                  '/me?fields=id&access_token=' + token)
+        if status != 'fetched (200)':
+            return None
+
+        return data.get('id')
+
     @Slot(QUrl)
     def onLoginWindowChanged(self, url):
         if url.toString().startswith(self.defaults['redirect_uri']):
@@ -2458,13 +2484,11 @@ class FacebookTab(AuthTab):
 
                 # Get user ID
                 if self.auth_preregistered:
-                    data, headers, status = self.request(
-                        None, self.basepathEdit.currentText().strip() +
-                        '/me?fields=id&access_token=' + token)
-                    if status != 'fetched (200)':
+                    userid = self.getUserId(token)
+                    if userid is None:
                         raise Exception("Could not retrieve user ID. Check settings and try again.")
 
-                    self.authorizeUser(data.get('id'))
+                    self.authorizeUser(userid)
                     if not self.auth_userauthorized:
                         raise Exception("You are not registered at Facepager.")
 
@@ -3138,6 +3162,15 @@ class YoutubeTab(AuthTab):
 
         self.scopeEdit = QLineEdit()
         authlayout.addRow("Scopes",self.scopeEdit)
+
+    def getUserId(self, token):
+        data, headers, status = self.request(
+            None, 'https://www.googleapis.com/youtube/v3/channels?mine=true&access_token='+token)
+
+        if status != 'fetched (200)':
+            return None
+
+        return getDictValueOrNone(data,'items.0.id')
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(YoutubeTab, self).getOptions(purpose)
