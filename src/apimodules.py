@@ -1766,10 +1766,11 @@ class AuthTab(ApiTab):
 
         super(AuthTab, self).setOptions(options)
 
-
-
-
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        # Preconditions
+        if not self.auth_userauthorized:
+            raise Exception('You are not authorized, login please!')
+
         session_no = options.get('threadnumber',0)
         self.closeSession(session_no)
         self.connected = True
@@ -2033,6 +2034,10 @@ class AuthTab(ApiTab):
             request_token_url=self.defaults.get('request_token_url'),
             base_url=self.defaults.get('basepath'))
 
+        #clientid = self.getClientId()
+        #if clientid is None:
+        #    return None
+
         service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else \
             self.defaults['consumer_key']
         service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else \
@@ -2062,27 +2067,39 @@ class AuthTab(ApiTab):
         self.sessions[no] = session
         return session
 
+    # Get Client ID
+    # return custom client ID if provided
+    # otherwise login to Facepager and return preregistered ID
+    # or return None if login fails
+    def getClientId(self):
+        if self.clientIdEdit.text() != "":
+            self.auth_preregistered = False
+            clientid = self.clientIdEdit.text()
+        else:
+            self.auth_preregistered = True
+            clientid = self.defaults.get('client_id', '')
+
+            if clientid == '':
+                raise Exception('Client ID missing, please adjust settings!')
+
+            termsurl = self.defaults.get('termsurl', '')
+            if termsurl != '':
+                proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
+                if proceedDlg.show() != QDialog.Accepted:
+                    return None
+
+        return clientid
+
+
     @Slot()
     def doOAuth2Login(self, session_no=0):
         try:
             options = self.getOptions()
 
             # use credentials from input if provided
-            if self.clientIdEdit.text() != "":
-                self.auth_preregistered = False
-                clientid = self.clientIdEdit.text()
-            else:
-                self.auth_preregistered = True
-                clientid = self.defaults.get('client_id', '')
-
-                if clientid == '':
-                    raise Exception('Client ID missing, please adjust settings!')
-
-                termsurl = self.defaults.get('termsurl', '')
-                if termsurl != '':
-                    proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
-                    if proceedDlg.show() != QDialog.Accepted:
-                        return False
+            clientid = self.getClientId()
+            if clientid is None:
+                return False
 
             scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
             loginurl = options.get('auth_uri', '')
@@ -2441,22 +2458,9 @@ class FacebookTab(AuthTab):
     def doLogin(self, session_no = 0):
         try:
             #use credentials from input if provided
-            if self.clientIdEdit.text() != "":
-                self.auth_preregistered = False
-                clientid = self.clientIdEdit.text()
-            else:
-                self.auth_preregistered = True
-                clientid = self.defaults.get('client_id','')
-
-                if clientid == '':
-                    raise Exception('Client ID missing, please adjust settings!')
-
-                termsurl = self.defaults.get('termsurl','')
-                if termsurl != '':
-                    proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
-                    if proceedDlg.show() != QDialog.Accepted:
-                        return False
-
+            clientid = self.getClientId()
+            if clientid is None:
+                return False
             scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
             
 
