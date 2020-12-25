@@ -1875,6 +1875,11 @@ class AuthTab(ApiTab):
     @Slot()
     def doOAuth1Login(self, session_no = 0):
         try:
+            # use credentials from input if provided
+            clientid = self.getClientId()
+            if clientid is None:
+                return False
+
             service = self.getOAuth1Service()
 
             self.oauthdata.pop('oauth_verifier', None)
@@ -2003,6 +2008,7 @@ class AuthTab(ApiTab):
     def doTwitterAppLogin(self, session_no=0):
         try:
             # See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
+            self.auth_preregistered = False
             clientid = self.clientIdEdit.text() # no defaults
             if clientid == '':
                 raise Exception('Client Id is missing, please adjust settings!')
@@ -2215,6 +2221,16 @@ class AuthTab(ApiTab):
                 session = service.get_auth_session(self.oauthdata['requesttoken'],
                                                    self.oauthdata['requesttoken_secret'], method="POST",
                                                    data={'oauth_verifier': self.oauthdata['oauth_verifier']})
+
+                # Get user ID
+                if self.auth_preregistered:
+                    userid = self.getUserId(session)
+                    if userid is None:
+                        raise Exception("Could not retrieve user ID. Check settings and try again.")
+
+                    self.authorizeUser(userid)
+                    if not self.auth_userauthorized:
+                        raise Exception("You are not registered at Facepager.")
 
                 self.tokenEdit.setText(session.access_token)
                 self.tokensecretEdit.setText(session.access_token_secret)
@@ -2751,6 +2767,9 @@ class TwitterTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
 
+        # Authorization
+        self.auth_userauthorized = False
+
         # Defaults
         self.defaults['basepath'] = 'https://api.twitter.com/1.1'
         self.defaults['resource'] = '/search/tweets'
@@ -2824,7 +2843,20 @@ class TwitterTab(AuthTab):
 
         return options
 
+    def getUserId(self, session):
+        # Send request
+        response = session.request('GET', 'https://api.twitter.com/1.1/account/settings.json', timeout=self.timeout)
+        if not response.ok :
+             return None
+
+        data = response.json() if response.text != '' else []
+        return getDictValueOrNone(data, 'screen_name')
+
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        # Preconditions
+        if not self.auth_userauthorized:
+            raise Exception('You are not authorized, login please!')
+
         self.connected = True
         self.speed = options.get('speed', None)
         self.timeout = options.get('timeout', 15)
@@ -2898,7 +2930,10 @@ class TwitterTab(AuthTab):
 
 class TwitterStreamingTab(TwitterTab):
     def __init__(self, mainWindow=None):
-        super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
+        super(TwitterTab, self).__init__(mainWindow, "Twitter Streaming")
+
+        # Authorization
+        self.auth_userauthorized = False
 
         self.defaults['auth_type'] = 'OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
@@ -2915,7 +2950,7 @@ class TwitterStreamingTab(TwitterTab):
 
         # Query Box
         self.initInputs()
-        self.initAuthSettingsInputs()
+        self.initAuthSetupInputs()
         self.initLoginInputs()
 
         self.loadDoc()
@@ -2995,6 +3030,10 @@ class TwitterStreamingTab(TwitterTab):
             self.connected = False
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        # Preconditions
+        if not self.auth_userauthorized:
+            raise Exception('You are not authorized, login please!')
+
         if not ('url' in options):
             urlpath = options["basepath"] + options["resource"] + ".json"
             urlpath, urlparams, templateparams = self.getURL(urlpath, options["params"], nodedata, options)
