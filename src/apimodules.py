@@ -1966,11 +1966,10 @@ class AuthTab(ApiTab):
         :param no: session number
         :return: session object
         """
+        options = self.getOptions()
 
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
+        if options['auth_type'] == 'Twitter OAuth1':
             return self.initOAuth1Session(no, renew)
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
-            return self.initOAuth2Session(no, renew)
         else:
             return self.initOAuth2Session(no, renew)
 
@@ -2046,6 +2045,12 @@ class AuthTab(ApiTab):
         return service
 
     def initOAuth1Session(self,no=0, renew=False):
+        """
+        Return session or create if necessary
+        :param no: session number
+        :return: session object
+        """
+
         while (len(self.sessions) <= no):
             self.sessions.append(None)
 
@@ -2571,30 +2576,6 @@ class TwitterStreamingTab(AuthTab):
         self.clientSecretEdit = QLineEdit()
         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
         authlayout.addRow("Consumer Secret",self.clientSecretEdit)
-
-
-    def initSession(self, no=0, renew=False):
-        """
-        Return session or create if necessary
-        :param no: session number
-        :return: session object
-        """
-
-        while (len(self.sessions) <= no):
-            self.sessions.append(None)
-
-        session = self.sessions[no] if not renew else None
-        if session is None:
-            service = self.getOAuth1Service()
-            if (self.tokenEdit.text() != '') and (self.tokensecretEdit.text() != ''):
-                session = service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
-
-        if session is None:
-            raise Exception("No access, login please!")
-
-        self.sessions[no] = session
-        return session
-
 
     def request(self, session_no=0, path='', args=None, headers=None):
         self.connected = True
