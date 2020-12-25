@@ -1713,7 +1713,7 @@ class AuthTab(ApiTab):
         #     options['auth'] = 'header'
         #     options['auth_prefix'] = "Bearer "
         #     options['auth_tokenname'] = "Authorization"
-        # elif options.get('auth_type') == 'Twitter OAuth1':
+        # elif options.get('auth_type') == 'OAuth1':
         #     options['auth'] = 'disable' # managed by Twitter module
         #     options['auth_prefix'] = ''
         #     options['auth_tokenname'] = ''
@@ -1725,6 +1725,10 @@ class AuthTab(ApiTab):
         return options
 
     def setOptions(self, options):
+        # Legacy types
+        if options.get('auth_type') == 'Twitter OAuth1':
+            options['auth_type'] = 'OAuth1'
+
         # Override defaults
         if options.get('auth_type') == 'OAuth2':
             options['auth'] = 'header'
@@ -1734,7 +1738,7 @@ class AuthTab(ApiTab):
             options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
             options['auth_tokenname'] = "Authorization"
-        elif options.get('auth_type') == 'Twitter OAuth1':
+        elif options.get('auth_type') == 'OAuth1':
             options['auth'] = 'disable' # managed by Twitter module
             options['auth_prefix'] = ''
             options['auth_tokenname'] = ''
@@ -1858,7 +1862,7 @@ class AuthTab(ApiTab):
 
         if options['auth_type'] == 'Twitter App-only':
             self.doTwitterAppLogin(session_no)
-        elif options['auth_type'] == 'Twitter OAuth1':
+        elif options['auth_type'] == 'OAuth1':
             self.doOAuth1Login(session_no)
         elif options['auth_type'] == 'Cookie':
             self.doCookieLogin(session_no)
@@ -2092,7 +2096,7 @@ class AuthTab(ApiTab):
 
         if options['auth_type'] == 'Twitter App-only':
             return False
-        elif options['auth_type'] == 'Twitter OAuth1':
+        elif options['auth_type'] == 'OAuth1':
             url = self.login_webview.url().toString()
             success = self.getOAuth1Token(url)
             if success:
@@ -2141,7 +2145,7 @@ class AuthTab(ApiTab):
         """
         options = self.getOptions()
 
-        if options['auth_type'] == 'Twitter OAuth1':
+        if options['auth_type'] == 'OAuth1':
             return self.initOAuth1Session(no, renew)
         else:
             return self.initOAuth2Session(no, renew)
@@ -2755,7 +2759,7 @@ class TwitterTab(AuthTab):
         self.defaults['resource'] = '/search/tweets'
         self.defaults['params'] = {'q': '<Object ID>'}
 
-        self.defaults['auth_type'] = 'Twitter OAuth1'
+        self.defaults['auth_type'] = 'OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
@@ -2802,7 +2806,7 @@ class TwitterTab(AuthTab):
         self.authWidget.setLayout(authlayout)
 
         self.authTypeEdit= QComboBox()
-        self.authTypeEdit.addItems(['Twitter OAuth1', 'Twitter App-only'])
+        self.authTypeEdit.addItems(['OAuth1', 'Twitter App-only'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.clientIdEdit = QLineEdit()
@@ -2899,7 +2903,7 @@ class TwitterStreamingTab(TwitterTab):
     def __init__(self, mainWindow=None):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
-        self.defaults['auth_type'] = 'Twitter OAuth1'
+        self.defaults['auth_type'] = 'OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
@@ -3021,7 +3025,7 @@ class TwitterStreamingTab(TwitterTab):
             options['querystatus'] = status
 
             logData(data, options, headers)
-            
+
 class YoutubeTab(AuthTab):
     def __init__(self, mainWindow=None):
 
