@@ -2959,7 +2959,7 @@ class TwitterStreamingTab(TwitterTab):
         self.timeout = 30
         self.connected = False
 
-    def request(self, session_no=0, path='', args=None, headers=None):
+    def stream(self, session_no=0, path='', args=None, headers=None):
         self.connected = True
         self.retry_counter=0
         self.last_reconnect=QDateTime.currentDateTime()
@@ -3055,7 +3055,7 @@ class TwitterStreamingTab(TwitterTab):
 
         # data
         session_no = options.get('threadnumber',0)
-        for data, headers, status in self.request(session_no, path=urlpath, args=urlparams):
+        for data, headers, status in self.stream(session_no, path=urlpath, args=urlparams):
             # data
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
