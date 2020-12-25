@@ -530,10 +530,7 @@ class ApiTab(QScrollArea):
                 self.clientIdEdit.setText(options.get('client_id',''))
             if 'client_secret' in options:
                 self.clientSecretEdit.setText(options.get('client_secret',''))
-            if 'consumer_key' in options:
-                self.clientIdEdit.setText(options.get('consumer_key', ''))
-            if 'consumer_secret' in options:
-                self.clientSecretEdit.setText(options.get('consumer_secret', ''))
+
         except AttributeError:
             pass
 
@@ -2179,22 +2176,22 @@ class AuthTab(ApiTab):
             self.oauthdata = {}
 
         service = OAuth1Service(
-            consumer_key=self.defaults.get('consumer_key'),
-            consumer_secret=self.defaults.get('consumer_secret'),
+            consumer_key=self.defaults.get('client_id'),
+            consumer_secret=self.defaults.get('client_secret'),
             name='oauth1',
             access_token_url=self.defaults.get('access_token_url'),
             authorize_url=self.defaults.get('authorize_url'),
             request_token_url=self.defaults.get('request_token_url'),
             base_url=self.defaults.get('basepath'))
 
-        #clientid = self.getClientId()
-        #if clientid is None:
-        #    return None
+        # clientid = self.getClientId()
+        # if clientid is None:
+        #     return None
 
         service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else \
-            self.defaults['consumer_key']
+            self.defaults['client_id']
         service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" else \
-            self.defaults['consumer_secret']
+            self.defaults['client_secret']
         service.base_url = self.basepathEdit.currentText().strip() if self.basepathEdit.currentText().strip() != "" else \
             self.defaults['basepath']
 
