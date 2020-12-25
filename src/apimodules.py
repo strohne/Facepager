@@ -2513,7 +2513,7 @@ class FacebookTab(AuthTab):
             self.closeLoginWindow()
 
 
-class TwitterStreamingTab(ApiTab):
+class TwitterStreamingTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
