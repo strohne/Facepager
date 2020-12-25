@@ -1427,55 +1427,16 @@ class ApiTab(QScrollArea):
             return data, headers, status
 
     def disconnectSocket(self):
-        """Used to disconnect when canceling requests"""
+        """Used to hardly disconnect the streaming client"""
         self.connected = False
+        while (len(self.sessions) > 0):
+            session = self.sessions.pop()
+            session.close()
+
+        #self.response.raw._fp.close()
+        #self.response.close()
 
     @Slot()
-    def editAuthSettings(self):
-        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
-        dialog.setWindowTitle("Authentication settings")
-        dialog.setMinimumWidth(400)
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.authWidget)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        layout.addWidget(buttons)
-        dialog.setLayout(layout)
-
-        def close():
-            dialog.close()
-
-        def apply():
-            # Auth type: 'Disable','API key','OAuth2', 'Twitter App-only','Cookie'
-            try:
-                if self.authTypeEdit.currentText() == 'Disable':
-                    self.authEdit.setCurrentIndex(self.authEdit.findText('disable'))
-                    self.tokenNameEdit.setText('')
-                elif self.authTypeEdit.currentText() == 'API key':
-                    pass
-                elif self.authTypeEdit.currentText() == 'OAuth2':
-                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
-                    self.tokenNameEdit.setText('Authorization')
-                elif self.authTypeEdit.currentText() == 'Twitter App-only':
-                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
-                    self.tokenNameEdit.setText('Authorization')
-                elif self.authTypeEdit.currentText() == 'Cookie':
-                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
-                    self.tokenNameEdit.setText('Cookie')
-
-            except AttributeError:
-                pass
-
-            dialog.close()
-
-        #connect the nested functions above to the dialog-buttons
-        buttons.accepted.connect(apply)
-        buttons.rejected.connect(close)
-        dialog.exec_()
-
-    @Slot()
-
     def captureData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         session_no = options.get('threadnumber',0)
         self.connected = True
@@ -1618,6 +1579,50 @@ class AuthTab(ApiTab):
         self.proxyEdit .setToolTip(wraptip("The proxy will be used for fetching data only, not for the login procedure."))
         authlayout.addRow("Proxy", self.proxyEdit)
 
+
+    @Slot()
+    def editAuthSettings(self):
+        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        dialog.setWindowTitle("Authentication settings")
+        dialog.setMinimumWidth(400)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.authWidget)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        layout.addWidget(buttons)
+        dialog.setLayout(layout)
+
+        def close():
+            dialog.close()
+
+        def apply():
+            # Auth type: 'Disable','API key','OAuth2', 'Twitter App-only','Cookie'
+            try:
+                if self.authTypeEdit.currentText() == 'Disable':
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('disable'))
+                    self.tokenNameEdit.setText('')
+                elif self.authTypeEdit.currentText() == 'API key':
+                    pass
+                elif self.authTypeEdit.currentText() == 'OAuth2':
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                    self.tokenNameEdit.setText('Authorization')
+                elif self.authTypeEdit.currentText() == 'Twitter App-only':
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                    self.tokenNameEdit.setText('Authorization')
+                elif self.authTypeEdit.currentText() == 'Cookie':
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                    self.tokenNameEdit.setText('Cookie')
+
+            except AttributeError:
+                pass
+
+            dialog.close()
+
+        #connect the nested functions above to the dialog-buttons
+        buttons.accepted.connect(apply)
+        buttons.rejected.connect(close)
+        dialog.exec_()
 
     def initLoginInputs(self, toggle=True):
         # token and login button
@@ -1867,6 +1872,174 @@ class AuthTab(ApiTab):
             self.doOAuth2Login(session_no)
 
     @Slot()
+    def doOAuth1Login(self, session_no = 0):
+        try:
+            service = self.getOAuth1Service()
+
+            self.oauthdata.pop('oauth_verifier', None)
+            self.oauthdata['requesttoken'], self.oauthdata[
+                'requesttoken_secret'] = service.get_request_token()
+
+            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
+                                 service.get_authorize_url(self.oauthdata['requesttoken']),
+                                 self.defaults.get('login_window_width', 600),
+                                 self.defaults.get('login_window_height', 600)
+                                 )
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+    @Slot()
+    def doOAuth2Login(self, session_no=0):
+        try:
+            options = self.getOptions()
+
+            # use credentials from input if provided
+            clientid = self.getClientId()
+            if clientid is None:
+                return False
+
+            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
+            loginurl = options.get('auth_uri', '')
+
+            if loginurl == '':
+                raise Exception('Login URL is missing, please adjust settings!')
+
+            if clientid == '':
+                raise Exception('Client Id is missing, please adjust settings!')
+
+            params = {'client_id': clientid,
+                      'redirect_uri': options['redirect_uri'],
+                      'response_type': options.get('response_type', 'code')}
+
+            if scope is not None:
+                params['scope'] = scope
+
+            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
+            url = loginurl + "?" + params
+
+            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
+                                 url,
+                                 self.defaults.get('login_window_width', 600),
+                                 self.defaults.get('login_window_height', 600)
+                                 )
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+    @Slot()
+    def doOAuth2ExternalLogin(self, session_no=0):
+        try:
+            options = self.getOptions()
+
+            # use credentials from input if provided
+            clientid = self.getClientId()
+            if clientid is None:
+                return False
+
+            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
+            loginurl = options.get('auth_uri', '')
+
+            if loginurl == '':
+                raise Exception('Login URL is missing, please adjust settings!')
+
+            if clientid == '':
+                raise Exception('Client Id is missing, please adjust settings!')
+
+            self.startLoginServer(0)
+            redirect_uri = "http://localhost:"+str(self.loginServerInstance.server_port)
+
+            params = {'client_id': clientid,
+                      'redirect_uri': redirect_uri,
+                      'response_type': options.get('response_type', 'code')}
+
+            if scope is not None:
+                params['scope'] = scope
+
+            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
+            url = loginurl + "?" + params
+
+            webbrowser.open(url)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+
+    @Slot()
+    def doCookieLogin(self, session_no=0):
+        def newCookie(domain, cookie):
+            self.tokenEdit.setText(cookie)
+            # print("Domain: "+domain+". Cookie: "+cookie)
+
+        try:
+            options = self.getOptions()
+            url= options.get('auth_uri', '')
+
+            if url == '':
+                raise Exception('Login URL is missing, please adjust settings!')
+
+            self.loginWindow = BrowserDialog(
+                self.mainWindow,
+                self.defaults.get('login_window_caption', 'Login'),
+                self.defaults.get('login_window_width', 600),
+                self.defaults.get('login_window_height', 600)
+            )
+
+            self.loginWindow.logMessage.connect(self.logMessage)
+            self.loginWindow.activateCookieButton(newCookie)
+            self.loginWindow.loadPage(url)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Login canceled",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+    @Slot()
+    def doTwitterAppLogin(self, session_no=0):
+        try:
+            # See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
+            clientid = self.clientIdEdit.text() # no defaults
+            if clientid == '':
+                raise Exception('Client Id is missing, please adjust settings!')
+
+            clientsecret = self.clientSecretEdit.text() # no defaults
+            if clientsecret == '':
+                raise Exception('Client Secret is missing, please adjust settings!')
+
+            basicauth = urllib.parse.quote_plus(clientid) + ':' + urllib.parse.quote_plus(clientsecret)
+            basicauth = base64.b64encode(basicauth.encode('utf-8')).decode('utf-8')
+
+            path = 'https://api.twitter.com/oauth2/token/'
+            payload = 'grant_type=client_credentials'
+            headers = {'Authorization': 'Basic ' + basicauth,
+                       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
+
+            data, headers, status = self.request(None, path, payload=payload, headers=headers, method="POST")
+
+            token = data.get('access_token', '')
+            self.tokenEdit.setText(token)
+
+            try:
+                self.tokensecretEdit.setText('')
+            except AttributeError:
+                pass
+
+            if token != '':
+                QMessageBox.information(self, "Login", "Login succeeded, got new access token.",
+                                        QMessageBox.StandardButton.Ok)
+            else:
+                raise Exception("Check your settings, no token could be retrieved.")
+        except Exception as e:
+            QMessageBox.critical(self, "Login failed",
+                                 str(e),
+                                 QMessageBox.StandardButton.Ok)
+
+
+    @Slot()
     def showLoginWindow(self, caption='', url='',width=600,height=600):
         """
         Create a SSL-capable WebView for the login-process
@@ -1973,45 +2146,29 @@ class AuthTab(ApiTab):
         else:
             return self.initOAuth2Session(no, renew)
 
-    @Slot()
-    def doOAuth1Login(self, session_no = 0):
-        try:
+    def initOAuth1Session(self,no=0, renew=False):
+        """
+        Return session or create if necessary
+        :param no: session number
+        :return: session object
+        """
+
+        while (len(self.sessions) <= no):
+            self.sessions.append(None)
+
+        session = self.sessions[no] if not renew else None
+        if session is None:
+            if (self.tokenEdit.text() == '') or (self.tokensecretEdit.text() == ''):
+                raise Exception("No access, login please!")
+
             service = self.getOAuth1Service()
+            session = service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
 
-            self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata[
-                'requesttoken_secret'] = service.get_request_token()
+        self.sessions[no] = session
+        return session
 
-            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
-                                 service.get_authorize_url(self.oauthdata['requesttoken']),
-                                 self.defaults.get('login_window_width', 600),
-                                 self.defaults.get('login_window_height', 600)
-                                 )
-        except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                 str(e),
-                                 QMessageBox.StandardButton.Ok)
-
-    def getOAuth1Token(self, url):
-        success = False
-        url = urllib.parse.parse_qs(url)
-        if "oauth_verifier" in url:
-            token = url["oauth_verifier"]
-            if token:
-                service = self.getOAuth1Service()
-                self.oauthdata['oauth_verifier'] = token[0]
-
-                session = service.get_auth_session(self.oauthdata['requesttoken'],
-                                                   self.oauthdata['requesttoken_secret'], method="POST",
-                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']})
-
-                self.tokenEdit.setText(session.access_token)
-                self.tokensecretEdit.setText(session.access_token_secret)
-
-                session.close()
-                success = True
-        return success
-
+    def initOAuth2Session(self, no=0, renew=False):
+        return super(AuthTab, self).initSession(no, renew)
 
     def getOAuth1Service(self):
         if not hasattr(self,'oauthdata'):
@@ -2044,89 +2201,27 @@ class AuthTab(ApiTab):
 
         return service
 
-    def initOAuth1Session(self,no=0, renew=False):
-        """
-        Return session or create if necessary
-        :param no: session number
-        :return: session object
-        """
 
-        while (len(self.sessions) <= no):
-            self.sessions.append(None)
+    def getOAuth1Token(self, url):
+        success = False
+        url = urllib.parse.parse_qs(url)
+        if "oauth_verifier" in url:
+            token = url["oauth_verifier"]
+            if token:
+                service = self.getOAuth1Service()
+                self.oauthdata['oauth_verifier'] = token[0]
 
-        session = self.sessions[no] if not renew else None
-        if session is None:
-            if (self.tokenEdit.text() == '') or (self.tokensecretEdit.text() == ''):
-                raise Exception("No access, login please!")
+                session = service.get_auth_session(self.oauthdata['requesttoken'],
+                                                   self.oauthdata['requesttoken_secret'], method="POST",
+                                                   data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
-            service = self.getOAuth1Service()
-            session = service.get_session((self.tokenEdit.text(), self.tokensecretEdit.text()))
+                self.tokenEdit.setText(session.access_token)
+                self.tokensecretEdit.setText(session.access_token_secret)
 
-        self.sessions[no] = session
-        return session
+                session.close()
+                success = True
+        return success
 
-    # Get Client ID
-    # return custom client ID if provided
-    # otherwise login to Facepager and return preregistered ID
-    # or return None if login fails
-    def getClientId(self):
-        if self.clientIdEdit.text() != "":
-            self.auth_preregistered = False
-            clientid = self.clientIdEdit.text()
-        else:
-            self.auth_preregistered = True
-            clientid = self.defaults.get('client_id', '')
-
-            if clientid == '':
-                raise Exception('Client ID missing, please adjust settings!')
-
-            termsurl = self.defaults.get('termsurl', '')
-            if termsurl != '':
-                proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
-                if proceedDlg.show() != QDialog.Accepted:
-                    return None
-
-        return clientid
-
-
-    @Slot()
-    def doOAuth2Login(self, session_no=0):
-        try:
-            options = self.getOptions()
-
-            # use credentials from input if provided
-            clientid = self.getClientId()
-            if clientid is None:
-                return False
-
-            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
-            loginurl = options.get('auth_uri', '')
-
-            if loginurl == '':
-                raise Exception('Login URL is missing, please adjust settings!')
-
-            if clientid == '':
-                raise Exception('Client Id is missing, please adjust settings!')
-
-            params = {'client_id': clientid,
-                      'redirect_uri': options['redirect_uri'],
-                      'response_type': options.get('response_type', 'code')}
-
-            if scope is not None:
-                params['scope'] = scope
-
-            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
-            url = loginurl + "?" + params
-
-            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
-                                 url,
-                                 self.defaults.get('login_window_width', 600),
-                                 self.defaults.get('login_window_height', 600)
-                                 )
-        except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                 str(e),
-                                 QMessageBox.StandardButton.Ok)
 
     def getOAuth2Token(self, url):
         success = False
@@ -2176,131 +2271,32 @@ class AuthTab(ApiTab):
 
         return success
 
-
-    def initOAuth2Session(self, no=0, renew=False):
-        return super(AuthTab, self).initSession(no, renew)
-
-    @Slot()
-    def doOAuth2ExternalLogin(self, session_no=0):
-        try:
-            options = self.getOptions()
-
-            #use credentials from input if provided
-            if self.clientIdEdit.text() != "":
-                self.auth_preregistered = False
-                clientid = self.clientIdEdit.text()
-            else:
-                self.auth_preregistered = True
-                clientid = self.defaults.get('client_id','')
-
-                if clientid == '':
-                    raise Exception('Client ID missing, please adjust settings!')
-
-                termsurl = self.defaults.get('termsurl','')
-                if termsurl != '':
-                    proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
-                    if proceedDlg.show() != QDialog.Accepted:
-                        return False
-
-            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', None)
-            loginurl = options.get('auth_uri', '')
-
-            if loginurl == '':
-                raise Exception('Login URL is missing, please adjust settings!')
+    # Get Client ID
+    # return custom client ID if provided
+    # otherwise login to Facepager and return preregistered ID
+    # or return None if login fails
+    def getClientId(self):
+        if self.clientIdEdit.text() != "":
+            self.auth_preregistered = False
+            clientid = self.clientIdEdit.text()
+        else:
+            self.auth_preregistered = True
+            clientid = self.defaults.get('client_id', '')
 
             if clientid == '':
-                raise Exception('Client Id is missing, please adjust settings!')
+                raise Exception('Client ID missing, please adjust settings!')
 
-            self.startLoginServer(0)
-            redirect_uri = "http://localhost:"+str(self.loginServerInstance.server_port)
+            termsurl = self.defaults.get('termsurl', '')
+            if termsurl != '':
+                proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
+                if proceedDlg.show() != QDialog.Accepted:
+                    return None
 
-            params = {'client_id': clientid,
-                      'redirect_uri': redirect_uri,
-                      'response_type': options.get('response_type', 'code')}
-
-            if scope is not None:
-                params['scope'] = scope
-
-            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
-            url = loginurl + "?" + params
-
-            webbrowser.open(url)
-
-        except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                 str(e),
-                                 QMessageBox.StandardButton.Ok)
+        return clientid
 
 
 
-    @Slot()
-    def doCookieLogin(self, session_no=0):
-        def newCookie(domain, cookie):
-            self.tokenEdit.setText(cookie)
-            # print("Domain: "+domain+". Cookie: "+cookie)
 
-        try:
-            options = self.getOptions()
-            url= options.get('auth_uri', '')
-
-            if url == '':
-                raise Exception('Login URL is missing, please adjust settings!')
-
-            self.loginWindow = BrowserDialog(
-                self.mainWindow,
-                self.defaults.get('login_window_caption', 'Login'),
-                self.defaults.get('login_window_width', 600),
-                self.defaults.get('login_window_height', 600)
-            )
-
-            self.loginWindow.logMessage.connect(self.logMessage)
-            self.loginWindow.activateCookieButton(newCookie)
-            self.loginWindow.loadPage(url)
-
-        except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                 str(e),
-                                 QMessageBox.StandardButton.Ok)
-
-    @Slot()
-    def doTwitterAppLogin(self, session_no=0):
-        try:
-            # See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
-            clientid = self.clientIdEdit.text() # no defaults
-            if clientid == '':
-                raise Exception('Client Id is missing, please adjust settings!')
-
-            clientsecret = self.clientSecretEdit.text() # no defaults
-            if clientsecret == '':
-                raise Exception('Client Secret is missing, please adjust settings!')
-
-            basicauth = urllib.parse.quote_plus(clientid) + ':' + urllib.parse.quote_plus(clientsecret)
-            basicauth = base64.b64encode(basicauth.encode('utf-8')).decode('utf-8')
-
-            path = 'https://api.twitter.com/oauth2/token/'
-            payload = 'grant_type=client_credentials'
-            headers = {'Authorization': 'Basic ' + basicauth,
-                       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
-
-            data, headers, status = self.request(None, path, payload=payload, headers=headers, method="POST")
-
-            token = data.get('access_token', '')
-            self.tokenEdit.setText(token)
-
-            try:
-                self.tokensecretEdit.setText('')
-            except AttributeError:
-                pass
-
-            if token != '':
-                QMessageBox.information(self, "Login", "Login succeeded, got new access token.",
-                                        QMessageBox.StandardButton.Ok)
-            else:
-                raise Exception("Check your settings, no token could be retrieved.")
-        except Exception as e:
-            QMessageBox.critical(self, "Login failed",
-                                 str(e),
-                                 QMessageBox.StandardButton.Ok)
 
 
 class FacebookTab(AuthTab):
@@ -2646,16 +2642,6 @@ class TwitterStreamingTab(AuthTab):
                 raise
         finally:
             self.connected = False
-
-    def disconnectSocket(self):
-        """Used to hardly disconnect the streaming client"""
-        self.connected = False
-        while (len(self.sessions) > 0):
-            session = self.sessions.pop()
-            session.close()
-
-        #self.response.raw._fp.close()
-        #self.response.close()
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         if not ('url' in options):
