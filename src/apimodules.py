@@ -1665,7 +1665,7 @@ class AuthTab(ApiTab):
         try:
             options['auth_type'] = self.authTypeEdit.currentText().strip() if self.authTypeEdit.currentText() != "" else self.defaults.get('auth_type', '')
         except AttributeError:
-            pass
+            self.defaults.get('auth_type', '')
 
         # OAUTH URIs
         try:
@@ -1849,18 +1849,19 @@ class AuthTab(ApiTab):
         :return:
         """
         self.closeSession(session_no)
+        options = self.getOptions()
 
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
+        if options['auth_type'] == 'Twitter App-only':
             self.doTwitterAppLogin(session_no)
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
+        elif options['auth_type'] == 'Twitter OAuth1':
             self.doOAuth1Login(session_no)
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Cookie':
+        elif options['auth_type'] == 'Cookie':
             self.doCookieLogin(session_no)
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'API key':
+        elif options['auth_type'] == 'API key':
             QMessageBox.information(self, "Facepager", "Manually enter your API key into the access token field or change the authentication method in the settings.")
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Disable':
+        elif options['auth_type'] == 'Disable':
             QMessageBox.information(self, "Login disabled","No authentication method selected. Please choose a method in the settings.", QMessageBox.StandardButton.Ok)
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'OAuth2 External':
+        elif options['auth_type'] == 'OAuth2 External':
             self.doOAuth2ExternalLogin(session_no)
         else:
             self.doOAuth2Login(session_no)
@@ -1914,9 +1915,11 @@ class AuthTab(ApiTab):
 
     @Slot()
     def onLoginWindowChanged(self, url=False):
-        if hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter App-only':
+        options = self.getOptions()
+
+        if options['auth_type'] == 'Twitter App-only':
             return False
-        elif hasattr(self, "authTypeEdit") and self.authTypeEdit.currentText() == 'Twitter OAuth1':
+        elif options['auth_type'] == 'Twitter OAuth1':
             url = self.login_webview.url().toString()
             success = self.getOAuth1Token(url)
             if success:
@@ -2006,7 +2009,7 @@ class AuthTab(ApiTab):
                 self.tokenEdit.setText(session.access_token)
                 self.tokensecretEdit.setText(session.access_token_secret)
 
-                self.closeSession()
+                session.close()
                 success = True
         return success
 
@@ -2507,9 +2510,12 @@ class TwitterStreamingTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
 
+        self.defaults['auth_type'] = 'Twitter OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
         self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
         self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
+        self.defaults['login_window_caption'] = 'Twitter Login Page'
+
         self.defaults['basepath'] = 'https://stream.twitter.com/1.1'
         self.defaults['resource'] = '/statuses/filter'
         self.defaults['params'] = {'track': '<Object ID>'}        
@@ -2527,30 +2533,6 @@ class TwitterStreamingTab(AuthTab):
 
         self.timeout = 30
         self.connected = False
-
-    def getOAuth1Service(self):
-        if not hasattr(self, 'oauthdata'):
-            self.oauthdata = {}
-
-        service = OAuth1Service(
-            consumer_key=self.defaults.get('consumer_key'),
-            consumer_secret=self.defaults.get('consumer_secret'),
-            name='twitterstreaming',
-            access_token_url=self.defaults.get('access_token_url'),
-            authorize_url=self.defaults.get('authorize_url'),
-            request_token_url=self.defaults.get('request_token_url'),
-            base_url=self.defaults.get('basepath'))
-
-        service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" \
-            else self.defaults['consumer_key']
-        service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" \
-            else self.defaults['consumer_secret']
-
-        if service.consumer_key == '' or service.consumer_secret == '':
-            raise Exception('Consumer key or consumer secret is missing, please adjust settings!')
-
-        return service
-
 
     def initLoginInputs(self):
         # Login-Boxes
@@ -2722,39 +2704,6 @@ class TwitterStreamingTab(AuthTab):
             options['querystatus'] = status
 
             logData(data, options, headers)
-
-
-    @Slot()
-    def doLogin(self, session_no=0):
-        try:
-            service = self.getOAuth1Service()
-
-            self.oauthdata.pop('oauth_verifier', None)
-            self.oauthdata['requesttoken'], self.oauthdata['requesttoken_secret'] = service.get_request_token()
-            caption = "Twitter Login Page"
-            self.showLoginWindow(caption,service.get_authorize_url(self.oauthdata['requesttoken']))
-        except Exception as e:
-            QMessageBox.critical(self, "Login canceled",
-                                            str(e),
-                                            QMessageBox.StandardButton.Ok)
-
-    @Slot()
-    def onLoginWindowChanged(self):
-        url = urllib.parse.parse_qs(self.login_webview.url().toString())
-        if 'oauth_verifier' in url:
-            token = url['oauth_verifier']
-            if token:
-                service = self.getOAuth1Service()
-                self.oauthdata['oauth_verifier'] = token[0]
-                session = service.get_auth_session(self.oauthdata['requesttoken'],
-                                                             self.oauthdata['requesttoken_secret'], method='POST',
-                                                             data={'oauth_verifier': self.oauthdata['oauth_verifier']})
-
-                self.tokenEdit.setText(session.access_token)
-                self.tokensecretEdit.setText(session.access_token_secret)
-
-                session.close()
-                self.closeLoginWindow()
 
 class AmazonTab(AuthTab):
 
