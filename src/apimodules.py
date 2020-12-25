@@ -1196,44 +1196,6 @@ class ApiTab(QScrollArea):
 
         return method, urlpath, urlparams, payload, requestheaders
 
-    # Retrieves a user ID from the API that
-    # later is hashed for maintaining the
-    # anonymized user list. REimplement in the modules.
-    def getUserId(self):
-        return None
-
-    def authorizeUser(self, userid):
-        # User ID
-        if userid is None:
-            self.auth_userauthorized = False
-            return False
-
-        # App salt
-        salt = getDictValueOrNone(credentials,'facepager.salt')
-        if salt is None:
-            self.auth_userauthorized = False
-            return False
-
-        # Create token
-        usertoken = hashlib.pbkdf2_hmac(
-            'sha256',  # The hash digest algorithm for HMAC
-            userid.encode("utf-8"),
-            salt.encode("utf-8"),
-            100000  # It is recommended to use at least 100,000 iterations of SHA-256
-        )
-
-        # Check token
-        authurl = getDictValueOrNone(credentials, 'facepager.url')
-        if authurl is None:
-            self.auth_userauthorized = False
-            return False
-
-        authurl += '?module='+self.name.lower()+'&usertoken='+usertoken.hex()
-        data, headers, status = self.request(None, authurl)
-        self.auth_userauthorized = status == 'fetched (200)'
-
-        return self.auth_userauthorized
-
     def initSession(self, no=0, renew=False):
         """
         Return existing session or create a new session if necessary
@@ -2148,7 +2110,7 @@ class AuthTab(ApiTab):
         """
         options = self.getOptions()
 
-        if options['auth_type'] == 'OAuth1':
+        if options.get('auth_type') == 'OAuth1':
             return self.initOAuth1Session(no, renew)
         else:
             return self.initOAuth2Session(no, renew)
@@ -2311,7 +2273,45 @@ class AuthTab(ApiTab):
 
         return clientid
 
+    # Retrieves a user ID from the API that
+    # later is hashed for maintaining the
+    # anonymized user list. REimplement in the modules.
+    def getUserId(self):
+        return None
 
+    def authorizeUser(self, userid):
+        # User ID
+        if userid is None:
+            self.auth_userauthorized = False
+            return False
+
+        # App salt
+        salt = getDictValueOrNone(credentials,'facepager.salt')
+        if salt is None:
+            self.auth_userauthorized = False
+            return False
+
+        # Create token
+        usertoken = hashlib.pbkdf2_hmac(
+            'sha256',  # The hash digest algorithm for HMAC
+            userid.encode("utf-8"),
+            salt.encode("utf-8"),
+            100000  # It is recommended to use at least 100,000 iterations of SHA-256
+        )
+
+        # Check token
+        authurl = getDictValueOrNone(credentials, 'facepager.url')
+        if authurl is None:
+            self.auth_userauthorized = False
+            return False
+
+        authurl += '?module='+self.name.lower()+'&usertoken='+usertoken.hex()
+        session = self.initOAuth2Session(0, True)
+        data, headers, status = self.request(0, authurl)
+        self.closeSession(0)
+        self.auth_userauthorized = status == 'fetched (200)'
+
+        return self.auth_userauthorized
 
 
 class GenericTab(AuthTab):
@@ -3075,7 +3075,7 @@ class YoutubeTab(AuthTab):
         self.defaults['auth_uri'] = 'https://accounts.google.com/o/oauth2/auth'
         self.defaults['token_uri'] = "https://accounts.google.com/o/oauth2/token"
         self.defaults['redirect_uri'] = 'http://localhost' #"urn:ietf:wg:oauth:2.0:oob" #, "http://localhost"
-        self.defaults['scope'] = "https://www.googleapis.com/auth/youtube.readonly" #,"https://www.googleapis.com/auth/youtube.force-ssl"
+        self.defaults['scope'] = "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl" #,"https://www.googleapis.com/auth/youtube.force-ssl"
         self.defaults['response_type'] = "code"
 
         self.defaults['login_buttoncaption'] = " Login to Google "
