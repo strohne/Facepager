@@ -2297,6 +2297,48 @@ class AuthTab(ApiTab):
 
 
 
+class GenericTab(AuthTab):
+    def __init__(self, mainWindow=None):
+        super(GenericTab, self).__init__(mainWindow, "Generic")
+
+        #Defaults
+        self.timeout = 60
+        self.defaults['basepath'] = '<Object ID>'
+
+        # Standard inputs
+        self.initInputs()
+
+        # Header, Verbs
+        self.initHeaderInputs()
+        self.initVerbInputs()
+        self.initUploadFolderInput()
+
+        # Extract input
+        self.initPagingInputs(True)
+        self.initResponseInputs(True)
+
+        self.initFileInputs()
+
+        # Login inputs
+        self.initAuthSetupInputs()
+        self.initLoginInputs()
+
+        self.loadDoc()
+        self.loadSettings()
+
+
+    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(GenericTab, self).getOptions(purpose)
+
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+
+        return options
+
+    # def onSslErrors(self, reply, errors):
+    #     url = str(reply.url().toString())
+    #     reply.ignoreSslErrors()
+    #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
 
 
 class FacebookTab(AuthTab):
@@ -2506,171 +2548,6 @@ class FacebookTab(AuthTab):
                                      str(e),QMessageBox.StandardButton.Ok)
             self.closeLoginWindow()
 
-
-class TwitterStreamingTab(AuthTab):
-    def __init__(self, mainWindow=None):
-        super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
-
-        self.defaults['auth_type'] = 'Twitter OAuth1'
-        self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
-        self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
-        self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
-        self.defaults['login_window_caption'] = 'Twitter Login Page'
-
-        self.defaults['basepath'] = 'https://stream.twitter.com/1.1'
-        self.defaults['resource'] = '/statuses/filter'
-        self.defaults['params'] = {'track': '<Object ID>'}        
-
-        self.defaults['key_objectid'] = 'id'
-        self.defaults['key_nodedata'] = None
-
-        # Query Box
-        self.initInputs()
-        self.initAuthSettingsInputs()
-        self.initLoginInputs()
-
-        self.loadDoc()
-        self.loadSettings()
-
-        self.timeout = 30
-        self.connected = False
-
-    def initLoginInputs(self):
-        # Login-Boxes
-        loginlayout = QHBoxLayout()
-
-        self.tokenEdit = QLineEdit()
-        self.tokenEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokenEdit)
-
-        loginlayout.addWidget(QLabel("Access Token Secret"))
-        self.tokensecretEdit = QLineEdit()
-        self.tokensecretEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokensecretEdit)
-
-        self.authButton = QPushButton('Settings', self)
-        self.authButton.clicked.connect(self.editAuthSettings)
-        loginlayout.addWidget(self.authButton)
-
-        self.loginButton = QPushButton(" Login to Twitter ", self)
-        self.loginButton.clicked.connect(self.doLogin)
-        loginlayout.addWidget(self.loginButton)
-
-        # Add to main-Layout
-        self.extraLayout.addRow("Access Token", loginlayout)
-
-
-    def initAuthSettingsInputs(self):
-        authlayout = QFormLayout()
-        authlayout.setContentsMargins(0,0,0,0)
-        self.authWidget.setLayout(authlayout)
-
-        self.clientIdEdit = QLineEdit()
-        self.clientIdEdit.setEchoMode(QLineEdit.Password)
-        authlayout.addRow("Consumer Key", self.clientIdEdit)
-
-        self.clientSecretEdit = QLineEdit()
-        self.clientSecretEdit.setEchoMode(QLineEdit.Password)
-        authlayout.addRow("Consumer Secret",self.clientSecretEdit)
-
-    def request(self, session_no=0, path='', args=None, headers=None):
-        self.connected = True
-        self.retry_counter=0
-        self.last_reconnect=QDateTime.currentDateTime()
-        try:
-            session = self.initSession(session_no)
-
-            def _send():
-                self.last_reconnect = QDateTime.currentDateTime()
-                while self.connected:
-                    try:
-                        if headers is not None:
-                            response = session.post(path, params=args,
-                                                         headers=headers,
-                                                         timeout=self.timeout,
-                                                         stream=True)
-                        else:
-                            response = session.get(path, params=args, timeout=self.timeout,
-                                                        stream=True)
-
-                    except requests.exceptions.Timeout:
-                        raise Exception('Request timed out.')
-                    else:
-                        if response.status_code != 200:
-                            if self.retry_counter<=5:
-                                self.logMessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+ str(response.content))
-                                time.sleep(3)
-                                if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
-                                    self.retry_counter = 0
-                                    _send()
-                                else:
-                                    self.retry_counter+=1
-                                    _send()
-                            else:
-                                #self.connected = False
-                                self.disconnectSocket()
-                                raise Exception("Request Error: " + str(response.status_code) + ". Message: "+str(response.content))
-
-                        return response
-
-
-            while self.connected:
-                response = _send()
-                if response:
-                    status = 'fetched' if response.ok else 'error'
-                    status = status + ' (' + str(response.status_code) + ')'
-                    headers = dict(list(response.headers.items()))
-
-                    for line in response.iter_lines():
-                        if not self.connected:
-                            break
-                        if line:
-                            try:
-                                data = json.loads(line)
-                            except ValueError:  # pragma: no cover
-                                raise Exception("Unable to decode response, not valid JSON")
-                            else:
-                                yield data, headers, status
-                else:
-                    break
-            response.close()
-
-        except AttributeError:
-            #This exception is thrown when canceling the connection
-            #Only re-raise if not manually canceled
-            if self.connected:
-                raise
-        finally:
-            self.connected = False
-
-    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
-        if not ('url' in options):
-            urlpath = options["basepath"] + options["resource"] + ".json"
-            urlpath, urlparams, templateparams = self.getURL(urlpath, options["params"], nodedata, options)
-        else:
-            urlpath = options['url']
-            urlparams = options["params"]
-
-        if options['logrequests']:
-            logpath = self.getLogURL(urlpath, urlparams, options)
-            logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
-
-        # fallback option for data handling
-        if (options.get('nodedata') is None):
-            options['nodedata'] = self.defaults.get('key_nodedata')
-        if (options.get('objectid') is None):
-            options['objectid'] = self.defaults.get('key_objectid')
-
-        self.timeout = options.get('timeout',30)
-
-        # data
-        session_no = options.get('threadnumber',0)
-        for data, headers, status in self.request(session_no, path=urlpath, args=urlparams):
-            # data
-            options['querytime'] = str(datetime.now())
-            options['querystatus'] = status
-
-            logData(data, options, headers)
 
 class AmazonTab(AuthTab):
 
@@ -3016,6 +2893,135 @@ class TwitterTab(AuthTab):
             if not self.connected:
                 break
 
+
+
+class TwitterStreamingTab(TwitterTab):
+    def __init__(self, mainWindow=None):
+        super(TwitterStreamingTab, self).__init__(mainWindow, "Twitter Streaming")
+
+        self.defaults['auth_type'] = 'Twitter OAuth1'
+        self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
+        self.defaults['authorize_url'] = 'https://api.twitter.com/oauth/authorize'
+        self.defaults['request_token_url'] = 'https://api.twitter.com/oauth/request_token'
+        self.defaults['login_window_caption'] = 'Twitter Login Page'
+
+        self.defaults['basepath'] = 'https://stream.twitter.com/1.1'
+        self.defaults['resource'] = '/statuses/filter'
+        self.defaults['params'] = {'track': '<Object ID>'}
+
+        self.defaults['key_objectid'] = 'id'
+        self.defaults['key_nodedata'] = None
+
+        # Query Box
+        self.initInputs()
+        self.initAuthSettingsInputs()
+        self.initLoginInputs()
+
+        self.loadDoc()
+        self.loadSettings()
+
+        self.timeout = 30
+        self.connected = False
+
+    def request(self, session_no=0, path='', args=None, headers=None):
+        self.connected = True
+        self.retry_counter=0
+        self.last_reconnect=QDateTime.currentDateTime()
+        try:
+            session = self.initSession(session_no)
+
+            def _send():
+                self.last_reconnect = QDateTime.currentDateTime()
+                while self.connected:
+                    try:
+                        if headers is not None:
+                            response = session.post(path, params=args,
+                                                         headers=headers,
+                                                         timeout=self.timeout,
+                                                         stream=True)
+                        else:
+                            response = session.get(path, params=args, timeout=self.timeout,
+                                                        stream=True)
+
+                    except requests.exceptions.Timeout:
+                        raise Exception('Request timed out.')
+                    else:
+                        if response.status_code != 200:
+                            if self.retry_counter<=5:
+                                self.logMessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+ str(response.content))
+                                time.sleep(3)
+                                if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
+                                    self.retry_counter = 0
+                                    _send()
+                                else:
+                                    self.retry_counter+=1
+                                    _send()
+                            else:
+                                #self.connected = False
+                                self.disconnectSocket()
+                                raise Exception("Request Error: " + str(response.status_code) + ". Message: "+str(response.content))
+
+                        return response
+
+
+            while self.connected:
+                response = _send()
+                if response:
+                    status = 'fetched' if response.ok else 'error'
+                    status = status + ' (' + str(response.status_code) + ')'
+                    headers = dict(list(response.headers.items()))
+
+                    for line in response.iter_lines():
+                        if not self.connected:
+                            break
+                        if line:
+                            try:
+                                data = json.loads(line)
+                            except ValueError:  # pragma: no cover
+                                raise Exception("Unable to decode response, not valid JSON")
+                            else:
+                                yield data, headers, status
+                else:
+                    break
+            response.close()
+
+        except AttributeError:
+            #This exception is thrown when canceling the connection
+            #Only re-raise if not manually canceled
+            if self.connected:
+                raise
+        finally:
+            self.connected = False
+
+    def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        if not ('url' in options):
+            urlpath = options["basepath"] + options["resource"] + ".json"
+            urlpath, urlparams, templateparams = self.getURL(urlpath, options["params"], nodedata, options)
+        else:
+            urlpath = options['url']
+            urlparams = options["params"]
+
+        if options['logrequests']:
+            logpath = self.getLogURL(urlpath, urlparams, options)
+            logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
+
+        # fallback option for data handling
+        if (options.get('nodedata') is None):
+            options['nodedata'] = self.defaults.get('key_nodedata')
+        if (options.get('objectid') is None):
+            options['objectid'] = self.defaults.get('key_objectid')
+
+        self.timeout = options.get('timeout',30)
+
+        # data
+        session_no = options.get('threadnumber',0)
+        for data, headers, status in self.request(session_no, path=urlpath, args=urlparams):
+            # data
+            options['querytime'] = str(datetime.now())
+            options['querystatus'] = status
+
+            logData(data, options, headers)
+            
 class YoutubeTab(AuthTab):
     def __init__(self, mainWindow=None):
 
@@ -3095,49 +3101,6 @@ class YoutubeTab(AuthTab):
             options['auth_tokenname'] = 'Authorization'
 
         return options
-
-class GenericTab(AuthTab):
-    def __init__(self, mainWindow=None):
-        super(GenericTab, self).__init__(mainWindow, "Generic")
-
-        #Defaults
-        self.timeout = 60
-        self.defaults['basepath'] = '<Object ID>'
-
-        # Standard inputs
-        self.initInputs()
-
-        # Header, Verbs
-        self.initHeaderInputs()
-        self.initVerbInputs()
-        self.initUploadFolderInput()
-
-        # Extract input
-        self.initPagingInputs(True)
-        self.initResponseInputs(True)
-
-        self.initFileInputs()
-
-        # Login inputs
-        self.initAuthSetupInputs()
-        self.initLoginInputs()
-
-        self.loadDoc()
-        self.loadSettings()
-
-
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(GenericTab, self).getOptions(purpose)
-
-        if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
-
-        return options
-
-    # def onSslErrors(self, reply, errors):
-    #     url = str(reply.url().toString())
-    #     reply.ignoreSslErrors()
-    #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
 
 
 # https://stackoverflow.com/questions/10123929/python-requests-fetch-a-file-from-a-local-url
