@@ -427,17 +427,7 @@ class ApiTab(QScrollArea):
             try:
                 options['client_secret'] = self.clientSecretEdit.text()
             except AttributeError:
-                pass       
-            
-            try:
-                options['consumer_key'] = self.consumerKeyEdit.text()
-            except AttributeError:
-                pass            
-
-            try:
-                options['consumer_secret'] = self.consumerSecretEdit.text()
-            except AttributeError:
-                pass            
+                pass
 
         return options
 
@@ -541,9 +531,9 @@ class ApiTab(QScrollArea):
             if 'client_secret' in options:
                 self.clientSecretEdit.setText(options.get('client_secret',''))
             if 'consumer_key' in options:
-                self.consumerKeyEdit.setText(options.get('consumer_key', ''))
+                self.clientIdEdit.setText(options.get('consumer_key', ''))
             if 'consumer_secret' in options:
-                self.consumerSecretEdit.setText(options.get('consumer_secret', ''))                                
+                self.clientSecretEdit.setText(options.get('consumer_secret', ''))
         except AttributeError:
             pass
 
@@ -2551,9 +2541,9 @@ class TwitterStreamingTab(AuthTab):
             request_token_url=self.defaults.get('request_token_url'),
             base_url=self.defaults.get('basepath'))
 
-        service.consumer_key = self.consumerKeyEdit.text() if self.consumerKeyEdit.text() != "" \
+        service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" \
             else self.defaults['consumer_key']
-        service.consumer_secret = self.consumerSecretEdit.text() if self.consumerSecretEdit.text() != "" \
+        service.consumer_secret = self.clientSecretEdit.text() if self.clientSecretEdit.text() != "" \
             else self.defaults['consumer_secret']
 
         if service.consumer_key == '' or service.consumer_secret == '':
@@ -2592,13 +2582,13 @@ class TwitterStreamingTab(AuthTab):
         authlayout.setContentsMargins(0,0,0,0)
         self.authWidget.setLayout(authlayout)
 
-        self.consumerKeyEdit = QLineEdit()
-        self.consumerKeyEdit.setEchoMode(QLineEdit.Password)
-        authlayout.addRow("Consumer Key", self.consumerKeyEdit)
+        self.clientIdEdit = QLineEdit()
+        self.clientIdEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Consumer Key", self.clientIdEdit)
 
-        self.consumerSecretEdit = QLineEdit()
-        self.consumerSecretEdit.setEchoMode(QLineEdit.Password)
-        authlayout.addRow("Consumer Secret",self.consumerSecretEdit)
+        self.clientSecretEdit = QLineEdit()
+        self.clientSecretEdit.setEchoMode(QLineEdit.Password)
+        authlayout.addRow("Consumer Secret",self.clientSecretEdit)
 
 
     def initSession(self, no=0, renew=False):
