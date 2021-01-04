@@ -57,6 +57,10 @@ from server import Server, RequestHandler
 #         'Contents', 'MacOS', 'QtWebEngineProcess'
 #     ))
 
+# Fix BigSur not showing windows
+if getattr(sys,'frozen', False) and sys.platform == 'darwin':
+    os.environ['QT_MAC_WANTS_LAYER']='1'
+
 class MainWindow(QMainWindow):
 
     def __init__(self,central=None):
