@@ -3074,7 +3074,7 @@ class YoutubeTab(AuthTab):
         self.defaults['auth_type'] = "OAuth2 External"
         self.defaults['auth_uri'] = 'https://accounts.google.com/o/oauth2/auth'
         self.defaults['token_uri'] = "https://accounts.google.com/o/oauth2/token"
-        self.defaults['redirect_uri'] = 'http://localhost'
+        self.defaults['redirect_uri'] = 'https://localhost'
         self.defaults['scope'] = "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl"
         self.defaults['response_type'] = "code"
 

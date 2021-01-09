@@ -40,7 +40,7 @@ class QParamEdit(QTableWidget):
                 vals = json.loads(vals)
         except:
             vals = {}
-        
+
         self.setRowCount(len(vals))
         self.setValueOptionsAll(self.valueoptions)
         self.setNameOptionsAll(self.nameoptions)
