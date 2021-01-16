@@ -21,7 +21,7 @@
     "objectid": null,
     "scope": "",
     "proxy": "",
-    "auth_type": "OAuth2",
+    "auth_type": "Disable",
     "auth_uri": "",
     "redirect_uri": "",
     "token_uri": "",
