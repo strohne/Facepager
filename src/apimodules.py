@@ -112,7 +112,7 @@ class ApiTab(QScrollArea):
 
         # Authorization / use preregistered app
         self.auth_userauthorized = True
-        self.auth_preregistered = True
+        self.auth_preregistered = self.defaults.get('termsurl', '') != ''
 
     # Called when Facepager stops
     def cleanup(self):
@@ -1311,7 +1311,7 @@ class ApiTab(QScrollArea):
 
                     # Send request
                     response = session.request(method,path, params=args, headers=headers, cookies=cookies,
-                                               data=payload, timeout=self.timeout) # verify=False
+                                               data=payload, timeout=self.timeout,verify=True) # verify=False
 
                 except (HTTPError, ConnectionError) as e:
                     maxretries -= 1
@@ -1726,7 +1726,7 @@ class AuthTab(ApiTab):
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         # Preconditions
-        if not self.auth_userauthorized:
+        if not self.auth_userauthorized and self.auth_preregistered:
             raise Exception('You are not authorized, login please!')
 
         session_no = options.get('threadnumber',0)
@@ -2422,7 +2422,7 @@ class FacebookTab(AuthTab):
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         # Preconditions
-        if not self.auth_userauthorized:
+        if not self.auth_userauthorized and self.auth_preregistered:
             raise Exception('You are not authorized, login please!')
 
         if options.get('access_token','') == '':
@@ -2854,7 +2854,7 @@ class TwitterTab(AuthTab):
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         # Preconditions
-        if not self.auth_userauthorized:
+        if not self.auth_userauthorized and self.auth_preregistered:
             raise Exception('You are not authorized, login please!')
 
         self.connected = True
@@ -3031,7 +3031,7 @@ class TwitterStreamingTab(TwitterTab):
 
     def fetchData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
         # Preconditions
-        if not self.auth_userauthorized:
+        if not self.auth_userauthorized and self.auth_preregistered:
             raise Exception('You are not authorized, login please!')
 
         if not ('url' in options):

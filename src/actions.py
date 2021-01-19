@@ -136,7 +136,7 @@ class ApiActions(object):
 
         # Get options
         apimodule, options = self.getQueryOptions(apimodule, options)
-        if not apimodule.auth_userauthorized:
+        if not apimodule.auth_userauthorized and apimodule.auth_preregistered:
             msg = 'You are not authorized, login please!'
             QMessageBox.critical(self.mainWindow, "Not authorized",msg,QMessageBox.StandardButton.Ok)
             return False
@@ -1279,7 +1279,7 @@ class GuiActions(object):
 
         # Get options
         apimodule, options = self.apiActions.getQueryOptions(apimodule, options)
-        if not apimodule.auth_userauthorized:
+        if not apimodule.auth_userauthorized and apimodule.auth_preregistered:
             msg = 'You are not authorized, login please!'
             QMessageBox.critical(self.mainWindow, "Not authorized",msg,QMessageBox.StandardButton.Ok)
             return False
