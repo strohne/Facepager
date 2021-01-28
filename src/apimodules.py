@@ -1668,7 +1668,7 @@ class AuthTab(ApiTab):
             options['auth_prefix'] = ''
             options['auth_tokenname'] = ''
 
-        if options.get('auth_type','disable') == 'Twitter App-only':
+        if options.get('auth_type','Disable') == 'Twitter App-only':
             options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
             options['auth_tokenname'] = "Authorization"
