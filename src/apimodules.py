@@ -293,9 +293,13 @@ class ApiTab(QScrollArea):
             options['basepath'] = self.basepathEdit.currentText().strip()
             options['resource'] = self.resourceEdit.currentText().strip()
             options['params'] = self.paramEdit.getParams()
-            options['extension'] = self.defaults.get('extension', '')
         except AttributeError:
             pass
+
+        # Extension (for Twitter, deprecated)
+        options['extension'] = self.defaults.get('extension', '')
+        if (options['extension'] != '') and options['resource'].endswith(options['extension']):
+            options['extension'] = ''
 
         #headers and verbs
         try:
