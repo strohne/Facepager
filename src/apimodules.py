@@ -1668,31 +1668,27 @@ class AuthTab(ApiTab):
 
         # Override authorization settings (token handling)
         # based on authentication settings
+
+        if options.get('auth_type') == 'OAuth2':
+            #options['auth'] = 'header'
+            options['auth_prefix'] = "Bearer "
+            #options['auth_tokenname'] = "Authorization"
+        elif options.get('auth_type') == 'Twitter App-only':
+            #options['auth'] = 'header'
+            options['auth_prefix'] = "Bearer "
+            #options['auth_tokenname'] = "Authorization"
+        elif options.get('auth_type') == 'OAuth1':
+            #options['auth'] = 'disable' # managed by Twitter module
+            options['auth_prefix'] = ''
+            #options['auth_tokenname'] = ''
+        elif options.get('auth_type') == 'Cookie':
+            #options['auth'] = 'header'
+            options['auth_prefix'] = ''
+            #options['auth_tokenname'] = 'Cookie'
+
         if options['auth'] == 'disable':
             options['auth_prefix'] = ''
             options['auth_tokenname'] = ''
-
-        if options.get('auth_type','Disable') == 'Twitter App-only':
-            options['auth'] = 'header'
-            options['auth_prefix'] = "Bearer "
-            options['auth_tokenname'] = "Authorization"
-
-        # elif options.get('auth_type') == 'OAuth2':
-        #     options['auth'] = 'header'
-        #     options['auth_prefix'] = "Bearer "
-        #     options['auth_tokenname'] = "Authorization"
-        # elif options.get('auth_type') == 'Twitter App-only':
-        #     options['auth'] = 'header'
-        #     options['auth_prefix'] = "Bearer "
-        #     options['auth_tokenname'] = "Authorization"
-        # elif options.get('auth_type') == 'OAuth1':
-        #     options['auth'] = 'disable' # managed by Twitter module
-        #     options['auth_prefix'] = ''
-        #     options['auth_tokenname'] = ''
-        # elif options.get('auth_type') == 'Cookie':
-        #     options['auth'] = 'header'
-        #     options['auth_prefix'] = ''
-        #     options['auth_tokenname'] = 'Cookie'
 
         return options
 
@@ -2003,7 +1999,6 @@ class AuthTab(ApiTab):
             data, headers, status = self.request(None, path, payload=payload, headers=headers, method="POST")
 
             token = data.get('access_token', '')
-            self.defaults['auth_prefix'] = "Bearer "
             self.tokenEdit.setText(token)
 
             try:
