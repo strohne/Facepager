@@ -293,6 +293,7 @@ class ApiTab(QScrollArea):
             options['basepath'] = self.basepathEdit.currentText().strip()
             options['resource'] = self.resourceEdit.currentText().strip()
             options['params'] = self.paramEdit.getParams()
+            options['extension'] = self.defaults.get('extension', '')
         except AttributeError:
             pass
 
@@ -572,7 +573,7 @@ class ApiTab(QScrollArea):
         if self.apidoc and isinstance(self.apidoc,dict):
             # Add base path
             self.basepathEdit.clear()
-            self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.url"))
+            self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.0.url"))
 
             # Add endpoints in reverse order
             endpoints = self.apidoc.get("paths",{})
@@ -589,6 +590,9 @@ class ApiTab(QScrollArea):
                 self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
 
             self.buttonApiHelp.setVisible(True)
+
+            # Path extension for Twitter (deprecated)
+            self.defaults['extension'] = getDictValue(self.apidoc, "servers.0.x-facepager-suffix")
 
             # Default extract settings
             self.defaults['key_objectid'] = getDictValueOrNone(self.apidoc,"x-facepager-objectid")
@@ -1165,7 +1169,7 @@ class ApiTab(QScrollArea):
 
     def buildUrl(self, nodedata, options, logProgress=None):
         if not ('url' in options):
-            urlpath = options["basepath"].strip() + options['resource'].strip() + options.get('pathextension', '')
+            urlpath = options["basepath"].strip() + options['resource'].strip() + options.get('extension', '')
             urlparams = {}
             urlparams.update(options['params'])
             urlpath, urlparams, templateparams = self.getURL(urlpath, urlparams, nodedata, options)
@@ -1664,6 +1668,11 @@ class AuthTab(ApiTab):
             options['auth_prefix'] = ''
             options['auth_tokenname'] = ''
 
+        if options.get('auth_type','disable') == 'Twitter App-only':
+            options['auth'] = 'header'
+            options['auth_prefix'] = "Bearer "
+            options['auth_tokenname'] = "Authorization"
+
         # elif options.get('auth_type') == 'OAuth2':
         #     options['auth'] = 'header'
         #     options['auth_prefix'] = "Bearer "
@@ -1990,6 +1999,7 @@ class AuthTab(ApiTab):
             data, headers, status = self.request(None, path, payload=payload, headers=headers, method="POST")
 
             token = data.get('access_token', '')
+            self.defaults['auth_prefix'] = "Bearer "
             self.tokenEdit.setText(token)
 
             try:
@@ -2774,6 +2784,7 @@ class TwitterTab(AuthTab):
         self.defaults['basepath'] = 'https://api.twitter.com/1.1'
         self.defaults['resource'] = '/search/tweets'
         self.defaults['params'] = {'q': '<Object ID>'}
+        #self.defaults['extension'] = ".json"
 
         self.defaults['auth_type'] = 'OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
@@ -2836,11 +2847,6 @@ class TwitterTab(AuthTab):
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(TwitterTab, self).getOptions(purpose)
 
-        if options.get('auth_type','disable') == 'Twitter App-only':
-            options['auth'] = 'header'
-            options['auth_prefix'] = "Bearer "
-            options['auth_tokenname'] = "Authorization"
-
         return options
 
     def getUserId(self, session):
@@ -2872,7 +2878,6 @@ class TwitterTab(AuthTab):
             options = deepcopy(options)
             options['currentpage'] = page
 
-            options['pathextension'] = ".json"
             method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
             if options['logrequests']:
@@ -2944,6 +2949,7 @@ class TwitterStreamingTab(TwitterTab):
         self.defaults['basepath'] = 'https://stream.twitter.com/1.1'
         self.defaults['resource'] = '/statuses/filter'
         self.defaults['params'] = {'track': '<Object ID>'}
+        #self.defaults['extension'] = ".json"
 
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = None
@@ -3035,7 +3041,7 @@ class TwitterStreamingTab(TwitterTab):
             raise Exception('You are not authorized, login please!')
 
         if not ('url' in options):
-            urlpath = options["basepath"] + options["resource"] + ".json"
+            urlpath = options["basepath"] + options["resource"] + options.get('extension', '')
             urlpath, urlparams, templateparams = self.getURL(urlpath, options["params"], nodedata, options)
         else:
             urlpath = options['url']
