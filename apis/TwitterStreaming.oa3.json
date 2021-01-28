@@ -18,7 +18,8 @@
         "url": "https://developer.twitter.com/en/docs/api-reference-index"
     },
     "servers": [{
-            "url": "https://stream.twitter.com/1.1"
+            "url": "https://stream.twitter.com/1.1",
+            "x-facepager-suffix": ".json"
         }
     ],
 	"paths":{

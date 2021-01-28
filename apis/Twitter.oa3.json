@@ -22,7 +22,8 @@
     },
     "servers": [
         {
-            "url":"https://api.twitter.com/1.1"
+            "url":"https://api.twitter.com/1.1",
+            "x-facepager-suffix": ".json"
         }
     ],
     "paths":{
