@@ -20,7 +20,7 @@
     "param_paging": "next",
     "nodedata": "results",
     "objectid": null,
-    "auth_type": "Twitter App-only",
+    "auth_type": "OAuth2 Client Credentials",
     "auth_uri": "",
     "redirect_uri": "",
     "token_uri": "",

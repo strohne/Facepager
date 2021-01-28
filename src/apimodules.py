@@ -1519,7 +1519,7 @@ class AuthTab(ApiTab):
         self.authWidget.setLayout(authlayout)
 
         self.authTypeEdit = QComboBox()
-        self.authTypeEdit.addItems(['Disable','API key','OAuth2', 'Cookie', 'Twitter App-only'])
+        self.authTypeEdit.addItems(['Disable','API key','OAuth2', 'Cookie', 'OAuth2 Client Credentials'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.authURIEdit = QLineEdit()
@@ -1564,7 +1564,7 @@ class AuthTab(ApiTab):
             dialog.close()
 
         def apply():
-            # Auth type: 'Disable','API key','OAuth2', 'Twitter App-only','Cookie'
+            # Auth type: 'Disable','API key','OAuth2', 'OAuth2 Client Credentials','Cookie'
             try:
                 if self.authTypeEdit.currentText() == 'Disable':
                     self.authEdit.setCurrentIndex(self.authEdit.findText('disable'))
@@ -1574,7 +1574,7 @@ class AuthTab(ApiTab):
                 elif self.authTypeEdit.currentText() == 'OAuth2':
                     self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
                     self.tokenNameEdit.setText('Authorization')
-                elif self.authTypeEdit.currentText() == 'Twitter App-only':
+                elif self.authTypeEdit.currentText() == 'OAuth2 Client Credentials':
                     self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
                     self.tokenNameEdit.setText('Authorization')
                 elif self.authTypeEdit.currentText() == 'Cookie':
@@ -1673,7 +1673,7 @@ class AuthTab(ApiTab):
             #options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
             #options['auth_tokenname'] = "Authorization"
-        elif options.get('auth_type') == 'Twitter App-only':
+        elif options.get('auth_type') == 'OAuth2 Client Credentials':
             #options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
             #options['auth_tokenname'] = "Authorization"
@@ -1696,13 +1696,15 @@ class AuthTab(ApiTab):
         # Legacy types
         if options.get('auth_type') == 'Twitter OAuth1':
             options['auth_type'] = 'OAuth1'
+        if options.get('auth_type') == 'Twitter App-only':
+            options['auth_type'] = 'OAuth2 Client Credentials'
 
         # Override defaults
         if options.get('auth_type') == 'OAuth2':
             options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
             options['auth_tokenname'] = "Authorization"
-        elif options.get('auth_type') == 'Twitter App-only':
+        elif options.get('auth_type') == 'OAuth2 Client Credentials':
             options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
             options['auth_tokenname'] = "Authorization"
@@ -1828,7 +1830,7 @@ class AuthTab(ApiTab):
         self.closeSession(session_no)
         options = self.getOptions()
 
-        if options['auth_type'] == 'Twitter App-only':
+        if options['auth_type'] == 'OAuth2 Client Credentials':
             self.doTwitterAppLogin(session_no)
         elif options['auth_type'] == 'OAuth1':
             self.doOAuth1Login(session_no)
@@ -1988,10 +1990,15 @@ class AuthTab(ApiTab):
             if clientsecret == '':
                 raise Exception('Client Secret is missing, please adjust settings!')
 
+            options = self.getOptions()
+            path= options.get('auth_uri', '')
+            if path == '':
+                raise Exception('Login URL is missing, please adjust settings!')
+
+
             basicauth = urllib.parse.quote_plus(clientid) + ':' + urllib.parse.quote_plus(clientsecret)
             basicauth = base64.b64encode(basicauth.encode('utf-8')).decode('utf-8')
 
-            path = 'https://api.twitter.com/oauth2/token/'
             payload = 'grant_type=client_credentials'
             headers = {'Authorization': 'Basic ' + basicauth,
                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
@@ -2068,7 +2075,7 @@ class AuthTab(ApiTab):
     def onLoginWindowChanged(self, url=False):
         options = self.getOptions()
 
-        if options['auth_type'] == 'Twitter App-only':
+        if options['auth_type'] == 'OAuth2 Client Credentials':
             return False
         elif options['auth_type'] == 'OAuth1':
             url = self.login_webview.url().toString()
@@ -2832,7 +2839,7 @@ class TwitterTab(AuthTab):
         self.authWidget.setLayout(authlayout)
 
         self.authTypeEdit= QComboBox()
-        self.authTypeEdit.addItems(['OAuth1', 'Twitter App-only'])
+        self.authTypeEdit.addItems(['OAuth1', 'OAuth2 Client Credentials'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.clientIdEdit = QLineEdit()
@@ -2845,6 +2852,9 @@ class TwitterTab(AuthTab):
 
     def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(TwitterTab, self).getOptions(purpose)
+
+        if options['auth_type'] == 'OAuth2 Client Credentials':
+            options['auth_uri'] = 'https://api.twitter.com/oauth2/token/'
 
         return options
 
