@@ -1,6 +1,10 @@
 {
   "category": "Twitter",
   "columns": [
+    "created_at",
+    "text",
+    "user.screen_name",
+    "user.id_str",
     "retweet_count",
     "favorite_count",
     "retweeted_status.id",
