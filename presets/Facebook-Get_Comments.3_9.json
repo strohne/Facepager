@@ -5,6 +5,7 @@
   "options": {
     "params": {
       "fields": "message, created_time, parent, comment_count, like_count",
+      "filter": "stream",
       "<post-id>": "<Object ID>"
     },
     "basepath": "https://graph.facebook.com/v3.2",
