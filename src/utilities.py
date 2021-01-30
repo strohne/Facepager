@@ -320,27 +320,38 @@ def findDictValues(data, multikey, dump=True, default=''):
     else:
         return [default]
 
+def toDictListTuple(data, key=''):
+    """Convert data to a list of tuples shaped (key, dict)."""
+
+    if not (type(data) is list):
+        subkey=0
+        data = [data]
+    else:
+        subkey = key.split('|').pop(0).rsplit('.', 1)[0]
+        key += '.*'
+
+    data = [(key, n if isinstance(n, Mapping) else {subkey: n}) for n in data]
+
+    return data
 
 def sliceData(data, headers=None, options={}):
     """Filter response data and extract nodes"""
     if options['nodedata'] is None:
-        subkey = 0
-        nodes = data
+        nodes = toDictListTuple(data)
         offcut = None
-    elif hasDictValue(data, options['nodedata'], piped=True):
-        subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
-        name, nodes = extractValue(data, options['nodedata'], False)
-        offcut = filterDictValue(data, options['nodedata'], False, piped=True) \
-            if options.get('offcut', True) else None
     else:
-        subkey = options['nodedata'].split('|').pop(0).rsplit('.', 1)[0]
+        keys = options['nodedata'].split(',')
         nodes = []
         offcut = data
-    if not (type(nodes) is list):
-        nodes = [nodes]
-        fieldsuffix = ''
-    else:
-        fieldsuffix = '.*'
+
+        for key in keys:
+            if hasDictValue(data, key, piped=True):
+                name, newnodes = extractValue(data, key, False)
+                newnodes = toDictListTuple(newnodes,key)
+
+                nodes.extend(newnodes)
+                offcut = filterDictValue(offcut, key, False, piped=True) \
+                    if options.get('offcut', True) else None
 
     #empty records
     if (len(nodes) == 0) and options.get('empty', True):
@@ -360,9 +371,7 @@ def sliceData(data, headers=None, options={}):
         'nodes': nodes,
         'offcut': offcut,
         'empty': empty,
-        'headers': headers,
-        'subkey': subkey,
-        'fieldsuffix': fieldsuffix
+        'headers': headers
     }
 
     return data

@@ -224,7 +224,7 @@ class TreeItem(object):
 
         newnodes = []
 
-        def appendNode(objecttype, objectid, response, fieldsuffix=''):
+        def appendNode(objecttype, objectid, response, extractedkey=''):
             new = Node(str(objectid), dbnode.id)
             new.objecttype = objecttype
             new.response = response
@@ -235,7 +235,7 @@ class TreeItem(object):
             new.querytype = options.get('querytype', '')
 
             queryparams = {key : options.get(key,'') for key in  ['nodedata','basepath','resource']}
-            queryparams['nodedata'] = queryparams['nodedata'] + fieldsuffix if queryparams['nodedata'] is not None else queryparams['nodedata']
+            queryparams['nodedata'] = extractedkey
             new.queryparams = queryparams
 
             newnodes.append(new)
@@ -245,9 +245,7 @@ class TreeItem(object):
             appendNode('empty', dbnode.objectid, data['empty'])
 
         #extracted nodes
-        for n in data['nodes']:
-            n = n if isinstance(n, Mapping) else {data['subkey']: n}
-
+        for k, n in data['nodes']:
             # Extract Object ID or use parent id if no key present
             o = options.get('objectid')
             if o is not None:
@@ -256,7 +254,7 @@ class TreeItem(object):
                 o = dbnode.objectid
 
             objecttype = options.get('objecttype', 'data')
-            appendNode(objecttype, o, n, data['fieldsuffix'])
+            appendNode(objecttype, o, n, k)
 
         #offcut
         if data['offcut'] is not None:
@@ -412,7 +410,7 @@ class TreeModel(QAbstractItemModel):
         return parentNode.childCount()
 
     def columnCount(self, parent):
-        return 5 + len(self.customcolumns)
+        return 6 + len(self.customcolumns)
 
     def data(self, index, role):
         if not index.isValid():
@@ -426,13 +424,15 @@ class TreeModel(QAbstractItemModel):
             elif index.column() == 1:
                 value = item.data.get('objecttype','')
             elif index.column() == 2:
-                value = item.data.get('querystatus','')
+                value = getDictValue(item.data.get('queryparams',''), 'nodedata')
             elif index.column() == 3:
-                value = item.data.get('querytime','')
+                value = item.data.get('querystatus','')
             elif index.column() == 4:
+                value = item.data.get('querytime','')
+            elif index.column() == 5:
                 value = item.data.get('querytype','')
             else:
-                key = self.customcolumns[index.column() - 5]
+                key = self.customcolumns[index.column() - 6]
                 value = extractValue(item.data.get('response',''), key)[1]
 
             if role == Qt.ToolTipRole:
@@ -475,13 +475,13 @@ class TreeModel(QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
-            captions = ['Object ID', 'Object Type', 'Query Status', 'Query Time', 'Query Type'] + extractNames(self.customcolumns)
+            captions = ['Object ID', 'Object Type','Object Key', 'Query Status', 'Query Time', 'Query Type'] + extractNames(self.customcolumns)
             return captions[section] if section < len(captions) else ""
 
         return None
 
     def getRowHeader(self):
-        row = ["id", "parent_id", "level", "object_id", "object_type", "query_status", "query_time", "query_type"]
+        row = ["id", "parent_id", "level", "object_id", "object_type", "object_key", "query_status", "query_time", "query_type"]
         columns = extractNames(self.customcolumns)
         for key in columns:
             row.append(key)
@@ -494,6 +494,7 @@ class TreeModel(QAbstractItemModel):
                node.data['level'],
                node.data['objectid'],
                node.data['objecttype'],
+               getDictValue(node.data['queryparams'],'nodedata'),
                node.data['querystatus'],
                node.data['querytime'],
                node.data['querytype']

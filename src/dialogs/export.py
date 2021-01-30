@@ -147,7 +147,7 @@ class ExportFileDialog(QFileDialog):
                                 lineterminator='\r\n')
 
             # Headers
-            row = ["level", "id", "parent_id", "object_id", "object_type",
+            row = ["level", "id", "parent_id", "object_id", "object_type","object_key",
                    "query_status", "query_time", "query_type"]
             for key in extractNames(self.mainWindow.tree.treemodel.customcolumns):
                 row.append(key)
@@ -167,7 +167,8 @@ class ExportFileDialog(QFileDialog):
                         break
 
                     row = [node.level, node.id, node.parent_id, node.objectid,
-                           node.objecttype, node.querystatus, node.querytime, node.querytype]
+                           node.objecttype,getDictValue(node.queryparams,'nodedata'),
+                           node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
                         row.append(node.getResponseValue(key)[1])
 
