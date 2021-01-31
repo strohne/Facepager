@@ -259,6 +259,14 @@ class MainWindow(QMainWindow):
         self.timeoutEdit.setValue(self.settings.value('timeout',15))
         self.settingsLayout.addRow('Request timeout',self.timeoutEdit)
 
+        # Max data size
+        self.maxsizeEdit = QSpinBox(self)
+        self.maxsizeEdit.setMinimum(1)
+        self.maxsizeEdit.setMaximum(300000)
+        self.maxsizeEdit.setToolTip(wraptip("How many megabytes will you download at maximum?"))
+        self.maxsizeEdit.setValue(self.settings.value('maxsize',5))
+        self.settingsLayout.addRow('Maximum size',self.maxsizeEdit)
+
         # Expand Box
         self.autoexpandCheckbox = QCheckBox("Expand new nodes",self)
         self.autoexpandCheckbox.setToolTip(wraptip(

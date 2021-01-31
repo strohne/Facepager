@@ -62,6 +62,7 @@ class ApiTab(QScrollArea):
     def __init__(self, mainWindow=None, name="NoName"):
         QScrollArea.__init__(self, mainWindow)
         self.timeout = None
+        self.maxsize = 5
         self.mainWindow = mainWindow
         self.loginWindow = None
         self.name = name
@@ -1311,92 +1312,102 @@ class ApiTab(QScrollArea):
         session = self.initSession(session_no)
 
         try:
-            maxretries = 3
-            while True:
-                try:
-                    if (not session):
-                        raise Exception("No session available.")
+            response = None
+            try:
+                maxretries = 3
+                while True:
+                    try:
+                        if (not session):
+                            raise Exception("No session available.")
 
-                    # Use cookie jar instead of header to persist redirects
-                    cookies = headers.pop('Cookie', None) if headers is not None else None
-                    if cookies is not None:
-                        cookies = dict(item.split("=",maxsplit=1) for item in cookies.split(";"))
+                        # Use cookie jar instead of header to persist redirects
+                        cookies = headers.pop('Cookie', None) if headers is not None else None
+                        if cookies is not None:
+                            cookies = dict(item.split("=",maxsplit=1) for item in cookies.split(";"))
 
-                    # Send request
-                    response = session.request(method,path, params=args, headers=headers, cookies=cookies,
-                                               data=payload, timeout=self.timeout,verify=True) # verify=False
+                        # Send request
+                        response = session.request(method,path, params=args, headers=headers, cookies=cookies,
+                                                   data=payload, timeout=self.timeout,stream=True,verify=True) # verify=False
 
-                except (HTTPError, ConnectionError) as e:
-                    maxretries -= 1
+                    except (HTTPError, ConnectionError) as e:
+                        maxretries -= 1
 
-                    # Try next request with new session
-                    if (maxretries > 0) and (self.connected):
-                        time.sleep(0.1)
-                        session = self.initSession(session_no, True)
-                        self.logMessage("Automatic retry: Request Error: {0}".format(str(e)))
+                        # Try next request with new session
+                        if (maxretries > 0) and (self.connected):
+                            time.sleep(0.1)
+                            session = self.initSession(session_no, True)
+                            self.logMessage("Automatic retry: Request Error: {0}".format(str(e)))
+                        else:
+                            raise e
                     else:
-                        raise e
-                else:
-                    break
+                        break
 
-        except (HTTPError, ConnectionError, InvalidURL, MissingSchema) as e:
-            status = 'request error'
-            data = {'error':str(e)}
-            headers = {}
+                if int(response.headers.get('content-length',0)) > (self.maxsize * 1024 * 1024):
+                    raise DataTooBigError(f"File is to big, content length is {response.headers['content-length']}.")
+
+                status = 'fetched' if response.ok else 'error'
+                status = status + ' (' + str(response.status_code) + ')'
+                headers = dict(list(response.headers.items()))
+
+                # Download data
+                data = {
+                    'content-type': response.headers.get("content-type",""),
+                    'sourcepath': path,'sourcequery': args,'finalurl': response.url
+                }
+
+                fullfilename = download(response, foldername, filename, fileext)
+
+                if fullfilename is not None:
+                    data['filename'] = os.path.basename(fullfilename)
+                    data['filepath'] = fullfilename
+
+                # Text
+                if format == 'text':
+                        data['text'] = response.text  # str(response.text)
+
+                 # Scrape links
+                elif format == 'links':
+                    try:
+                        links, base = extractLinks(response.text, response.url)
+                        data['links'] = links
+                        data['base'] = base
+                    except Exception as  e:
+                        data['error'] = 'Could not extract Links.'
+                        data['message'] = str(e)
+                        data['response'] = response.text
+
+                # JSON
+                elif format == 'json':
+                    try:
+                        data = response.json() if response.text != '' else []
+                    except Exception as e:
+                        # self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
+                        # try:
+                        #     data = xmlToJson(response.text)
+                        # except:
+                        data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
+
+                # JSON
+                elif format == 'xml':
+                    try:
+                        data = xmlToJson(response.text)
+                    except Exception as e:
+                        data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
+
+
+            except Exception as e:
+            #except (DataTooBigError, HTTPError, ReadTimeout, ConnectionError, InvalidURL, MissingSchema) as e:
+                status = 'request error'
+                data = {'error':str(e)}
+                headers = {}
+
+                #raise Exception("Request Error: {0}".format(str(e)))
+        finally:
+            if response is not None:
+                response.close()
+
             return data, headers, status
-            #raise Exception("Request Error: {0}".format(str(e)))
 
-        else:
-            status = 'fetched' if response.ok else 'error'
-            status = status + ' (' + str(response.status_code) + ')'
-            headers = dict(list(response.headers.items()))
-
-            # Download data
-            data = {
-                'content-type': response.headers.get("content-type",""),
-                'sourcepath': path,'sourcequery': args,'finalurl': response.url
-            }
-
-            fullfilename = download(response, foldername, filename, fileext)
-
-            if fullfilename is not None:
-                data['filename'] = os.path.basename(fullfilename)
-                data['filepath'] = fullfilename
-
-            # Text
-            if format == 'text':
-                    data['text'] = response.text  # str(response.text)
-
-             # Scrape links
-            elif format == 'links':
-                try:
-                    links, base = extractLinks(response.text, response.url)
-                    data['links'] = links
-                    data['base'] = base
-                except Exception as  e:
-                    data['error'] = 'Could not extract Links.'
-                    data['message'] = str(e)
-                    data['response'] = response.text
-
-            # JSON
-            elif format == 'json':
-                try:
-                    data = response.json() if response.text != '' else []
-                except Exception as e:
-                    # self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
-                    # try:
-                    #     data = xmlToJson(response.text)
-                    # except:
-                    data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
-
-            # JSON
-            elif format == 'xml':
-                try:
-                    data = xmlToJson(response.text)
-                except Exception as e:
-                    data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
-
-            return data, headers, status
 
     def disconnectSocket(self):
         """Used to hardly disconnect the streaming client"""
@@ -1750,6 +1761,7 @@ class AuthTab(ApiTab):
         self.connected = True
         self.speed = options.get('speed', None)
         self.timeout = options.get('timeout', 15)
+        self.maxsize = options.get('maxsize', 5)
 
         # Init pagination
         options = self.initPagingOptions(nodedata, options)
@@ -2452,6 +2464,7 @@ class FacebookTab(AuthTab):
         self.connected = True
         self.speed = options.get('speed',None)
         self.timeout = options.get('timeout', 15)
+        self.maxsize = options.get('maxsize', 5)
         session_no = options.get('threadnumber', 0)
 
         # Init pagination
@@ -2880,6 +2893,7 @@ class TwitterTab(AuthTab):
         self.connected = True
         self.speed = options.get('speed', None)
         self.timeout = options.get('timeout', 15)
+        self.maxsize = options.get('maxsize', 5)
         session_no = options.get('threadnumber',0)
 
         # Init pagination
@@ -3072,6 +3086,7 @@ class TwitterStreamingTab(TwitterTab):
             options['objectid'] = self.defaults.get('key_objectid')
 
         self.timeout = options.get('timeout',30)
+        self.maxsize = options.get('maxsize', 5)
 
         # data
         session_no = options.get('threadnumber',0)
@@ -3217,3 +3232,6 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
 
     def close(self):
         pass
+
+class DataTooBigError(Exception):
+    pass

@@ -377,6 +377,7 @@ class ApiActions(object):
         settings['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         settings['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
         settings['timeout'] = self.mainWindow.timeoutEdit.value()
+        settings['maxsize'] = self.mainWindow.maxsizeEdit.value()
         settings['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
         settings['resume'] = self.mainWindow.resumeCheckbox.isChecked()
         settings['emptyonly'] = self.mainWindow.emptyCheckbox.isChecked()
@@ -415,6 +416,10 @@ class ApiActions(object):
         value = settings.get('timeout') # default 15
         if value is not None:
             self.mainWindow.timeoutEdit.setValue(int(value))
+
+        value = settings.get('maxsize') # default 5
+        if value is not None:
+            self.mainWindow.maxsizeEdit.setValue(int(value))
 
         value = settings.get('logrequests', None) # default None
         if value is not None:
@@ -940,6 +945,7 @@ class GuiActions(object):
         globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
         globaloptions['timeout'] = self.mainWindow.timeoutEdit.value()
+        globaloptions['maxsize'] = self.mainWindow.maxsizeEdit.value()
         globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
         globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
         globaloptions['emptyonly'] = self.mainWindow.emptyCheckbox.isChecked()

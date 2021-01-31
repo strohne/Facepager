@@ -149,6 +149,10 @@ class PresetWindow(QDialog):
         self.detailTimeout = QLabel('')
         self.presetForm.addRow('<b>Timeout</b>', self.detailTimeout)
 
+        # Max size
+        self.detailMaxsize = QLabel('')
+        self.presetForm.addRow('<b>Maximum size</b>', self.detailMaxsize)
+
         # Headers
         self.detailHeaders = QLabel('')
         self.presetForm.addRow('<b>Header nodes</b>', self.detailHeaders)
@@ -287,6 +291,7 @@ class PresetWindow(QDialog):
                 self.detailColumns.setText("\r\n".join(data.get('columns', [])))
                 self.detailSpeed.setText(str(data.get('speed','')))
                 self.detailTimeout.setText(str(data.get('timeout', '')))
+                self.detailMaxsize.setText(str(data.get('maxsize', '')))
 
                 #self.applyButton.setText("Apply")
                 self.presetView.show()
@@ -668,7 +673,7 @@ class PresetWindow(QDialog):
                     self.currentData.update(data_settings)
 
             # Sanitize and reorder
-            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'saveheaders','timeout','columns']
+            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'saveheaders','timeout','maxsize','columns']
             self.currentData = {k: self.currentData.get(k, None) for k in keys}
 
             # Create folder
