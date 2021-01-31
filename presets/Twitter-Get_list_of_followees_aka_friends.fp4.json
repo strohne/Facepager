@@ -1,0 +1,39 @@
+{
+  "name": "Get list of followees aka friends",
+  "category": "Twitter",
+  "description": "Add user IDs as nodes. You cawn get the user IDs with the preset \"Get information about users\". In case you want to work with the name of a user, change the parameter \"user_id\" to \"screen_name\" and add the Twitter handle as a seed node (without the @). \n\nThis preset fetches you 11 pages with 100 followees. You can get more data by increasing the maximum pages. But be aware of rate limits, at the moment, only one request per minute is allowed. The endpoint /friends/ids might help you to go further.\n\nFor more information see the reference: https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-friends-list",
+  "module": "Twitter",
+  "options": {
+    "basepath": "https://api.twitter.com/1.1",
+    "resource": "/friends/list",
+    "params": {
+      "user_id": "<Object ID>"
+    },
+    "extension": ".json",
+    "pages": 1,
+    "paging_type": "key",
+    "key_paging": "next_cursor_str",
+    "paging_stop": "next_cursor",
+    "param_paging": "cursor",
+    "nodedata": "users",
+    "objectid": null,
+    "auth_type": "OAuth1",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "columns": [
+    "id",
+    "name",
+    "screen_name",
+    "friends_count",
+    "created_at",
+    "errors.*.message"
+  ]
+}
