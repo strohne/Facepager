@@ -11,7 +11,7 @@
       "part": "snippet,id,contentDetails,status",
       "playlistId": "<Object ID>"
     },
-    "pages": 100,
+    "pages": 1,
     "paging_type": "key",
     "key_paging": "nextPageToken",
     "paging_stop": null,
