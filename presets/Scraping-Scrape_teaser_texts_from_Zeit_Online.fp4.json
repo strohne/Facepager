@@ -5,7 +5,7 @@
   "module": "Generic",
   "options": {
     "auth": "disable",
-    "auth_type": "OAuth2",
+    "auth_type": "Disable",
     "auth_uri": "",
     "basepath": "https://www.zeit.de/",
     "fileext": "<None>",
