@@ -1,7 +1,7 @@
 {
   "name": "Scrape teaser texts from Zeit Online",
   "category": "Scraping",
-  "description": "Add search terms as seed nodes and fetch data.\n\nThis preset uses the search of https://www.zeit.de/suche/index?q=corona&p=1 to fetch a list of articles vom Zeit Online. \n\nSee the wiki for information about using CSS and XPath selectors with Facepager: https://github.com/strohne/Facepager/wiki/Webscraping",
+  "description": "Add search terms as seed nodes and fetch data.\n\nThis preset uses the search of https://www.zeit.de/suche/index?q=corona&p=1 to fetch a list of articles from Zeit Online. \n\nSee the wiki for information about using CSS and XPath selectors with Facepager: https://github.com/strohne/Facepager/wiki/Webscraping",
   "module": "Generic",
   "options": {
     "auth": "disable",
