@@ -786,7 +786,10 @@ class GuiActions(object):
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         filesbutton = buttons.addButton("Add files", QDialogButtonBox.ResetRole)
+        filesbutton.setToolTip(wraptip("Add the names of files in a directory as nodes. Useful for uploading files in the Generic module or for importing data you downloaded before. The filenames are URIs an can be processed like any API or website."))
+
         loadbutton = buttons.addButton("Load CSV", QDialogButtonBox.ResetRole)
+        loadbutton.setToolTip(wraptip("Import nodes from a csv file. Use semicolon as seperator. The first column becomes the Object ID, all columns are added to the data view as key value pairs."))
         layout.addWidget(buttons)
 
         dialog.setLayout(layout)
