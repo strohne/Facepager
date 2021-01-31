@@ -213,10 +213,10 @@ class BrowserDialog(QMainWindow):
             }
 
             # Fetch HTML
-            data['html'] = self.getHtml()
+            data['text'] = self.getHtml()
 
             # Fetch plain text
-            data['text'] = self.getText()
+            data['plaintext'] = self.getText()
 
 
             if self.foldername is not None:

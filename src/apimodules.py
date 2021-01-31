@@ -1250,8 +1250,13 @@ class ApiTab(QScrollArea):
         def download(response,foldername=None,filename=None,fileext=None):
             if foldername is not None and filename is not None:
                 if fileext is None:
-                    guessed_ext = guess_all_extensions(response.headers.get("content-type"))
-                    fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+                    contentype = response.headers.get("content-type")
+                    if contentype is not None:
+                        guessed_ext = guess_all_extensions(contentype)
+                        fileext = guessed_ext[-1] if len(guessed_ext) > 0 else None
+                    else:
+                        fileext = None
+
 
                 fullfilename = makefilename(path,foldername, filename, fileext)
                 file = open(fullfilename, 'wb')
@@ -1440,7 +1445,7 @@ class ApiTab(QScrollArea):
         self.browserWindow = BrowserDialog(self.mainWindow, "Browser", 800, 600)
         self.browserWindow.logMessage.connect(logMessage)
         self.browserWindow.activateCaptureButton(logData)
-        url = urlpath + urllib.parse.urlencode(urlparams)
+        url = urlpath + '?' + urllib.parse.urlencode(urlparams)
         self.browserWindow.loadPage(url, requestheaders, options, foldername, filename, fileext)
 
         # for data, headers, status in self.browserWindow.capturePage(
