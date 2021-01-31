@@ -1,6 +1,6 @@
 {
   "name": "Facebook Pagelikes",
-  "category": "LIKE Facebook",
+  "category": "Facebook",
   "description": "Get the pages a page likes. Add page IDs as seed nodes. You can get page IDs using the preset \"Information about pages\".  \n\n\nSee https://developers.facebook.com/docs/graph-api/reference/page/likes/ for more information about the endpoint. \n",
   "module": "Facebook",
   "options": {
