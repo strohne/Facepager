@@ -8,6 +8,7 @@ import lxml.html
 import lxml.etree
 import html
 import urllib.parse
+import tldextract
 from collections import OrderedDict
 from collections import Mapping
 from xmljson import BadgerFish
@@ -598,7 +599,7 @@ def elementToJson(element, context=True):
 
 
 
-def extractLinks(data,baseurl):
+def extractLinks(data,baseurl,parseurl=True):
     links = []
     soup = lxml.html.fromstring(data)
 
@@ -610,9 +611,52 @@ def extractLinks(data,baseurl):
         link = elementToJson(part, True)
         if link.get('@href',None) is not None:
             link['url'] = urllib.parse.urljoin(baseurl, link.get('@href',None))
+            if parseurl:
+                parts = extractURLparts(link['url'],usecache=True)
+                link.update(parts)
         links.append(link)
 
     return links, base
+
+urlcache = {}
+def extractURLparts(url_absolut,prefix="url_",usecache=False):
+    cachekey = prefix + url_absolut
+    if not usecache or (not cachekey in urlcache):
+        item = {}
+        # Domain etc. aus der absoluten URL rausziehen und im dict speichern
+        try:
+            parsed_uri = urllib.parse.urlparse(url_absolut)
+
+            item[prefix + 'domain'] = parsed_uri.netloc
+            item[prefix + 'scheme'] = parsed_uri.scheme
+            item[prefix + 'path'] = parsed_uri.path
+            item[prefix + 'params'] = parsed_uri.params
+            item[prefix + 'query'] = parsed_uri.query
+            item[prefix + 'fragment'] = parsed_uri.fragment
+        except:
+            pass
+
+        # Parse domain
+        try:
+            domainparts = tldextract.extract(item[prefix + 'domain'])
+            item[prefix + 'domain_subdomain'] = domainparts.subdomain
+            item[prefix + 'domain_domain'] = domainparts.domain
+            item[prefix + 'domain_suffix'] = domainparts.suffix
+
+        except:
+            pass
+
+        # Normalize domain
+        try:
+            domainnormalized = re.sub("^www\.", "", parsed_uri.netloc).lower()
+            domainnormalized = re.sub(":[0-9]+$", "", domainnormalized)
+            item[prefix + 'domain_normalized'] = domainnormalized
+        except Exception as e:
+            pass
+
+        urlcache[cachekey] = item
+
+    return urlcache[cachekey]
 
 def extractHtml(html, selector, type='css', dump=False):
     items = []
