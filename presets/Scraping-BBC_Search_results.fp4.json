@@ -1,0 +1,45 @@
+{
+  "name": "BBC: Search results",
+  "category": "Scraping",
+  "description": "Add search terms as seed nodes and fetch data.\n\nThis preset uses the search of https://www.bbc.co.uk/search?q=disinformation+campaign to fetch a list of articles from the BBC news site. \n\nSee the wiki for information about using CSS and XPath selectors with Facepager: https://github.com/strohne/Facepager/wiki/Webscraping",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://www.bbc.co.uk",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "text",
+    "headers": {},
+    "nodedata": "text|css:main ul li",
+    "objectid": "text|xpath://a/@href",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": "page",
+    "params": {
+      "q": "<Object ID>"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/search",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "columns": [
+    "headline=text|css:a|xpath:string()",
+    "link=text|xpath://a/@href",
+    "text|xpath:string(//p[2])",
+    "text|xpath:string(//span[@type=\"published\"])",
+    "text|xpath:string(//span[@type=\"category\"])"
+  ]
+}
