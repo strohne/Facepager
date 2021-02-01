@@ -1,5 +1,5 @@
 {
-  "name": "Get playlist items",
+  "name": "2 Get playlist items",
   "category": "YouTube",
   "description": "Each channel contains playlists and playlists contain playlist items. In the playlist items you find the videos.  Therefore, to get the videos in a channel, you first query the channel information and then fetch the items in the 'uploads' playlist.\n\nTo use this preset, add IDs of playlists as seed nodes. If you already fetched channel information, you can use those nodes as starting nodes and set the parameter playlistId to \"<contentDetails.relatedPlaylists.uploads>\"\n\nSee https://developers.google.com/youtube/v3/docs/playlists/list and https://developers.google.com/youtube/v3/docs/playlistItems/list for further information.\n",
   "module": "YouTube",

@@ -1,0 +1,53 @@
+{
+  "name": "1_Get posts in a subreddit",
+  "category": "Reddit",
+  "description": "Add the name of the subreddit as seed node, e.g. \"funnycats\" for https://www.reddit.com/r/funnycats/\n\n\nSee https://github.com/reddit-archive/reddit/wiki/JSON for an overview about the fields. See https://www.reddit.com/dev/api for information about the API.\n\nSee https://github.com/reddit-archive/reddit/wiki/API for information about setting the user agent.\n",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "https://www.reddit.com/api/v1/authorize?state=mystate&duration=temporary",
+    "basepath": "https://www.reddit.com",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {
+      "User-Agent": "MyApp/0.1 by Meself"
+    },
+    "key_paging": "data.after",
+    "nodedata": "data.children",
+    "objectid": "data.id",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": "after",
+    "params": {},
+    "proxy": "",
+    "redirect_uri": "https://localhost",
+    "resource": "/r/<Object ID>/.json",
+    "scope": "identity read mysubreddits",
+    "token_uri": "https://www.reddit.com/api/v1/access_token",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "kind",
+    "data.title",
+    "data.created_utc|timestamp",
+    "data.num_comments",
+    "data.ups",
+    "data.downs",
+    "data.url",
+    "data.is_video",
+    "data.name",
+    "data.subreddit_id",
+    "data.subreddit",
+    "data.permalink"
+  ]
+}

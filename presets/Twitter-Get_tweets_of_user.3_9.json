@@ -19,7 +19,7 @@
   "description": "Add user ids as nodes and fetch data.\n\nAlternatively you can add the screen_name and switch the parameter \"user_id\" to \"screen_name\".\n\nAdjust count-parameter and maximum pages to get more than 200 tweets. The API returns up to 3200 tweets.\n\nSee https://developer.twitter.com/en/docs/tweets/timelines/api-reference/get-statuses-user_timeline for further information.",
   "headers": false,
   "module": "Twitter",
-  "name": "Get tweets of user",
+  "name": "3 Get tweets of user",
   "options": {
     "basepath": "https://api.twitter.com/1.1",
     "key_paging": null,

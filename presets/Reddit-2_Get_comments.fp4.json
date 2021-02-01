@@ -1,0 +1,54 @@
+{
+  "name": "2_Get comments",
+  "category": "Reddit",
+  "description": "First fetch posts, then comments. \n\nThis preset is a first start and still is experimental. Feel free to improve it.\n\nSee the posts preset for further information about the API.",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "https://www.reddit.com/api/v1/authorize?state=mystate&duration=temporary",
+    "basepath": "https://www.reddit.com",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {
+      "User-Agent": "MyApp/0.1 by Meself"
+    },
+    "key_paging": "data.after",
+    "nodedata": "1.data.children",
+    "objectid": "data.id",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": "after",
+    "params": {
+      "count": "5"
+    },
+    "proxy": "",
+    "redirect_uri": "https://localhost",
+    "resource": "/r/<data.subreddit>/comments/<data.id>/.json",
+    "scope": "identity read mysubreddits",
+    "token_uri": "https://www.reddit.com/api/v1/access_token",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "kind",
+    "data.body",
+    "data.created_utc|timestamp",
+    "data.author",
+    "data.ups",
+    "data.downs",
+    "data.score",
+    "data.name",
+    "data.subreddit_id",
+    "data.subreddit",
+    "data.permalink"
+  ]
+}
