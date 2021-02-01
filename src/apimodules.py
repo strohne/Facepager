@@ -1343,7 +1343,7 @@ class ApiTab(QScrollArea):
                         break
 
                 if int(response.headers.get('content-length',0)) > (self.maxsize * 1024 * 1024):
-                    raise DataTooBigError(f"File is to big, content length is {response.headers['content-length']}.")
+                    raise DataTooBigError(f"File is too big, content length is {response.headers['content-length']}.")
 
                 status = 'fetched' if response.ok else 'error'
                 status = status + ' (' + str(response.status_code) + ')'
@@ -1912,8 +1912,11 @@ class AuthTab(ApiTab):
             if scope is not None:
                 params['scope'] = scope
 
-            params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
-            url = loginurl + "?" + params
+
+            #params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
+            #url =  loginurl + "?" + params
+            urlpath, urlparams, templateparams = self.getURL(loginurl,params,{},{})
+            url = urlpath + '?' + urllib.parse.urlencode(urlparams)
 
             self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
                                  url,
@@ -2252,10 +2255,16 @@ class AuthTab(ApiTab):
                     scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else \
                         self.defaults.get('scope', None)
 
+                    headers = options.get("headers",{})
+                    headers = {key.lower(): value for (key, value) in headers.items()}
+
                     session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'], scope=scope)
-                    token = session.fetch_token(options['token_uri'],
-                                                     authorization_response=str(url),
-                                                     client_secret=clientsecret)
+                    token = session.fetch_token(
+                        options['token_uri'],
+                        authorization_response=str(url),
+                        client_secret=clientsecret,
+                        headers=headers
+                    )
 
                     # Get user ID
                     if self.auth_preregistered:
@@ -2277,6 +2286,8 @@ class AuthTab(ApiTab):
                     success = True
                 finally:
                     session.close()
+            elif url.startswith(options['redirect_uri']) and query.get('error') is not None:
+                self.logMessage(f"Login error: {query.get('error')}")
 
         except Exception as e:
             self.logMessage(e)
@@ -2568,6 +2579,7 @@ class FacebookTab(AuthTab):
 
     @Slot(QUrl)
     def onLoginWindowChanged(self, url):
+        print(url.toString())
         if url.toString().startswith(self.defaults['redirect_uri']):
             try:
                 url = urllib.parse.parse_qs(url.toString())
