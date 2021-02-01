@@ -280,7 +280,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
             elif modifier == 'length':
                 value = len(value)
             elif modifier == "timestamp":
-                value = [datetime.utcfromtimestamp(int(x)).isoformat() for x in value]
+                value = [datetime.utcfromtimestamp(float(x)).isoformat() for x in value]
             elif modifier == "shortdate":
                 value = [str(datetime.strptime(x, '%a %b %d %H:%M:%S %z %Y')) for x in value]
 
