@@ -1,7 +1,6 @@
 import urllib.parse
 import urllib.request, urllib.error
 
-
 import secrets
 import hashlib, hmac, base64
 from mimetypes import guess_all_extensions
@@ -2579,11 +2578,11 @@ class FacebookTab(AuthTab):
 
     @Slot(QUrl)
     def onLoginWindowChanged(self, url):
-        #print(url.toString())
-        if url.toString().startswith(self.defaults['redirect_uri']):
+        if "#access_token" in url.toString():
             try:
-                url = urllib.parse.parse_qs(url.toString())
-                token = url.get(self.defaults['redirect_uri']+"#access_token",[''])[0]
+                url = urllib.parse.urlparse(url.toString(),allow_fragments=True)
+                fragment = urllib.parse.parse_qs(url.fragment)
+                token = fragment.get('access_token').pop()
 
                 # Get user ID
                 if self.auth_preregistered:

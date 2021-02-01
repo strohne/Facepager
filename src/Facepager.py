@@ -768,6 +768,7 @@ if __name__ == "__main__":
         if not os.path.isdir(logfolder):
             os.makedirs(logfolder)
         logging.basicConfig(filename=os.path.join(logfolder,'facepager.log'),level=logging.ERROR,format='%(asctime)s %(levelname)s:%(message)s')
+        #logging.basicConfig(filename=os.path.join(logfolder, 'facepager.log'), level=logging.DEBUG,format='%(asctime)s %(levelname)s:%(message)s')
     except Exception as e:
         print("Error intitializing log file: {}".format(e.message))
 
