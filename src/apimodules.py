@@ -2579,7 +2579,7 @@ class FacebookTab(AuthTab):
 
     @Slot(QUrl)
     def onLoginWindowChanged(self, url):
-        print(url.toString())
+        #print(url.toString())
         if url.toString().startswith(self.defaults['redirect_uri']):
             try:
                 url = urllib.parse.parse_qs(url.toString())
