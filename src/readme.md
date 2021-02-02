@@ -18,6 +18,7 @@ Facepager depends on the following packages:
 - xmljson pip install xmljson (MIT licence)
 - cchardet: pip install cchardet (GPL, LGPL, MPL 1.1)
 - json
+- cssselect
 - datetime
 - pyjsparser: pip install pyjsparser (MIT)
 - tldextract
@@ -41,7 +42,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ python -m venv pyenv  
   $ pyenv\Scripts\activate.bat  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect  
   $ pip install PySide2==5.15.2
 
 - Start Facepager  
@@ -60,7 +61,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect  
   $ pip install PySide2==5.15.2 
 
 - Start Facepager  
@@ -83,7 +84,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv pyenv  
   $ source pyenv/bin/activate  
   
-  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract   
+  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect   
   $ pip3 install PySide2==5.15.2
 
 - Start Facepager  
