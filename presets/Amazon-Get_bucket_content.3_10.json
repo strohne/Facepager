@@ -1,6 +1,6 @@
 {
   "category": "Amazon",
-  "description": "Add bucket name as node or fetch buckets with another preset. Up to 1000 objects are returned. Use the prefix-parameter to get a subset with matching keys. You can see your buckets in the web browser as well: https://s3.console.aws.amazon.com\n\nBe aware oif region settings. You get an error if the wrong region is set.\n\nRegister at Amazon AWS to obtain access key and secret. Reference: https://docs.aws.amazon.com/de_de/AmazonS3/latest/API/Welcome.html\n\n\n\n",
+  "description": "Add bucket name as node or fetch buckets with another preset. Up to 1000 objects are returned. Use the prefix-parameter to get a subset with matching keys. You can see your buckets in the web browser as well: https://s3.console.aws.amazon.com\n\nBe aware of region settings. You get an error if the wrong region is set.\n\nRegister at Amazon AWS to obtain access key and secret. Reference: https://docs.aws.amazon.com/de_de/AmazonS3/latest/API/Welcome.html\n\n\n\n",
   "module": "Amazon",
   "name": "Get bucket content",
   "options": {
