@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
 
         #
         # Settings widget
-        #
+        #s
 
         self.settingsWidget = QWidget()
         self.settingsLayout = QFormLayout()
@@ -249,6 +249,14 @@ class MainWindow(QMainWindow):
         self.headersCheckbox.setToolTip(
             wraptip("Check if you want to create nodes containing headers of the response."))
         self.settingsLayout.addRow(self.headersCheckbox)
+
+        # Full offcut
+        self.offcutCheckbox = QCheckBox("Keep all data in offcut",self)
+        self.offcutCheckbox.setChecked(str(self.settings.value('fulloffcut', 'false')) == 'true')
+        self.offcutCheckbox.setToolTip(
+            wraptip("Check if you don't want to filter out data from the offcut node. Useful for webscraping, keeps the full HTML content"))
+        self.settingsLayout.addRow(self.offcutCheckbox)
+
 
         # Timeout
         self.timeoutEdit = QSpinBox(self)

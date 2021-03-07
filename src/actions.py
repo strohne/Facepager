@@ -376,6 +376,7 @@ class ApiActions(object):
         settings['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
         settings['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         settings['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
+        settings['fulloffcut'] = self.mainWindow.offcutCheckbox.isChecked()
         settings['timeout'] = self.mainWindow.timeoutEdit.value()
         settings['maxsize'] = self.mainWindow.maxsizeEdit.value()
         settings['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
@@ -412,6 +413,10 @@ class ApiActions(object):
         value = settings.get('saveheaders', None) # default None
         if value is not None:
             self.mainWindow.headersCheckbox.setChecked(bool(value))
+
+        value = settings.get('fulloffcut', None) # default None
+        if value is not None:
+            self.mainWindow.offcutCheckbox.setChecked(bool(value))
 
         value = settings.get('timeout') # default 15
         if value is not None:
@@ -944,6 +949,7 @@ class GuiActions(object):
         globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
         globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
         globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
+        globaloptions['fulloffcut'] = self.mainWindow.offcutCheckbox.isChecked()
         globaloptions['timeout'] = self.mainWindow.timeoutEdit.value()
         globaloptions['maxsize'] = self.mainWindow.maxsizeEdit.value()
         globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()

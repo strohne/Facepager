@@ -363,6 +363,9 @@ def sliceData(data, headers=None, options={}):
     # offcut
     if not options.get('offcut', True):
         offcut = None
+    elif options.get('fulloffcut', False):
+        offcut = data
+
 
     # headers
     if not options.get('saveheaders', False):
