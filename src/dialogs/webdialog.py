@@ -49,11 +49,12 @@ class PreLoginWebDialog(QDialog):
         buttonDismiss.clicked.connect(self.reject)
         hLayout.addWidget(buttonDismiss)
 
-        buttonProceed = QPushButton(self)
-        buttonProceed.setText("Proceed")
-        buttonProceed.setDefault(True)
-        buttonProceed.clicked.connect(self.accept)
-        hLayout.addWidget(buttonProceed)
+        self.buttonProceed = QPushButton(self)
+        self.buttonProceed.setText("Proceed")
+        self.buttonProceed.setDefault(True)
+        self.buttonProceed.clicked.connect(self.accept)
+        self.buttonProceed.setDisabled(True)
+        hLayout.addWidget(self.buttonProceed)
 
         self.loadPage()
         #browser.setBackgroundRole(QPalette.Window)
@@ -69,6 +70,7 @@ class PreLoginWebDialog(QDialog):
     @Slot()
     def loadStarted(self):
         self.ready = False
+        self.buttonProceed.setDisabled(True)
         self.loadingLabel.setText('Loading...')
 
 
@@ -76,10 +78,12 @@ class PreLoginWebDialog(QDialog):
     def loadFinished(self, ok):
         if ok:
             self.ready = True
+            self.buttonProceed.setDisabled(False)
 
             self.loadingLabel.setText('Loading finished.')
         else:
             self.ready = False
+            self.buttonProceed.setDisabled(True)
             self.loadingLabel.setText('Loading failed.')
 
 class BrowserDialog(QMainWindow):
