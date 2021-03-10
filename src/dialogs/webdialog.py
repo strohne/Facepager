@@ -28,12 +28,20 @@ class PreLoginWebDialog(QDialog):
         self.browser = QWebEngineView(self)
         self.page = WebPageCustom(self.browser)
         self.page.allowLinks = False
+        self.page.loadFinished.connect(self.loadFinished)
+        self.page.loadStarted.connect(self.loadStarted)
+
         self.browser.setPage(self.page)
         vLayout.addWidget(self.browser)
+
+        # Status bar
+        self.loadingLabel = QLabel()
 
         # Buttons
         hLayout = QHBoxLayout()
         vLayout.addLayout(hLayout)
+        hLayout.addWidget(self.loadingLabel)
+
         hLayout.addStretch(5)
 
         buttonDismiss = QPushButton(self)
@@ -56,6 +64,23 @@ class PreLoginWebDialog(QDialog):
     def show(self):
         #super(WebDialog, self).show()
         return self.exec_()
+
+
+    @Slot()
+    def loadStarted(self):
+        self.ready = False
+        self.loadingLabel.setText('Loading...')
+
+
+    @Slot()
+    def loadFinished(self, ok):
+        if ok:
+            self.ready = True
+
+            self.loadingLabel.setText('Loading finished.')
+        else:
+            self.ready = False
+            self.loadingLabel.setText('Loading failed.')
 
 class BrowserDialog(QMainWindow):
     logMessage = Signal(str)
