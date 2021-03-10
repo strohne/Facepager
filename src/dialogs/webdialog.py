@@ -34,12 +34,19 @@ class PreLoginWebDialog(QDialog):
         self.browser.setPage(self.page)
         vLayout.addWidget(self.browser)
 
-        # Status bar
-        self.loadingLabel = QLabel()
 
         # Buttons
         hLayout = QHBoxLayout()
         vLayout.addLayout(hLayout)
+
+        # Status bar
+        self.reloadButton = QPushButton(self)
+        self.reloadButton.setText("Retry")
+        self.reloadButton.clicked.connect(self.loadPage)
+        self.reloadButton.setVisible(False)
+        hLayout.addWidget(self.reloadButton)
+
+        self.loadingLabel = QLabel()
         hLayout.addWidget(self.loadingLabel)
 
         hLayout.addStretch(5)
@@ -78,11 +85,12 @@ class PreLoginWebDialog(QDialog):
     def loadFinished(self, ok):
         if ok:
             self.ready = True
+            self.reloadButton.setVisible(False)
             self.buttonProceed.setDisabled(False)
-
             self.loadingLabel.setText('Loading finished.')
         else:
             self.ready = False
+            self.reloadButton.setVisible(True)
             self.buttonProceed.setDisabled(True)
             self.loadingLabel.setText('Loading failed.')
 
