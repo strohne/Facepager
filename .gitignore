@@ -25,3 +25,4 @@ src/Facepager.spec
 *.app.zip
 *.app.macosx.zip
 *.bat
+.Rproj.user
