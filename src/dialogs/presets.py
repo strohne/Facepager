@@ -191,11 +191,18 @@ class PresetWindow(QDialog):
         self.rejectButton.setToolTip(wraptip("Close the preset dialog."))
         buttons.addWidget(self.rejectButton)
 
+        self.columnsButton=QPushButton('Add Columns')
+        self.columnsButton.setDefault(True)
+        self.columnsButton.clicked.connect(self.addColumns)
+        self.columnsButton.setToolTip(wraptip("Add the columns of the selected preset to the column setup."))
+        buttons.addWidget(self.columnsButton)
+
         self.applyButton=QPushButton('Apply')
         self.applyButton.setDefault(True)
         self.applyButton.clicked.connect(self.applyPreset)
         self.applyButton.setToolTip(wraptip("Load the selected preset."))
         buttons.addWidget(self.applyButton)
+
         layout.addLayout(buttons)
 
         #status bar
@@ -567,6 +574,15 @@ class PresetWindow(QDialog):
             self.mainWindow.apiActions.applySettings(data)
 
         self.close()
+
+    def addColumns(self):
+        if not self.presetList.currentItem():
+            return False
+
+        data = self.presetList.currentItem().data(0,Qt.UserRole)
+        if not data.get('iscategory',False):
+            self.mainWindow.apiActions.addColumns(data)
+
 
     def uniqueFilename(self,name):
         filename = re.sub('[^a-zA-Z0-9_-]+', '_', name )+self.presetSuffix[-1]

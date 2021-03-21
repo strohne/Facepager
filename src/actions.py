@@ -103,6 +103,21 @@ class ApiActions(object):
 
         return True
 
+    @blockState
+    def addColumns(self, settings={}):
+        newcolumns = settings.get('columns')
+        columns = self.mainWindow.fieldList.toPlainText().splitlines()
+
+        if newcolumns is not None:
+            columns.extend([x for x in newcolumns if not x in columns])
+            columns = [x.strip() for x in columns]
+            columns = [x for x in columns if x != '']
+
+            self.mainWindow.fieldList.setPlainText("\n".join(columns))
+            self.mainWindow.tree.treemodel.setCustomColumns(columns)
+
+        return True
+
     def loadPreset(self, filename):
         with open(filename, 'r', encoding="utf-8") as input:
             settings = json.load(input)
