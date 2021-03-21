@@ -654,7 +654,7 @@ class MainWindow(QMainWindow):
 
 class Toolbar(QToolBar):
     """
-    Initialize the main toolbar for the facepager - that provides the central interface and functions.
+    Initialize the main toolbar - provides the main actions
     """
     def __init__(self,parent=None,mainWindow=None):
         super(Toolbar,self).__init__(parent)
@@ -664,14 +664,16 @@ class Toolbar(QToolBar):
 
         self.addActions(self.mainWindow.guiActions.basicActions.actions())
         self.addSeparator()
-        self.addActions(self.mainWindow.guiActions.databaseActions.actions())
+
+        self.addAction(self.mainWindow.guiActions.actionAdd)
+        self.addAction(self.mainWindow.guiActions.actionDelete)
 
         self.addSeparator()
-        #self.addAction(self.mainWindow.actions.actionExpandAll)
-        #self.addAction(self.mainWindow.actions.actionCollapseAll)
-        #self.addAction(self.mainWindow.actions.actionSelectNodes)
         self.addAction(self.mainWindow.guiActions.actionLoadPreset)
         self.addAction(self.mainWindow.guiActions.actionLoadAPIs)
+        
+        self.addSeparator()
+        self.addAction(self.mainWindow.guiActions.actionExport)
         self.addAction(self.mainWindow.guiActions.actionHelp)
 
 
