@@ -302,6 +302,11 @@ class TreeItem(object):
         data = sliceData(self.data.get("response", {}), None, options)
         self.appendNodes(data, options, delaycommit=delaycommit)
 
+    def copyNode(self, delaycommit=False):
+        objectid = self.data.get("objectid")
+        self.model.addSeedNodes([objectid],delaycommit=delaycommit)
+
+
     def __repr__(self):
         return self.id
 
@@ -340,7 +345,9 @@ class TreeModel(QAbstractItemModel):
         self.layoutChanged.emit()
 
     def deleteNode(self, index, delaycommit=False):
-        if (not self.database.connected) or (not index.isValid()) or (index.column() != 0):
+        if (not self.database.connected) or\
+                (not index.isValid()) or\
+                (index.column() != 0):
             return False
 
         self.beginRemoveRows(index.parent(), index.row(), index.row())
@@ -352,7 +359,7 @@ class TreeModel(QAbstractItemModel):
         item.remove(True)
         self.endRemoveRows()
 
-    def addSeedNodes(self, nodesdata, extended=False, progress=None):
+    def addSeedNodes(self, nodesdata, extended=False, progress=None, delaycommit=False):
         """
         Add seed nodes
         """
@@ -390,11 +397,14 @@ class TreeModel(QAbstractItemModel):
                 newnodes.append(new)
 
             self.database.session.add_all(newnodes)
-            self.database.session.commit()
             self.rootItem._childcountall += len(newnodes)
             self.rootItem.loaded = False
 
-            self.layoutChanged.emit()
+            self.newnodes += len(newnodes)
+            self.commitNewNodes(delaycommit)
+            #self.database.session.commit()
+            #self.layoutChanged.emit()
+
         except Exception as e:
             self.logmessage.emit(str(e))
 
@@ -419,21 +429,28 @@ class TreeModel(QAbstractItemModel):
         item = index.internalPointer()
 
         if (role == Qt.DisplayRole) or (role == Qt.ToolTipRole):
+            custom_len = len(self.customcolumns)
+
+            # Object ID
             if index.column() == 0:
                 value = item.data.get('objectid','')
-            elif index.column() == 1:
-                value = item.data.get('objecttype','')
-            elif index.column() == 2:
-                value = getDictValue(item.data.get('queryparams',''), 'nodedata')
-            elif index.column() == 3:
-                value = item.data.get('querystatus','')
-            elif index.column() == 4:
-                value = item.data.get('querytime','')
-            elif index.column() == 5:
-                value = item.data.get('querytype','')
-            else:
-                key = self.customcolumns[index.column() - 6]
+
+            # Custom columns
+            elif (index.column() <= custom_len):
+                key = self.customcolumns[index.column() - 1]
                 value = extractValue(item.data.get('response',''), key)[1]
+
+            # Query columns
+            elif index.column() == 1+custom_len:
+                value = item.data.get('objecttype','')
+            elif index.column() == 2+custom_len:
+                value = getDictValue(item.data.get('queryparams',''), 'nodedata')
+            elif index.column() == 3+custom_len:
+                value = item.data.get('querystatus','')
+            elif index.column() == 4+custom_len:
+                value = item.data.get('querytime','')
+            elif index.column() == 5+custom_len:
+                value = item.data.get('querytype','')
 
             if role == Qt.ToolTipRole:
                 return wraptip(value)
@@ -475,7 +492,8 @@ class TreeModel(QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
-            captions = ['Object ID', 'Object Type','Object Key', 'Query Status', 'Query Time', 'Query Type'] + extractNames(self.customcolumns)
+            captions = ['Object ID'] + extractNames(self.customcolumns)
+            captions += ['Object Type', 'Object Key', 'Query Status', 'Query Time', 'Query Type']
             return captions[section] if section < len(captions) else ""
 
         return None

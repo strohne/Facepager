@@ -25,6 +25,8 @@
 
 import sys
 import argparse
+from datetime import datetime
+
 import html
 
 from PySide2.QtCore import *
@@ -44,6 +46,8 @@ from dialogs.timer import *
 from dialogs.apiviewer import *
 from dialogs.dataviewer import *
 from dialogs.selectnodes import *
+from dialogs.transfernodes import *
+
 import logging
 import threading
 from server import Server, RequestHandler
@@ -123,6 +127,7 @@ class MainWindow(QMainWindow):
         self.apiWindow = ApiViewer(self)
         self.apiWindow.logmessage.connect(self.logmessage)
         self.dataWindow = DataViewer(self)
+        self.transferWindow = TransferNodes(self)
         self.timerWindow=TimerWindow(self)
         self.selectNodesWindow=SelectNodesWindow(self)
 
@@ -671,7 +676,7 @@ class Toolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.mainWindow.guiActions.actionLoadPreset)
         self.addAction(self.mainWindow.guiActions.actionLoadAPIs)
-        
+
         self.addSeparator()
         self.addAction(self.mainWindow.guiActions.actionExport)
         self.addAction(self.mainWindow.guiActions.actionHelp)

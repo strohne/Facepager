@@ -1,19 +1,11 @@
-#from requester import *
-import sqlalchemy as sql
 from sqlalchemy import Column, Integer, String,ForeignKey,Text
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine,event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_session
 from sqlalchemy.engine import Engine
 
-import json
 from utilities import *
-from dateutil import parser
-import datetime
 import os
-from PySide2.QtGui import *
-from PySide2.QtCore import *
 
 Base = declarative_base()
 

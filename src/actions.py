@@ -639,15 +639,15 @@ class GuiActions(object):
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
 
+        self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"), "Copy JSON to Clipboard")
+        self.actionJsonCopy.setToolTip(wraptip("Copy the selected JSON-data to the clipboard"))
+        self.actionJsonCopy.triggered.connect(self.jsonCopy)
+
         self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Extract Data")
         self.actionUnpack.setToolTip(wraptip("Extract new nodes from the data using keys." \
                                              "You can pipe the value to css selectors (e.g. text|div.main)" \
                                              "or xpath selectors (e.g. text|//div[@class='main']/text()"))
         self.actionUnpack.triggered.connect(self.unpackList)
-
-        self.actionJsonCopy = self.detailActions.addAction(QIcon(":/icons/toclip.png"),"Copy JSON to Clipboard")
-        self.actionJsonCopy.setToolTip(wraptip("Copy the selected JSON-data to the clipboard"))
-        self.actionJsonCopy.triggered.connect(self.jsonCopy)
 
         self.actionFieldDoc = self.detailActions.addAction(QIcon(":/icons/help.png"),"")
         self.actionFieldDoc.setToolTip(wraptip("Open the documentation for the selected item if available."))
@@ -691,6 +691,11 @@ class GuiActions(object):
         self.actionClipboard = self.treeActions.addAction(QIcon(":/icons/toclip.png"), "Copy Node(s) to Clipboard")
         self.actionClipboard.setToolTip(wraptip("Copy the selected nodes(s) to the clipboard"))
         self.actionClipboard.triggered.connect(self.clipboardNodes)
+
+        self.actionTransfer = self.treeActions.addAction(QIcon(":/icons/transfer.png"), "Transfer nodes")
+        self.actionTransfer.setToolTip(wraptip("Add the Object IDs of the selected nodes as seed nodes. Duplicates will be ignored. " \
+                                             "Useful for crawling: after fetching data, add new nodes to the list."))
+        self.actionTransfer.triggered.connect(self.duplicateNodes)
 
 
     @Slot()
@@ -933,6 +938,10 @@ class GuiActions(object):
     def unpackList(self):
         key = self.mainWindow.detailTree.selectedKey()
         self.mainWindow.dataWindow.showValue(key)
+
+    @Slot()
+    def duplicateNodes(self):
+        self.mainWindow.transferWindow.show()
 
     @Slot()
     def showFieldDoc(self):
@@ -1351,6 +1360,11 @@ class GuiActions(object):
         # update preview in extract data window
         if self.mainWindow.dataWindow.isVisible():
             self.mainWindow.dataWindow.updateNode(current)
+
+        # update node level in duplicate nodes window
+        if self.mainWindow.transferWindow.isVisible():
+            self.mainWindow.transferWindow.updateNode(current)
+
 
         #select level
         level = 0

@@ -56,13 +56,17 @@ class ExportFileDialog(QFileDialog):
         layout.addWidget(self.optionAll,row+2,1,1,2)
         self.setLayout(layout)
 
-        datadir = self.mainWindow.database.filename
-        if not os.path.exists(datadir):
-            datadir = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
-        if not os.path.exists(datadir):
-            datadir = os.path.expanduser("~")
-        datadir = os.path.dirname(datadir)
-        self.setDirectory(datadir)
+        dbfilename = self.mainWindow.database.filename
+        #self.setDirectory(os.path.dirname(dbfilename))
+        filename, ext = os.path.splitext(dbfilename)
+        self.selectFile(filename+'.csv')
+
+        # if not os.path.exists(dbfilename):
+        #     dbfilename = self.mainWindow.settings.value("lastpath", os.path.expanduser("~"))
+        # if not os.path.exists(dbfilename):
+        #     dbfilename = os.path.expanduser("~")
+
+
 
         if self.exec_():
             try:

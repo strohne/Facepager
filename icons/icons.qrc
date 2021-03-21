@@ -23,6 +23,7 @@
     <file>more.png</file>
     <file>apply.png</file>
     <file>clear.png</file>
+    <file>transfer.png</file>
   </qresource>
 </RCC>
 
