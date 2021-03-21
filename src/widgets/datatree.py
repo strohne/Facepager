@@ -430,27 +430,26 @@ class TreeModel(QAbstractItemModel):
 
         if (role == Qt.DisplayRole) or (role == Qt.ToolTipRole):
             custom_len = len(self.customcolumns)
+            default_len = 6
 
-            # Object ID
+            # Default columns
             if index.column() == 0:
                 value = item.data.get('objectid','')
+            elif index.column() == 1:
+                value = item.data.get('objecttype','')
+            elif index.column() == 2:
+                value = getDictValue(item.data.get('queryparams',''), 'nodedata')
+            elif index.column() == 3:
+                value = item.data.get('querystatus','')
+            elif index.column() == 4:
+                value = item.data.get('querytime','')
+            elif index.column() == 5:
+                value = item.data.get('querytype','')
 
             # Custom columns
-            elif (index.column() <= custom_len):
-                key = self.customcolumns[index.column() - 1]
+            else:
+                key = self.customcolumns[index.column() - default_len]
                 value = extractValue(item.data.get('response',''), key)[1]
-
-            # Query columns
-            elif index.column() == 1+custom_len:
-                value = item.data.get('objecttype','')
-            elif index.column() == 2+custom_len:
-                value = getDictValue(item.data.get('queryparams',''), 'nodedata')
-            elif index.column() == 3+custom_len:
-                value = item.data.get('querystatus','')
-            elif index.column() == 4+custom_len:
-                value = item.data.get('querytime','')
-            elif index.column() == 5+custom_len:
-                value = item.data.get('querytype','')
 
             if role == Qt.ToolTipRole:
                 return wraptip(value)
@@ -492,8 +491,8 @@ class TreeModel(QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
-            captions = ['Object ID'] + extractNames(self.customcolumns)
-            captions += ['Object Type', 'Object Key', 'Query Status', 'Query Time', 'Query Type']
+            captions = ['Object ID','Object Type', 'Object Key', 'Query Status', 'Query Time', 'Query Type']
+            captions += extractNames(self.customcolumns)
             return captions[section] if section < len(captions) else ""
 
         return None
