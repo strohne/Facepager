@@ -638,13 +638,6 @@ class GuiActions(object):
 
         #Detail actions
         self.detailActions = QActionGroup(self.mainWindow)
-        self.actionAddColumn = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add Column")
-        self.actionAddColumn.setToolTip(wraptip("Add the current JSON-key as a column in the data view"))
-        self.actionAddColumn.triggered.connect(self.addColumn)
-
-        self.actionAddAllolumns = self.detailActions.addAction(QIcon(":/icons/addcolumn.png"),"Add All Columns")
-        self.actionAddAllolumns.setToolTip(wraptip("Analyzes all selected nodes in the data view and adds all found keys as columns"))
-        self.actionAddAllolumns.triggered.connect(self.addAllColumns)
 
         self.actionUnpack = self.detailActions.addAction(QIcon(":/icons/unpack.png"),"Extract Data")
         self.actionUnpack.setToolTip(wraptip("Extract new nodes from the data using keys." \
@@ -662,6 +655,16 @@ class GuiActions(object):
 
         # Column setup actions
         self.columnActions = QActionGroup(self.mainWindow)
+
+        self.actionAddColumn = self.columnActions.addAction(QIcon(":/icons/addcolumn.png"), "Add Column")
+        self.actionAddColumn.setToolTip(wraptip("Add the current JSON-key as a column in the data view"))
+        self.actionAddColumn.triggered.connect(self.addColumn)
+
+        self.actionAddAllolumns = self.columnActions.addAction(QIcon(":/icons/addcolumn.png"), "Add All Columns")
+        self.actionAddAllolumns.setToolTip(
+            wraptip("Analyzes all selected nodes in the data view and adds all found keys as columns"))
+        self.actionAddAllolumns.triggered.connect(self.addAllColumns)
+
         self.actionShowColumns = self.columnActions.addAction(QIcon(":/icons/apply.png"), "Apply Column Setup")
         self.actionShowColumns.setToolTip(wraptip(("Show the columns in the central data view. " +
             "Scroll right or left to see hidden columns.")))

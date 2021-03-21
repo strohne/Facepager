@@ -333,22 +333,29 @@ class MainWindow(QMainWindow):
         dataLayout.addWidget(self.tree)
 
 
-        #right sidebar - toolbar
-        detailtoolbar = QToolBar(self)
-        detailtoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
-        detailtoolbar.setIconSize(QSize(16,16))
-        detailtoolbar.addActions(self.guiActions.detailActions.actions())
-        detailLayout.addWidget(detailtoolbar)
+        #right sidebar - json toolbar
+        jsontoolbar = QToolBar(self)
+        jsontoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
+        jsontoolbar.setIconSize(QSize(16,16))
+        jsontoolbar.addActions(self.guiActions.detailActions.actions())
+        detailLayout.addWidget(jsontoolbar)
 
         #right sidebar - json viewer
         self.detailTree=DictionaryTree(self.mainWidget,self.apiWindow)
         detailLayout.addWidget(self.detailTree)
 
-        #right sidebar - column setup
-        detailGroup=QGroupBox("Custom Table Columns (one key per line)")
+        # right sidebar - column setup
+        detailGroup = QWidget()
         detailSplitter.addWidget(detailGroup)
-        groupLayout=QVBoxLayout()
+        groupLayout = QVBoxLayout()
         detailGroup.setLayout(groupLayout)
+
+        #column setup toolbar
+        columntoolbar = QToolBar(self)
+        columntoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
+        columntoolbar.setIconSize(QSize(16,16))
+        columntoolbar.addActions(self.guiActions.columnActions.actions())
+        groupLayout.addWidget(columntoolbar)
 
         self.fieldList=QTextEdit()
         self.fieldList.setLineWrapMode(QTextEdit.NoWrap)
@@ -361,12 +368,8 @@ class MainWindow(QMainWindow):
 
         groupLayout.addWidget(self.fieldList)
 
-        #column setup toolbar
-        columntoolbar = QToolBar(self)
-        columntoolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon);
-        columntoolbar.setIconSize(QSize(16,16))
-        columntoolbar.addActions(self.guiActions.columnActions.actions())
-        groupLayout.addWidget(columntoolbar)
+        #columnhelp = QLabel("Custom table columns: one key per line")
+        #groupLayout.addWidget(columnhelp)
 
         #Requests/Apimodules
         self.RequestTabs=QTabWidget()
