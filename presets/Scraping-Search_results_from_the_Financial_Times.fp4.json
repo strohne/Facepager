@@ -1,0 +1,46 @@
+{
+  "name": "Search results from the Financial Times",
+  "category": "Scraping",
+  "description": "Add search terms as seed nodes and fetch data.\n\nThis preset uses the search of https://www.ft.com/search?sort=date&q=corona to fetch a list of articles from the Financial Times. \n\nSee the wiki for information about using CSS and XPath selectors with Facepager: https://github.com/strohne/Facepager/wiki/Webscraping",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://www.ft.com",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "text",
+    "headers": {},
+    "nodedata": "text|css:div.search-item",
+    "objectid": "text|xpath://a[@data-trackable=\"heading-link\"]/@href",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 3,
+    "paging_type": "count",
+    "param_paging": "page",
+    "params": {
+      "q": "<Object ID>",
+      "sort": "date"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/search",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "columns": [
+    "meta=text|css:div.o-teaser__meta|xpath:string()",
+    "heading=text|css:div.o-teaser__heading|xpath:string()",
+    "standfirst=text|css:p.o-teaser__standfirst|xpath:string()",
+    "date=text|css:div.o-teaser__timestamp|xpath:string()",
+    "timestamp=text|css:div.o-teaser__timestamp|xpath:time/@datetime"
+  ]
+}
