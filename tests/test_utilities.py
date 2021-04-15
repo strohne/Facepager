@@ -8,7 +8,8 @@ class Test_Utilities(TestCase):
             'posts': {
                 'comments': [
                     {'text': 'smartidea1','tags':['red']},
-                    {'text': 'smartidea2','tags':['blue','green']}
+                    {'text': 'smartidea2','tags':['blue','green']},
+                    {'text': 'smartidea3', 'wild.*.card': 'party'}
                 ]
             }
         }
@@ -21,5 +22,7 @@ class Test_Utilities(TestCase):
         self.assertEqual('smartidea1',out)
 
         out = getDictValue(self.fixture,'posts.comments.*.tags',dump=False)
-        self.assertEqual(['red','blue','green'],out)
+        self.assertEqual(['red','blue','green',''],out)
 
+        out = getDictValue(self.fixture,'posts.comments.*.wild\.*\.card',dump=False)
+        self.assertEqual(['','','party'],out)

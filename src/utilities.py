@@ -36,9 +36,11 @@ def flattenList(items):
 
 def hasDictValue(data,multikey, piped=False):
     try:
-        multikey = multikey.split('|').pop(0) if piped else multikey
+        #multikey = multikey.split('|').pop(0) if piped else multikey
+        name, multikey, pipeline = parseKey(multikey) if piped else (None,multikey,None)
 
-        keys=multikey.split('.',1)
+        #keys=multikey.split('.',1)
+        keys = tokenize_with_escape(multikey, escape='\\', separator='.')
 
         if isinstance(data, Mapping) and keys[0] != '':
 
@@ -389,7 +391,8 @@ def getDictValue(data, multikey, dump=True, default=''):
     :return:
     """
     try:
-        keys=multikey.split('.',1)
+        #keys=multikey.split('.',1)
+        keys = tokenize_with_escape(multikey,escape ='\\',separator='.',n=1)
 
         if isinstance(data, Mapping) and keys[0] != '':
             try:
@@ -813,22 +816,34 @@ def formatdict(data):
     return "\n".join(getdictvalues(data))
 
 
-def tokenize_with_escape(a, escape='\\', separator='|'):
+
+def tokenize_with_escape(a, escape='\\', separator='|', n = None):
     '''
         Tokenize a string with escape characters
+        @n number of token to consume or None for all tokens
     '''
     result = []
     token = ''
     state = 0
     for c in a:
-        if state == 0:
+        # Rest of string
+        if state == 2:
+            token += c
+
+        # Next character
+        elif state == 0:
             if c == escape:
                 state = 1
             elif c == separator:
                 result.append(token)
+                if (n is not None) and (len(result) == n):
+                    state = 2
+
                 token = ''
             else:
                 token += c
+
+        # Escaped character
         elif state == 1:
             token += c
             state = 0
