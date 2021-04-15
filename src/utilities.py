@@ -401,7 +401,12 @@ def getDictValue(data, multikey, dump=True, default=''):
                     listkey = keys[1] if len(keys) > 1 else ''
                     value=[]
                     for elem in data:
-                        value.append(getDictValue(data[elem],listkey,dump, default))
+                        item = getDictValue(data[elem],listkey,dump, default)
+                        if isinstance(item,list):
+                            value.extend(item)
+                        else:
+                            value.append(item)
+
                 elif keys[0] == '**':
                     listkey = keys[1] if len(keys) > 1 else ''
                     value = findDictValues(data, listkey, dump, default)
@@ -426,7 +431,12 @@ def getDictValue(data, multikey, dump=True, default=''):
 
                     value=[]
                     for elem in data:
-                        value.append(getDictValue(elem, listkey, dump, default))
+                        item = getDictValue(elem, listkey, dump, default)
+                        if isinstance(item, list):
+                            value.extend(item)
+                        else:
+                            value.append(item)
+
 
         elif keys[0] == '':
             value = data
