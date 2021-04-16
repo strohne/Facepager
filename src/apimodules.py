@@ -12,11 +12,8 @@ import io
 from collections import OrderedDict
 import threading
 
-from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
-from PySide2.QtWebEngineCore import QWebEngineHttpRequest
-from PySide2.QtNetwork import QNetworkCookie
-from PySide2.QtWidgets import *
-from PySide2.QtCore import Qt, QUrl, QByteArray
+from PySide2.QtWebEngineWidgets import QWebEngineView
+from PySide2.QtCore import Qt, QUrl
 
 import requests
 from requests.exceptions import *
@@ -1268,32 +1265,36 @@ class ApiTab(QScrollArea):
             # iter_content, text and content all fall back to the previously downloaded content
             # no need to download into string object a second time
 
-            # try:
-            #     content = io.BytesIO()
-            #     try:
-            #         for chunk in response.iter_content(1024):
-            #             content.write(chunk)
-            #             if file is not None:
-            #                 file.write(chunk)
-            #
-            #         out = content.getvalue().decode('utf-8')
-            #     except Exception as e:
-            #         out = str(e)
-            #     finally:
-            #         content.close()
-            # finally:
-            #     if file is not None:
-            #         file.close()
-
-            if file is not None:
+            try:
+                content = io.BytesIO()
                 try:
                     for chunk in response.iter_content(1024):
-                        file.write(chunk)
+                        content.write(chunk)
+                        if file is not None:
+                            file.write(chunk)
+
+
+                    out = content.getvalue()
+                    encoding = cchardet.detect(out)['encoding'] #encoding = 'utf-8'
+                    out = out.decode(encoding)
+
+                except Exception as e:
+                    out = str(e)
                 finally:
+                    content.close()
+            finally:
+                if file is not None:
                     file.close()
 
+            # if file is not None:
+            #     try:
+            #         for chunk in response.iter_content(1024):
+            #             file.write(chunk)
+            #     finally:
+            #         file.close()
 
-            return fullfilename
+
+            return (fullfilename, out)
 
         #Throttle speed
         if (self.speed is not None) and (self.lastrequest is not None):
@@ -1354,7 +1355,7 @@ class ApiTab(QScrollArea):
                     'sourcepath': path,'sourcequery': args,'finalurl': response.url
                 }
 
-                fullfilename = download(response, foldername, filename, fileext)
+                fullfilename, content = download(response, foldername, filename, fileext)
 
                 if fullfilename is not None:
                     data['filename'] = os.path.basename(fullfilename)
@@ -1362,36 +1363,44 @@ class ApiTab(QScrollArea):
 
                 # Text
                 if format == 'text':
-                        data['text'] = response.text  # str(response.text)
+                        data['text'] = content  # str(response.text)
 
                  # Scrape links
                 elif format == 'links':
                     try:
-                        links, base = extractLinks(response.text, response.url)
+                        links, base = extractLinks(content, response.url)
                         data['links'] = links
                         data['base'] = base
                     except Exception as  e:
                         data['error'] = 'Could not extract Links.'
                         data['message'] = str(e)
-                        data['response'] = response.text
+                        data['response'] = content
 
                 # JSON
                 elif format == 'json':
                     try:
-                        data = response.json() if response.text != '' else []
+                        data = json.loads(content) if content != '' else []
                     except Exception as e:
                         # self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
                         # try:
                         #     data = xmlToJson(response.text)
                         # except:
-                        data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
+                        data = {
+                            'error': 'Data could not be converted to JSON',
+                            'response': content,
+                            'exception':str(e)
+                        }
 
                 # JSON
                 elif format == 'xml':
                     try:
-                        data = xmlToJson(response.text)
+                        data = xmlToJson(content)
                     except Exception as e:
-                        data = {'error': 'Data could not be converted to JSON','response': response.text,'exception':str(e)}
+                        data = {
+                            'error': 'Data could not be converted to JSON',
+                            'response': content,
+                            'exception':str(e)
+                        }
 
 
             except Exception as e:
