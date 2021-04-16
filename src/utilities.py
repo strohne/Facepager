@@ -825,21 +825,26 @@ def tokenize_with_escape(a, escape='\\', separator='|', n = None):
     result = []
     token = ''
     state = 0
-    for c in a:
+    for i, c in enumerate(a):
         # Rest of string
         if state == 2:
             token += c
 
-        # Next character
+        # Next character (state 0: not in escape sequence)
         elif state == 0:
-            if c == escape:
+            # Swith to escape sequence state
+            if (c == escape) and (i < len(a)-1) and (a[i+1] == separator):
                 state = 1
+
+            # Or tokenize
             elif c == separator:
                 result.append(token)
                 if (n is not None) and (len(result) == n):
                     state = 2
 
                 token = ''
+
+            # Or add to token
             else:
                 token += c
 

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from utilities import getDictValue
+from utilities import getDictValue, extractValue
 
 class Test_Utilities(TestCase):
 
@@ -26,3 +26,7 @@ class Test_Utilities(TestCase):
 
         out = getDictValue(self.fixture,'posts.comments.*.wild\.*\.card',dump=False)
         self.assertEqual(['','','party'],out)
+
+    def test_extract_value(self):
+        out = extractValue(self.fixture, 'posts.comments.*.wild\.*\.card', dump=False)
+        self.assertEqual((None,['','','party']),out)
