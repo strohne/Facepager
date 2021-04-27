@@ -1,7 +1,7 @@
 {
   "name": "Twitter v2: Lookup user data",
   "category": "Twitter",
-  "description": "Add a Twitter handle (=username) as seed node, e.g. \"uni_greifswald\".\n\nIn order to use this preset you need to register an app at Twitter and transfer the consumer key and the consumer secret to the settings (next to the login button). Afterwards, click login to get an access token. See https://developer.twitter.com/en/apply-for-access\n\nYou can get more data about a user by adding fields, see the reference.\n\nReference: https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username",
+  "description": "Add a Twitter handle (=username) as seed node, e.g. \"uni_greifswald\".\n\nIn order to use this preset you need to register an app at Twitter and transfer the API key (-> Client ID) and API secret key (-> Client Secret) into the Facepager settings, next to the login button. Afterwards, click login to get an access token. See https://developer.twitter.com/en/apply-for-access\n\nYou can get more data about a user by adding fields, see the reference.\n\nReference: https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username",
   "module": "Generic",
   "options": {
     "auth": "header",

@@ -1,7 +1,7 @@
 {
   "name": "Twitter v2: Get followee",
   "category": "Twitter",
-  "description": "The followee are users an account follows, aka friends or following.\n\nIn order to use this preset you need to register an app at Twitter and transfer the consumer key and the consumer secret to the settings (next to the login button). Afterwards, click login to get an access token. See https://developer.twitter.com/en/apply-for-access\n\nYou need the ID of a Twitter user as seed node, see the preset for looking up a user ID from the user name.\n\nYou can increase the number of result using the max_results parameter and by increasing the maximum pages.\n\nReference: https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following",
+  "description": "The followee are users an account follows, aka friends or following.\n\nIn order to use this preset you need to register an app at Twitter and transfer the API key (-> Client ID) and API secret key (-> Client Secret) into the Facepager settings, next to the login button. Afterwards, click login to get an access token. See https://developer.twitter.com/en/apply-for-access\n\nYou need the ID of a Twitter user as seed node, see the preset for looking up a user ID from the user name.\n\nYou can increase the number of result using the max_results parameter and by increasing the maximum pages.\n\nReference: https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following",
   "module": "Generic",
   "options": {
     "basepath": "https://api.twitter.com/2",
