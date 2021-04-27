@@ -1,0 +1,51 @@
+{
+  "name": "Twitter v2: Lookup user data",
+  "category": "Twitter",
+  "description": "Add a Twitter handle (=username) as seed node, e.g. \"uni_greifswald\".\n\nIn order to use this preset you need to register an app at Twitter and transfer the consumer key and the consumer secret to the settings (next to the login button). Afterwards, click login to get an access token. See https://developer.twitter.com/en/apply-for-access\n\nYou can get more data about a user by adding fields, see the reference.\n\nReference: https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username",
+  "module": "Generic",
+  "options": {
+    "auth": "header",
+    "auth_prefix": "Bearer ",
+    "auth_tokenname": "Authorization",
+    "auth_type": "OAuth2 Client Credentials",
+    "auth_uri": "https://api.twitter.com/oauth2/token/",
+    "basepath": "https://api.twitter.com/2",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "data",
+    "objectid": "id",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "<username>": "<Object ID>",
+      "user.fields": "id,name,username,description"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/users/by/username/<username>",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "created_at",
+    "text",
+    "author_id",
+    "public_metrics.retweet_count",
+    "public_metrics.reply_count",
+    "public_metrics.like_count",
+    "public_metrics.quote_count",
+    "meta.next_token"
+  ]
+}
