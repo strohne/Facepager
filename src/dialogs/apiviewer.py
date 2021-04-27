@@ -652,9 +652,12 @@ class ApiViewer(QDialog):
                     options['paging_stop'] = getDictValue(data,'x-facepager-pagination.stop')
                     options['param_paging'] = getDictValue(data,'x-facepager-pagination.param')
 
-                    options['auth'] = getDictValue(data,'x-facepager-authorization.auth')
-                    options['auth_tokenname'] = getDictValue(data,'x-facepager-authorization.auth_tokenname')
-                    options['auth_type'] = getDictValue(data,'x-facepager-authorization.auth_type')
+                    options['auth_type'] = getDictValue(data, 'x-facepager-authorization.auth_type')
+                    options['auth_uri'] = getDictValue(data,'x-facepager-authorization.auth_uri')
+                    options['auth_tokenuri'] = getDictValue(data, 'x-facepager-authorization.token_uri')
+
+                    options['auth'] = getDictValue(data,'x-facepager-authorization.auth_method')
+                    options['auth_tokenname'] = getDictValue(data,'x-facepager-authorization.token_name')
 
                 tab.setOptions(options)
 
