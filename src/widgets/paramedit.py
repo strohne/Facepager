@@ -92,8 +92,8 @@ class QParamEdit(QTableWidget):
         #Set param values
         values = {}
         for param in params:
-            # Default values for required params or if example is provided
-            if param.get("required", False) or "example" in param:
+            # Default values for required params
+            if param.get("required", False) in param: # if example is provided: or "example"
                 name = param.get("name","")
                 name = "<" + name + ">" if param.get("in", "query") == "path" else name
                 value = param.get("example","<Object ID>")

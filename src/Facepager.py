@@ -575,7 +575,7 @@ class MainWindow(QMainWindow):
         self.settings.setValue('module',self.RequestTabs.currentWidget().name)
         self.settings.setValue("lastpath", self.database.filename)
 
-        self.settings.setValue('saveheaders', self.autoexpandCheckbox.isChecked())
+        self.settings.setValue('saveheaders', self.headersCheckbox.isChecked())
         self.settings.setValue('expand', self.autoexpandCheckbox.isChecked())
         self.settings.setValue('logrequests', self.logCheckbox.isChecked())
         self.settings.setValue('style', self.styleEdit.currentText())

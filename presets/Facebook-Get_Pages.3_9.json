@@ -4,7 +4,7 @@
   "speed": 200,
   "options": {
     "resource": "/<page-id>",
-    "basepath": "https://graph.facebook.com/v3.2",
+    "basepath": "https://graph.facebook.com/v3.3",
     "params": {
       "fields": "name, about, location, category, talking_about_count, fan_count",
       "<page-id>": "<Object ID>"

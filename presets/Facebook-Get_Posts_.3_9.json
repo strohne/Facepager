@@ -6,7 +6,7 @@
   "speed": 200,
   "options": {
     "resource": "/<page-id>/posts",
-    "basepath": "https://graph.facebook.com/v3.2",
+    "basepath": "https://graph.facebook.com/v3.3",
     "params": {
       "limit": "20",
       "fields": "message, from, created_time, updated_time",

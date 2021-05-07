@@ -8,7 +8,7 @@
       "filter": "stream",
       "<post-id>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v3.2",
+    "basepath": "https://graph.facebook.com/v3.3",
     "resource": "/<post-id>/comments",
     "pages": 1,
     "scope": ""

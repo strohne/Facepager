@@ -8,7 +8,7 @@
     "auth_prefix": "",
     "auth_tokenname": "access_token",
     "auth_uri": "https://www.facebook.com/dialog/oauth",
-    "basepath": "https://graph.facebook.com/v3.2",
+    "basepath": "https://graph.facebook.com/v3.3",
     "key_paging": "paging.next",
     "nodedata": null,
     "objectid": null,

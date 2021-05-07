@@ -14,7 +14,7 @@
   "module": "Facebook",
   "name": "Get page insights",
   "options": {
-    "basepath": "https://graph.facebook.com/v3.2",
+    "basepath": "https://graph.facebook.com/v3.3",
     "resource": "/<page-id>/insights",
     "params": {
       "<page-id>": "<Object ID>",

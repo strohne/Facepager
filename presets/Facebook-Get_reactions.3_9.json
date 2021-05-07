@@ -7,7 +7,7 @@
       "fields": "comments.limit(0).summary(1),\nshares, reactions.limit(0).summary(1),\nreactions.type(LIKE).limit(0).summary(1).as(like),\nreactions.type(LOVE).limit(0).summary(1).as(love),\nreactions.type(HAHA).limit(0).summary(1).as(haha),\nreactions.type(WOW).limit(0).summary(1).as(wow),\nreactions.type(SAD).limit(0).summary(1).as(sad),\nreactions.type(ANGRY).limit(0).summary(1).as(angry)",
       "<post-id>": "<Object ID>"
     },
-    "basepath": "https://graph.facebook.com/v3.2",
+    "basepath": "https://graph.facebook.com/v3.3",
     "resource": "/<post-id>",
     "pages": 10,
     "scope": ""
