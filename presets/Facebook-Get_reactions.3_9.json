@@ -1,8 +1,8 @@
 {
-  "description": "Get the counts of different types of reactions with this preset. Before you can use this preset, you have to fetch posts or add post IDs. This preset gets all different types in one call, instead of querying every single edge. See the preset named \"Get Facebook posts\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v3.2/object/reactions for information about available fields. \n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.",
+  "description": "Get the counts of different types of reactions with this preset. Before you can use this preset, you have to fetch posts or add post IDs. This preset gets all different types in one call, instead of querying every single edge. See the preset named \"Get Facebook posts\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v3.3/object/reactions for information about available fields. \n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.",
   "module": "Facebook",
   "speed": 200,
-  "options": {
+  "options": {w
     "params": {
       "fields": "comments.limit(0).summary(1),\nshares, reactions.limit(0).summary(1),\nreactions.type(LIKE).limit(0).summary(1).as(like),\nreactions.type(LOVE).limit(0).summary(1).as(love),\nreactions.type(HAHA).limit(0).summary(1).as(haha),\nreactions.type(WOW).limit(0).summary(1).as(wow),\nreactions.type(SAD).limit(0).summary(1).as(sad),\nreactions.type(ANGRY).limit(0).summary(1).as(angry)",
       "<post-id>": "<Object ID>"
