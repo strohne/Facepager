@@ -438,8 +438,11 @@ class ApiTab(QScrollArea):
         # URLs
         try:
             self.basepathEdit.setEditText(options.get('basepath', self.defaults.get('basepath','')))
+            self.onChangedBasepath()
+
             self.resourceEdit.setEditText(options.get('resource', self.defaults.get('resource','')))
-            self.onChangedRelation()
+            self.onChangedResource()
+
             self.paramEdit.setParams(options.get('params',self.defaults.get('params','')))
         except AttributeError:
             pass
@@ -568,46 +571,10 @@ class ApiTab(QScrollArea):
         Loads and prepares documentation
         '''
 
-        self.resourceEdit.clear()
-        self.apidoc = self.mainWindow.apiWindow.getDocModule(self.name)
-
-        if self.apidoc and isinstance(self.apidoc,dict):
-            # Add base path
-            self.basepathEdit.clear()
-            self.basepathEdit.addItem(getDictValue(self.apidoc,"servers.0.url"))
-
-            # Add endpoints in reverse order
-            endpoints = self.apidoc.get("paths",{})
-            paths = endpoints.keys()
-            for path in list(paths):
-                operations = endpoints[path]
-                path = path.replace("{", "<").replace("}", ">")
-
-                self.resourceEdit.addItem(path)
-                idx = self.resourceEdit.count()-1
-                self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations,"get.summary","")), Qt.ToolTipRole)
-
-                #store params for later use in onChangedRelation
-                self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
-
-            self.buttonApiHelp.setVisible(True)
-
-            # Path extension for Twitter (deprecated)
-            self.defaults['extension'] = getDictValue(self.apidoc, "servers.0.x-facepager-suffix")
-
-            # Default extract settings
-            self.defaults['key_objectid'] = getDictValueOrNone(self.apidoc,"x-facepager-objectid")
-            self.defaults['key_nodedata'] = getDictValueOrNone(self.apidoc,"x-facepager-extract")
-
-            # Default pagination setting
-            pagination = getDictValueOrNone(self.apidoc, "x-facepager-pagination", dump=False)
-            self.defaults['paging_type'] = getDictValueOrNone(pagination,'method')
-            self.defaults['param_paging'] = getDictValueOrNone(pagination,'param')
-            self.defaults['key_paging'] = getDictValueOrNone(pagination,'key')
-            self.defaults['paging_stop'] = getDictValueOrNone(pagination,'stop')
-
-        self.resourceEdit.insertItem(0, "/<Object ID>")
-
+        # Add base path
+        self.basepathEdit.clear()
+        urls = self.mainWindow.apiWindow.getApiBasePaths(self.name)
+        self.basepathEdit.insertItems(0,urls)
 
 
     def showDoc(self):
@@ -630,6 +597,7 @@ class ApiTab(QScrollArea):
             self.basepathEdit.insertItems(0, [self.defaults.get('basepath','')])
         self.basepathEdit.setEditable(True)
         self.mainLayout.addRow("Base path", self.basepathEdit)
+        self.basepathEdit.currentIndexChanged.connect(self.onChangedBasepath)
 
         #Resource
         self.resourceLayout = QHBoxLayout()
@@ -652,7 +620,7 @@ class ApiTab(QScrollArea):
         #Parameters
         self.paramEdit = QParamEdit(self)
         self.mainLayout.addRow("Parameters", self.paramEdit)
-        self.resourceEdit.currentIndexChanged.connect(self.onChangedRelation)
+        self.resourceEdit.currentIndexChanged.connect(self.onChangedResource)
 
     def getFileFolderName(self,options, nodedata):
         # Folder
@@ -987,7 +955,57 @@ class ApiTab(QScrollArea):
             self.extraLayout.addRow("Response", layout)
 
     @Slot()
-    def onChangedRelation(self, index = None):
+    def onChangedBasepath(self, index = None):
+        '''
+        Load API doc
+        '''
+        if index is None:
+            index = self.basepathEdit.findText(self.basepathEdit.currentText())
+            if index != -1:
+                self.basepathEdit.setCurrentIndex(index)
+
+        basepath = self.basepathEdit.currentText().strip()
+        self.apidoc = self.mainWindow.apiWindow.getApiDoc(self.name,basepath)
+
+        self.resourceEdit.clear()
+        if self.apidoc and isinstance(self.apidoc,dict):
+            # Add endpoints in reverse order
+            endpoints = self.apidoc.get("paths",{})
+            paths = endpoints.keys()
+            for path in list(paths):
+                operations = endpoints[path]
+                path = path.replace("{", "<").replace("}", ">")
+
+                self.resourceEdit.addItem(path)
+                idx = self.resourceEdit.count()-1
+                self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations,"get.summary","")), Qt.ToolTipRole)
+
+                #store params for later use in onChangedResource
+                self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
+
+            self.buttonApiHelp.setVisible(True)
+
+            # Path extension for Twitter (deprecated)
+            self.defaults['extension'] = getDictValue(self.apidoc, "servers.0.x-facepager-suffix")
+
+            # Default extract settings
+            self.defaults['key_objectid'] = getDictValueOrNone(self.apidoc,"x-facepager-objectid")
+            self.defaults['key_nodedata'] = getDictValueOrNone(self.apidoc,"x-facepager-extract")
+
+            # Default pagination setting
+            pagination = getDictValueOrNone(self.apidoc, "x-facepager-pagination", dump=False)
+            self.defaults['paging_type'] = getDictValueOrNone(pagination,'method')
+            self.defaults['param_paging'] = getDictValueOrNone(pagination,'param')
+            self.defaults['key_paging'] = getDictValueOrNone(pagination,'key')
+            self.defaults['paging_stop'] = getDictValueOrNone(pagination,'stop')
+        else:
+            self.resourceEdit.insertItem(0, "/<Object ID>")
+
+        # set Resource
+        self.onChangedResource()
+
+    @Slot()
+    def onChangedResource(self, index = None):
         '''
         Handles the automated parameter suggestion for the current
         selected API relation/endpoint based on the OpenAPI specification 3.0.0

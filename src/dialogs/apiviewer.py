@@ -34,8 +34,16 @@ class ApiViewer(QDialog):
         self.folderDefault = os.path.join(os.path.expanduser("~"), 'Facepager', 'DefaultAPIs')
         self.filesSuffix = ['.oa3.json']
         self.lastSelected = None
-        self.moduleDoc = {}
+
+        # Hold the list of loaded ApiDocs,
+        # indexed by filename
+        self.apis = {}
+
+        # List of top nodes in the view,
+        # indexed by filename
+        # deprecated: use self.apis instead
         self.topNodes= {}
+
         self.detailTables = {}
         self.detailWidgets = {}
 
@@ -140,7 +148,7 @@ class ApiViewer(QDialog):
 
         self.clear()
         self.topNodes = {}
-        self.moduleDoc = {}
+        self.apis = {}
         self.initDocs()
 
         for i in range(0, self.mainWindow.RequestTabs.count()):
@@ -171,27 +179,8 @@ class ApiViewer(QDialog):
         QApplication.processEvents()
         self.initDocs()
 
-        # Select
-        selectedItem = None
-
         # Find file / module / api
-        for idx_file in range(self.itemList.topLevelItemCount()):
-            topItem = self.itemList.topLevelItem(idx_file)
-            topData = topItem.data(0,Qt.UserRole)
-
-            # Find path
-            if topData.get('module',None) == module:
-                selectedItem = topItem
-
-                for idx_path in range(topItem.childCount()):
-                    pathItem = topItem.child(idx_path)
-                    pathData = pathItem.data(0, Qt.UserRole)
-
-                    if pathData.get('path', None) == path:
-                        selectedItem = pathItem
-                        break
-
-                #break
+        selectedItem = self.getApiNode(module, basepath, path)
         self.itemList.setCurrentItem(selectedItem)
         self.itemList.setFocus()
 
@@ -453,6 +442,14 @@ class ApiViewer(QDialog):
             return True
 
 
+    def loadFiles(self,folder, module, default=False):
+        # self.downloadDefaultFiles(True)
+
+        module = module.replace(" ", "")
+        for filename in os.listdir(folder):
+            if filename.startswith(module) and filename.endswith(self.filesSuffix[0]):
+                self.loadFile(folder, filename, default)
+
     def loadFile(self, folder, filename, default=False):
         if os.path.join(folder, filename) in self.topNodes:
             return self.topNodes[os.path.join(folder, filename)]
@@ -467,7 +464,10 @@ class ApiViewer(QDialog):
             if not isinstance(data,dict):
                 return None
 
-            # Add file item
+            data['x-facepager-default'] = default
+            self.apis[os.path.join(folder, filename)] = data
+
+            # Prepare node
             itemData = {}
             itemData = {k:v for (k,v) in data.items() if k.startswith('x-facepager-')}
             itemData['type'] = 'file'
@@ -477,9 +477,10 @@ class ApiViewer(QDialog):
 
             itemData['info'] = data.get('info',{})
             itemData['info']['externalDocs'] = data.get('externalDocs',{})
-            itemData['info']['servers'] = data.get('servers', {})
+            itemData['info']['servers'] = data.get('servers', [])
             itemData['module'] = data.get("x-facepager-module", "Generic")
 
+            # Root node in the view
             if default:
                 itemData['caption'] = itemData['info'].get('title', '') +" *"
             else:
@@ -494,11 +495,7 @@ class ApiViewer(QDialog):
                 topItem.setForeground(0, QBrush(QColor("darkblue")))
 
             topItem.setData(0,Qt.UserRole,itemData)
-
             self.itemList.addTopLevelItem(topItem)
-            if (not itemData['module'] in self.moduleDoc) or (not default):
-                self.moduleDoc[itemData['module']] = data
-
             self.topNodes[os.path.join(folder, filename)] = topItem
 
             # Path nodes
@@ -525,29 +522,84 @@ class ApiViewer(QDialog):
              QMessageBox.information(self,"Facepager","Error loading items:"+str(e))
              return None
 
-    def getDocModule(self, module, basepath = ''):
+    def getApiBasePaths(self, module):
+        urls = []
+        try:
+            # Load files
+            self.loadFiles(self.folder, module)
+            self.loadFiles(self.folderDefault, module)
+
+            # Extract urls
+            for k,v in self.apis.items():
+                api_module = getDictValue(v,'x-facepager-module','Generic')
+                if (api_module == module):
+                    api_urls = getDictValue(v, 'servers.*.url', [])
+                    urls.extend(api_urls)
+                    urls= list(set(urls))
+
+        except Exception as e:
+            self.logmessage(f"Error loading base paths: {str(e)}")
+
+        return urls
+
+    def getApiDoc(self, module, basepath = ''):
         try:
             # Documentation
-            #self.downloadDefaultFiles(True)
-            filename = module.replace(" ","") + self.filesSuffix[0]
+            self.loadFiles(self.folder, module)
+            self.loadFiles(self.folderDefault, module)
 
-            if os.path.isfile(os.path.join(self.folder, filename)):
-                self.loadFile(self.folder, filename, False)
-            else:
-                self.loadFile(self.folderDefault, filename, True)
+            # Get best match based on module and basepath
+            api = None
+            for k,v in self.apis.items():
+                api_module = getDictValue(v,'x-facepager-module','Generic')
+                api_urls = getDictValue(v,'servers.*.url',[])
+                api_default = getDictValue(v,'x-facepager-default',False)
 
-            return self.moduleDoc.get(module, None)
+                # Prio 1: user defined docs matching module and basepath
+                if (api_module == module) and (basepath in api_urls) and (not api_default):
+                    api = v
+                    break
+
+                # Prio 2: default docs matching module and basepath
+                elif (api_module == module) and (basepath in api_urls):
+                    api = v
+
+                # # Prio 3: docs matching module
+                # elif (api_module == module):
+                #     api = v if api is None else api
+
+            return api
         except:
             return None
 
-    def getSchemaComponent(self, data, key):
-        # eg "#components/schema/user/properties
-        key = key.replace("#", "").replace("/", ".")
-        return getDictValue(data, key, False)
+    def getApiNode(self, module, basepath, path):
+        node = None
+        for idx_file in range(self.itemList.topLevelItemCount()):
+            topItem = self.itemList.topLevelItem(idx_file)
+            topData = topItem.data(0, Qt.UserRole)
 
-    def getDocField(self, module = '', basepath = '', path='', field=''):
+            # Find path
+            # TODO: prioritize non default apis
+            # TODO: fuzzy match (module matches, basepath is similar)
+            api_module = topData.get('module', 'Generic')
+            api_urls = getDictValue(topData, 'info.servers.*.url', [])
+            api_default = topData['default']
+
+            if (api_module == module) and (basepath in api_urls):
+                node = topItem
+
+                for idx_path in range(topItem.childCount()):
+                    pathItem = topItem.child(idx_path)
+                    pathData = pathItem.data(0, Qt.UserRole)
+
+                    if pathData.get('path', None) == path:
+                        return pathItem
+
+        return node
+
+    def getApiField(self, module = '', basepath = '', path='', field=''):
         try:
-            data = self.getDocModule(module, basepath)
+            data = self.getApiDoc(module, basepath)
             if data is not None:
 
                 basepath = getDictValue(data,"servers.0.url") if data is not None else basepath
@@ -623,6 +675,13 @@ class ApiViewer(QDialog):
             return None
         except:
             return None
+
+
+    def getSchemaComponent(self, data, key):
+        # eg "#components/schema/user/properties
+        key = key.replace("#", "").replace("/", ".")
+        return getDictValue(data, key, False)
+
 
     def applyItem(self):
         if not self.itemList.currentItem():

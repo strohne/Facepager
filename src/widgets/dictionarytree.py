@@ -115,7 +115,7 @@ class DictionaryTreeModel(QAbstractItemModel):
         try:
             if (self.apiWindow is not None) and (self.itemtype is not None):
                 field = self.fieldprefix+field
-                doc = self.apiWindow.getDocField(self.module,self.basepath, self.path, field)
+                doc = self.apiWindow.getApiField(self.module,self.basepath, self.path, field)
                 doc = field if doc is None else doc
             else:
                 doc = field
