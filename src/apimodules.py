@@ -1293,7 +1293,8 @@ class ApiTab(QScrollArea):
 
 
                     out = content.getvalue()
-                    encoding = cchardet.detect(out)['encoding'] #encoding = 'utf-8'
+                    encoding = cchardet.detect(out)['encoding']
+                    encoding = 'utf-8' if encoding is None else encoding
                     out = out.decode(encoding)
 
                 except Exception as e:
