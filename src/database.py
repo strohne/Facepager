@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref,sessionmaker,session,scoped_session
 from sqlalchemy.engine import Engine
 
+from PySide2.QtWidgets import QMessageBox
 from utilities import *
 import os
 

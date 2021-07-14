@@ -418,7 +418,7 @@ class MainWindow(QMainWindow):
         #-Continue pagination
         self.resumeCheckbox = QCheckBox(self)
         self.resumeCheckbox.setCheckState(Qt.Unchecked)
-        self.resumeCheckbox.setToolTip(wraptip("Check if you want to continue collection after fetching was cancelled or nodes were skipped. The last fetched offcut or data node is used to determine the pagination value. Nodes are skipped if no pagination value can be found. Nodes without children having status fetched(200) are processed anyway."))
+        self.resumeCheckbox.setToolTip(wraptip("Check if you want to continue collection after fetching was cancelled or nodes were skipped. A selected node (you can use the option to select all nodes) will be added to the queue if: a) It is empty. b) It has no child node with query status fetched (200), object type data, offcut, or empty, and a corresponding query type. c) Such child nodes are used to determine the pagination value. Nodes for which pagination values can be determined are added to the queue."))
         fetchsettings.addRow("Resume collection", self.resumeCheckbox)
 
         # Thread Box

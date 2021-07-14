@@ -1029,7 +1029,7 @@ class ApiTab(QScrollArea):
             self.proxies = {}
             if hasattr(self, "proxyEdit"):
                 self.proxies = self.proxyEdit.text().strip()
-                self.proxies = self.proxies .split(";")
+                self.proxies = self.proxies.split(";")
 
         if len(self.proxies) == 0:
             proxy = ""
