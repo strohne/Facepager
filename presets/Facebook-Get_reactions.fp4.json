@@ -1,0 +1,42 @@
+{
+  "name": "Get reactions",
+  "category": "Facebook",
+  "description": "Get the counts of different types of reactions with this preset. Before you can use this preset, you have to fetch posts or add post IDs. This preset gets all different types in one call, instead of querying every single edge. See the preset named \"Get Facebook posts\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v4.0/object/reactions for information about available fields. \n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.",
+  "module": "Facebook",
+  "options": {
+    "basepath": "https://graph.facebook.com/v4.0",
+    "resource": "/<post-id>",
+    "params": {
+      "<post-id>": "<Object ID>",
+      "fields": "comments.limit(0).summary(1),\nshares, reactions.limit(0).summary(1),\nreactions.type(LIKE).limit(0).summary(1).as(like),\nreactions.type(LOVE).limit(0).summary(1).as(love),\nreactions.type(HAHA).limit(0).summary(1).as(haha),\nreactions.type(WOW).limit(0).summary(1).as(wow),\nreactions.type(SAD).limit(0).summary(1).as(sad),\nreactions.type(ANGRY).limit(0).summary(1).as(angry)"
+    },
+    "extension": "",
+    "pages": 10,
+    "paging_type": "url",
+    "key_paging": "paging.next",
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "token_uri": "",
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "comments.summary.total_count",
+    "shares.count",
+    "reactions.summary.total_count",
+    "like.summary.total_count",
+    "love.summary.total_count",
+    "wow.summary.total_count",
+    "haha.summary.total_count",
+    "sad.summary.total_count",
+    "angry.summary.total_count"
+  ]
+}

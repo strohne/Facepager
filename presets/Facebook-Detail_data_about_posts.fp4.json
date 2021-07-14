@@ -1,0 +1,35 @@
+{
+  "name": "Detail data about posts",
+  "category": "Facebook",
+  "description": "Get detailed data about a post. Use the fields-parameter to provide a list of the fields you would like to have back from the API. You can  use this preset to get fields you forgot in the first time :)\n\nBefore you can use this preset, you have to fetch the posts or add Facebook IDs of some posts. See the preset \"Get Facebook posts\". \n\nIf you want to change or add more fields see https://developers.facebook.com/docs/graph-api/reference/v4.0/post for all available fields.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.",
+  "module": "Facebook",
+  "options": {
+    "basepath": "https://graph.facebook.com/v4.0",
+    "resource": "/<post-id>",
+    "params": {
+      "<post-id>": "<Object ID>",
+      "fields": "from,likes.limit(0).summary(1),picture,attachments"
+    },
+    "extension": "",
+    "pages": 1,
+    "paging_type": "url",
+    "key_paging": "paging.next",
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "token_uri": "",
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "from.name",
+    "error.message"
+  ]
+}
