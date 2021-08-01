@@ -1,0 +1,38 @@
+{
+  "name": "2 Get Facebook posts",
+  "category": "Facebook",
+  "description": "Add Facebook-IDs of pages as nodes, e.g. \"Uni.Greifswald.de\". This preset fetches the last 10 posts on a page. You can increase the limit-parameter or increade the maximum pages to get more posts.\n\nTo filter  by date use the parameters \"since\" and \"until\". The until-parameter always has to be one day later, the day starts at 0:00am GMT. For example, set since to \"2019-03-21\" and until to \"2019-03-22\" to limit the result to 21st of March 2019.\n\nIf you want more data than message, created_time and updated_time adjust the fields-parameter. Try things like: attachments, message_tags, story, permalink_url. \n\nIf you want data about reactions try the fields from the reactions preset:\n\n reactions.limit(0).summary(1), reactions.type(LIKE).limit(0).summary(1).as(like), reactions.type(LOVE).limit(0).summary(1).as(love), reactions.type(HAHA).limit(0).summary(1).as(haha), reactions.type(WOW).limit(0).summary(1).as(wow), reactions.type(SAD).limit(0).summary(1).as(sad), reactions.type(ANGRY).limit(0).summary(1).as(angry), likes.limit(0).summary(true). \n\nSee https://developers.facebook.com/docs/graph-api/reference/v4.0/post for more options. \n\nSee https://developers.facebook.com/docs/graph-api/reference/v4.0/page/feed for an explanation of the difference between feed and posts.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.",
+  "module": "Facebook",
+  "options": {
+    "basepath": "https://graph.facebook.com/v4.0",
+    "resource": "/<page-id>/posts",
+    "params": {
+      "<page-id>": "<Object ID>",
+      "fields": "message, from, created_time, updated_time",
+      "limit": "20"
+    },
+    "extension": "",
+    "pages": 1,
+    "paging_type": "url",
+    "key_paging": "paging.next",
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "token_uri": "",
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "message",
+    "created_time",
+    "updated_time",
+    "error.message"
+  ]
+}

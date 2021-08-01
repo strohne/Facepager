@@ -1,17 +1,33 @@
 {
+  "name": "1 Information about pages",
+  "category": "Facebook",
   "description": "Add Facebook-IDs as nodes, e.g. \"Uni.Greifswald.de\".\n\nThis preset fetches the most basic information about a Facebook page for you. In case you want to fetch more data just add the fields you like. For example, add \"likes\" to get to know which pages this page liked. See https://developers.facebook.com/docs/graph-api/reference/page/ for more possibilities.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.\n",
   "module": "Facebook",
-  "speed": 200,
   "options": {
+    "basepath": "https://graph.facebook.com/v4.0",
     "resource": "/<page-id>",
-    "basepath": "https://graph.facebook.com/v3.3",
     "params": {
-      "fields": "name, about, location, category, talking_about_count, fan_count",
-      "<page-id>": "<Object ID>"
+      "<page-id>": "<Object ID>",
+      "fields": "name, about, location, category, talking_about_count, fan_count"
     },
+    "extension": "",
     "pages": 1,
-    "scope": ""
+    "paging_type": "url",
+    "key_paging": "paging.next",
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "token_uri": "",
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token"
   },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
   "columns": [
     "name",
     "about",
@@ -20,6 +36,5 @@
     "fan_count",
     "talking_about_count",
     "error.message"
-  ],
-  "name": "1 Information about pages"
+  ]
 }

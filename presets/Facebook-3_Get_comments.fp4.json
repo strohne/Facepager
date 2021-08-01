@@ -1,0 +1,39 @@
+{
+  "name": "3 Get comments",
+  "category": "Facebook",
+  "description": "Get comments of a post and some basic information about the comments. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. See the preset named \"Get Facebook posts\".\n\nReplies are comments to comments. Thus, you can use the same preset to get replies to the comments. Alternatively, set the filter parameter to \"stream\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v4.0/comment for information about available fields.\n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.\n\nBy the way: you cannot access data about the author of comments (if you are not the owner of the page).",
+  "module": "Facebook",
+  "options": {
+    "basepath": "https://graph.facebook.com/v4.0",
+    "resource": "/<post-id>/comments",
+    "params": {
+      "<post-id>": "<Object ID>",
+      "fields": "message, created_time, parent, comment_count, like_count",
+      "filter": "stream"
+    },
+    "extension": "",
+    "pages": 1,
+    "paging_type": "url",
+    "key_paging": "paging.next",
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "token_uri": "",
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "message",
+    "created_time",
+    "like_count",
+    "comment_count",
+    "error.message"
+  ]
+}
