@@ -96,6 +96,7 @@ class ApiViewer(QDialog):
         #self.detailDescription .setStyleSheet("QTextViewer  {padding-left:0px;}")
         self.detailLayout.addWidget(self.detailDescription)
 
+        self.detailLayout.addStretch(100)
         #buttons
         buttons= QHBoxLayout() #QDialogButtonBox()
         
@@ -345,6 +346,7 @@ class ApiViewer(QDialog):
             while detailForm.rowCount() > 0:
                detailForm.removeRow(0)
             self.detailLayout.removeItem(detailForm)
+
         self.detailTables = {}
         self.detailWidgets = {}
 
