@@ -1,0 +1,1217 @@
+{
+	"openapi": "3.0.0",
+	"x-facepager-module": "Twitter",
+
+	"x-facepager-extract": "data",
+	"x-facepager-objectid": "id",
+	"x-facepager-pagination": {
+		"method": "key",
+		"param": "cursor",
+		"key": "next_cursor_str",
+		"stop": "next_cursor"
+	},
+    "x-facepager-authorization" : {         
+         "auth_type":"OAuth2 Client Credentials",
+         "auth_uri":"https://api.twitter.com/oauth2/token/"
+     },
+
+	"info": {
+		"title": "Twitter API version 2",
+		"description": "The first endpoints of the Twitter v2 API are available within Early Access. According to Twitter, additional endpoints, features, and access levels will be released soon. They intend for this new v2 Twitter API to replace the standard v1.1, premium v1.1, and enterprise APIs in the future.",
+		"termsOfService": "https://developer.twitter.com/en/developer-terms",
+		"version": "2"
+	},
+	"externalDocs": {
+		"url": "https://developer.twitter.com/en/docs/twitter-api/early-access"
+	},
+	"servers": [{
+		"url": "https://api.twitter.com/2"
+	}],
+	"paths": {
+		"/tweets": {
+			"get": {
+				"summary": "Retrieve multiple Tweets with a list of IDs. Returns a variety of information about the Tweet specified by the requested ID or list of IDs.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets"
+				},
+				"parameters": [{
+						"name": "id",
+						"in": "query",
+						"required": true,
+						"description": "A comma separated list of Tweet IDs. Up to 100 are allowed in a single request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "string"
+						}
+
+					},
+					{
+						"name": "expansions",
+						"in": "query",
+						"description": "Comma-separated list of expansions. Expansions enable requests to expand an ID into a full object in the includes response object. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "media.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the media object. The response will contain the selected fields only if a Tweet contains media attachments. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "place.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the place object. The response will contain the selected fields only if location data is present in any of the response objects. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "poll.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the poll object. The response will contain the selected fields only if a Tweet contains a poll. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+
+						"name": "tweet.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the Tweet object. By default, the endpoint only returns id and text. Make sure to not include a space between commas and fields.",
+                        "example": "entities,lang",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+
+						"name": "user.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the user object. By default, the endpoint does not return any user field. To use this parameter, you must include the author_id expansion parameter in the request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A collection of relevant Tweets matching a specified query.",
+						"content": {
+							"application/json": {
+                               "schema" : {
+                                    "type" : "object",
+                                    "x-facepager-extract" : "users",
+									"properties": {
+										"data" : {
+											"type": "array",
+											"items": {
+												"type":"object",
+												"properties": {
+													"$ref" : "#components/schema/tweet/properties"
+												}
+											}
+									    }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tweets/{id}": {
+			"get": {
+				"summary": "Retrieve a single Tweet with an ID. Returns a variety of information about a single Tweet specified by the requested ID.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id"
+				},
+				"parameters": [{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"description": "The identifier of the Collection for which to return results.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "expansions",
+						"in": "query",
+						"description": "Comma-separated list of expansions. Expansions enable requests to expand an ID into a full object in the includes response object. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "media.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the media object. The response will contain the selected fields only if a Tweet contains media attachments. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "place.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the place object. The response will contain the selected fields only if location data is present in any of the response objects. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "poll.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the poll object. The response will contain the selected fields only if a Tweet contains a poll. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+
+						"name": "tweet.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the Tweet object. By default, the endpoint only returns id and text. Make sure to not include a space between commas and fields.",
+						"example": "entities,lang",
+                        "schema": {
+							"type": "enum"                            
+						}
+					},
+					{
+
+						"name": "user.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the user object. By default, the endpoint does not return any user field. To use this parameter, you must include the author_id expansion parameter in the request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					}
+
+				],
+				"responses": {
+					"200": {
+						"description": "A collection of detailed data of the specific post.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"$ref": "#components/schema/tweet/properties"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tweets/search/recent": {
+			"get": {
+				"summary": "The recent search endpoint returns Tweets from the last 7 days that match a search query.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent"
+				},
+				"parameters": [{
+						"name": "end_time",
+						"in": "query",
+						"description": "YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339). The newest, most recent UTC timestamp to which the Tweets will be provided. Timestamp is in second granularity and is exclusive (for example, 12:00:01 excludes the first second of the minute). By default, a request will return Tweets from as recent as 30 seconds ago if you do not include this parameter.",
+						"schema": {
+							"type": "date"
+						}
+					},
+					{
+						"name": "query",
+						"in": "query",
+						"required": true,
+						"description": "One rule for matching Tweets. Up to 512 characters.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "expansions",
+						"in": "query",
+						"description": "Comma-separated list of expansions. Expansions enable requests to expand an ID into a full object in the includes response object. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "max_results",
+						"in": "query",
+						"description": "The maximum number of search results to be returned by a request. A number between 10 and the system limit (currently 100). By default, a request response will return 10 results.",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "next_token",
+						"in": "query",
+						"description": "This parameter is used to get the next 'page' of results. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "place.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the place object. The response will contain the selected fields only if location data is present in any of the response objects. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "poll.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the poll object. The response will contain the selected fields only if a Tweet contains a poll. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "since_id",
+						"in": "query",
+						"description": "Returns results with a Tweet ID greater than (that is, more recent than) the specified ID. The ID specified is exclusive and responses will not include it. If included with the same request as a start_time parameter, only since_id will be used.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "start_time",
+						"in": "query",
+						"description": "YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339). The oldest UTC timestamp (from most recent seven days) from which the Tweets will be provided. Timestamp is in second granularity and is inclusive (for example, 12:00:01 includes the first second of the minute). If included with the same request as a since_id parameter, only since_id will be used. By default, a request will return Tweets from up to seven days ago if you do not include this parameter.",
+						"schema": {
+							"type": "date"
+						}
+					},
+					{
+						"name": "tweet.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the Tweet object. By default, the endpoint only returns id and text. Make sure to not include a space between commas and fields.",
+                        "example": "entities,lang",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "until_id",
+						"in": "query",
+						"description": "Returns results with a Tweet ID less than (that is, older than) the specified ID. The ID specified is exclusive and responses will not include it.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "user.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the user object. By default, the endpoint does not return any user field. To use this parameter, you must include the author_id expansion parameter in the request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "The recent search endpoint returns Tweets from the last 7 days that match a search query.",
+						"content": {
+							"application/json": {
+                               "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"data" : {
+											"type": "array",
+											"items": {
+												"type":"object",
+												"properties": {
+													"$ref" : "#components/schema/tweet/properties"
+												}
+											}
+									    }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/{id}/tweets": {
+			"get": {
+				"summary": "Returns Tweets composed by a single user, specified by the requested user ID. By default, the most recent 10 Tweets are returned per request with the default Tweet id and text. Using pagination, the most recent 3,200 Tweets can be retrieved.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-tweets"
+				},
+				"parameters": [{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"description": "Unique identifier of the Twitter account (user ID) for whom to return results. User ID can be referenced using the user/lookup endpoint. More information on Twitter IDs is here.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "end_time",
+						"in": "query",
+						"description": "YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339). The newest, most recent UTC timestamp to which the Tweets will be provided. Timestamp is in second granularity and is exclusive (for example, 12:00:01 excludes the first second of the minute). By default, a request will return Tweets from as recent as 30 seconds ago if you do not include this parameter.",
+						"schema": {
+							"type": "date"
+						}
+					},
+					{
+						"name": "expansions",
+						"in": "query",
+						"description": "Comma-separated list of expansions. Expansions enable requests to expand an ID into a full object in the includes response object. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "exclude",
+						"in": "query",
+						"description": "Comma-separated list of the types of Tweets to exclude from the response. When exclude=retweets is used, the maximum historical Tweets returned is still 3200. When the exclude=replies parameter is used for any value, only the most recent 800 Tweets are available.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "max_results",
+						"in": "query",
+						"description": "The maximum number of search results to be returned by a request. A number between 10 and the system limit (currently 100). By default, a request response will return 10 results.",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "media.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the media object. The response will contain the selected fields only if a Tweet contains media attachments. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "pagination_token",
+						"in": "query",
+						"description": "This parameter is used to move forwards or backwards through 'pages' of results, based on the value of the next_token or previous_token in the response. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "place.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the place object. The response will contain the selected fields only if location data is present in any of the response objects. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "poll.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the poll object. The response will contain the selected fields only if a Tweet contains a poll. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "since_id",
+						"in": "query",
+						"description": "Returns results with a Tweet ID greater than (that is, more recent than) the specified ID. The ID specified is exclusive and responses will not include it. If included with the same request as a start_time parameter, only since_id will be used.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "start_time",
+						"in": "query",
+						"description": "YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339). The oldest UTC timestamp (from most recent seven days) from which the Tweets will be provided. Timestamp is in second granularity and is inclusive (for example, 12:00:01 includes the first second of the minute). If included with the same request as a since_id parameter, only since_id will be used. By default, a request will return Tweets from up to seven days ago if you do not include this parameter.",
+						"schema": {
+							"type": "date"
+						}
+					},
+					{
+						"name": "tweet.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the Tweet object. By default, the endpoint only returns id and text. Make sure to not include a space between commas and fields.",
+						"example": "entities,lang",
+                        "schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "until_id",
+						"in": "query",
+						"description": "Returns results with a Tweet ID less than (that is, older than) the specified ID. The ID specified is exclusive and responses will not include it.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "user.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the user object. By default, the endpoint does not return any user field. To use this parameter, you must include the author_id expansion parameter in the request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns Tweets composed by a single user, specified by the requested user ID.",
+						"content": {
+							"application/json": {
+                               "schema" : {
+                                    "type" : "object",
+                                    "x-facepager-extract" : "users",
+									"properties": {
+										"data" : {
+											"type": "array",
+											"items": {
+												"type":"object",
+												"properties": {
+													"$ref" : "#components/schema/tweet/properties"
+												}
+											}
+									    }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/{id}/mentions": {
+			"get": {
+				"summary": "Returns Tweets mentioning a single user specified by the requested user ID. By default, the most recent 10 Tweets are returned per request with the default Tweet id and text. Using pagination, up to the most recent 800 Tweets can be retrieved.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-mentions"
+				},
+				"parameters": [{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"description": "Unique identifier of the user for whom to return Tweets mentioning the user. User ID can be referenced using the user/lookup endpoint. More information on Twitter IDs is here.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "end_time",
+						"in": "query",
+						"description": "YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339). The newest, most recent UTC timestamp to which the Tweets will be provided. Timestamp is in second granularity and is exclusive (for example, 12:00:01 excludes the first second of the minute). By default, a request will return Tweets from as recent as 30 seconds ago if you do not include this parameter.",
+						"schema": {
+							"type": "date"
+						}
+					},
+					{
+						"name": "expansions",
+						"in": "query",
+						"description": "Comma-separated list of expansions. Expansions enable requests to expand an ID into a full object in the includes response object. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "max_results",
+						"in": "query",
+						"description": "The maximum number of search results to be returned by a request. A number between 10 and the system limit (currently 100). By default, a request response will return 10 results.",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "media.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the media object. The response will contain the selected fields only if a Tweet contains media attachments. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "pagination_token",
+						"in": "query",
+						"description": "This parameter is used to move forwards or backwards through 'pages' of results, based on the value of the next_token or previous_token in the response. The value used with the parameter is pulled directly from the response provided by the API, and should not be modified.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "place.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the place object. The response will contain the selected fields only if location data is present in any of the response objects. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "poll.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the poll object. The response will contain the selected fields only if a Tweet contains a poll. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "since_id",
+						"in": "query",
+						"description": "Returns results with a Tweet ID greater than (that is, more recent than) the specified ID. The ID specified is exclusive and responses will not include it. If included with the same request as a start_time parameter, only since_id will be used.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "start_time",
+						"in": "query",
+						"description": "YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339). The oldest UTC timestamp (from most recent seven days) from which the Tweets will be provided. Timestamp is in second granularity and is inclusive (for example, 12:00:01 includes the first second of the minute). If included with the same request as a since_id parameter, only since_id will be used. By default, a request will return Tweets from up to seven days ago if you do not include this parameter.",
+						"schema": {
+							"type": "date"
+						}
+					},
+					{
+						"name": "tweet.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the Tweet object. By default, the endpoint only returns id and text. Make sure to not include a space between commas and fields.",
+                        "example": "entities,lang",
+                        "schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "until_id",
+						"in": "query",
+						"description": "Returns results with a Tweet ID less than (that is, older than) the specified ID. The ID specified is exclusive and responses will not include it.",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "user.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the user object. By default, the endpoint does not return any user field. To use this parameter, you must include the author_id expansion parameter in the request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns Tweets mentioning a single user specified by the requested user ID.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"$ref": "#components/schema/tweet/properties"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tweets/search/stream/rules": {
+			"get": {
+				"summary": "Return a list of rules currently active on the streaming endpoint, either as a list or individually.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/filtered-stream/api-reference/get-tweets-search-stream-rules"
+				},
+				"parameters": [{
+					"name": "ids",
+					"in": "query",
+					"description": "Comma-separated list of rule IDs. If omitted, all rules are returned.",
+					"schema": {
+						"type": "string"
+					}
+				}],
+				"responses": {
+					"200": {
+						"id": {
+							"description": "A cursored collection of user IDs for every user following the specified user."
+						},
+						"value": {
+							"description": "The rule text as submitted when creating the rule."
+						},
+						"tag": {
+							"description": "The tag label as defined when creating the rule."
+						},
+						"meta.sent": {
+							"description": "The time when the request body was returned."
+						}
+					}
+				}
+			}
+		},
+		"/tweets/search/stream": {
+			"get": {
+				"summary": "Streams Tweets in real-time based on a specific set of filter rules.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/filtered-stream/api-reference/get-tweets-search-stream"
+				},
+				"parameters": [{
+						"name": "expansions",
+						"in": "query",
+						"description": "Comma-separated list of expansions. Expansions enable requests to expand an ID into a full object in the includes response object. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "media.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the media object. The response will contain the selected fields only if a Tweet contains media attachments. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "place.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the place object. The response will contain the selected fields only if location data is present in any of the response objects. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "poll.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the poll object. The response will contain the selected fields only if a Tweet contains a poll. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "tweet.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the Tweet object. By default, the endpoint only returns id and text. Make sure to not include a space between commas and fields.",
+                        "example": "entities,lang",
+                        "schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "user.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the user object. By default, the endpoint does not return any user field. To use this parameter, you must include the author_id expansion parameter in the request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns Tweets mentioning a single user specified by the requested user ID.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"$ref": "#components/schema/tweet/properties"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tweets/sample/stream": {
+			"get": {
+				"summary": "Streams about 1% of all Tweets in real-time.",
+				"externalDocs": {
+					"url": "https://developer.twitter.com/en/docs/twitter-api/tweets/sampled-stream/api-reference/get-tweets-sample-stream"
+				},
+				"parameters": [{
+						"name": "expansions",
+						"in": "query",
+						"description": "Comma-separated list of expansions. Expansions enable requests to expand an ID into a full object in the includes response object. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "media.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the media object. The response will contain the selected fields only if a Tweet contains media attachments. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "place.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the place object. The response will contain the selected fields only if location data is present in any of the response objects. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "poll.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the poll object. The response will contain the selected fields only if a Tweet contains a poll. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "tweet.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the Tweet object. By default, the endpoint only returns id and text. Make sure to not include a space between commas and fields.",
+                        "example": "entities,lang",
+                        "schema": {
+							"type": "enum"
+						}
+					},
+					{
+						"name": "user.fields",
+						"in": "query",
+						"description": "Comma-separated list of additional fields to return in the user object. By default, the endpoint does not return any user field. To use this parameter, you must include the author_id expansion parameter in the request. Make sure to not include a space between commas and fields.",
+						"schema": {
+							"type": "enum"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns about 1% of all Tweets in real-time.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"$ref": "#components/schema/tweet/properties"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+
+	"components": {
+		"schema": {
+			"tweet": {
+				"properties": {
+					"created_at": {
+						"description": "UTC time when this Tweet was created."
+					},
+					"id": {
+						"description": "Unique identifier of this Tweet. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers."
+					},
+					"author_id": {
+						"description": "The string representation of the unique identifier for this Tweet. Implementations should use this rather than the large integer in id."
+					},
+					"text": {
+						"description": "The content of the Tweet. To return this field, add tweet.fields=text in the request's query parameter."
+					},
+					"conversation_id": {
+						"description": "The Tweet ID of the original Tweet of the conversation (which includes direct replies, replies of replies). To return this field, add tweet.fields=conversation_id in the request's query parameter."
+					},
+					"in_reply_to_user_id": {
+						"description": "If this Tweet is a Reply, indicates the user ID of the parent Tweet's author. This is returned as a string in order to avoid complications with languages and tools that cannot handle large integers. You can obtain the expanded object in includes.users by adding expansions=in_reply_to_user_id in the request's query parameter."
+					},
+					"referenced_tweets": {
+						"description": "A list of Tweets this Tweet refers to. For example, if the parent Tweet is a Retweet, a Retweet with comment (also known as Quoted Tweet) or a Reply, it will include the related Tweet referenced to by its parent. To return this field, add tweet.fields=referenced_tweets in the request's query parameter."
+					},
+					"referenced_tweets.type": {
+						"description": "Indicates the type of relationship between this Tweet and the Tweet returned in the response: retweeted (this Tweet is a Retweet), quoted (a Retweet with comment, also known as Quoted Tweet), or replied_to (this Tweet is a reply)."
+					},
+					"referenced_tweets.id": {
+						"description": "The unique identifier of the referenced Tweet. You can obtain the expanded object in includes.tweets by adding expansions=referenced_tweets.id in the request's query parameter."
+					},
+					"lang": {
+						"description": "Language of the Tweet, if detected by Twitter. Returned as a BCP47 language tag. To return this field, add tweet.fields=lang in the request's query parameter."
+					},
+					"possibly_sensitive": {
+						"description": "Indicates if this Tweet contains URLs marked as sensitive, for example content suitable for mature audiences. To return this field, add tweet.fields=possibly_sensitive in the request's query parameter."
+					},
+					"source": {
+						"description": "The name of the app the user Tweeted from. To return this field, add tweet.fields=source in the request's query parameter."
+					},
+					"attachments": {
+						"description": "Specifies the type of attachments (if any) present in this Tweet. To return this field, add tweet.fields=attachments in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/attachments"
+						}
+					},
+					"coordinates": {
+						"description": "Nullable. Represents the geographic location of this Tweet as reported by the user or client application. The inner coordinates array is formatted as geoJSON (longitude first, then latitude).",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/coordinates/properties"
+						}
+					},
+					"place": {
+						"description": "Nullable When present, indicates that the tweet is associated (but not necessarily originating from) a Place.",
+						"type": "object",
+						"properties": {
+							"$ref": " #components/schema/place/properties"
+						}
+					},
+					"entities": {
+						"description": "Contains details about text that has a special meaning in a Tweet. To return this field, add tweet.fields=entities in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/entities/properties"
+						}
+					},
+					"withheld": {
+						"description": "Contains withholding details for withheld content. To return this field, add tweet.fields=withheld in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/withheld/properties"
+						}
+					},
+					"public_metrics": {
+						"description": "Engagement metrics for the Tweet at the time of the request. To return this field, add tweet.fields=public_metrics in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/public_metrics/properties"
+						}
+					},
+					"non_public_metrics": {
+						"description": "Non-public engagement metrics for the Tweet at the time of the request. This is a private metric, and requires the use of OAuth 1.0a User Context authentication. To return this field, add tweet.fields=non_public_metrics in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/non_public_metrics/properties"
+						}
+					},
+					"organic_metrics": {
+						"description": "Organic engagement metrics for the Tweet at the time of the request. Requires user context authentication.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/organic_metrics/properties"
+						}
+					},
+					"promoted_metrics": {
+						"description": "Engagement metrics for the Tweet at the time of the request in a promoted context. Requires user context authentication.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/promoted_metrics/properties"
+						}
+					},
+					"includes": {
+						"description": "If you include an expansion parameter, the referenced objects will be returned if available.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/includes/properties"
+						}
+					},
+					"context_annotations": {
+						"description": "Contains context annotations for the Tweet. To return this field, add tweet.fields=context_annotations in the request's query parameter.",
+						"type": "array",
+						"properties": {
+							"$ref": "#components/schema/context_annotations/properties"
+						}
+					},
+					"geo": {
+						"description": "Contains details about the location tagged by the user in this Tweet, if they specified one. To return this field, add tweet.fields=geo in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"$ref": "#components/schema/geo/properties"
+						}
+					}
+				},
+				"attachments": {
+					"properties": {
+						"attachments.media_key": {
+							"description": "List of unique identifiers of media attached to this Tweet. These identifiers use the same media key format as those returned by the Media Library. You can obtain the expanded object in includes.media by adding expansions=attachments.media_keys in the request's query parameter.",
+							"type": "array"
+						},
+						"attachments.poll_ids": {
+							"description": "List of unique identifiers of polls present in the Tweets returned. These are returned as a string in order to avoid complications with languages and tools that cannot handle large integers. You can obtain the expanded object in includes.polls by adding expansions=attachments.polls_ids in the request's query parameter.",
+							"type": "array"
+						}
+					}
+				},
+				"entities": {
+					"description": "Contains details about text that has a special meaning in a Tweet. To return this field, add tweet.fields=entities in the request's query parameter.",
+					"type": "object",
+					"properties": {
+						"entities.annotations": {
+							"description": "Contains details about annotations relative to the text within a Tweet.",
+							"type": "array",
+							"properties": {
+								"entities.annotations.start": {
+									"description": "The start position (zero-based) of the text used to annotate the Tweet."
+								},
+								"entities.annotations.end": {
+									"description": "The end position (zero based) of the text used to annotate the Tweet."
+								},
+								"entities.annotations.propability": {
+									"description": "The confidence score for the annotation as it correlates to the Tweet text."
+								},
+								"entities.annotations.type": {
+									"description": "The description of the type of entity identified when the Tweet text was interpreted."
+								},
+								"entities.annotations.normalized_text": {
+									"description": "The text used to determine the annotation type."
+								}
+							},
+
+							"entities.urls": {
+								"description": "Contains details about text recognized as a URL.",
+								"type": "array",
+								"properties": {
+									"entities.urls.start": {
+										"description": "The start position (zero-based) of the recognized URL within the Tweet."
+									},
+									"entities.urls.end": {
+										"description": "The end position (zero-based) of the recognized URL within the Tweet."
+									},
+									"entities.urls.url": {
+										"description": "The URL in the format tweeted by the user."
+									},
+									"entities.urls.expanded_url": {
+										"description": "The fully resolved URL."
+									},
+									"entities.urls.display_url": {
+										"description": "The URL as displayed in the Twitter client."
+									},
+									"entities.urls.unwound_url": {
+										"description": "The full destination URL."
+									}
+								}
+							},
+							"entities.hashtags": {
+								"description": "Contains details about text recognized as a Hashtag.",
+								"type": "array",
+								"properties": {
+									"entities.hashtags.start": {
+										"description": "The start position (zero-based) of the recognized Hashtag within the Tweet."
+									},
+									"entities.hashtags.end": {
+										"description": "The end position (zero-based) of the recognized Hashtag within the Tweet."
+									},
+									"entities.hashtags.tags": {
+										"description": "The text of the Hashtag."
+									}
+								}
+							},
+							"entities.mentions": {
+								"description": "Contains details about text recognized as a user mention.",
+								"type": "array",
+								"properties": {
+									"entities.mentions.start": {
+										"description": "The start position (zero-based) of the recognized user mention within the Tweet."
+									},
+									"entities.mentions.end": {
+										"description": "The end position (zero-based) of the recognized user mention within the Tweet."
+									},
+									"entities.mentions.username": {
+										"description": "The part of text recognized as a user mention. You can obtain the expanded object in includes.users by adding expansions=entities.mentions.username in the request's query parameter."
+									}
+								}
+							},
+							"entities.cashhtags": {
+								"description": "Contains details about text recognized as a Cashtag.",
+								"type": "array",
+								"properties": {
+									"entities.cashhtags.start": {
+										"description": "The start position (zero-based) of the recognized Cashtag within the Tweet."
+									},
+									"entities.cashhtags.end": {
+										"description": "The end position (zero-based) of the recognized Cashtag within the Tweet."
+									},
+									"entities.cashhtags.tag": {
+										"description": "The text of the Cashtag."
+									}
+								}
+							}
+						}
+					},
+					"withheld": {
+						"description": "Contains withholding details for withheld content. To return this field, add tweet.fields=withheld in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"withheld.copyright": {
+								"description": "Indicates if the content is being withheld for on the basis of copyright infringement."
+							},
+							"withheld.country_code": {
+								"description": "Provides a list of countries where this content is not available."
+							},
+							"withheld.scope": {
+								"description": "Indicates whether the content being withheld is a Tweet or a user."
+							}
+						}
+					},
+					"public_metrics": {
+						"description": "Engagement metrics for the Tweet at the time of the request. To return this field, add tweet.fields=public_metrics in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"public_metrics.retweet_count": {
+								"description": "Number of times this Tweet has been Retweeted."
+							},
+							"public_metrics.reply_count": {
+								"description": "Number of Replies of this Tweet."
+							},
+							"public_metrics.like_count": {
+								"description": "Number of Likes of this Tweet."
+							},
+							"public_metrics.quote_count": {
+								"description": "Number of times this Tweet has been Retweeted with a comment (also known as Quote)."
+							}
+						}
+					},
+					"non_public_metrics": {
+						"description": "Non-public engagement metrics for the Tweet at the time of the request. This is a private metric, and requires the use of OAuth 1.0a User Context authentication. To return this field, add tweet.fields=non_public_metrics in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"non_public_metrics.impression_count": {
+								"description": "Number of times the Tweet has been viewed. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"non_public_metrics.url_link_clicks": {
+								"description": "Number of times a user clicks on a URL link or URL preview card in a Tweet. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"non_public_metrics.user_profile_clicks": {
+								"description": "Number of times a user clicks the following portions of a Tweet - display name, user name, profile picture. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							}
+						}
+					},
+					"organic_metrics": {
+						"description": "Organic engagement metrics for the Tweet at the time of the request. Requires user context authentication.",
+						"type": "object",
+						"properties": {
+							"organic_metrics.impression_count": {
+								"description": "Number of times the Tweet has been viewed organically. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"organic_metrics.url_link_clicks": {
+								"description": "Number of times a user clicks on a URL link or URL preview card in a Tweet organically. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"organic_metrics.user_profile_clicks": {
+								"description": "Number of times a user clicks the following portions of a Tweet organically - display name, user name, profile picture. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"organic_metrics.retweet_count": {
+								"description": "Number of times the Tweet has been Retweeted organically."
+							},
+							"organic_metrics.reply_count": {
+								"description": "Number of replies the Tweet has received organically."
+							},
+							"organic_metrics.like_count": {
+								"description": "Number of likes the Tweet has received organically."
+							}
+						}
+					},
+					"promoted_metrics": {
+						"description": "Engagement metrics for the Tweet at the time of the request in a promoted context. Requires user context authentication.",
+						"type": "object",
+						"properties": {
+							"promoted_metrics.impression_count": {
+								"description": "Number of times the Tweet has been viewed when that Tweet is being promoted. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"promoted_metrics.url_link_clicks": {
+								"description": "Number of times a user clicks on a URL link or URL preview card in a Tweet when it is being promoted. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"promoted_metrics.user_profile_clicks": {
+								"description": "Number of times a user clicks the following portions of a Tweet when it is being promoted - display name, user name, profile picture. This is a private metric, and requires the use of OAuth 1.0a User Context authentication."
+							},
+							"promoted_metrics.retweet_count": {
+								"description": "Number of times this Tweet has been Retweeted when that Tweet is being promoted."
+							},
+							"promoted_metrics.reply_count": {
+								"description": "Number of Replies to this Tweet when that Tweet is being promoted."
+							},
+							"promoted_metrics.like_count": {
+								"description": "Number of Likes of this Tweet when that Tweet is being promoted."
+							}
+						}
+					},
+					"includes": {
+						"description": "If you include an expansion parameter, the referenced objects will be returned if available.",
+						"type": "object",
+						"properties": {
+							"includes.tweets": {
+								"description": "When including the expansions=referenced_tweets.id parameter, this includes a list of referenced Retweets, Quoted Tweets, or replies in the form of Tweet objects with their default fields and any additional fields requested using the tweet.fields parameter, assuming there is a referenced Tweet present in the returned Tweet(s)."
+							},
+							"includes.user": {
+								"description": "When including the expansions=author_id parameter, this includes a list of referenced Tweet authors in the form of user objects with their default fields and any additional fields requested using the user.fields parameter."
+							},
+							"includes.places": {
+								"description": "When including the expansions=geo.place_id parameter, this includes a list of referenced places in Tweets in the form of place objects with their default fields and any additional fields requested using the place.fields parameter, assuming there is a place present in the returned Tweet(s)."
+							},
+							"includes.media": {
+								"description": "When including the expansions=attachments.media_keys parameter, this includes a list of images, videos, and GIFs included in Tweets in the form of media objects with their default fields and any additional fields requested using the media.fields parameter, assuming there is a media attachment present in the returned Tweet(s)."
+							},
+							"includes.polls": {
+								"description": "When including the expansions=attachments.poll_ids parameter, this includes a list of polls that are attached to Tweets in the form of poll objects with their default fields and any additional fields requested using the poll.fields parameter, assuming there is a poll present in the returned Tweet(s)."
+							}
+						}
+					},
+					"context_annotations": {
+						"description": "Contains context annotations for the Tweet. To return this field, add tweet.fields=context_annotations in the request's query parameter.",
+						"type": "array",
+						"properties": {
+							"context_annotations.domain": {
+								"description": "Contains elements which identify detailed information regarding the domain classification based on Tweet text."
+							},
+							"type": "object",
+							"properties": {
+								"context_annotations.domain.id": {
+									"description": "Contains the numeric value of the domain."
+								},
+								"context_annotations.domain.name": {
+									"description": "Domain name based on the Tweet text."
+								},
+								"context_annotations.domain.description": {
+									"description": "Long form description of domain classification."
+								}
+							},
+							"context_annotations.entity": {
+								"description": "Contains elements which identify detailed information regarding the domain classification bases on Tweet text."
+							},
+							"type": "object",
+							"properties": {
+								"context_annotations.entity.id": {
+									"description": "Unique value which correlates to an explicitly mentioned Person, Place, Product or Organization"
+								},
+								"context_annotations.entity.name": {
+									"description": "Name or reference of entity referenced in the Tweet."
+								},
+								"context_annotations.entity.description": {
+									"description": "Additional information regarding referenced entity."
+								}
+							}
+						}
+					},
+					"geo": {
+						"description": "Contains details about the location tagged by the user in this Tweet, if they specified one. To return this field, add tweet.fields=geo in the request's query parameter.",
+						"type": "object",
+						"properties": {
+							"geo.coordinates": {
+								"description": "Contains details about the coordinates of the location tagged by the user in this Tweet, if they specified one. To return this field, add tweet.fields=geo.coordinates in the request's query parameter."
+							}
+						},
+						"geo.coordinates.type": {
+							"description": "Describes the type of coordinate. The only value supported at present is Point."
+						},
+						"geo.coordinates.cordinates": {
+							"description": "A pair of decimal values representing the precise location of the user (latitude, longitude). This value be null unless the user explicitly shared their precise location."
+						},
+						"geo.place_id": {
+							"description": "The unique identifier of the place, if this is a point of interest tagged in the Tweet. You can obtain the expanded object in includes.places by adding expansions=geo.place_id in the request's query parameter."
+						}
+					}
+				}
+			}
+		}
+	}
+}
