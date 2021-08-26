@@ -1,319 +1,405 @@
 {
   "openapi": "3.0.0",
-  "x-facepager-module":"Generic",
-  "x-facepager-extract" : "result.posts",
-  "x-facepager-objectid" : "platformId",
-
+  "x-facepager-module": "Generic",
+  "x-facepager-extract": "result.posts",
+  "x-facepager-objectid": "platformId",
   "x-facepager-pagination": {
-    "method" : "url",
-		"param" : null,
-		"key" : "result.pagination.nextPage",
-		"stop" : null
+    "method": "url",
+    "param": null,
+    "key": "result.pagination.nextPage",
+    "stop": null
   },
-
-	"x-facepager-authorization": {
-		"auth_method" : "param",
-		"token_name" : "token",
-		"auth_type" : "API key"
-	},
-
+  "x-facepager-authorization": {
+    "auth_method": "param",
+    "token_name": "token",
+    "auth_type": "API key",
+    "auth": "param",
+    "auth_tokenname": "token"
+  },
   "info": {
     "title": "CrowdTangle API",
-    "description": "The CrowdTangle API can be used to access posts, the leaderboard and the link-checker.",
+    "description": "The CrowdTangle API can be used to access posts, the leaderboard and the link-checker. To access the API: You need to copy your API token in the 'Access token'-field of Facepager. Your API token is located in your CrowdTangle dashboard under Settings > API Access).",
     "termsOfService": "https://github.com/CrowdTangle/API/wiki/Terms-and-Policy"
   },
-
   "externalDocs": {
-    "url":"https://github.com/CrowdTangle/API/wiki"
+    "url": "https://github.com/CrowdTangle/API/wiki"
   },
-
   "servers": [
     {
-      "url":"https://api.crowdtangle.com"
+      "url": "https://api.crowdtangle.com"
     }
   ],
-
-  "paths":{
+  "paths": {
     "/posts": {
-      "get" : {
-        "summary" : "Retrieve a set of posts for the given parameters.",
+      "get": {
+        "summary": "Retrieve a set of posts for the given parameters. To access the API: You need to copy your API token in the 'Access token'-field of Facepager. Your API token is located in your CrowdTangle dashboard under Settings > API Access).",
         "externalDocs": {
-          "url":"https://api.crowdtangle.com/posts"
+          "url": "https://github.com/CrowdTangle/API/wiki/Posts"
         },
-        "parameters" : [
+        "parameters": [
           {
             "name": "accounts",
-            "in" : "query",
-            "description" : "The account handles or platform ids to search. These can be separated by commas to include multiple accounts.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
+            "in": "query",
+            "description": "The account handles or platform ids to search. These can be separated by commas to include multiple accounts.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
           },
           {
             "name": "brandedContent",
-					  "in" : "query",
-            "description" : "Limits to or excludes posts that have been marked as Branded Content, either as Publisher or Marketer.",
-            "required" : false,
+            "in": "query",
+            "description": "Limits to or excludes posts that have been marked as Branded Content, either as Publisher or Marketer.",
+            "required": false,
             "schema": {
-              "type":"string",
-              "enum": ["as_publisher", "as_marketer", "exclude", "no_filter"]
+              "type": "string",
+              "enum": [
+                "as_publisher",
+                "as_marketer",
+                "exclude",
+                "no_filter"
+              ]
             },
-					  "example": "no_filter"
+            "example": "no_filter",
+            "x-facepager-default": false
           },
           {
-            "name" : "count",
-            "in" : "query",
-            "description" : "The number of posts to return.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": "10"
+            "name": "count",
+            "in": "query",
+            "description": "The number of posts to return.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "example": "10",
+            "x-facepager-default": false
           },
           {
             "name": "endDate",
-					  "in" : "query",
-            "description" : "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
-					},
-          {
-					  "name": "includeHistory",
-					  "in" : "query",
-            "description" : "Includes timestep data for growth of each post returned.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": "true"
-					},
-          {
-					  "name": "language",
-					  "in" : "query",
-            "description" : "Exceptions: Some languages require more than two characters: Chinese (Simplified) is zh-CN and Chinese (Traditional) is zh-TW.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
-					},
-          {
-					  "name": "listIds",
-					  "in" : "query",
-            "description" : "The IDs of lists or saved searches to retrieve. These can be separated by commas to include multiple lists.",
-            "required" : false,
-            "schema":{"type":"string"},
-            "example":""
-					},
-					{
-					  "name": "minInteractions",
-					  "in" : "query",
-            "description" : "If set, will exclude posts with total interactions below this threshold.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": "1"
-					},
-					{
-					  "name": "offset",
-					  "in" : "query",
-            "description" : "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": "10"
-					},
-					{
-					  "name": "pageAdminTopCountry",
-					  "in" : "query",
-            "description" : "Limits to posts for which the account has the pageAdminTopCountry matching the parameter setting.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
-					},
-					{
-					  "name": "searchTerm",
-					  "in" : "query",
-            "description" : "Returns only posts that match this search term. Terms AND automatically. Separate with commas for OR, use quotes for phrases. E.g. CrowdTangle API -> AND. CrowdTangle, API -> OR. CrowdTangle API -> AND in that exact order. You can also use traditional Boolean search with this parameter.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
-					},
-					{
-					  "name": "sortBy",
-					  "in" : "query",
-            "description" : "The method by which to filter and order posts.",
-            "required" : false,
+            "in": "query",
+            "description": "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
+            "required": false,
             "schema": {
-              "type":"string",
-              "enum": ["date", "interaction_rate", "overperforming", "total_interactions", "underperforming"]
+              "type": "string"
             },
-					  "example": "date",
-                      "x-facepager-default" : true
-					},
-					{
-					  "name": "startDate",
-					  "in" : "query",
-            "description" : "The earliest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
-					},
-					{
-					  "name": "timeframe",
-					  "in" : "query",
-            "description" : "The interval of time to consider from the endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred. Depending on the number of posts, longer timeframes may not return within the timeout window. If you get a 504, try shortening your timeframe.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": "6 HOUR"
-					},
-          {
-            "name" : "types",
-            "in" : "query",
-            "description" : "The types of post to include. These can be separated by commas to include multiple types. If you want all live videos (whether currently or formerly live), be sure to include both live_video and live_video_complete. The \"video\" type does not mean all videos, it refers to videos that aren't native_video or youtube (e.g. a video on Vimeo).",
-            "required" : false,
-            "schema": {
-              "type":"string",
-              "enum": ["album", "igtv", "link", "live_video", "live_video_complete", "live_video_scheduled", "native_video", "photo", "status", "video", "vine", "youtube"]
-            },
-					  "example": ""
+            "example": "",
+            "x-facepager-default": false
           },
           {
-					  "name": "verified",
-					  "in" : "query",
-            "description" : "Limits to posts where the account has the verified setting matching the input.",
-            "required" : false,
+            "name": "includeHistory",
+            "in": "query",
+            "description": "Includes timestep data for growth of each post returned.",
+            "required": false,
             "schema": {
-              "type":"string",
-              "enum": ["only", "exclude", "no_filter"]
+              "type": "string"
             },
-					  "example": "no_filter"
-					},
-					{
-					  "name": "weightAngry",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "true",
+            "x-facepager-default": false
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Exceptions: Some languages require more than two characters: Chinese (Simplified) is zh-CN and Chinese (Traditional) is zh-TW.",
+            "required": false,
             "schema": {
-              "type":"string",
-              "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightComment",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "listIds",
+            "in": "query",
+            "description": "The IDs of lists or saved searches to retrieve. These can be separated by commas to include multiple lists.",
+            "required": false,
             "schema": {
-              "type":"string",
-						  "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightHaha",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "",
+            "x-facepager-default": true
+          },
+          {
+            "name": "minInteractions",
+            "in": "query",
+            "description": "If set, will exclude posts with total interactions below this threshold.",
+            "required": false,
             "schema": {
-              "type":"string",
-						  "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightLike",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "1",
+            "x-facepager-default": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response.",
+            "required": false,
             "schema": {
-              "type":"string",
-					  	"enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightLove",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "10",
+            "x-facepager-default": false
+          },
+          {
+            "name": "pageAdminTopCountry",
+            "in": "query",
+            "description": "Limits to posts for which the account has the pageAdminTopCountry matching the parameter setting.",
+            "required": false,
             "schema": {
-              "type":"string",
-              "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightRepost",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "searchTerm",
+            "in": "query",
+            "description": "Returns only posts that match this search term. Terms AND automatically. Separate with commas for OR, use quotes for phrases. E.g. CrowdTangle API -> AND. CrowdTangle, API -> OR. CrowdTangle API -> AND in that exact order. You can also use traditional Boolean search with this parameter.",
+            "required": false,
             "schema": {
-              "type":"string",
-						  "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightSad",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "The method by which to filter and order posts.",
+            "required": false,
             "schema": {
-              "type":"string",
-						  "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string",
+              "enum": [
+                "date",
+                "interaction_rate",
+                "overperforming",
+                "total_interactions",
+                "underperforming"
+              ]
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightShare",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "date",
+            "x-facepager-default": true
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "The earliest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred.",
+            "required": false,
             "schema": {
-              "type":"string",
-					  	"enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightUpvote",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "timeframe",
+            "in": "query",
+            "description": "The interval of time to consider from the endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred. Depending on the number of posts, longer timeframes may not return within the timeout window. If you get a 504, try shortening your timeframe.",
+            "required": false,
             "schema": {
-              "type":"string",
-						  "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string"
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightView",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "6 HOUR",
+            "x-facepager-default": false
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "description": "The types of post to include. These can be separated by commas to include multiple types. If you want all live videos (whether currently or formerly live), be sure to include both live_video and live_video_complete. The \"video\" type does not mean all videos, it refers to videos that aren't native_video or youtube (e.g. a video on Vimeo).",
+            "required": false,
             "schema": {
-              "type":"string",
-						  "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+              "type": "string",
+              "enum": [
+                "album",
+                "igtv",
+                "link",
+                "live_video",
+                "live_video_complete",
+                "live_video_scheduled",
+                "native_video",
+                "photo",
+                "status",
+                "video",
+                "vine",
+                "youtube"
+              ]
             },
-					  "example": "0"
-					},
-					{
-					  "name": "weightWow",
-					  "in" : "query",
-            "description" : "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
-            "required" : false,
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "verified",
+            "in": "query",
+            "description": "Limits to posts where the account has the verified setting matching the input.",
+            "required": false,
             "schema": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 10
+              "type": "string",
+              "enum": [
+                "only",
+                "exclude",
+                "no_filter"
+              ]
             },
-             "example": "0"
+            "example": "no_filter",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightAngry",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightComment",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightHaha",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightLike",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightLove",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightRepost",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightSad",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightShare",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightUpvote",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightView",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "weightWow",
+            "in": "query",
+            "description": "How much weight to give to each type of interaction. If you send in no weights, all weights will use the current dashboard defaults. If you send in at least one weight, all other weights will default to 0. Weights are multiplied by interaction counts: e.g. weightsComment at 1 and all others at 0 will find the most commented-on posts. weightLike at 1 and weightShare at 2 will give shares twice the impact as likes when computing scores.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "example": "0",
+            "x-facepager-default": false
           }
         ],
-        "responses" : {
-          "200" : {
-            "description" : "Post object.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "$ref" : "#components/schema/post/properties"
+        "responses": {
+          "200": {
+            "description": "A post object represents a single post from any of the supported platforms (e.g., Facebook, Instagram). All posts also contain an account object. Reference of post object: https://github.com/CrowdTangle/API/wiki/Post.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$ref": "#components/schema/post/properties"
                   }
                 }
               }
@@ -322,56 +408,54 @@
         }
       }
     },
-    "/post/:id": {
-      "get" : {
-        "summary" : "Retrieve a speciific post.",
+    "/post/{:id}": {
+      "get": {
+        "summary": "Retrieve a specific post.",
         "externalDocs": {
-          "url":"https://api.crowdtangle.com/post/:id"
+          "url": "https://github.com/CrowdTangle/API/wiki/Posts#get-postid"
         },
-        "parameters" : [
+        "parameters": [
+          {
+            "name": ":id",
+            "in": "path",
+            "description": "ID of the post.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "account",
-					  "in" : "query",
-            "description" : "The account handles or platform ids to search. These can be separated by commas to include multiple accounts.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
+            "in": "query",
+            "description": "The account handles or platform ids to search. These can be separated by commas to include multiple accounts.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
           },
           {
             "name": "includeHistory",
-  					"in" : "query",
-            "description" : "Includes timestep data for growth of each post returned.",
-            "required" : false,
-            "schema":{"type":"string"},
-  					"example": "true"
+            "in": "query",
+            "description": "Includes timestep data for growth of each post returned.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "true",
+            "x-facepager-default": false
           }
         ],
-        "responses" : {
-          "200" : {
-            "description" : "Post object.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "platformId": {"description": "The platform's ID for the post."},
-                    "platform": {"description": "The platform on which the post was posted. E.g., Facebook, Instagram, etc."},
-                    "date": {"description": "The date and time the post was published. Time zone is UTC."},
-                    "updated":{"description":"The date and time the post was most recently updated in CrowdTangle, which is most often via getting new scores from the platform. Time zone is UTC."},
-                    "type": {"description": "The type of the post."},
-                    "message": {"description": "The user-submitted text on a post."},
-                    "expandedLinks": {"description": "A map where the keys are the original links that came in the post (which are often shortened), and the values are the expanded links."},
-                    "link": {"description": "An external URL that the post links to, if available. (Facebook only)"},
-                    "postUrl": {"description": "The URL to access the post on its platform."},
-                    "subscriberCount": {"description": "The number of subscriber the account had when the post was published. This is in contrast to the subscriberCount found on the account, which represents the current number of subscribers an account has."},
-                    "score": {"description": "The score of a post as measured by the request. E.g. it will represent the overperforming score if the request sortBy specifies overperforming, the interaction rate if the request specifies interaction_rate, etc."},
-                    "media": {"description": "An array of available media for the post."},
-                    "statistics": {"description": "Performance metrics associated with the post."},
-                    "account": {"description": "See account."},
-                    "videoLengthMS": {"description": "The length of the video in milliseconds."},
-                    "liveVideoStatus": {"description": "The status of the live video."},
-                    "Id": {"description": "The unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "legacyid": {"description": "The legacy version of the unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."}
+        "responses": {
+          "200": {
+            "description": "A post object represents a single post from any of the supported platforms (e.g., Facebook, Instagram). All posts also contain an account object. Reference of post object: https://github.com/CrowdTangle/API/wiki/Post.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$ref": "#components/schema/post/properties"
                   }
                 }
               }
@@ -381,302 +465,405 @@
       }
     },
     "/posts/search": {
-      "get" : {
-        "summary" : "Access to the Search is restricted and requires prior approval by CrowdTangle (https://www.facebook.com/help/contact/908993259530156). Retrieve a set of posts for the given parameters and search terms.",
+      "get": {
+        "summary": "Access to the Search is restricted and requires prior approval by CrowdTangle (https://www.facebook.com/help/contact/908993259530156). Retrieve a set of posts for the given parameters and search terms.",
         "externalDocs": {
-          "url":"https://api.crowdtangle.com/posts/search"
+          "url": "https://github.com/CrowdTangle/API/wiki/Search"
         },
-        "parameters" : [
+        "parameters": [
           {
             "name": "accounts",
-            "in" : "query",
-            "description" : "The account handles or platform ids to search. These can be separated by commas to include multiple accounts.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
+            "in": "query",
+            "description": "The account handles or platform ids to search. These can be separated by commas to include multiple accounts.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
           },
           {
             "name": "accountType",
-            "in" : "query",
-            "description" : "Limits search to a specific Facebook account type. You can use more than one type. Requires “platforms=facebook” to be set also. If “platforms=facebook” is not set, all post types including IG and Reddit will be returned. Only applies to Facebook.",
-            "required" : false,
+            "in": "query",
+            "description": "Limits search to a specific Facebook account type. You can use more than one type. Requires “platforms=facebook” to be set also. If “platforms=facebook” is not set, all post types including IG and Reddit will be returned. Only applies to Facebook.",
+            "required": false,
             "schema": {
               "type": "string",
-              "enum": ["facebook_page","facebook_group","facebook_profile"]
+              "enum": [
+                "facebook_page",
+                "facebook_group",
+                "facebook_profile"
+              ]
             },
-					  "example": ""
+            "example": "",
+            "x-facepager-default": true
           },
           {
             "name": "and",
-            "in" : "query",
-            "description" : "Post search is split into OR, AND and NOT chunks. This is the AND section. Each is a phrase match, meaning that searchTerm is “CrowdTangle, API” and and is “so fast, great documentation,” it will search for ((“CrowdTangle” AND “so fast” AND “great documentation”) OR (“API” AND “so fast” AND “great documentation”)).",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
+            "in": "query",
+            "description": "Post search is split into OR, AND and NOT chunks. This is the AND section. Each is a phrase match, meaning that searchTerm is “CrowdTangle, API” and and is “so fast, great documentation,” it will search for ((“CrowdTangle” AND “so fast” AND “great documentation”) OR (“API” AND “so fast” AND “great documentation”)).",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": true
           },
           {
             "name": "brandedContent",
-					  "in" : "query",
-            "description" : "Limits to or excludes posts that have been marked as Branded Content, either as Publisher or Marketer.",
-            "required" : false,
+            "in": "query",
+            "description": "Limits to or excludes posts that have been marked as Branded Content, either as Publisher or Marketer.",
+            "required": false,
             "schema": {
               "type": "string",
-              "enum": ["as_publisher", "as_marketer", "exclude", "no_filter"]
+              "enum": [
+                "as_publisher",
+                "as_marketer",
+                "exclude",
+                "no_filter"
+              ]
             },
-					  "example": "no_filter"
+            "example": "no_filter",
+            "x-facepager-default": false
           },
           {
-            "name" : "count",
-            "in" : "query",
-            "description" : "The number of posts to return. Options: 1-100.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "10"
+            "name": "count",
+            "in": "query",
+            "description": "The number of posts to return. Options: 1-100.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "10",
+            "x-facepager-default": false
           },
           {
             "name": "endDate",
-					  "in" : "query",
-            "description" : "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": ""
-					},
-          {
-					  "name": "excludePageCategories",
-					  "in" : "query",
-            "description" : "Exclude one or multiple Page Categories from search results, e.g. ARTIST, TV_NETWORK, MEDIA_NEWS_COMPANY. View the full list of page categories here (https://www.facebook.com/pages/category/).",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": ""
-					},
-          {
-					  "name": "includeHistory",
-					  "in" : "query",
-            "description" : "Includes timestep data for growth of each post returned.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "true"
-					},
-          {
-					  "name": "inAccountsIds",
-					  "in" : "query",
-            "description" : "A comma-separated list of the IDs of accounts to search within.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": ""
-					},
-          {
-					  "name": "includeSummary",
-					  "in" : "query",
-            "description" : "Adds a “summary” section with total interaction statistics for each platform that matches your search. It will look beyond the count requested to summarize across the time searched. When includeSummary is specified, either startDate or timeframe is required.",
-            "required" : false,
+            "in": "query",
+            "description": "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
+            "required": false,
             "schema": {
-              "type": "string",
-              "enum": ["true","false"]
+              "type": "string"
             },
-					  "example": "false"
-					},
-          {
-					  "name": "inListIds",
-					  "in" : "query",
-            "description" : "A comma-separated list of the IDs of lists to search within.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "language",
-					  "in" : "query",
-            "description" : "Exceptions: Some languages require more than two characters: Chinese (Simplified) is zh-CN and Chinese (Traditional) is zh-TW.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-					{
-					  "name": "minInteractions",
-					  "in" : "query",
-            "description" : "If set, will exclude posts with total interactions below this threshold. Options: > 0",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "minSubscriberCount",
-					  "in" : "query",
-            "description" : "The minimum number of subscribers an account must have to be included in the search results. Options: > 0",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "not",
-					  "in" : "query",
-            "description" : "A corollary to “and”, “not” will exclude all posts matching this word/phrase.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "notInAccountsIds",
-					  "in" : "query",
-            "description" : "A comma-separated list of the IDs of accounts to exclude. This behaves the same as notInListIds, except with specific accounts.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "notInListIds",
-					  "in" : "query",
-            "description" : "A comma-separated list of the the IDs of lists to exclude from results. For instance, if don't want to see news outlet mentions of your search term, 'Lebron James,' you could exclude your sports publishers list.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "notInTitle",
-					  "in" : "query",
-            "description" : "Exclude all posts whose account title matches this term. E.g. search for “CrowdTangle” but ignore any accounts that include the word “CrowdTangle” to see what other accounts are posting.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-					{
-					  "name": "offset",
-					  "in" : "query",
-            "description" : "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: > 0",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": "0"
-					},
-					{
-					  "name": "pageAdminTopCountry",
-					  "in" : "query",
-            "description" : "Limits to posts for which the account has the pageAdminTopCountry matching the parameter setting.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "pageCategories",
-					  "in" : "query",
-            "description" : "Include one or multiple Page Categories in search results, e.g. ARTIST, TV_NETWORK, MEDIA_NEWS_COMPANY. View the full list of page categories here (https://www.facebook.com/pages/category/).",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					},
-          {
-					  "name": "platforms",
-					  "in" : "query",
-            "description" : "The platforms from which to retrieve posts. This value can be comma-separated. Reddit is not currently available for the ACADEMICS vertical.",
-            "required" : false,
-            "schema":{
-              "type": "string",
-              "enum": ["facebook","instagram","reddit"]
-            },
-					  "example": ""
-					},
-          {
-					  "name": "searchField",
-					  "in" : "query",
-            "description" : "This allows you to search image text, URLs with query strings, and account names, in addition to text fields only or both text fields and image text.",
-            "required" : false,
-            "schema":{
-              "type": "string",
-              "enum": ["text_fields_and_image_text","include_query_strings ","text_fields_only","account_name_only","image_text_only "]
-            },
-					  "example": ""
-					},
-					{
-					  "name": "searchTerm",
-					  "in" : "query",
-            "description" : "Returns only posts that match this search term. Terms AND automatically. Separate with commas for OR, use quotes for phrases. E.g. CrowdTangle API -> AND. CrowdTangle, API -> OR. CrowdTangle API -> AND in that exact order. You can also use traditional Boolean search with this parameter.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
-					},
-					{
-					  "name": "sortBy",
-					  "in" : "query",
-            "description" : "The method by which to filter and order posts.",
-            "required" : false,
-            "schema": {
-              "type":"string",
-              "enum": ["date", "interaction_rate", "overperforming", "total_interactions", "underperforming"]
-            },
-					  "example": ""
-					},
-					{
-					  "name": "startDate",
-					  "in" : "query",
-            "description" : "The earliest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": ""
-					},
-					{
-					  "name": "timeframe",
-					  "in" : "query",
-            "description" : "The interval of time to consider from the endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred. Depending on the number of posts, longer timeframes may not return within the timeout window. If you get a 504, try shortening your timeframe.",
-            "required" : false,
-            "schema":{"type":"string"},
-					  "example": "6 HOUR"
-					},
-          {
-            "name" : "types",
-            "in" : "query",
-            "description" : "The types of post to include. These can be separated by commas to include multiple types. If you want all live videos (whether currently or formerly live), be sure to include both live_video and live_video_complete. The \"video\" type does not mean all videos, it refers to videos that aren't native_video or youtube (e.g. a video on Vimeo).",
-            "required" : false,
-            "schema": {
-              "type":"string",
-              "enum": ["album", "igtv", "link", "live_video", "live_video_complete", "live_video_scheduled", "native_video", "photo", "status", "video", "vine", "youtube"]
-            },
-					  "example": ""
+            "example": "",
+            "x-facepager-default": false
           },
           {
-					  "name": "verified",
-					  "in" : "query",
-            "description" : "Limits to posts where the account has the verified setting matching the input.",
-            "required" : false,
+            "name": "excludePageCategories",
+            "in": "query",
+            "description": "Exclude one or multiple Page Categories from search results, e.g. ARTIST, TV_NETWORK, MEDIA_NEWS_COMPANY. View the full list of page categories here (https://www.facebook.com/pages/category/).",
+            "required": false,
             "schema": {
-              "type":"string",
-              "enum": ["only", "exclude", "no_filter"]
+              "type": "string"
             },
-					  "example": "no_filter"
-					},
+            "example": "",
+            "x-facepager-default": false
+          },
           {
-					  "name": "verifiedOnly",
-					  "in" : "query",
-            "description" : "Limit results to verified accounts only. Note, this only applies to platforms that supply information about verified accounts.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-					}
+            "name": "includeHistory",
+            "in": "query",
+            "description": "Includes timestep data for growth of each post returned.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "true",
+            "x-facepager-default": false
+          },
+          {
+            "name": "inAccountsIds",
+            "in": "query",
+            "description": "A comma-separated list of the IDs of accounts to search within.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "includeSummary",
+            "in": "query",
+            "description": "Adds a “summary” section with total interaction statistics for each platform that matches your search. It will look beyond the count requested to summarize across the time searched. When includeSummary is specified, either startDate or timeframe is required.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "example": "false",
+            "x-facepager-default": false
+          },
+          {
+            "name": "inListIds",
+            "in": "query",
+            "description": "A comma-separated list of the IDs of lists to search within.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Exceptions: Some languages require more than two characters: Chinese (Simplified) is zh-CN and Chinese (Traditional) is zh-TW.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "minInteractions",
+            "in": "query",
+            "description": "If set, will exclude posts with total interactions below this threshold. Options: > 0",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "minSubscriberCount",
+            "in": "query",
+            "description": "The minimum number of subscribers an account must have to be included in the search results. Options: > 0",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "not",
+            "in": "query",
+            "description": "A corollary to “and”, “not” will exclude all posts matching this word/phrase.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": true
+          },
+          {
+            "name": "notInAccountsIds",
+            "in": "query",
+            "description": "A comma-separated list of the IDs of accounts to exclude. This behaves the same as notInListIds, except with specific accounts.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "notInListIds",
+            "in": "query",
+            "description": "A comma-separated list of the the IDs of lists to exclude from results. For instance, if don't want to see news outlet mentions of your search term, 'Lebron James,' you could exclude your sports publishers list.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "notInTitle",
+            "in": "query",
+            "description": "Exclude all posts whose account title matches this term. E.g. search for “CrowdTangle” but ignore any accounts that include the word “CrowdTangle” to see what other accounts are posting.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: > 0",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "pageAdminTopCountry",
+            "in": "query",
+            "description": "Limits to posts for which the account has the pageAdminTopCountry matching the parameter setting.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "pageCategories",
+            "in": "query",
+            "description": "Include one or multiple Page Categories in search results, e.g. ARTIST, TV_NETWORK, MEDIA_NEWS_COMPANY. View the full list of page categories here (https://www.facebook.com/pages/category/).",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "platforms",
+            "in": "query",
+            "description": "The platforms from which to retrieve posts. This value can be comma-separated. Reddit is not currently available for the ACADEMICS vertical.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "facebook",
+                "instagram",
+                "reddit"
+              ]
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "searchField",
+            "in": "query",
+            "description": "This allows you to search image text, URLs with query strings, and account names, in addition to text fields only or both text fields and image text.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "text_fields_and_image_text",
+                "include_query_strings ",
+                "text_fields_only",
+                "account_name_only",
+                "image_text_only "
+              ]
+            },
+            "example": "text_fields_and_image_text",
+            "x-facepager-default": false
+          },
+          {
+            "name": "searchTerm",
+            "in": "query",
+            "description": "Returns only posts that match this search term. Terms AND automatically. Separate with commas for OR, use quotes for phrases. E.g. CrowdTangle API -> AND. CrowdTangle, API -> OR. CrowdTangle API -> AND in that exact order. You can also use traditional Boolean search with this parameter.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "The method by which to filter and order posts.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "date",
+                "interaction_rate",
+                "overperforming",
+                "total_interactions",
+                "underperforming"
+              ]
+            },
+            "example": "",
+            "x-facepager-default": true
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "The earliest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "timeframe",
+            "in": "query",
+            "description": "The interval of time to consider from the endDate. Timeframe and startDate are mutually exclusive; if both are passed, startDate will be preferred. Depending on the number of posts, longer timeframes may not return within the timeout window. If you get a 504, try shortening your timeframe.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "6 HOUR",
+            "x-facepager-default": false
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "description": "The types of post to include. These can be separated by commas to include multiple types. If you want all live videos (whether currently or formerly live), be sure to include both live_video and live_video_complete. The \"video\" type does not mean all videos, it refers to videos that aren't native_video or youtube (e.g. a video on Vimeo).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "album",
+                "igtv",
+                "link",
+                "live_video",
+                "live_video_complete",
+                "live_video_scheduled",
+                "native_video",
+                "photo",
+                "status",
+                "video",
+                "vine",
+                "youtube"
+              ]
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "verified",
+            "in": "query",
+            "description": "Limits to posts where the account has the verified setting matching the input.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "only",
+                "exclude",
+                "no_filter"
+              ]
+            },
+            "example": "no_filter",
+            "x-facepager-default": false
+          },
+          {
+            "name": "verifiedOnly",
+            "in": "query",
+            "description": "Limit results to verified accounts only. Note, this only applies to platforms that supply information about verified accounts.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "false",
+            "x-facepager-default": false
+          }
         ],
-        "responses" : {
-          "200" : {
-            "description" : "Post object.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "platformId": {"description": "The platform's ID for the post."},
-                    "platform": {"description": "The platform on which the post was posted. E.g., Facebook, Instagram, etc."},
-                    "date": {"description": "The date and time the post was published. Time zone is UTC."},
-                    "updated": {"description": "The date and time the post was most recently updated in CrowdTangle, which is most often via getting new scores from the platform. Time zone is UTC."},
-                    "type": {"description": "The type of the post."},
-                    "description": {"description": "Further details, if available. Associated with links or images across different platforms."},
-                    "postUrl": {"description": "The URL to access the post on its platform."},
-                    "subscriberCount": {"description": "The number of subscriber the account had when the post was published. This is in contrast to the subscriberCount found on the account, which represents the current number of subscribers an account has."},
-                    "score": {"description": "The score of a post as measured by the request. E.g. it will represent the overperforming score if the request sortBy specifies overperforming, the interaction rate if the request specifies interaction_rate, etc."},
-                    "media": {"description": "An array of available media for the post."},
-                    "statistics": {"description": "Performance metrics associated with the post."},
-                    "account": {"description": "See account."},
-                    "imageText": {"description": "The text, if it exists, within an image."},
-                    "newId": {"description": ""},
-                    "id": {"description": "The unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "pagination": {"description": ""},
-                    "hitCount": {"description": ""}
+        "responses": {
+          "200": {
+            "description": "A post object represents a single post from any of the supported platforms (e.g., Facebook, Instagram). All posts also contain an account object. Reference of post object: https://github.com/CrowdTangle/API/wiki/Post.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$ref": "#components/schema/post/properties"
                   }
                 }
               }
@@ -686,262 +873,132 @@
       }
     },
     "/leaderboard": {
-      "get" : {
-        "summary" : "Retrieves leaderboard data for a certain list or set of accounts.",
+      "get": {
+        "summary": "Retrieves leaderboard data for a certain list or set of accounts.",
         "externalDocs": {
-          "url":"https://api.crowdtangle.com/leaderboard"
+          "url": "https://github.com/CrowdTangle/API/wiki/Leaderboard"
         },
-        "parameters" : [
+        "parameters": [
           {
             "name": "accountIds",
-            "in" : "query",
-            "description" : "A list of CrowdTangle accountIds to retrieve leaderboard data for. These should be provided comma-separated. This and listId are mutually exclusive; if both are sent, accountIds will be preferred.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": ""
-          },
-          {
-            "name" : "count",
-            "in" : "query",
-            "description" : "The number of posts to return. Options: 1-100.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "50"
-          },
-          {
-            "name": "endDate",
-					  "in" : "query",
-            "description" : "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "2021-08-11"
-					},
-          {
-            "name" : "listId",
-            "in" : "query",
-            "description" : "The list of the leaderboard to retrieve. This and accountIds are mutually exclusive; if both are sent, accountIds will be preferred.",
-            "required" : false,
-            "schema": {"type":"string"},
-            "example": "0"
-          },
-					{
-					  "name": "offset",
-					  "in" : "query",
-            "description" : "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: > 0",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": "0"
-					},
-					{
-					  "name": "orderBy",
-					  "in" : "query",
-            "description" : "The order of the sort.",
-            "required" : false,
+            "in": "query",
+            "description": "A list of CrowdTangle accountIds to retrieve leaderboard data for. These should be provided comma-separated. This and listId are mutually exclusive; if both are sent, accountIds will be preferred.",
+            "required": false,
             "schema": {
-              "type": "string",
-              "enum": ["asc","desc"]
+              "type": "string"
             },
-					  "example": "desc"
-					},
+            "example": "",
+            "x-facepager-default": false
+          },
           {
-					  "name": "sortBy",
-					  "in" : "query",
-            "description" : "The method by which the accountStatistics are sorted.",
-            "required" : false,
+            "name": "count",
+            "in": "query",
+            "description": "The number of posts to return. Options: 1-100.",
+            "required": false,
             "schema": {
-              "type": "string",
-              "enum": ["total_interactions","interaction_rate"]
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             },
-					  "example": "total_interactions"
-					},
-          {
-					  "name": "startDate",
-					  "in" : "query",
-            "description" : "The startDate of the leaderboard rage. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": "2021-08-10"
-					}
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "Post object.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "account":{"description":"See account."},
-                    "link":{"description":"An external URL that the post links to, if available. (Facebook only)"}
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/links": {
-      "get" : {
-        "summary" : "Retrieve a set of posts matching a certain link. This will return up to 1000 posts. This endpoint only pulls data from CrowdTangle.",
-        "externalDocs": {
-          "url":"https://api.crowdtangle.com/links"
-        },
-        "parameters" : [
-          {
-            "name" : "count",
-            "in" : "query",
-            "description" : "The number of posts to return. Options: 1-100.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "50"
+            "example": "50",
+            "x-facepager-default": false
           },
           {
             "name": "endDate",
-					  "in" : "query",
-            "description" : "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "2021-08-11"
-					},
+            "in": "query",
+            "description": "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2021-08-11",
+            "x-facepager-default": false
+          },
           {
-					  "name": "includeHistory",
-					  "in" : "query",
-            "description" : "Includes timestep data for growth of each post returned.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "true"
-					},
+            "name": "listId",
+            "in": "query",
+            "description": "The list of the leaderboard to retrieve. This and accountIds are mutually exclusive; if both are sent, accountIds will be preferred.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
           {
-					  "name": "link",
-					  "in" : "query",
-            "description" : "The link to query by. Required.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "<Object ID>"
-					},
+            "name": "offset",
+            "in": "query",
+            "description": "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: > 0",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
           {
-					  "name": "includeSummary",
-					  "in" : "query",
-            "description" : "Adds a “summary” section with total interaction statistics for each platform that matches your search. It will look beyond the count requested to summarize across the time searched. When includeSummary is specified, either startDate or timeframe is required.",
-            "required" : false,
+            "name": "orderBy",
+            "in": "query",
+            "description": "The order of the sort.",
+            "required": false,
             "schema": {
               "type": "string",
-              "enum": ["true","false"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             },
-					  "example": "false"
-					},
-					{
-					  "name": "offset",
-					  "in" : "query",
-            "description" : "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: > 0",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": "0"
-					},
+            "example": "desc",
+            "x-facepager-default": false
+          },
           {
-					  "name": "platforms",
-					  "in" : "query",
-            "description" : "The platforms from which to retrieve posts. This value can be comma-separated. Reddit is not currently available for the ACADEMICS vertical.",
-            "required" : false,
-            "schema":{
-              "type": "string",
-              "enum": ["facebook","instagram","reddit"]
-            },
-					  "example": ""
-					},
-          {
-					  "name": "searchField",
-					  "in" : "query",
-            "description" : "Allows you to search URLs containing query strings.",
-            "required" : false,
-            "schema":{
-              "type": "string",
-              "enum": ["include_query_strings"]
-            },
-					  "example": ""
-					},
-          {
-					  "name": "startDate",
-					  "in" : "query",
-            "description" : "The startDate of the leaderboard rage. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate.",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": "2021-08-10"
-					},
-          {
-					  "name": "sortBy",
-					  "in" : "query",
-            "description" : "The method by which to order posts (defaults to the most recent). If subscriber_count, a startDate is required.",
-            "required" : false,
+            "name": "sortBy",
+            "in": "query",
+            "description": "The method by which the accountStatistics are sorted.",
+            "required": false,
             "schema": {
               "type": "string",
-              "enum": ["date","subscriber_count","total_interactions"]
+              "enum": [
+                "total_interactions",
+                "interaction_rate"
+              ]
             },
-					  "example": ""
-					}
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "Post object.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "account":{"description":"See account."},
-                    "brandedContentSponsor":{"description":"See account. This field is only present for Facebook Page posts where there is a sponsoring Page."},
-                    "caption":{"description":"The caption to a photo, if available."},
-                    "date":{"description":"The date and time the post was published. Time zone is UTC."},
-                    "description":{"description":"Further details, if available. Associated with links or images across different platforms."},
-                    "expandedLinks":{"description":"A map where the keys are the original links that came in the post (which are often shortened), and the values are the expanded links."},
-                    "id":{"description":"The unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "imageText":{"description":"The text, if it exists, within an image."},
-                    "legacyid":{"description":"The legacy version of the unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "link":{"description":"An external URL that the post links to, if available. (Facebook only)"},
-                    "media":{"description":"An array of available media for the post."},
-                    "message":{"description":"The user-submitted text on a post."},
-                    "platform":{"description":"The platform on which the post was posted. E.g., Facebook, Instagram, etc."},
-                    "platformId":{"description":"The platform's ID for the post."},
-                    "postUrl":{"description":"The URL to access the post on its platform."},
-                    "score":{"description":"The score of a post as measured by the request. E.g. it will represent the overperforming score if the request sortBy specifies overperforming, the interaction rate if the request specifies interaction_rate, etc."},
-                    "statistics":{"description":"Performance metrics associated with the post."},
-                    "subscriberCount":{"description":"The number of subscriber the account had when the post was published. This is in contrast to the subscriberCount found on the account, which represents the current number of subscribers an account has."},
-                    "type":{"description":"The type of the post."},
-                    "updated":{"description":"The date and time the post was most recently updated in CrowdTangle, which is most often via getting new scores from the platform. Time zone is UTC."},
-                    "videoLengthMS":{"description":"The length of the video in milliseconds."},
-                    "liveVideoStatus":{"description":"The status of the live video."}
-                  }
-                }
-              }
-            }
+            "example": "total_interactions",
+            "x-facepager-default": false
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "The startDate of the leaderboard rage. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2021-08-10",
+            "x-facepager-default": false
           }
-        }
-      }
-    },
-    "/lists": {
-      "get" : {
-        "summary" : "Retrieve the lists, saved searches and saved post lists of the dashboard associated with the token sent in.",
-        "externalDocs": {
-          "url": "https://api.crowdtangle.com/lists"
-        },
-        "parameters" : [],
-        "responses" : {
-          "200" : {
-            "description" : "List objects.",        
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "x-facepager-extract" : "result.lists",
-                  "x-facepager-objectid" : "id",
-                  "properties" : {
-                    "id": {"description": "The unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "title": {"description": "The title of the list."},
-                    "type": {
-                        "description": "",
-                        "type":"string",
-                        "enum": ["SAVED_SEARCH", "SAVED_POSTS", "LIST"]
+        ],
+        "responses": {
+          "200": {
+            "description": "An AccountStatistics object represents the aggregate statistics of an account over the specified time. Reference of accountStatistics object: https://github.com/CrowdTangle/API/wiki/AccountStatistics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "x-facepager-extract": "result.accountStatistics",
+                  "x-facepager-objectid": "id",
+                  "properties": {
+                    "account": {
+                      "description": "Details about the account not related to statistics."
+                    },
+                    "breakdown": {
+                      "description": "A StatisticSet for each type of post the account posted. E.g. photo, video, etc."
+                    },
+                    "subcriberData": {
+                      "description": "The subscriberCounts relevant to the date range requested."
+                    },
+                    "summary": {
+                      "description": "An aggregate StatisticSet of the breakdown."
                     }
                   }
                 }
@@ -951,49 +1008,302 @@
         }
       }
     },
-    "/lists/:listId/accounts": {
-      "get" : {
-        "summary" : "Retrieve the accounts for a given list. Accounts may only be retrieved for lists of type LIST, as saved searches and saved posts do not have associated accounts.",
+    "/links": {
+      "get": {
+        "summary": "Retrieve a set of posts matching a certain link. This will return up to 1000 posts. This endpoint only pulls data from CrowdTangle. Note: Please use startDate! The system works much more quickly (and with much less strain) when it only has to search a subset of dates for your data.",
         "externalDocs": {
-          "url":"https://api.crowdtangle.com/lists/:listId/accounts"
+          "url": "https://github.com/CrowdTangle/API/wiki/Links"
         },
-        "parameters" : [
+        "parameters": [
           {
-            "name" : "count",
-            "in" : "query",
-            "description" : "The number of posts to return. Options: 1-100.",
-            "required" : false,
-            "schema": {"type":"string"},
-					  "example": "50"
+            "name": "count",
+            "in": "query",
+            "description": "The number of posts to return. Options: 1-100.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "example": "50",
+            "x-facepager-default": false
           },
-					{
-					  "name": "offset",
-					  "in" : "query",
-            "description" : "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: >= 0",
-            "required" : false,
-            "schema": {"type": "string"},
-					  "example": "0"
-					}
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "The latest date at which a post could be posted. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00).",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2021-08-11",
+            "x-facepager-default": false
+          },
+          {
+            "name": "includeHistory",
+            "in": "query",
+            "description": "Includes timestep data for growth of each post returned.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "true",
+            "x-facepager-default": false
+          },
+          {
+            "name": "link",
+            "in": "query",
+            "description": "The link to query by. Required.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<Object ID>",
+            "x-facepager-default": false
+          },
+          {
+            "name": "includeSummary",
+            "in": "query",
+            "description": "Adds a “summary” section with total interaction statistics for each platform that matches your search. It will look beyond the count requested to summarize across the time searched. When includeSummary is specified, either startDate or timeframe is required.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "example": "false",
+            "x-facepager-default": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: > 0",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "0",
+            "x-facepager-default": false
+          },
+          {
+            "name": "platforms",
+            "in": "query",
+            "description": "The platforms from which to retrieve posts. This value can be comma-separated. Reddit is not currently available for the ACADEMICS vertical.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "facebook",
+                "instagram",
+                "reddit"
+              ]
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "searchField",
+            "in": "query",
+            "description": "Allows you to search URLs containing query strings.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "include_query_strings"
+              ]
+            },
+            "example": "",
+            "x-facepager-default": false
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "The startDate of the leaderboard rage. Time zone is UTC. Format is “yyyy-mm-ddThh:mm:ss” or “yyyy-mm-dd” (defaults to time 00:00:00). This must be before endDate.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2021-08-10",
+            "x-facepager-default": true
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "The method by which to order posts (defaults to the most recent). If subscriber_count, a startDate is required.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "date",
+                "subscriber_count",
+                "total_interactions"
+              ]
+            },
+            "example": "date",
+            "x-facepager-default": true
+          }
         ],
-        "responses" : {
-          "200" : {
-            "description" : "Post object.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "id": {"description": "The unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "name": {"description": ""},
-                    "handle": {"description": ""},
-                    "profileImage": {"description": ""},
-                    "subscriberCount": {"description": "The number of subscriber the account had when the post was published. This is in contrast to the subscriberCount found on the account, which represents the current number of subscribers an account has."},
-                    "url": {"description": ""},
-                    "platform": {"description": "The platform on which the post was posted. E.g., Facebook, Instagram, etc."},
-                    "platformId": {"description": "The platform's ID for the post."},
-                    "accountType": {"description": ""},
-                    "pageAdminTopCountry": {"description": ""},
-                    "verified": {"description": ""}
+        "responses": {
+          "200": {
+            "description": "A post object represents a single post from any of the supported platforms (e.g., Facebook, Instagram). All posts also contain an account object. Reference of post object: https://github.com/CrowdTangle/API/wiki/Post.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$ref": "#components/schema/post/properties"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lists": {
+      "get": {
+        "summary": "Retrieve the lists, saved searches and saved post lists of the dashboard associated with the token sent in.",
+        "externalDocs": {
+          "url": "https://github.com/CrowdTangle/API/wiki/lists"
+        },
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A List Object represents a list, saved search or saved post list in a dashboard /lists. Reference of list object: https://github.com/CrowdTangle/API/wiki/List.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "x-facepager-extract": "result.lists",
+                  "x-facepager-objectid": "id",
+                  "properties": {
+                    "title": {
+                      "description": "The title of the list as it appears in the dashboard."
+                    },
+                    "id": {
+                      "description": "The unique identifier of the list in the CrowdTangle system. Use this id when querying by the listIds parameters."
+                    },
+                    "type": {
+                      "description": "The type of the list corresponding with its function in the dashboard.",
+                      "type": "string",
+                      "enum": [
+                        "SAVED_SEARCH",
+                        "SAVED_POSTS",
+                        "LIST"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lists/{:listId}/accounts": {
+      "get": {
+        "summary": "Retrieve the accounts for a given list. Accounts may only be retrieved for lists of type LIST, as saved searches and saved posts do not have associated accounts.",
+        "parameters": [
+          {
+            "name": ":listId",
+            "in": "path",
+            "description": "ID of the list.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "The number of posts to return. Options: 1-100.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "example": "10",
+            "x-facepager-default": true
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The number of posts to offset (generally used for pagination). Pagination links will also be provided in the response. Options: >= 0",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "0",
+            "x-facepager-default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An Account Object represents a page, account or user on a given platform. Reference of account object: https://github.com/CrowdTangle/API/wiki/Account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "x-facepager-extract": "result.accounts",
+                  "x-facepager-objectid": "id",
+                  "properties": {
+                    "accountType": {
+                      "description": "For Facebook only.",
+                      "type": "string",
+                      "enum": [
+                        "facebook_page",
+                        "facebook_profile",
+                        "facebook_group"
+                      ]
+                    },
+                    "handle": {
+                      "description": "The handle or vanity URL of the account."
+                    },
+                    "id": {
+                      "description": "The unique identifier of the account in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform on which the account exists."
+                    },
+                    "name": {
+                      "description": "The name of the account."
+                    },
+                    "pageAdminTopCountry": {
+                      "description": "The ISO country code of the the country from where the plurality of page administrators operate."
+                    },
+                    "pageCategory": {
+                      "description": "The page category as submitted by the page. View all page categories: https://www.facebook.com/pages/category/."
+                    },
+                    "pageCreatedDate": {
+                      "description": "The date on which the page was created."
+                    },
+                    "pagesDescription": {
+                      "description": "The description of the page as documented in Page Transparency information."
+                    },
+                    "platform": {
+                      "description": "The platform on which the account exists.",
+                      "type": "string",
+                      "enum": [
+                        "facebook",
+                        "instagram",
+                        "reddit"
+                      ]
+                    },
+                    "platformId": {
+                      "description": "The platform's ID for the account. This is not shown for Facebook public users."
+                    },
+                    "profileImage": {
+                      "description": "A URL pointing at the profile image."
+                    },
+                    "subscriberCount": {
+                      "description": "The number of subscribers/likes/followers the account has. By default, the subscriberCount property will show page Followers (as of January 26, 2021). You can select either Page Likes or Followers in your Dashboard settings."
+                    },
+                    "url": {
+                      "description": "A link to the account on its platform."
+                    },
+                    "verified": {
+                      "description": "Whether or not the account is verified by the platform, if supported by the platform. If not supported, will return false."
+                    }
                   }
                 }
               }
@@ -1003,37 +1313,105 @@
       }
     }
   },
-
-    "components": {
-        "schema":{
-            "post" : {
-                "properties": {  
-                    "account":{"description":"See account."},
-                    "brandedContentSponsor":{"description":"See account. This field is only present for Facebook Page posts where there is a sponsoring Page."},
-                    "caption":{"description":"The caption to a photo, if available."},
-                    "date":{"description":"The date and time the post was published. Time zone is UTC."},
-                    "description":{"description":"Further details, if available. Associated with links or images across different platforms."},
-                    "expandedLinks":{"description":"A map where the keys are the original links that came in the post (which are often shortened), and the values are the expanded links."},
-                    "id":{"description":"The unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "imageText":{"description":"The text, if it exists, within an image."},
-                    "legacyid":{"description":"The legacy version of the unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."},
-                    "link":{"description":"An external URL that the post links to, if available. (Facebook only)"},
-                    "media":{"description":"An array of available media for the post."},
-                    "message":{"description":"The user-submitted text on a post."},
-                    "platform":{"description":"The platform on which the post was posted. E.g., Facebook, Instagram, etc."},
-                    "platformId":{"description":"The platform's ID for the post."},
-                    "postUrl":{"description":"The URL to access the post on its platform."},
-                    "score":{"description":"The score of a post as measured by the request. E.g. it will represent the overperforming score if the request sortBy specifies overperforming, the interaction rate if the request specifies interaction_rate, etc."},
-                    "statistics":{"description":"Performance metrics associated with the post."},
-                    "subscriberCount":{"description":"The number of subscriber the account had when the post was published. This is in contrast to the subscriberCount found on the account, which represents the current number of subscribers an account has."},
-                    "type":{"description":"The type of the post."},
-                    "updated":{"description":"The date and time the post was most recently updated in CrowdTangle, which is most often via getting new scores from the platform. Time zone is UTC."},
-                    "videoLengthMS":{"description":"The length of the video in milliseconds."},
-                    "liveVideoStatus":{"description":"The status of the live video."}                
-                
-                }
-            }
+  "components": {
+    "schema": {
+      "post": {
+        "properties": {
+          "account": {
+            "description": "An Account Object represents a page, account or user on a given platform. See https://github.com/CrowdTangle/API/wiki/Account."
+          },
+          "brandedContentSponsor": {
+            "description": "See https://github.com/CrowdTangle/API/wiki/Account. This field is only present for Facebook Page posts where there is a sponsoring Page."
+          },
+          "caption": {
+            "description": "The caption to a photo, if available."
+          },
+          "date": {
+            "description": "The date and time the post was published. Time zone is UTC."
+          },
+          "description": {
+            "description": "Further details, if available. Associated with links or images across different platforms."
+          },
+          "expandedLinks": {
+            "description": "A map where the keys are the original links that came in the post (which are often shortened), and the values are the expanded links."
+          },
+          "id": {
+            "description": "The unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."
+          },
+          "imageText": {
+            "description": "The text, if it exists, within an image."
+          },
+          "legacyid": {
+            "description": "The legacy version of the unique identifier of the post in the CrowdTangle system. This ID is specific to CrowdTangle, not the platform from which the post originated."
+          },
+          "link": {
+            "description": "An external URL that the post links to, if available. (Facebook only)"
+          },
+          "media": {
+            "description": "An array of available media for the post."
+          },
+          "message": {
+            "description": "The user-submitted text on a post."
+          },
+          "platform": {
+            "description": "The platform on which the post was posted. E.g., Facebook, Instagram, etc.",
+            "type": "string",
+            "enum": [
+              "facebook",
+              "instagram",
+              "reddit"
+            ]
+          },
+          "platformId": {
+            "description": "The platform's ID for the post."
+          },
+          "postUrl": {
+            "description": "The URL to access the post on its platform."
+          },
+          "score": {
+            "description": "The score of a post as measured by the request. E.g. it will represent the overperforming score if the request sortBy specifies overperforming, the interaction rate if the request specifies interaction_rate, etc."
+          },
+          "statistics": {
+            "description": "Performance metrics associated with the post."
+          },
+          "subscriberCount": {
+            "description": "The number of subscriber the account had when the post was published. This is in contrast to the subscriberCount found on the account, which represents the current number of subscribers an account has."
+          },
+          "type": {
+            "description": "The type of the post.",
+            "type": "string",
+            "enum": [
+              "album",
+              "igtv",
+              "link",
+              "live_video",
+              "live_video_complete",
+              "live_video_scheduled",
+              "native_video",
+              "photo",
+              "status",
+              "video",
+              "vine",
+              "youtube"
+            ]
+          },
+          "updated": {
+            "description": "The date and time the post was most recently updated in CrowdTangle, which is most often via getting new scores from the platform. Time zone is UTC."
+          },
+          "videoLengthMS": {
+            "description": "The length of the video in milliseconds."
+          },
+          "liveVideoStatus": {
+            "description": "The status of the live video.",
+            "type": "string",
+            "enum": [
+              "live",
+              "completed",
+              "upcoming"
+            ]
+          }
         }
+      }
     }
-        
+  }
 }
