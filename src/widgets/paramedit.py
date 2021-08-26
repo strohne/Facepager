@@ -36,7 +36,7 @@ class QParamEdit(QTableWidget):
     # Takes params as dict and fills the widget
     def setParams(self,vals={}):
         try:
-            if isinstance(vals,str) or isinstance(vals,str):
+            if isinstance(vals,str):
                 vals = json.loads(vals)
         except:
             vals = {}
@@ -81,25 +81,6 @@ class QParamEdit(QTableWidget):
                 #params[self.getValue(row,0).strip()] =
         return params
 
-
-    # Fills left comboboxes with parameter names
-    # Adds default options
-    # @params OpenAPI dict with get parameters (operations.get.parameters)
-    def setOpenAPIOptions(self, params):
-        #Set param names
-        self.setNameOptionsAll(params)
-
-        #Set param values
-        values = {}
-        for param in params:
-            # Default values for required params
-            if param.get("required", False): # if example is provided: or "example"
-                name = param.get("name","")
-                name = "<" + name + ">" if param.get("in", "query") == "path" else name
-                value = param.get("example","<Object ID>")
-                values[name] = value
-
-        self.setParams(values)
 
     def setNameOptionsAll(self, options):
         '''

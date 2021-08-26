@@ -99,7 +99,7 @@ class ApiActions(object):
             self.mainWindow.guiActions.showColumns()
 
         # Set global settings
-        self.setGlobalOptions(settings)
+        tab.setGlobalOptions(settings)
 
         return True
 
@@ -380,106 +380,33 @@ class ApiActions(object):
         self.mainWindow.fieldList.setPlainText("\n".join(columns))
         self.showColumns()
 
-    def getGlobalOptions(self):
-        # Get global options
-        settings = {}
-        settings['nodelevel'] = self.mainWindow.levelEdit.value()
-        settings['excludetypes'] = self.mainWindow.typesEdit.text()
-        settings['threads'] = self.mainWindow.threadsEdit.value()
-        settings['speed'] = self.mainWindow.speedEdit.value()
-        settings['errors'] = self.mainWindow.errorEdit.value()
-        settings['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
-        settings['logrequests'] = self.mainWindow.logCheckbox.isChecked()
-        settings['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
-        settings['fulloffcut'] = self.mainWindow.offcutCheckbox.isChecked()
-        settings['timeout'] = self.mainWindow.timeoutEdit.value()
-        settings['maxsize'] = self.mainWindow.maxsizeEdit.value()
-        settings['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
-        settings['resume'] = self.mainWindow.resumeCheckbox.isChecked()
-        settings['emptyonly'] = self.mainWindow.emptyCheckbox.isChecked()
 
-        return settings
-
-    def setGlobalOptions(self, settings):
-        value = settings.get('nodelevel', None) # default None
-        if value is not None:
-            self.mainWindow.levelEdit.setValue(int(value))
-
-        value = settings.get('excludetypes', None) # default None
-        if value is not None:
-            self.mainWindow.typesEdit.setText(str(value))
-
-        value = settings.get('threads', None) # default None
-        if value is not None:
-            self.mainWindow.threadsEdit.setValue(int(value))
-
-        value = settings.get('speed') # default 200
-        if value is not None:
-            self.mainWindow.speedEdit.setValue(int(value))
-
-        value = settings.get('errors', None) # default None
-        if value is not None:
-            self.mainWindow.errorEdit.setValue(int(value))
-
-        value = settings.get('expand', None) # default None
-        if value is not None:
-            self.mainWindow.autoexpandCheckbox.setChecked(bool(value))
-
-        value = settings.get('saveheaders', None) # default None
-        if value is not None:
-            self.mainWindow.headersCheckbox.setChecked(bool(value))
-
-        value = settings.get('fulloffcut', None) # default None
-        if value is not None:
-            self.mainWindow.offcutCheckbox.setChecked(bool(value))
-
-        value = settings.get('timeout') # default 15
-        if value is not None:
-            self.mainWindow.timeoutEdit.setValue(int(value))
-
-        value = settings.get('maxsize') # default 5
-        if value is not None:
-            self.mainWindow.maxsizeEdit.setValue(int(value))
-
-        value = settings.get('logrequests', None) # default None
-        if value is not None:
-            self.mainWindow.logCheckbox.setChecked(bool(value))
-
-        value = settings.get('allnodes', None) # default None
-        if value is not None:
-            self.mainWindow.allnodesCheckbox.setChecked(bool(value))
-
-        value = settings.get('resume', None) # default None
-        if value is not None:
-            self.mainWindow.resumeCheckbox.setChecked(bool(value))
-
-        value = settings.get('emptyonly', None) # default None
-        if value is not None:
-            self.mainWindow.emptyCheckbox.setChecked(bool(value))
 
     def getPresetOptions(self):
-        # Global options
-        settings = self.getGlobalOptions()
+        apimodule = self.mainWindow.RequestTabs.currentWidget()
+
+        # Get global options
+        settings = apimodule.getGlobalOptions()
+        settings['module'] = apimodule.name
 
         # Columns
         settings['columns'] = self.mainWindow.fieldList.toPlainText().splitlines()
 
-        # Module option
-        apimodule = self.mainWindow.RequestTabs.currentWidget()
-        settings['module'] = apimodule.name
+        # Module options
         settings['options'] = apimodule.getOptions('preset')
 
         return settings
 
     def getQueryOptions(self, apimodule=False, options=None):
-        # Get global options
-        globaloptions = self.getGlobalOptions()
-
         # Get module option
         if isinstance(apimodule, str):
             apimodule = self.mainWindow.getModule(apimodule)
         if apimodule == False:
             apimodule = self.mainWindow.RequestTabs.currentWidget()
+
+        # Get global options
+        globaloptions = apimodule.getGlobalOptions()
+
         apimodule.getProxies(True)
 
         if options is None:
@@ -968,28 +895,16 @@ class GuiActions(object):
         self.mainWindow.selectNodesWindow.showWindow()
 
     def getQueryOptions(self, apimodule=False, options=None):
-        # Get global options
-        globaloptions = {}
-        globaloptions['threads'] = self.mainWindow.threadsEdit.value()
-        globaloptions['speed'] = self.mainWindow.speedEdit.value()
-        globaloptions['errors'] = self.mainWindow.errorEdit.value()
-        globaloptions['expand'] = self.mainWindow.autoexpandCheckbox.isChecked()
-        globaloptions['logrequests'] = self.mainWindow.logCheckbox.isChecked()
-        globaloptions['saveheaders'] = self.mainWindow.headersCheckbox.isChecked()
-        globaloptions['fulloffcut'] = self.mainWindow.offcutCheckbox.isChecked()
-        globaloptions['timeout'] = self.mainWindow.timeoutEdit.value()
-        globaloptions['maxsize'] = self.mainWindow.maxsizeEdit.value()
-        globaloptions['allnodes'] = self.mainWindow.allnodesCheckbox.isChecked()
-        globaloptions['resume'] = self.mainWindow.resumeCheckbox.isChecked()
-        globaloptions['emptyonly'] = self.mainWindow.emptyCheckbox.isChecked()
-
-        # Get module option
         if isinstance(apimodule, str):
             apimodule = self.mainWindow.getModule(apimodule)
         if apimodule == False:
             apimodule = self.mainWindow.RequestTabs.currentWidget()
+
+        # Get global options
+        globaloptions = apimodule.getGlobalOptions()
         apimodule.getProxies(True)
 
+        # Get module option
         if options is None:
             options = apimodule.getOptions()
         else:

@@ -546,7 +546,7 @@ class ApiViewer(QDialog):
         try:
             # Documentation
             self.loadFiles(self.folder, module)
-            self.loadFiles(self.folderDefault, module)
+            self.loadFiles(self.folderDefault, module, True)
 
             # Get best match based on module and basepath
             api = None
@@ -702,26 +702,8 @@ class ApiViewer(QDialog):
                     'resource' : path
                 }
 
-                if module == 'Generic':
-                    options['nodedata'] = getDictValue(data,'x-facepager-extract')
-                    options['objectid'] = getDictValue(data,'x-facepager-objectid')
-
-                    options['paging_type'] = getDictValue(data,'x-facepager-pagination.method')
-                    options['key_paging'] = getDictValue(data,'x-facepager-pagination.key')
-                    options['paging_stop'] = getDictValue(data,'x-facepager-pagination.stop')
-                    options['param_paging'] = getDictValue(data,'x-facepager-pagination.param')
-
-                    options['auth_type'] = getDictValue(data, 'x-facepager-authorization.auth_type')
-                    options['auth_uri'] = getDictValue(data,'x-facepager-authorization.auth_uri')
-                    options['auth_tokenuri'] = getDictValue(data, 'x-facepager-authorization.token_uri')
-
-                    options['auth'] = getDictValue(data,'x-facepager-authorization.auth_method')
-                    options['auth_tokenname'] = getDictValue(data,'x-facepager-authorization.token_name')
-
+                # Will pull the default settings from the API doc
                 tab.setOptions(options)
-
-                params = getDictValue(data, "operations.get.parameters", [])
-                tab.paramEdit.setOpenAPIOptions(params)
 
                 self.mainWindow.RequestTabs.setCurrentWidget(tab)
 
