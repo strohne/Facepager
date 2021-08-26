@@ -205,7 +205,7 @@ class ApiViewer(QDialog):
         detailForm.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow);
         detailForm.setFormAlignment(Qt.AlignLeft | Qt.AlignTop);
         detailForm.setLabelAlignment(Qt.AlignLeft);
-        self.detailLayout.addLayout(detailForm,1)
+        self.detailLayout.insertLayout(self.detailLayout.count()-1, detailForm,1)
         self.detailTables[caption] = detailForm
 
         caption = QLabel(caption)
