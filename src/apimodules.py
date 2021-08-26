@@ -2621,7 +2621,7 @@ class FacebookTab(AuthTab):
         #Defaults
         self.defaults['auth_type'] = "OAuth2"
         self.defaults['scope'] = '' #user_groups
-        self.defaults['basepath'] = 'https://graph.facebook.com/v3.2'
+        self.defaults['basepath'] = 'https://graph.facebook.com/v3.4'
         self.defaults['resource'] = '/<Object ID>'
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
         self.defaults['redirect_uri'] = 'https://www.facebook.com/connect/login_success.html'
