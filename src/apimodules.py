@@ -429,11 +429,14 @@ class ApiTab(QScrollArea):
 
         return options
 
-    def updateBasePath(self, basepath=None):
-        if basepath is None:
+    def updateBasePath(self, options=None):
+        if options is None:
             basepath = self.basepathEdit.currentText().strip()
         else:
+            basepath = options.get('basepath', '')
             self.basepathEdit.setEditText(basepath)
+
+        selected = self.resourceEdit.currentText()
 
         # Get general doc
         apidoc = self.mainWindow.apiWindow.getApiDoc(self.name, basepath)
@@ -460,14 +463,22 @@ class ApiTab(QScrollArea):
         else:
             self.resourceEdit.insertItem(0, "/<Object ID>")
 
-    def updateResource(self, resource=None):
-        if resource is None:
+        # Select endpoint
+        index = self.resourceEdit.findText(selected)
+        if ((index == -1) and (self.resourceEdit.count() > 0)):
+            index = 0
+
+        self.resourceEdit.setCurrentIndex(index)
+
+
+    def updateResource(self, options=None):
+        if options is None:
             resource = self.resourceEdit.currentText().strip()
         else:
+            resource = options.get('resource', '')
             self.resourceEdit.setEditText(resource)
 
         index = self.resourceEdit.findText(resource)
-
         operations = self.resourceEdit.itemData(index, Qt.UserRole)
         params = getDictValue(operations, "get.parameters", False) if operations else []
 
@@ -475,149 +486,154 @@ class ApiTab(QScrollArea):
         self.paramEdit.setNameOptionsAll(params)
 
         # Set default param values
-        newparams = {}
+        defaultparams = {}
         for param in params:
             # Default values for required params
-            if param.get("required", False) or param.get("x-facepager-default",
-                                                         False):  # if example is provided: or "example"
+            if param.get("required", False) or param.get("x-facepager-default", False):
                 name = param.get("name", "")
                 name = "<" + name + ">" if param.get("in", "query") == "path" else name
                 value = param.get("example", "<Object ID>")
 
-                newparams[name] = value
+                defaultparams[name] = value
 
-        self.paramEdit.setParams(newparams)
+        self.updateParams({'params':defaultparams})
 
-        # Set doc options
+        # Set default options
         self.docoptions = self.getDocOptions()
+
+        defaults = self.defaults.copy()
+        defaults.update(self.docoptions)
+        self.updateOptions(defaults)
 
     # Populates input fields from loaded options and presets
     # Select boxes are updated by onChangedBasepath and onChangedResource
     # based on the API docs.
-    # @options None or dict with options
-    def setSettings(self, options = {}):
+    # @settings Dict with options
+    def setSettings(self, settings = {}):
         if not self.isUpdating:
             self.isUpdating = True
             try:
                 try:
                     # Merge options
-                    defaults = self.defaults.copy()
-                    defaults.update(self.docoptions)
-                    defaults.update(options)
+                    options = self.defaults.copy()
+                    options.update(self.docoptions)
+                    options.update(settings)
 
                     # Base path
-                    self.updateBasePath(defaults.get('basepath',''))
+                    self.updateBasePath(options)
 
                     # Resource
-                    self.updateResource(defaults.get('resource',''))
+                    self.updateResource(options)
 
                     # Params
-                    self.paramEdit.setParams(defaults.get('params',  ''))
+                    self.updateParams(options)
 
-                    # Recalculate options
-                    # (docoptions may be altered by onChangedBasepath or onChangedResource)
-                    defaults = self.defaults.copy()
-                    defaults.update(self.docoptions)
-                    defaults.update(options)
-
-                    # Header and method
-                    try:
-                        self.headerEdit.setParams(defaults.get('headers', {}))
-                        self.verbEdit.setCurrentIndex(self.verbEdit.findText(defaults.get('verb', 'GET')))
-                        self.encodingEdit.setCurrentIndex(self.encodingEdit.findText(defaults.get('encoding', '<None>')))
-
-                        if defaults.get('encoding', '<None>') == 'multipart/form-data':
-                            self.multipartEdit.setParams(defaults.get('payload', {}))
-                        else:
-                            self.payloadEdit.setPlainText(defaults.get('payload', ''))
-
-                        self.verbChanged()
-                    except AttributeError:
-                        pass
-
-                    # Format
-                    try:
-                        self.formatEdit.setCurrentIndex(self.formatEdit.findText(defaults.get('format', 'json')))
-                    except AttributeError:
-                        pass
-
-                    # Upload folder
-                    try:
-                        if 'folder' in options:
-                            self.folderEdit.setText(defaults.get('folder'))
-                    except AttributeError:
-                        pass
-
-                    # Download folder
-                    try:
-                        if 'downloadfolder' in options:
-                            self.downloadfolderEdit.setText(defaults.get('downloadfolder'))
-                    except AttributeError:
-                        pass
-
-                    try:
-                        self.filenameEdit.setEditText(defaults.get('filename', '<None>'))
-                        self.fileextEdit.setEditText(defaults.get('fileext', '<None>'))
-                    except AttributeError:
-                        pass
-
-                    # Paging
-                    try:
-                        self.pagesEdit.setValue(int(defaults.get('pages', 1)))
-                    except AttributeError:
-                        pass
-
-                    try:
-                        self.pagingTypeEdit.setCurrentIndex(
-                            self.pagingTypeEdit.findText(defaults.get('paging_type', 'key')))
-                        self.pagingkeyEdit.setText(defaults.get('key_paging', ''))
-                        self.pagingstopEdit.setText(defaults.get('paging_stop', ''))
-                        self.pagingparamEdit.setText(defaults.get('param_paging', ''))
-                        self.offsetStartEdit.setValue(int(defaults.get('offset_start', 1)))
-                        self.offsetStepEdit.setValue(int(defaults.get('offset_step', 1)))
-                        self.pagingChanged()
-                    except AttributeError:
-                        pass
-
-                    # Extract options
-                    try:
-                        self.extractEdit.setText(defaults.get('nodedata'))
-                        self.objectidEdit.setText(defaults.get('objectid'))
-                    except AttributeError:
-                        pass
-
-                    # Scope
-                    try:
-                        self.scopeEdit.setText(defaults.get('scope', ''))
-                    except AttributeError:
-                        pass
-
-                    # Proxy
-                    try:
-                        self.proxyEdit.setText(defaults.get('proxy', ''))
-                    except AttributeError:
-                        pass
-
-                    # Credentials
-                    try:
-                        if 'access_token' in defaults:
-                            self.tokenEdit.setText(defaults.get('access_token', ''))
-                        if 'access_token_secret' in defaults:
-                            self.tokensecretEdit.setText(defaults.get('access_token_secret', ''))
-                        if 'client_id' in defaults:
-                            self.clientIdEdit.setText(defaults.get('client_id', ''))
-                        if 'client_secret' in defaults:
-                            self.clientSecretEdit.setText(defaults.get('client_secret', ''))
-
-                    except AttributeError:
-                        pass
+                    # Options
+                    self.updateOptions(options)
 
                 except AttributeError:
                     pass
             finally:
                 self.isUpdating = False
 
-        return options
+        return settings
+
+    def updateParams(self, options):
+        self.paramEdit.setParams(options.get('params', ''))
+
+    def updateOptions(self, options):
+
+        # Header and method
+        try:
+            self.headerEdit.setParams(options.get('headers', {}))
+            self.verbEdit.setCurrentIndex(self.verbEdit.findText(options.get('verb', 'GET')))
+            self.encodingEdit.setCurrentIndex(self.encodingEdit.findText(options.get('encoding', '<None>')))
+
+            if options.get('encoding', '<None>') == 'multipart/form-data':
+                self.multipartEdit.setParams(options.get('payload', {}))
+            else:
+                self.payloadEdit.setPlainText(options.get('payload', ''))
+
+            self.verbChanged()
+        except AttributeError:
+            pass
+
+        # Format
+        try:
+            self.formatEdit.setCurrentIndex(self.formatEdit.findText(options.get('format', 'json')))
+        except AttributeError:
+            pass
+
+        # Upload folder
+        try:
+            if 'folder' in options:
+                self.folderEdit.setText(options.get('folder'))
+        except AttributeError:
+            pass
+
+        # Download folder
+        try:
+            if 'downloadfolder' in options:
+                self.downloadfolderEdit.setText(options.get('downloadfolder'))
+        except AttributeError:
+            pass
+
+        try:
+            self.filenameEdit.setEditText(options.get('filename', '<None>'))
+            self.fileextEdit.setEditText(options.get('fileext', '<None>'))
+        except AttributeError:
+            pass
+
+        # Paging
+        try:
+            self.pagesEdit.setValue(int(options.get('pages', 1)))
+        except AttributeError:
+            pass
+
+        try:
+            self.pagingTypeEdit.setCurrentIndex(
+                self.pagingTypeEdit.findText(options.get('paging_type', 'key')))
+            self.pagingkeyEdit.setText(options.get('key_paging', ''))
+            self.pagingstopEdit.setText(options.get('paging_stop', ''))
+            self.pagingparamEdit.setText(options.get('param_paging', ''))
+            self.offsetStartEdit.setValue(int(options.get('offset_start', 1)))
+            self.offsetStepEdit.setValue(int(options.get('offset_step', 1)))
+            self.pagingChanged()
+        except AttributeError:
+            pass
+
+        # Extract options
+        try:
+            self.extractEdit.setText(options.get('nodedata'))
+            self.objectidEdit.setText(options.get('objectid'))
+        except AttributeError:
+            pass
+
+        # Scope
+        try:
+            self.scopeEdit.setText(options.get('scope', ''))
+        except AttributeError:
+            pass
+
+        # Proxy
+        try:
+            self.proxyEdit.setText(options.get('proxy', ''))
+        except AttributeError:
+            pass
+
+        # Credentials
+        try:
+            if 'access_token' in options:
+                self.tokenEdit.setText(options.get('access_token', ''))
+            if 'access_token_secret' in options:
+                self.tokensecretEdit.setText(options.get('access_token_secret', ''))
+            if 'client_id' in options:
+                self.clientIdEdit.setText(options.get('client_id', ''))
+            if 'client_secret' in options:
+                self.clientSecretEdit.setText(options.get('client_secret', ''))
+
+        except AttributeError:
+            pass
 
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_" + self.name)
@@ -1101,7 +1117,6 @@ class ApiTab(QScrollArea):
                 self.basepathEdit.setCurrentIndex(index)
 
         self.updateBasePath()
-        self.onChangedResource()
 
 
     @Slot()
@@ -1118,12 +1133,12 @@ class ApiTab(QScrollArea):
 
         self.updateResource()
 
-        options = {
-            'basepath': self.basepathEdit.currentText().strip(),
-            'resource': self.resourceEdit.currentText().strip()
-        }
-
-        self.setSettings(options)
+        # options = {
+        #     'basepath': self.basepathEdit.currentText().strip(),
+        #     'resource': self.resourceEdit.currentText().strip()
+        # }
+        #
+        # self.setSettings(options)
 
     @Slot()
     def onChangedParam(self,index=0):
