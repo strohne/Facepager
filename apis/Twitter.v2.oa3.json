@@ -16,7 +16,7 @@
      },
 
 	"info": {
-		"title": "Twitter API version 2",
+		"title": "Twitter API v2",
 		"description": "The first endpoints of the Twitter v2 API are available within Early Access. According to Twitter, additional endpoints, features, and access levels will be released soon. They intend for this new v2 Twitter API to replace the standard v1.1, premium v1.1, and enterprise APIs in the future.",
 		"termsOfService": "https://developer.twitter.com/en/developer-terms",
 		"version": "2"
