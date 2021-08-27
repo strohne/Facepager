@@ -89,7 +89,7 @@ class ApiActions(object):
 
         tab = self.mainWindow.getModule(module)
         if tab is not None:
-            tab.setOptions(settings.get('options', {}))
+            tab.setSettings(settings.get('options', {}))
             self.mainWindow.RequestTabs.setCurrentWidget(tab)
 
         # Set columns
@@ -393,7 +393,7 @@ class ApiActions(object):
         settings['columns'] = self.mainWindow.fieldList.toPlainText().splitlines()
 
         # Module options
-        settings['options'] = apimodule.getOptions('preset')
+        settings['options'] = apimodule.getSettings('preset')
 
         return settings
 
@@ -410,7 +410,7 @@ class ApiActions(object):
         apimodule.getProxies(True)
 
         if options is None:
-            options = apimodule.getOptions('fetch')
+            options = apimodule.getSettings('fetch')
         else:
             options = options.copy()
         options.update(globaloptions)
@@ -906,7 +906,7 @@ class GuiActions(object):
 
         # Get module option
         if options is None:
-            options = apimodule.getOptions()
+            options = apimodule.getSettings()
         else:
             options = options.copy()
         options.update(globaloptions)
@@ -1174,7 +1174,7 @@ class GuiActions(object):
                       }
         indexes = self.mainWindow.tree.selectedIndexesAndChildren(conditions)
         module = self.mainWindow.RequestTabs.currentWidget()
-        options = module.getOptions()
+        options = module.getSettings()
         pipeline = [{'module': module, 'options': options}]
 
         # Show timer window

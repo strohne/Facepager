@@ -550,7 +550,7 @@ class PresetWindow(QDialog):
 
             preset = item.data(0, Qt.UserRole)
             module = self.mainWindow.getModule(preset.get('module', None))
-            options = module.getOptions()
+            options = module.getSettings()
             options.update(preset.get('options', {}))
             preset['options'] = options.copy()
             preset['item'] = item

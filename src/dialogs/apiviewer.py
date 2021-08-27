@@ -705,7 +705,7 @@ class ApiViewer(QDialog):
                 }
 
                 # Will pull the default settings from the API doc
-                tab.setOptions(options)
+                tab.setSettings(options)
 
                 self.mainWindow.RequestTabs.setCurrentWidget(tab)
 

@@ -276,7 +276,7 @@ class ApiTab(QScrollArea):
             return payload
 
     # Gets data from input fields or defaults (never gets credentials from default values!)
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = {}
 
         defaults = self.defaults.copy()
@@ -495,13 +495,7 @@ class ApiTab(QScrollArea):
     # Select boxes are updated by onChangedBasepath and onChangedResource
     # based on the API docs.
     # @options None or dict with options
-    def setOptions(self, options = None):
-        if options is None:
-            options = {
-                'basepath': self.basepathEdit.currentText().strip(),
-                'resource': self.resourceEdit.currentText().strip()
-            }
-
+    def setSettings(self, options = {}):
         if not self.isUpdating:
             self.isUpdating = True
             try:
@@ -627,7 +621,7 @@ class ApiTab(QScrollArea):
 
     def saveSettings(self):
         self.mainWindow.settings.beginGroup("ApiModule_" + self.name)
-        options = self.getOptions('settings')
+        options = self.getSettings('settings')
 
         for key in list(options.keys()):
             self.mainWindow.settings.setValue(key, options[key])
@@ -640,7 +634,7 @@ class ApiTab(QScrollArea):
         for key in self.mainWindow.settings.allKeys():
             options[key] = self.mainWindow.settings.value(key)
         self.mainWindow.settings.endGroup()
-        self.setOptions(options)
+        self.setSettings(options)
 
     @Slot(str)
     def logMessage(self,message):
@@ -1106,7 +1100,9 @@ class ApiTab(QScrollArea):
             if index != -1:
                 self.basepathEdit.setCurrentIndex(index)
 
-        self.setOptions()
+        self.updateBasePath()
+        self.onChangedResource()
+
 
     @Slot()
     def onChangedResource(self, index = None):
@@ -1120,7 +1116,14 @@ class ApiTab(QScrollArea):
             if index != -1:
                 self.resourceEdit.setCurrentIndex(index)
 
-        self.setOptions()
+        self.updateResource()
+
+        options = {
+            'basepath': self.basepathEdit.currentText().strip(),
+            'resource': self.resourceEdit.currentText().strip()
+        }
+
+        self.setSettings(options)
 
     @Slot()
     def onChangedParam(self,index=0):
@@ -1852,8 +1855,8 @@ class AuthTab(ApiTab):
         #self.mainLayout.addRow(rowcaption, loginwidget)
         self.extraLayout.addRow(rowcaption, loginlayout)
 
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(AuthTab, self).getOptions(purpose)
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(AuthTab, self).getSettings(purpose)
         defaults = self.defaults.copy()
         defaults.update(self.docoptions)
 
@@ -1918,8 +1921,8 @@ class AuthTab(ApiTab):
 
 
     # Transfer options to GUI
-    def setOptions(self, options = None):
-        options = super(AuthTab, self).setOptions(options)
+    def setSettings(self, options = {}):
+        options = super(AuthTab, self).setSettings(options)
 
         if not self.isUpdating:
             # Merge options
@@ -2054,7 +2057,7 @@ class AuthTab(ApiTab):
         :return:
         """
         self.closeSession(session_no)
-        options = self.getOptions()
+        options = self.getSettings()
 
         if options['auth_type'] == 'OAuth2 Client Credentials':
             self.doTwitterAppLogin(session_no)
@@ -2098,7 +2101,7 @@ class AuthTab(ApiTab):
     @Slot()
     def doOAuth2Login(self, session_no=0):
         try:
-            options = self.getOptions()
+            options = self.getSettings()
 
             # use credentials from input if provided
             clientid = self.getClientId()
@@ -2140,7 +2143,7 @@ class AuthTab(ApiTab):
     @Slot()
     def doOAuth2ExternalLogin(self, session_no=0):
         try:
-            options = self.getOptions()
+            options = self.getSettings()
 
             # use credentials from input if provided
             clientid = self.getClientId()
@@ -2184,7 +2187,7 @@ class AuthTab(ApiTab):
             # print("Domain: "+domain+". Cookie: "+cookie)
 
         try:
-            options = self.getOptions()
+            options = self.getSettings()
             url= options.get('auth_uri', '')
 
             if url == '':
@@ -2219,7 +2222,7 @@ class AuthTab(ApiTab):
             if clientsecret == '':
                 raise Exception('Client Secret is missing, please adjust settings!')
 
-            options = self.getOptions()
+            options = self.getSettings()
             path= options.get('auth_uri', '')
             if path == '':
                 raise Exception('Login URL is missing, please adjust settings!')
@@ -2302,7 +2305,7 @@ class AuthTab(ApiTab):
 
     @Slot()
     def onLoginWindowChanged(self, url=False):
-        options = self.getOptions()
+        options = self.getSettings()
 
         if options['auth_type'] == 'OAuth2 Client Credentials':
             return False
@@ -2313,7 +2316,7 @@ class AuthTab(ApiTab):
                 self.closeLoginWindow()
         else:
             url = url.toString()
-            options = self.getOptions()
+            options = self.getSettings()
             if url.startswith(options['redirect_uri']):
                 if self.getOAuth2Token(url):
                     self.closeLoginWindow()
@@ -2338,7 +2341,7 @@ class AuthTab(ApiTab):
             self.loginServerInstance = None
 
     def onLoginServerRedirect(self, path):
-        options = self.getOptions()
+        options = self.getSettings()
         url = options['redirect_uri'] + path
         if self.getOAuth2Token(url):
             self.stopLoginServer()
@@ -2353,7 +2356,7 @@ class AuthTab(ApiTab):
         :param no: session number
         :return: session object
         """
-        options = self.getOptions()
+        options = self.getSettings()
 
         if options.get('auth_type') == 'OAuth1':
             return self.initOAuth1Session(no, renew)
@@ -2450,7 +2453,7 @@ class AuthTab(ApiTab):
     def getOAuth2Token(self, url):
         success = False
         try:
-            options = self.getOptions()
+            options = self.getSettings()
 
             urlparsed = urlparse(url)
             query = parse_qs(urlparsed.query)
@@ -2597,8 +2600,8 @@ class GenericTab(AuthTab):
         self.loadSettings()
 
 
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(GenericTab, self).getOptions(purpose)
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(GenericTab, self).getSettings(purpose)
 
         if purpose != 'preset':
             options['querytype'] = self.name + ':'+options['basepath']+options['resource']
@@ -2655,8 +2658,8 @@ class FacebookTab(AuthTab):
         self.scopeEdit = QLineEdit()
         authlayout.addRow("Scopes",self.scopeEdit)
 
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(FacebookTab, self).getOptions(purpose)
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(FacebookTab, self).getSettings(purpose)
 
         options['auth'] = 'param'
         options['auth_prefix'] = ''
@@ -2667,8 +2670,8 @@ class FacebookTab(AuthTab):
 
         return options
 
-    def setOptions(self, options = None):
-        options = super(FacebookTab, self).setOptions(options)
+    def setSettings(self, options ={}):
+        options = super(FacebookTab, self).setSettings(options)
 
         if not self.isUpdating:
             if 'pageid' in options:
@@ -2873,8 +2876,8 @@ class AmazonTab(AuthTab):
 
         self.extraLayout.addRow("Access Key", loginwidget)
 
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(AmazonTab, self).getOptions(purpose)
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(AmazonTab, self).getSettings(purpose)
 
         options['auth'] = 'disable'
         #options['format'] = self.defaults.get('format', '')
@@ -2888,8 +2891,8 @@ class AmazonTab(AuthTab):
 
         return options
 
-    def setOptions(self, options = None):
-        options = super(AmazonTab, self).setOptions(options)
+    def setSettings(self, options = {}):
+        options = super(AmazonTab, self).setSettings(options)
 
         if not self.isUpdating:
             if 'secretkey' in options:
@@ -3087,8 +3090,8 @@ class TwitterTab(AuthTab):
         self.clientSecretEdit.setEchoMode(QLineEdit.Password)
         authlayout.addRow("Consumer Secret", self.clientSecretEdit)
 
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(TwitterTab, self).getOptions(purpose)
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(TwitterTab, self).getSettings(purpose)
 
         if options['auth_type'] == 'OAuth2 Client Credentials':
             options['auth_uri'] = 'https://api.twitter.com/oauth2/token/'
@@ -3368,8 +3371,8 @@ class YoutubeTab(AuthTab):
 
         return getDictValueOrNone(data,'items.0.id')
 
-    def getOptions(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
-        options = super(YoutubeTab, self).getOptions(purpose)
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(YoutubeTab, self).getSettings(purpose)
 
         if options.get('auth_type') == 'API key':
             options['auth'] = 'param'
