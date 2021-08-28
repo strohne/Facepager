@@ -447,6 +447,10 @@ class ApiViewer(QDialog):
     def loadFiles(self,folder, module, default=False):
         # self.downloadDefaultFiles(True)
 
+        # Create folders
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
         module = module.replace(" ", "")
         for filename in os.listdir(folder):
             if filename.startswith(module) and filename.endswith(self.filesSuffix[0]):
