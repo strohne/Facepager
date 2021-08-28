@@ -1,0 +1,53 @@
+{
+  "name": "2 Get accounts from lists",
+  "category": "Crowdtangle",
+  "description": "Add List ID as seed node. \n\nYou get the list ID from a list or a saved search/post at your CrowdTangle Dashboard (Preset 1) or you do a search with the search endpoint.\n\nWith this preset you can get the accounts for a given list. The list has to be of type list, saved searches and saved posts do not have associated accounts.\n\nThis preset fetches 10 accounts of a list. You can increase the count-parameter up to 100 to get more accounts.\n\nDON'T FORGET: Before you can fetch the data, you must enter your CrowdTangle access token in the corresponding field \"access token\" for authentication.\n\nSee https://github.com/CrowdTangle/API/wiki/List-Accounts for more information. \n\nAPI-Cheatsheet: https://help.crowdtangle.com/en/articles/3443476-api-cheat-sheet",
+  "module": "Generic",
+  "options": {
+    "auth": "param",
+    "auth_tokenname": "token",
+    "auth_type": "API key",
+    "auth_uri": "",
+    "basepath": "https://api.crowdtangle.com",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": "result.pagination.nextPage",
+    "nodedata": "result.accounts",
+    "objectid": "id",
+    "pages": 5,
+    "paging_type": "url",
+    "params": {
+      "<listID>": "<Object ID>",
+      "count": "10"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/lists/<listID>/accounts",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": true,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "name",
+    "handle",
+    "profileImage",
+    "subscriberCount",
+    "url",
+    "platform",
+    "platformId",
+    "accountType",
+    "pageAdminTopCountry",
+    "pageDescription",
+    "pageCreatedDate",
+    "pageCategory",
+    "verified"
+  ]
+}

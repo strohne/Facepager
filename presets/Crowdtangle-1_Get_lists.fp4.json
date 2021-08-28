@@ -1,0 +1,42 @@
+{
+  "name": "1 Get lists",
+  "category": "Crowdtangle",
+  "description": "CrowdTangle is a Facebook public insights tool that makes it simple to track, analyze, and report on what's going on with public social media material. \n\nThe access for CrowdTangle is available for academics and researchers in specific fields. Here you can find more information about the registration and apply for the access token: https://help.crowdtangle.com/en/articles/4302208-crowdtangle-for-academics-and-researchers. \n\nOnce you have the CrowdTangle Access you can start the data collection of public accounts and groups across Facebook and Instagram. From your CrowdTangle Dashboard you can create custom lists of public accounts and groups you want to monitor.  \n\nWith this first preset you get the lists and saved searches/posts of your dashboard. Add your Access Token as seed node. \n\nDON'T FORGET: Before you can fetch the data, you must enter your CrowdTangle access token in the corresponding field \"access token\" for authentication.\n\nSee https://github.com/CrowdTangle/API/wiki/lists for more information\n\nAPI-Cheatsheet: https://help.crowdtangle.com/en/articles/3443476-api-cheat-sheet",
+  "module": "Generic",
+  "options": {
+    "auth": "param",
+    "auth_tokenname": "token",
+    "auth_type": "API key",
+    "auth_uri": "",
+    "basepath": "https://api.crowdtangle.com",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": "result.pagination.nextPage",
+    "nodedata": "result.lists",
+    "objectid": "id",
+    "pages": 5,
+    "paging_type": "url",
+    "params": {
+      "token": "<Object ID>"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/lists",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "title",
+    "type",
+    "result"
+  ]
+}
