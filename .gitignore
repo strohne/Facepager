@@ -11,6 +11,7 @@ __pycache__
 src/credentials.py
 build/windows/PySide2
 build/osx/copyfromvm.bat
+build/osx/Facepager/
 pyenv
 .project
 .pydevproject
