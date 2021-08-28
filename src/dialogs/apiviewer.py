@@ -695,19 +695,17 @@ class ApiViewer(QDialog):
         if module is None:
             return False
 
-        for i in range(0, self.mainWindow.RequestTabs.count()):
-            if self.mainWindow.RequestTabs.widget(i).name == module:
-                tab = self.mainWindow.RequestTabs.widget(i)
-                path = data.get('path', '')
-                options = {
-                    'basepath' : getDictValue(data, 'info.servers.0.url',''),
-                    'resource' : path
-                }
+        tab = self.mainWindow.getModule(module)
+        if tab is not None:
+            path = data.get('path', '')
+            options = {
+                'basepath' : getDictValue(data, 'info.servers.0.url',''),
+                'resource' : path
+            }
 
-                # Will pull the default settings from the API doc
-                tab.setSettings(options)
-                self.mainWindow.RequestTabs.setCurrentWidget(tab)
-                break
+            # Will pull the default settings from the API doc
+            tab.setSettings(options)
+            self.mainWindow.RequestTabs.setCurrentWidget(tab)
 
         self.close()
 

@@ -505,12 +505,10 @@ class MainWindow(QMainWindow):
             else:
                 webbrowser.open('file:///'+os.path.dirname(self.database.filename))
 
-
     def getModule(self,module):
         for i in range(0, self.RequestTabs.count()):
             if self.RequestTabs.widget(i).name == module:
-                tab = self.RequestTabs.widget(i)
-                return tab
+                return self.RequestTabs.widget(i)
         return None
 
     def updateUI(self):
