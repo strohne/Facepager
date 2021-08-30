@@ -3092,6 +3092,9 @@ class TwitterTab(AuthTab):
 
         if options['auth_type'] == 'OAuth2 Client Credentials':
             options['auth_uri'] = 'https://api.twitter.com/oauth2/token/'
+            options['auth'] = 'header'
+            options['auth_prefix'] = 'Bearer '
+            options['auth_tokenname'] = "Authorization"
 
         return options
 

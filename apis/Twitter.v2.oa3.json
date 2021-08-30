@@ -12,8 +12,10 @@
 	},
     "x-facepager-authorization" : {         
          "auth_type":"OAuth2 Client Credentials",
-         "auth_uri":"https://api.twitter.com/oauth2/token/"
-     },
+         "auth_uri":"https://api.twitter.com/oauth2/token/",
+		 "auth_method": "header",
+		 "token_name": "Authorization"
+	},
 
 	"info": {
 		"title": "Twitter API v2",
