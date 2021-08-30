@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "x-facepager-module":"Facebook",
-    "x-facepager-extract" : "data",
+    "x-facepager-extract": "data",
 	"x-facepager-objectid" : "id",
 
 	"x-facepager-pagination": {
@@ -210,6 +210,8 @@
                             "application/json" : {
                                 "schema" : {
                                     "type" : "object",
+                                    "x-facepager-extract": null,
+                                    "x-facepager-objectid" : "id",                                    
                                     "properties" : {
                                         "id":{"description":"Page ID. No access token is required to access this field"},
                                         "about":{"description":"Information about the Page"},
@@ -1800,6 +1802,8 @@
 						"application/json" : {
 							"schema" : {
 								"type" : "object",
+                                "x-facepager-extract": null,
+                                "x-facepager-objectid" : "id",                                  
 								"properties" : {
 									"id":{"description":"The post ID"},
 									"actions":{"description":"Action links"},
@@ -2258,7 +2262,9 @@
 					"content" : {
 						"application/json" : {
 							"schema" : {
-								"type" : "object",
+                                    "type" : "object",
+                                    "x-facepager-extract": null,
+                                    "x-facepager-objectid" : "id",                                  
 									"properties": {
 										"id":{"description": "The comment ID"},
 										"attachment":{"description": "Link, video, sticker, or photo attached to the comment"},
