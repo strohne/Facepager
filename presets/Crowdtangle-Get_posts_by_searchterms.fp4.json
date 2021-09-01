@@ -25,7 +25,8 @@
       "platforms": "instagram",
       "searchTerm": "<Object ID>",
       "sortBy": "",
-      "startDate": "2021-08-01"
+      "startDate": "2021-08-01",
+      "endDate": "2021-08-31"
     },
     "proxy": "",
     "redirect_uri": "",
