@@ -570,9 +570,9 @@ class ApiViewer(QDialog):
                 elif (api_module == module) and (basepath in api_urls):
                     api = v
 
-                # # Prio 3: docs matching module
-                # elif (api_module == module):
-                #     api = v if api is None else api
+                # Prio 3: docs matching module
+                elif (api_module == module):
+                    api = v if api is None else api
 
             return api
         except:
