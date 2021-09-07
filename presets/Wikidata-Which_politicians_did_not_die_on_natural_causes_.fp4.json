@@ -1,0 +1,45 @@
+{
+  "name": "Which politicians did not die on natural causes?",
+  "category": "Wikidata",
+  "description": "This preset fetches a list of politicians from WikiData that did not die on natural causes. Add an arbitrary node as seed node, e.g. \"politicians\".\n\nSee https://www.wikidata.org/ for further information. You can try out different queries on https://query.wikidata.org/ (paste the value of the query parameter).\n\nPlease be aware that expressions in angle brackets are handled as placeholder by Facepager. Thus, the brackets of the prefixes have to be escaped with a backslash.\n\nPagination is handled by the <offset> placeholder.",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://query.wikidata.org",
+    "resource": "/sparql",
+    "params": {
+      "format": "json",
+      "query": "PREFIX wd: \\<http://www.wikidata.org/entity/\\> \nPREFIX wdt: \\<http://www.wikidata.org/prop/direct/\\>\n\nSELECT DISTINCT ?politician ?cause ?politicianLabel ?causeLabel WHERE {\n   ?politician wdt:P106 wd:Q82955 .            # find items that have \"occupation (P106): politician (Q82955)\"\n   ?politician wdt:P509|wdt:P1196 ?cause .     # with a P509 (cause of death) or P1196 (manner of death) claim\n   ?cause wdt:P279* wd:Q149086 .               # ... where the cause is a subclass of (P279*) homicide (Q149086)\n   # ?politician wdt:P39 wd:Q11696 .           # Uncomment this line to include only U.S. Presidents \n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" }\n} LIMIT 10 OFFSET <offset>"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "GET",
+    "format": "json",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 3,
+    "paging_type": "count",
+    "param_paging": "<offset>",
+    "offset_start": 0,
+    "offset_step": 10,
+    "nodedata": "results.bindings",
+    "objectid": "politician.value",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "API key",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "param",
+    "auth_tokenname": "token"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "politicianLabel.value",
+    "causeLabel.value",
+    "politician.value",
+    "cause.value"
+  ]
+}

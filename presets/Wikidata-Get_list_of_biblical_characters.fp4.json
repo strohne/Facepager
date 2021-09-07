@@ -1,0 +1,48 @@
+{
+  "name": "Get list of biblical characters",
+  "category": "Wikidata",
+  "description": "This preset gets a list of biblical characters, along with the sections in which they occur, from WikiData. Add an arbitrary seed node and fetch data.\n\nSee https://www.wikidata.org/wiki/Wikidata:Lists/List_of_biblical_characters\n\nYou can try out different query on https://query.wikidata.org/ (paste the value of the query parameter to get started).\n\n\nPlease be aware that expressions in angle brackets are handled as placeholder by Facepager. Thus, if your query contains angle brackets, escape them with a backslash. Pagination is handled by the <offset> placeholder.",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://query.wikidata.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "nodedata": "results.bindings",
+    "objectid": "figure.value",
+    "offset_start": 0,
+    "offset_step": 10,
+    "pages": 2,
+    "paging_type": "count",
+    "param_paging": "<offset>",
+    "params": {
+      "format": "json",
+      "query": "SELECT DISTINCT ?figure ?figureLabel ?figureDescription ?section ?sectionLabel ?sectionDescription WHERE {\n\n    ?figure wdt:P31 wd:Q12405827 .\n    ?figure wdt:P1441 ?section .\n    wd:Q1845  (wdt:P527)* ?chapter .  \n    wd:Q1845  (wdt:P527)* ?chapter .\n  \n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\".} \n}\nLIMIT 10 OFFSET <offset>"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/sparql",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "figureLabel.value",
+    "figureDescription.value",
+    "sectionLabel.value",
+    "sectionDescription.value",
+    "figure.value",
+    "section.value"
+  ]
+}
