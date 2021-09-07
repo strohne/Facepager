@@ -9,7 +9,9 @@ rmdir /s / q build
 rmdir /s / q dist
 
 copy ..\build\windows\Facepager.spec Facepager.spec
-pyinstaller --windowed --noconfirm Facepager.spec
+pyinstaller --noconfirm --debug all --upx-exclude vcruntime140.dll --upx-dir ..\build\windows\upx-3.96-win64\ Facepager.spec
+
+@rem pyinstaller --debug all --noconfirm --upx-exclude vcruntime140.dll Facepager.spec --upx-dir ..\build\windows\upx-3.96-win64\
 
 cd dist
 copy ..\..\build\windows\Facepager_Setupscript.nsi Facepager_Setupscript.nsi

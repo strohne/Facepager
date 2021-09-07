@@ -41,7 +41,7 @@ ShowUninstDetails "nevershow"
 ;——————————E
 ;Folder selection page
 
-InstallDir "$PROGRAMFILES\Facepager"
+InstallDir "$PROGRAMFILES64\Facepager"
 
 ;——————————E
 ;Data
