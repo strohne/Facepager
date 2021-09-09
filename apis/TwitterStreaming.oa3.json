@@ -1,0 +1,616 @@
+{
+    "openapi": "3.0.0",
+    "x-facepager-module": "Twitter Streaming",
+
+    "x-facepager-extract" : null,
+	"x-facepager-objectid" : "id",
+	"x-facepager-pagination": {
+		"method" : "stream"
+	},
+    
+    "info": {
+        "title": "Twitter Streaming API",
+        "description": "The Twitter Streaming API let you streams live tweets and get user information.",
+        "termsOfService": "https://developer.twitter.com/en/developer-terms",
+        "version": "1.1"
+    },
+    "externalDocs": {
+        "url": "https://developer.twitter.com/en/docs/api-reference-index"
+    },
+    "servers": [{
+            "url": "https://stream.twitter.com/1.1",
+            "x-facepager-suffix": ".json"
+        }
+    ],
+	"paths":{
+        "/statuses/filter": {
+            "get": {
+                "summary": "Returns public statuses that match one or more filter predicates. Multiple parameters may be specified which allows most clients to use a single connection to the Streaming API. Both GET and POST requests are supported, but GET requests with too many parameters may cause the request to be rejected for excessive URL length. Use a POST request to avoid long URLs..",
+                "externalDocs": {
+                    "url": "https://developer.twitter.com/en/docs/tweets/filter-realtime/api-reference/post-statuses-filter"
+                },
+                "parameters": [
+                    {
+                        "name": "follow",
+                        "in": "query",
+                        "description": "A comma separated list of user IDs, indicating the users to return statuses for in the stream.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "track",
+                        "in": "query",
+                        "description": "Keywords to track. Phrases of keywords are specified by a comma-separated list.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "<Object ID>"
+                    }, {
+                        "name": "locations",
+                        "in": "query",
+                        "description": "Specifies a set of bounding boxes to track.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "delimited",
+                        "in": "query",
+                        "description": "Specifies whether messages should be length-delimited.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "stall_warnings",
+                        "in": "query",
+                        "description": "Specifies whether stall warnings should be delivered.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns public statuses that match one or more filter predicates.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type":"object",
+                                    "properties": {
+                                        "$ref" : "#components/schema/tweet/properties"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/statuses/sample": {
+            "get": {
+                "summary": "Returns a small random sample of all public statuses via a stream. The Tweets returned by the default access level are the same, so if two different clients connect to this endpoint, they will see the same Tweets.",
+                "externalDocs": {
+                    "url": "https://developer.twitter.com/en/docs/tweets/sample-realtime/api-reference/get-statuses-sample"
+                },
+                "parameters": [
+                    {
+                        "name": "delimited",
+                        "in": "query",
+                        "description": "Specifies whether messages should be length-delimited. ",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "stall_warnings",
+                        "in": "query",
+                        "description": "Specifies whether stall warnings should be delivered.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns public statuses that match one or more filter predicates.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type":"object",
+                                    "properties": {
+                                        "$ref" : "#components/schema/tweet/properties"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            },
+       "/labs/1/tweets/stream/sample": {
+            "get": {
+                "summary": "Streams about 1% of all Tweets in real-time.",
+                "externalDocs": {
+                    "url": "https://developer.twitter.com/en/docs/labs/sampled-stream/api-reference/get-tweets-stream-sample"
+                },
+                "parameters": [{
+                        "name": "expansions",
+                        "in": "query",
+                        "description": "Comma-separated list of fields to expand. Expansions enable requests to expand an ID into a full object in the includes response object.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "format",
+                        "in": "query",
+                        "description": "Format for all the objects returned as part of the response, including those returned in expansions.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "place.format",
+                        "in": "query",
+                        "description": "Format for all Place objects returned in response. Can be used together with other format parameters to expand or reduce Place objects only.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "tweet.format",
+                        "in": "query",
+                        "description": "Format for all Tweet objects returned in response. Can be used together with other format parameters to expand or reduce Tweet objects only.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }, {
+                        "name": "user.format",
+                        "in": "query",
+                        "description": "Format for all User objects returned in response. Can be used together with other format parameters to expand or reduce User objects only.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "All Information about 1% of all Tweets in real-time",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+										"type":"object",
+										"properties": {
+											"$ref" : "#components/schema/tweet/properties"
+										}
+                                }
+                            }
+                        }
+                    }
+                }
+            
+          }
+        }            
+      },
+"components": {
+    "schema": {
+        "tweet": {
+            "properties": {
+                "created_at": {
+                    "description": "UTC time when this Tweet was created."
+                },
+                "id": {
+                    "description": "The integer representation of the unique identifier for this Tweet. This number is greater than 53 bits and some programming languages may have difficulty/silent defects in interpreting it. Using a signed 64 bit integer for storing this identifier is safe. Use id_str for fetching the identifier to stay on the safe side. See Twitter IDs, JSON and Snowflake."
+                },
+                "id_str": {
+                    "description": "The string representation of the unique identifier for this Tweet. Implementations should use this rather than the large integer in id."
+                },
+                "text": {
+                    "description": "The actual UTF-8 text of the status update. See twitter-text for details on what characters are currently considered valid."
+                },
+                "source": {
+                    "description": "Utility used to post the Tweet, as an HTML-formatted string. Tweets from the Twitter website have a source value of web."
+                },
+                "truncated": {
+                    "description": "Indicates whether the value of the text parameter was truncated, for example, as a result of a retweet exceeding the original Tweet text length limit of 140 characters. Truncated text will end in ellipsis, like this ... Since Twitter now rejects long Tweets vs truncating them, the large majority of Tweets will have this set to false . Note that while native retweets may have their toplevel text property shortened, the original text will be available under the retweeted_status object and the truncated parameter will be set to the value of the original status (in most cases, false )."
+                },
+                "in_reply_to_status_id": {
+                    "description": "Nullable. If the represented Tweet is a reply, this field will contain the integer representation of the original Tweet's ID."
+                },
+                "in_reply_to_status_id_str": {
+                    "description": "Nullable. If the represented Tweet is a reply, this field will contain the string representation of the original Tweet's ID. "
+                },
+                "in_reply_to_user_id": {
+                    "description": "Nullable. If the represented Tweet is a reply, this field will contain the integer representation of the original Tweet's author ID. This will not necessarily always be the user directly mentioned in the Tweet."
+                },
+                "in_reply_to_user_id_str": {
+                    "description": "Nullable. If the represented Tweet is a reply, this field will contain the string representation of the original Tweet's author ID. This will not necessarily always be the user directly mentioned in the Tweet."
+                },
+                "in_reply_to_screen_name": {
+                    "description": "Nullable. If the represented Tweet is a reply, this field will contain the screen name of the original Tweet's author."
+                },
+                "user": {
+                    "description": "The user who posted this Tweet. See User data dictionary for complete list of attributes.",
+                    "type": "object",
+                    "properties": {
+                        "$ref": "#components/schema/user/properties"
+                    }
+                },
+                "coordinates": {
+                    "description": "Nullable. Represents the geographic location of this Tweet as reported by the user or client application. The inner coordinates array is formatted as geoJSON (longitude first, then latitude).",
+                    "type": "object",
+                    "properties": {
+                        "$ref": "#components/schema/coordinates/properties"
+                    }
+                },
+                "place": {
+                    "description": "Nullable When present, indicates that the tweet is associated (but not necessarily originating from) a Place.",
+                    "type": "object",
+                    "properties": {
+                        "$ref": " #components/schema/place/properties"
+                    }
+                },
+                "quoted_status_id": {
+                    "description": "This field only surfaces when the Tweet is a quote Tweet. This field contains the integer value Tweet ID of the quoted Tweet."
+                },
+                "quoted_status_id_str": {
+                    "description": "This field only surfaces when the Tweet is a quote Tweet. This is the string representation Tweet ID of the quoted Tweet."
+                },
+                "is_quote_status": {
+                    "description": "Indicates whether this is a Quoted Tweet."
+                },
+                "quoted_status": {
+                    "description": "This field only surfaces when the Tweet is a quote Tweet. This attribute contains the Tweet object of the original Tweet that was quoted."
+                },
+                "retweeted_status": {
+                    "description": "Users can amplify the broadcast of Tweets authored by other users by retweeting . Retweets can be distinguished from typical Tweets by the existence of a retweeted_status attribute. This attribute contains a representation of the original Tweet that was retweeted. Note that retweets of retweets do not show representations of the intermediary retweet, but only the original Tweet. (Users can also unretweet a retweet they created by deleting their retweet.)"
+                },
+                "quote_count": {
+                    "description": "Nullable. Indicates approximately how many times this Tweet has been quoted by Twitter users. Note: This object is only available with the Premium and Enterprise tier product."
+                },
+                "reply_count": {
+                    "description": "Number of times this Tweet has been replied to. Note:This object is only available with the Premium and Enterprise tier products."
+                },
+                "retweet_count": {
+                    "description": "Number of times this Tweet has been retweeted."
+                },
+                "favorite_count": {
+                    "description": "Nullable. Indicates approximately how many times this Tweet has been liked by Twitter users."
+                },
+                "entities": {
+                    "description": "Entities which have been parsed out of the text of the Tweet. Additionally see Entities in Twitter Objects.",
+                    "type": "object",
+                    "properties": {
+                        "$ref": "#components/schema/entities/properties"
+                    }
+                },
+                "extended_entities": {
+                    "description": "When between one and four native photos or one video or one animated GIF are in Tweet, contains an array 'media' metadata. This is also available in Quote Tweets. Additionally see Entities in Twitter Objects."
+                },
+                "favorited": {
+                    "description": "Nullable. Indicates whether this Tweet has been liked by the authenticating user."
+                },
+                "retweeted": {
+                    "description": "Indicates whether this Tweet has been Retweeted by the authenticating user."
+                },
+                "possibly_sensitive": {
+                    "description": "Nullable. This field only surfaces when a Tweet contains a link. The meaning of the field doesn't pertain to the Tweet content itself, but instead it is an indicator that the URL contained in the Tweet may contain content or media identified as sensitive content."
+                },
+                "filter_level": {
+                    "description": "Indicates the maximum value of the filter_level parameter which may be used and still stream this Tweet. So a value of medium will be streamed on none, low, and medium streams."
+                },
+                "lang": {
+                    "description": "Nullable. When present, indicates a BCP 47 language identifier corresponding to the machine-detected language of the Tweet text, or und if no language could be detected."
+                },
+                "matching_rules": {
+                    "description": "Present in filtered products such as Twitter Search and PowerTrack. Provides the id and tag associated with the rule that matched the Tweet. With PowerTrack, more than one rule can match a Tweet."
+                }
+            }
+        },
+        "user": {
+            "properties": {
+                "id": {
+                    "description": "The integer representation of the unique identifier for this User. This number is greater than 53 bits and some programming languages may have difficulty/silent defects in interpreting it. Using a signed 64 bit integer for storing this identifier is safe. Use id_str for fetching the identifier to stay on the safe side. See Twitter IDs, JSON and Snowflake."
+                },
+                "id_str": {
+                    "description": "The string representation of the unique identifier for this User. Implementations should use this rather than the large, possibly un-consumable integer in id."
+                },
+                "name": {
+                    "description": "The name of the user, as they've defined it. Not necessarily a person's name. Typically capped at 50 characters, but subject to change."
+                },
+                "screen_name": {
+                    "description": "The screen name, handle, or alias that this user identifies themselves with. screen_names are unique but subject to change. Use id_str as a user identifier whenever possible. Typically a maximum of 15 characters long, but some historical accounts may exist with longer names."
+                },
+                "location": {
+                    "description": "Nullable . The user-defined location for this account's profile. Not necessarily a location, nor machine-parseable. This field will occasionally be fuzzily interpreted by the Search service."
+                },
+                "derived": {
+                    "description": "Enterprise APIs only Collection of Enrichment metadata derived for user. Provides the Profile Geo Enrichment metadata. See referenced documentation for more information, including JSON data dictionaries."
+                },
+                "url": {
+                    "description": "Nullable . A URL provided by the user in association with their profile."
+                },
+                "description": {
+                    "description": "Nullable . The user-defined UTF-8 string describing their account."
+                },
+                "protected": {
+                    "description": "When true, indicates that this user has chosen to protect their Tweets. See About Public and Protected Tweets."
+                },
+                "verified": {
+                    "description": "When true, indicates that the user has a verified account. See Verified Accounts."
+                },
+                "followers_count": {
+                    "description": "The number of followers this account currently has. Under certain conditions of duress, this field will temporarily indicate '0'. "
+                },
+                "frieds_count": {
+                    "description": "The number of users this account is following (AKA their \"followings\"). Under certain conditions of duress, this field will temporarily indicate '0'."
+                },
+                "listed_count": {
+                    "description": "The number of public lists that this user is a member of."
+                },
+                "favourites_count": {
+                    "description": "The number of Tweets this user has liked in the account's lifetime. British spelling used in the field name for historical reasons."
+                },
+                "statuses_count": {
+                    "description": "The number of Tweets (including retweets) issued by the user."
+                },
+                "created_at": {
+                    "description": "The UTC datetime that the user account was created on Twitter."
+                },
+                "profile_banner_url": {
+                    "description": "The HTTPS-based URL pointing to the standard web representation of the user's uploaded profile banner. By adding a final path element of the URL, it is possible to obtain different image sizes optimized for specific displays. For size variants, please see User Profile Images and Banners."
+                },
+                "profile_image_url_https": {
+                    "description": "A HTTPS-based URL pointing to the user's profile image."
+                },
+                "default_profile": {
+                    "description": "When true, indicates that the user has not altered the theme or background of their user profile."
+                },
+                "default_profile_image": {
+                    "description": "When true, indicates that the user has not uploaded their own profile image and a default image is used instead."
+                },
+                "withheld_in_countries": {
+                    "description": "When present, indicates a list of uppercase two-letter country codes this content is withheld from. Twitter supports the following non-country values for this field: \"XX\" - Content is withheld in all countries \"XY\" - Content is withheld due to a DMCA request."
+                },
+                "withheld_scope": {
+                    "description": "When present, indicates that the content being withheld is a \"user.\""
+                }
+            }
+        },
+        "entities": {
+            "properties": {
+                "hashtags": {
+                    "description": "Represents hashtags which have been parsed out of the Tweet text.",
+                    "type": "object",
+                    "properties": {
+                        "indices": {
+                            "description": "An array of integers indicating the offsets within the Tweet text where the hashtag begins and ends. The first integer represents the location of the # character in the Tweet text string. The second integer represents the location of the first character after the hashtag. Therefore the difference between the two numbers will be the length of the hashtag name plus one (for the '#' character)."
+                        },
+                        "text": {
+                            "description": "Name of the hashtag, minus the leading '#' character."
+                        }
+                    }
+                },
+                "media": {
+                    "description": "Represents media elements uploaded with the Tweet.",
+                    "type": "object",
+                    "properties": {
+                        "display_url": {
+                            "description": "URL of the media to display to clients."
+                        },
+                        "expanded_url": {
+                            "description": "An expanded version of display_url. Links to the media display page."
+                        },
+                        "id": {
+                            "description": "ID of the media expressed as a 64-bit integer. "
+                        },
+                        "id_str": {
+                            "description": "ID of the media expressed as a string."
+                        },
+                        "indices": {
+                            "description": "An array of integers indicating the offsets within the Tweet text where the URL begins and ends. The first integer represents the location of the first character of the URL in the Tweet text. The second integer represents the location of the first non-URL character occurring after the URL (or the end of the string if the URL is the last part of the Tweet text)."
+                        },
+                        "media_url": {
+                            "description": "An http:// URL pointing directly to the uploaded media file.For media in direct messages, media_url is the same https URL as media_url_https and must be accessed by signing a request with the user's access token using OAuth 1.0A.It is not possible to access images via an authenticated twitter.com session. Please visit this page to learn how to account for these recent change. You cannot directly embed these images in a web page. See Photo Media URL formatting for how to format a photo's URL, such as media_url_https, based on the available sizes."
+                        },
+                        "media_url_https": {
+                            "description": "An https:// URL pointing directly to the uploaded media file, for embedding on https pages. For media in direct messages, media_url_https must be accessed by signing a request with the user's access token using OAuth 1.0A. It is not possible to access images via an authenticated twitter.com session. Please visit this page to learn how to account for these recent change.  You cannot directly embed these images in a web page. See Photo Media URL formatting for how to format a photo's URL, such as media_url_https, based on the available sizes."
+                        },
+                        "sizes": {
+                            "description": "An object showing available sizes for the media file. See Photo Media URL formatting for how to format a photo's URL, such as media_url_https, based on the available sizes.",
+                            "type": "object",
+                            "properties": {
+                                "thumb": {
+                                    "description": "Information for a thumbnail-sized version of the media.Thumbnail-sized photo media will be limited to fill a 150x150 boundary and cropped.",
+                                    "type": "object",
+                                    "properties": {
+                                        "w": {
+                                            "description": "Width in pixels of this size."
+                                        },
+                                        "h": {
+                                            "description": "Height in pixels of this size."
+                                        },
+                                        "resize": {
+                                            "description": "Resizing method used to obtain this size. A value of fit means that the media was resized to fit one dimension, keeping its native aspect ratio. A value of crop means that the media was cropped in order to fit a specific resolution."
+                                        }
+                                    },
+                                    "large": {
+                                        "description": "Information for a large-sized version of the media. Small-sized photo media will be limited to fit within a 680x680 boundary.",
+                                        "type": "object",
+                                        "properties": {
+                                            "w": {
+                                                "description": "Width in pixels of this size."
+                                            },
+                                            "h": {
+                                                "description": "Height in pixels of this size."
+                                            },
+                                            "resize": {
+                                                "description": "Resizing method used to obtain this size. A value of fit means that the media was resized to fit one dimension, keeping its native aspect ratio. A value of crop means that the media was cropped in order to fit a specific resolution."
+                                            }
+                                        }
+                                    },
+                                    "medium": {
+                                        "description": "Information for a medium-sized version of the media. Medium-sized photo media will be limited to fit within a 1200x1200 boundary.",
+                                        "type": "object",
+                                        "properties": {
+                                            "w": {
+                                                "description": "Width in pixels of this size."
+                                            },
+                                            "h": {
+                                                "description": "Height in pixels of this size."
+                                            },
+                                            "resize": {
+                                                "description": "Resizing method used to obtain this size. A value of fit means that the media was resized to fit one dimension, keeping its native aspect ratio. A value of crop means that the media was cropped in order to fit a specific resolution."
+                                            }
+                                        }
+                                    },
+                                    "small": {
+                                        "description": "Information for a small-sized version of the media.Large-sized photo media will be limited to fit within a 2048x2048 boundary.",
+                                        "type": "object",
+                                        "properties": {
+                                            "w": {
+                                                "description": "Width in pixels of this size."
+                                            },
+                                            "h": {
+                                                "description": "Height in pixels of this size."
+                                            },
+                                            "resize": {
+                                                "description": "Resizing method used to obtain this size. A value of fit means that the media was resized to fit one dimension, keeping its native aspect ratio. A value of crop means that the media was cropped in order to fit a specific resolution."
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "source_status_id": {
+                                "description": "Nullable. For Tweets containing media that was originally associated with a different tweet, this ID points to the original Tweet. "
+                            },
+                            "source_status_id_str": {
+                                "description": "Nullable. For Tweets containing media that was originally associated with a different tweet, this string-based ID points to the original Tweet."
+                            },
+                            "type": {
+                                "description": "Type of uploaded media. Possible types include photo, video, and animated_gif."
+                            },
+                            "url": {
+                                "description": "Wrapped URL for the media link. This corresponds with the URL embedded directly into the raw Tweet text, and the values for the indices parameter."
+                            }
+                        }
+                    }
+                },
+                "urls": {
+                    "description": "Represents URLs included in the text of a Tweet.",
+                    "type": "object",
+                    "properties": {
+                        "display_url": {
+                            "description": "URL pasted/typed into Tweet."
+                        },
+                        "expanded_url": {
+                            "description": "Expanded version of `` display_url`` ."
+                        },
+                        "indices": {
+                            "description": "An array of integers representing offsets within the Tweet text where the URL begins and ends. The first integer represents the location of the first character of the URL in the Tweet text. The second integer represents the location of the first non-URL character after the end of the URL."
+                        },
+                        "url": {
+                            "description": "Wrapped URL, corresponding to the value embedded directly into the raw Tweet text, and the values for the indices parameter."
+                        }
+                    }
+                },
+                "user_mentions": {
+                    "description": "Represents other Twitter users mentioned in the text of the Tweet.",
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "description": "ID of the mentioned user, as an integer."
+                        },
+                        "id_str": {
+                            "description": "If of the mentioned user, as a string."
+                        },
+                        "indices": {
+                            "description": "An array of integers representing the offsets within the Tweet text where the user reference begins and ends. The first integer represents the location of the '@' character of the user mention. The second integer represents the location of the first non-screenname character following the user mention."
+                        },
+                        "name": {
+                            "description": "Display name of the referenced user."
+                        },
+                        "screen_name": {
+                            "description": "Screen name of the referenced user."
+                        }
+                    }
+                },
+                "symbols": {
+                    "description": "Represents symbols, i.e. $cashtags, included in the text of the Tweet.",
+                    "type": "object",
+                    "properties": {
+                        "indices": {
+                            "description": "An array of integers indicating the offsets within the Tweet text where the symbol/cashtag begins and ends. The first integer represents the location of the $ character in the Tweet text string. The second integer represents the location of the first character after the cashtag. Therefore the difference between the two numbers will be the length of the hashtag name plus one (for the '$' character)."
+                        },
+                        "text": {
+                            "description": "Name of the cashhtag, minus the leading '$' character."
+                        }
+                    }
+                },
+                "polls": {
+                    "description": "Represents Twitter Polls included in the Tweet.",
+                    "type": "object",
+                    "properties": {
+                        "options": {
+                            "description": "An array of options, each having a poll position, and the text for that position."
+                        },
+                        "end_datetime": {
+                            "description": "Time stamp (UTC) of when poll ends."
+                        },
+                        "duration_minutes": {
+                            "description": "Duration of poll in minutes."
+                        }
+                    }
+                }
+            }
+        },
+        "place": {
+            "properties": {
+                "id": {
+                    "description": "ID representing this place. Note that this is represented as a string, not an integer."
+                },
+                "url": {
+                    "description": "URL representing the location of additional place metadata for this place. "
+                },
+                "place_type": {
+                    "description": "The type of location represented by this place."
+                },
+                "name": {
+                    "description": "Short human-readable representation of the place's name."
+                },
+                "full_name": {
+                    "description": "Full human-readable representation of the place's name."
+                },
+                "country_code": {
+                    "description": "Shortened country code representing the country containing this place."
+                },
+                "country": {
+                    "description": "Name of the country containing this place."
+                },
+                "bounding_box": {
+                    "description": "A bounding box of coordinates which encloses this place.",
+                    "type": "object",
+                    "properties": {
+                        "coordinates": {
+                            "description": "A series of longitude and latitude points, defining a box which will contain the Place entity this bounding box is related to. Each point is an array in the form of [longitude, latitude]. Points are grouped into an array per bounding box. Bounding box arrays are wrapped in one additional array to be compatible with the polygon notation."
+                        },
+                        "type": {
+                            "description": "The type of data encoded in the coordinates property. This will be \"Polygon\" for bounding boxes and \"Point\" for Tweets with exact coordinates."
+                        }
+                    }
+                },
+                "attributes": {
+                    "description": "When using PowerTrack, 30-Day and Full-Archive Search APIs, and Volume Streams this hash is null."
+                }
+            }
+        },
+        "coordinates": {
+            "properties": {
+                "coordinates": {
+                    "description": "The longitude and latitude of the Tweet's location, as a collection in the form [longitude, latitude]."
+                },
+                "type": {
+                    "description": "The type of data encoded in the coordinates property. This will be \"Point\" for Tweet coordinates fields."
+                }
+            }
+        }
+	}
+	}
+}

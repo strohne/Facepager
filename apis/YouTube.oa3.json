@@ -1,0 +1,2565 @@
+{
+    "openapi": "3.0.0",
+    "x-facepager-module":"YouTube",
+
+	"x-facepager-extract" : "items",
+	"x-facepager-objectid" : "id",
+	"x-facepager-pagination": {
+		"method" : "key",
+		"param" : "pageToken",
+		"key" : "nextPageToken",
+		"stop" : null
+	},
+
+    "info": {
+        "title": "YouTube Data API",
+        "description": "The YouTube Data API lets you incorporate functions normally executed on the YouTube website into your own website or application.",
+        "termsOfService": "https://developers.google.com/youtube/terms/api-services-terms-of-service",
+        "version": "3"
+    },
+    "externalDocs": {
+        "url":"https://developers.google.com/youtube/v3/docs/"
+    },
+    "servers": [
+        {
+            "url":"https://www.googleapis.com/youtube/v3"
+        }
+    ],
+    "paths":{
+		"/activities" : {
+            "get" : {
+                "summary" : "An activity resource contains information about an action that a particular channel, or user, has taken on YouTube. The actions reported in activity feeds include rating a video, sharing a video, marking a video as a favorite, uploading a video, and so forth. Each activity resource identifies the type of action, the channel associated with the action, and the resource(s) associated with the action, such as the video that was rated or uploaded.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/activities"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more activity resource properties that the API response will include. If the parameter identifies a property that contains child properties, the child properties will be included in the response. For example, in an activity resource, the snippet property contains other properties that identify the type of activity, a display title for the activity, and so forth. If you set part=snippet, the API response will also contain all of those nested properties.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["contentDetails", "id", "snippet"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "channelId",
+						"in": "query",
+						"description": "The channelId parameter specifies a unique YouTube channel ID. The API will then return a list of that channel's activities.",
+						"example": "<Object ID>",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "mine",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to true to retrieve a feed of the authenticated user's activities.",
+						"schema":{
+							"type":"boolean", 
+							"enum":["true","false"]
+							}
+					},
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. The default value is 5.",
+						"schema":{"type":"unsigned integer"}
+					},
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken and prevPageToken properties identify other pages that could be retrieved.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "publishedAfter",
+						"in": "query",
+						"description": "The publishedAfter parameter specifies the earliest date and time that an activity could have occurred for that activity to be included in the API response. If the parameter value specifies a day, but not a time, then any activities that occurred that day will be included in the result set. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format.",
+						"schema":{"type":"datetime"}
+					},
+					{
+						"name": "publishedBefore",
+						"in": "query",
+						"description": "The publishedBefore parameter specifies the date and time before which an activity must have occurred for that activity to be included in the API response. If the parameter value specifies a day, but not a time, then any activities that occurred that day will be excluded from the result set. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format.",
+						"schema":{"type":"datetime"}
+					},
+					{
+						"name": "regionCode",
+						"in": "query",
+						"description": "The regionCode parameter instructs the API to return results for the specified country. The parameter value is an ISO 3166-1 alpha-2 country code. YouTube uses this value when the authorized user's previous activity on YouTube does not provide enough information to generate the activity feed.",
+						"schema":{"type":"string"}
+					}					
+				],
+               "responses" : {
+                    "200" : {
+                        "description" : "Returns a list of channel activity events that match the request criteria. For example, you can retrieve events associated with a particular channel or with the user's own channel.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#activityListResponse."},
+										"etag": {"description":"The Etag of this resource."},
+										"nextPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/activities/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/captions": {
+            "get" : {
+                "summary" : "A caption resource represents a YouTube caption track. A caption track is associated with exactly one YouTube video.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/captions"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies the caption resource parts that the API response will include.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["id", "snippet"]
+								}
+							},	
+					   "example": "snippet"
+					},
+					{
+						"name": "videoId",
+						"in": "query",
+						"required": true,
+						"description": "The videoId parameter specifies the YouTube video ID of the video for which the API should return caption tracks.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of IDs that identify the caption resources that should be retrieved. Each ID must identify a caption track associated with the specified video.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The actual CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					}
+				],
+               "responses" : {
+                    "200" : {
+                        "description" : "Returns a list of caption tracks that are associated with a specified video. Note that the API response does not contain the actual captions and that the captions.download method provides the ability to retrieve a caption track.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#captionListResponse."},
+										"etag": {"description": "The Etag of this resource."},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"kind":{"description":"Identifies the API resource's type. The value will be youtube#caption."},
+													"etag": {"description":"The Etag of this resource."},
+													"id": {"description": "The ID that YouTube uses to uniquely identify the caption track."},
+													"snippet": {
+														"description": "The snippet object contains basic details about the caption.",
+														"type": "object", 
+														"properties": {
+															"videoId": {"description": "The ID that YouTube uses to uniquely identify the video associated with the caption track."},
+															"lastUpdated": {"description": "The date and time when the caption track was last updated. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+															"trackKind": {"description": "The caption track's type. Valid values for this property are: ASR - A caption track generated using automatic speech recognition, forced - A caption track that plays when no other track is selected in the player. For example, a video that shows aliens speaking in an alien language might have a forced caption track to only show subtitles for the alien language, standard - A regular caption track. This is the default value."},
+															"language": {"description": "The language of the caption track. The property value is a BCP-47 language tag."},
+															"name": {"description": "The name of the caption track. The name is intended to be visible to the user as an option during playback."},
+															"audioTrackType": {"description": "The type of audio track associated with the caption track. Valid values for this property are: commentary - The caption track corresponds to an alternate audio track that includes commentary, such as directory commentary, descriptive - The caption track corresponds to an alternate audio track that includes additional descriptive audio, primary - The caption track corresponds to the primary audio track for the video, which is the audio track normally associated with the video, unknown - This is the default value."},
+															"isCC": {"description": "Indicates whether the track contains closed captions for the deaf and hard of hearing. The default value is false."},
+															"isLarge": {"description": "Indicates whether the caption track uses large text for the vision-impaired. The default value is false."},
+															"isEasyReader": {"description": "Indicates whether caption track is formatted for 'easy reader,' meaning it is at a third-grade level for language learners. The default value is false."},
+															"isDraft": {"description": "Indicates whether the caption track is a draft. If the value is true, then the track is not publicly visible. The default value is false."},
+															"isAutoSynced": {"description": "Indicates whether YouTube synchronized the caption track to the audio track in the video. The value will be true if a sync was explicitly requested when the caption track was uploaded. For example, when calling the captions.insert or captions.update methods, you can set the sync parameter to true to instruct YouTube to sync the uploaded track to the video. If the value is false, YouTube uses the time codes in the uploaded caption track to determine when to display captions."},
+															"status": {"description": "The caption track's status. Valid values for this property are: failed, serving, syncing"},
+															"failureReason": {"description": "The reason that YouTube failed to process the caption track. This property is only present if the state property's value is failed. Valid values for this property are: processingFailed - YouTube failed to process the uploaded caption track, unknownFormat - The caption track's format was not recognized, unsupportedFormat - The caption track's format is not supported."}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}		
+		},
+		"/channels":{
+            "get" : {
+                "summary" : "A channel resource contains information about a YouTube channel.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/channels"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more channel resource properties that the API response will include. If the parameter identifies a property that contains child properties, the child properties will be included in the response. For example, in a channel resource, the contentDetails property contains other properties, such as the uploads properties. As such, if you set part=contentDetails, the API response will also contain all of those nested properties.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["auditDetails", "brandingSettings", "contentDetails", "contentOwnerDetails", "id", "invideoPromotion", "localizations", "snippet", "statistics", "status", "topicDetails"]
+								}
+							},	
+					   "example": "snippet"						
+					},
+					{
+						"name": "categoryID",
+						"in": "query",
+						"description": "The categoryId parameter specifies a YouTube guide category, thereby requesting YouTube channels associated with that category.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "forUsername",
+						"in": "query",
+						"description": "The forUsername parameter specifies a YouTube username, thereby requesting the channel associated with that username.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of the YouTube channel ID(s) for the resource(s) that are being retrieved. In a channel resource, the id property specifies the channel's YouTube channel ID.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},
+					{
+						"name": "managedByMe",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. Set this parameter's value to true to instruct the API to only return channels managed by the content owner that the onBehalfOfContentOwner parameter specifies. The user must be authenticated as a CMS account linked to the specified content owner and onBehalfOfContentOwner must be provided.",
+						"schema":{
+							"type":"boolean", 
+							"enum":["true","false"]
+							}
+					},
+					{
+						"name": "mine",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to true to instruct the API to only return channels owned by the authenticated user.",
+						"schema":{
+							"type":"boolean",
+							"enum":["true","false"]
+							}
+					},
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter instructs the API to retrieve localized resource metadata for a specific application language that the YouTube website supports. The parameter value must be a language code included in the list returned by the i18nLanguages.list method. If localized resource details are available in that language, the resource's snippet.localized object will contain the localized values. However, if localized details are not available, the snippet.localized object will contain resource details in the resource's default language.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. The default value is 5.",
+						"schema":{"type":"unsigned integer"}
+					},
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken and prevPageToken properties identify other pages that could be retrieved.",
+						"schema":{"type":"string"}
+					}				
+				],
+               "responses" : {
+                    "200" : {
+                        "description" : "Returns a collection of zero or more channel resources that match the request criteria.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#channelListResponse."},
+										"etag": {"description":"The Etag of this resource."},
+										"nextPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/channel/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}				
+		},
+		"/channelSections": {
+            "get" : {
+                "summary" : "A channelSection resource contains information about a set of videos that a channel has chosen to feature. For example, a section could feature a channel's latest uploads, most popular uploads, or videos from one or more playlists. Note that a channel's sections are only visible if the channel displays content in a browse view (rather than a feed view). To enable a channel to display content in a browse view, set the brandingSettings.channel.showBrowseView property to true for the specified channel. A channel can create a maximum of 10 shelves without setting targeting data and can create a maximum of 100 shelves with targeting data.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/channelSections"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more channelSection resource properties that the API response will include. If the parameter identifies a property that contains child properties, the child properties will be included in the response. For example, in a channelSection resource, the snippet property contains other properties, such as a display title for the section. If you set part=snippet, the API response will also contain all of those nested properties.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["contentDetails", "id", "localizations", "snippet", "targeting"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "channelId",
+						"in": "query",
+						"description": "The channelId parameter specifies a YouTube channel ID. If a request specifies a value for this parameter, the API will only return the specified channel's sections.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of IDs that uniquely identify the channelSection resources that are being retrieved. In a channelSection resource, the id property specifies the section's ID.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "mine",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to true to retrieve a feed of the channel sections associated with the authenticated user's YouTube channel.",
+						"schema":{
+							"type":"boolean",
+							"enum":["true","false"]
+							}
+					},
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter instructs the API to retrieve localized resource metadata for a specific application language that the YouTube website supports. The parameter value must be a language code included in the list returned by the i18nLanguages.list method. If localized resource details are available in that language, the resource's snippet.localized object will contain the localized values. However, if localized details are not available, the snippet.localized object will contain resource details in the resource's default language.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					}
+				],
+               "responses" : {
+                    "200" : {
+                        "description" : "Returns a list of channelSection resources that match the API request criteria.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#channelSectionListResponse."},
+										"etag": {"description":"The Etag of this resource."},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/channelSections/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}				
+		},
+		"/comments": {
+            "get" : {
+                "summary" : "A comment resource contains information about a single YouTube comment. A comment resource can represent a comment about either a video or a channel. In addition, the comment could be a top-level comment or a reply to a top-level comment.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/comments"
+                },  
+                "parameters" : [ 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more comment resource properties that the API response will include. .",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["id", "snippet"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of comment IDs for the resources that are being retrieved. In a comment resource, the id property specifies the comment's ID.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},                
+					{
+						"name": "parentId",
+						"in": "query",
+						"description": "The parentId parameter specifies the ID of the comment for which replies should be retrieved. Note: YouTube currently supports replies only for top-level comments. However, replies to replies may be supported in the future.",
+						"schema":{"type":"string"}
+					},      
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Note: This parameter is not supported for use in conjunction with the id parameter. Acceptable values are 1 to 100, inclusive. The default value is 20.",
+						"schema":{"type":"unsigned integer"}
+					},
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken property identifies the next page of the result that can be retrieved. Note: This parameter is not supported for use in conjunction with the id parameter.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "textFormat",
+						"in": "query",
+						"description": "This parameter indicates whether the API should return comments formatted as HTML or as plain text. The default value is html. Acceptable values are: html - Returns the comments in HTML format. This is the default value. plainText - Returns the comments in plain text format.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["html", "plainText"]
+							}	
+						}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a list of comments that match the API request parameters.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#commentListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/comments/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}			
+		},
+		"/commentThreads": {
+            "get" : {
+                "summary" : "A commentThread resource contains information about a YouTube comment thread, which comprises a top-level comment and replies, if any exist, to that comment. A commentThread resource can represent comments about either a video or a channel. Both the top-level comment and the replies are actually comment resources nested inside the commentThread resource. The commentThread resource does not necessarily contain all replies to a comment, and you need to use the comments.list method if you want to retrieve all replies for a particular comment. Also note that some comments do not have replies.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/commentThreads"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more commentThread resource properties that the API response will include. The following list contains the part names that you can include in the parameter value and the quota cost for each part: id: 0, replies: 2,snippet: 2",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["id", "replies", "snippet"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "allThreadsRelatedToChannelId",
+						"in": "query",
+						"description": "The allThreadsRelatedToChannelId parameter instructs the API to return all comment threads associated with the specified channel. The response can include comments about the channel or about the channel's videos.",
+						"schema":{"type":"string"}
+					},		
+					{
+						"name": "channelId",
+						"in": "query",
+						"description": "The channelId parameter instructs the API to return comment threads containing comments about the specified channel. (The response will not include comments left on videos that the channel uploaded.)",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},		
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of comment thread IDs for the resources that should be retrieved.",
+						"schema":{"type":"string"}
+					},		
+					{
+						"name": "videoId",
+						"in": "query",
+						"description": "The videoId parameter instructs the API to return comment threads associated with the specified video ID.",
+						"schema":{"type":"string"}
+					},		
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Note: This parameter is not supported for use in conjunction with the id parameter. Acceptable values are 1 to 100, inclusive. The default value is 20.",
+						"schema":{"type":"unsigned integer"}
+					},		
+					{
+						"name": "moderationStatus",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter to limit the returned comment threads to a particular moderation state. Note: This parameter is not supported for use in conjunction with the id parameter. The default value is published. Acceptable values are: heldForReview - Retrieve comment threads that are awaiting review by a moderator. A comment thread can be included in the response if the top-level comment or at least one of the replies to that comment are awaiting review. likelySpam - Retrieve comment threads classified as likely to be spam. A comment thread can be included in the response if the top-level comment or at least one of the replies to that comment is considered likely to be spam. published - Retrieve threads of published comments. This is the default value. A comment thread can be included in the response if its top-level comment has been published.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["heldForReview", "likelySpam", "published"]
+							}
+						}	
+					},		
+					{
+						"name": "order",
+						"in": "query",
+						"description": "The order parameter specifies the order in which the API response should list comment threads. Valid values are: time - Comment threads are ordered by time. This is the default behavior. relevance - Comment threads are ordered by relevance. Note: This parameter is not supported for use in conjunction with the id parameter. ",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["time", "relevance"]
+							}
+						}
+					},		
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken property identifies the next page of the result that can be retrieved. Note: This parameter is not supported for use in conjunction with the id parameter.",
+						"schema":{"type":"string"}
+					},		
+					{
+						"name": "searchTerms",
+						"in": "query",
+						"description": "The searchTerms parameter instructs the API to limit the API response to only contain comments that contain the specified search terms. Note: This parameter is not supported for use in conjunction with the id parameter.",
+						"schema":{"type":"string"}
+					},		
+					{
+						"name": "textFormat",
+						"in": "query",
+						"description": "Set this parameter's value to html or plainText to instruct the API to return the comments left by users in html formatted or in plain text. The default value is html. Acceptable values are: html - Returns the comments in HTML format. This is the default value. plainText - Returns the comments in plain text format.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["html", "plainText"]
+							}
+						}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a list of comment threads that match the API request parameters.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#commentThreadListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/commentThreads/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}			
+		},
+		"/guideCategories": {
+            "get" : {
+                "summary" : "A guideCategory resource identifies a category that YouTube algorithmically assigns based on a channel's content or other indicators, such as the channel's popularity. The list is similar to video categories, with the difference being that a video's uploader can assign a video category but only YouTube can assign a channel category.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/guideCategories"
+				},  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies the guideCategory resource properties that the API response will include. Set the parameter value to snippet. The snippet part has a quota cost of 2 units.",
+					    "schema":{"type":"string"},
+						"example": "snippet"
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of the YouTube channel category ID(s) for the resource(s) that are being retrieved. In a guideCategory resource, the id property specifies the YouTube channel category ID.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},
+					{
+						"name": "regionCode",
+						"in": "query",
+						"description": "The regionCode parameter instructs the API to return the list of guide categories available in the specified country. The parameter value is an ISO 3166-1 alpha-2 country code.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter specifies the language that will be used for text values in the API response. The default value is en-US.",
+						"schema":{"type":"string"}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a list of categories that can be associated with YouTube channels.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#guideCategoryListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/guideCategories/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}		
+		},
+		"/i18nLanguages": {
+            "get" : {
+                "summary" : "An i18nLanguage resource identifies an application language that the YouTube website supports. The application language can also be referred to as a UI language. For the YouTube website, an application language could be automatically selected based on Google Account settings, browser language, or IP location. A user could also manually select the desired UI language from the YouTube site footer. Each i18nLanguage resource identifies a language code and a name. The language code can be used as the value of the hl parameter when calling API methods like videoCategories.list and guideCategories.list.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/i18nLanguages"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies the i18nLanguage resource properties that the API response will include. Set the parameter value to snippet. The snippet part has a quota cost of 1 unit.",
+					    "schema":{"type":"string"},
+						"example": "snippet"
+					},
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter specifies the language that should be used for text values in the API response. The default value is en_US.",
+						"schema":{"type":"string"},
+						"example": "en_US"
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a list of application languages that the YouTube website supports.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#i18nLanguageListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/i18nLanguage/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/i18nRegions": {
+            "get" : {
+                "summary" : "An i18nRegion resource identifies a geographic area that a YouTube user can select as the preferred content region. The content region can also be referred to as a content locale. For the YouTube website, a content region could be automatically selected based on heuristics like the YouTube domain or the user's IP location. A user could also manually select the desired content region from the YouTube site footer. Each i18nRegion resource identifies a region code and a name. The region code can be used as the value of the regionCode parameter when calling API methods like search.list, videos.list, activities.list, and videoCategories.list.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/i18nRegions"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies the i18nRegion resource properties that the API response will include. Set the parameter value to snippet. The snippet part has a quota cost of 1 unit.",
+					    "schema":{"type":"string"},
+						"example": "snippet"
+					},
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter specifies the language that should be used for text values in the API response. The default value is en_US.",
+						"schema":{"type":"string"},
+						"example": "en_US"
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a list of content regions that the YouTube website supports.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#i18nRegionListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/i18nRegion/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/playlistItems": {
+            "get" : {
+                "summary" : "A playlistItem resource identifies another resource, such as a video, that is included in a playlist. In addition, the playlistItem resource contains details about the included resource that pertain specifically to how that resource is used in that playlist. YouTube uses playlists to identify special collections of videos for a channel, such as: uploaded videos, favorite videos, positively rated (liked) videos, watch history, watch later. To be more specific, these lists are associated with a channel, which is a collection of a person, group, or company's videos, playlists, and other YouTube information. You can retrieve the playlist IDs for each of these lists from the channel resource for a given channel. You can then use the playlistItems.list method to retrieve any of those lists. You can also add or remove items from those lists by calling the playlistItems.insert and playlistItems.delete methods. For example, if a user marks a video as a favorite video, you would insert that video into the favorite videos playlist for that user's channel.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/playlistItems"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more playlistItem resource properties that the API response will include. If the parameter identifies a property that contains child properties, the child properties will be included in the response. For example, in a playlistItem resource, the snippet property contains numerous fields, including the title, description, position, and resourceId properties. As such, if you set part=snippet, the API response will contain all of those properties. The following list contains the part names that you can include in the parameter value and the quota cost for each part: contentDetails: 2, id: 0, snippet: 2, status: 2.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["contentDetails", "id", "snippet", "status"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of one or more unique playlist item IDs.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},		
+					{
+						"name": "playlistId",
+						"in": "query",
+						"description": "The playlistId parameter specifies the unique ID of the playlist for which you want to retrieve playlist items. Note that even though this is an optional parameter, every request to retrieve playlist items must specify a value for either the id parameter or the playlistId parameter.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. The default value is 5.",
+						"schema":{"type":"unsigned integer"}
+					},
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken and prevPageToken properties identify other pages that could be retrieved.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "videoId",
+						"in": "query",
+						"description": "The videoId parameter specifies that the request should return only the playlist items that contain the specified video.",
+						"schema":{"type":"string"}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a collection of playlist items that match the API request parameters. You can retrieve all of the playlist items in a specified playlist or retrieve one or more playlist items by their unique IDs.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#playlistItemListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/playlistItem/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/playlists": {
+            "get" : {
+                "summary" : "A playlist resource represents a YouTube playlist. A playlist is a collection of videos that can be viewed sequentially and shared with other users. By default, playlists are publicly visible to other users, but playlists can be public or private. YouTube also uses playlists to identify special collections of videos for a channel, such as: uploaded videos, positively rated (liked) videos. To be more specific, these lists are associated with a channel, which is a collection of a person, group, or company's videos, playlists, and other YouTube information. You can retrieve the playlist IDs for each of these lists from the channel resource for a given channel. You can then use the playlistItems.list method to retrieve any of those lists. You can also add or remove items from those lists by calling the playlistItems.insert and playlistItems.delete methods.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/playlists"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more playlist resource properties that the API response will include. If the parameter identifies a property that contains child properties, the child properties will be included in the response. For example, in a playlist resource, the snippet property contains properties like author, title, description, tags, and timeCreated. As such, if you set part=snippet, the API response will contain all of those properties. The following list contains the part names that you can include in the parameter value and the quota cost for each part: contentDetails: 2, id: 0, localizations: 2, player: 0, snippet: 2, status: 2",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["contentDetails", "id", "localizations", "player", "snippet", "status"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "channelId",
+						"in": "query",
+						"description": "This value indicates that the API should only return the specified channel's playlists.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of the YouTube playlist ID(s) for the resource(s) that are being retrieved. In a playlist resource, the id property specifies the playlist's YouTube playlist ID.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "mine",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to true to instruct the API to only return playlists owned by the authenticated user.",
+						"schema":{
+							"type":"boolean",
+							"enum":["true","false"]
+							}
+					},
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter instructs the API to retrieve localized resource metadata for a specific application language that the YouTube website supports. The parameter value must be a language code included in the list returned by the i18nLanguages.list method. If localized resource details are available in that language, the resource's snippet.localized object will contain the localized values. However, if localized details are not available, the snippet.localized object will contain resource details in the resource's default language.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. The default value is 5.",
+						"schema":{"type":"unsigned integer"}
+					},
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "onBehalfOfContentOwnerChannel",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwnerChannel parameter specifies the YouTube channel ID of the channel to which a video is being added. This parameter is required when a request specifies a value for the onBehalfOfContentOwner parameter, and it can only be used in conjunction with that parameter. In addition, the request must be authorized using a CMS account that is linked to the content owner that the onBehalfOfContentOwner parameter specifies. Finally, the channel that the onBehalfOfContentOwnerChannel parameter value specifies must be linked to the content owner that the onBehalfOfContentOwner parameter specifies. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and perform actions on behalf of the channel specified in the parameter value, without having to provide authentication credentials for each separate channel.",
+						"schema":{"type":"string"}
+					},
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken and prevPageToken properties identify other pages that could be retrieved.",
+						"schema":{"type":"string"}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a collection of playlists that match the API request parameters. For example, you can retrieve all playlists that the authenticated user owns, or you can retrieve one or more playlists by their unique IDs.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#playlistListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/playlist/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}		
+		},
+		"/search": {
+            "get" : {
+                "summary" : "A search result contains information about a YouTube video, channel, or playlist that matches the search parameters specified in an API request. While a search result points to a uniquely identifiable resource, like a video, it does not have its own persistent data.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/search"
+                },  
+                "parameters" : [  
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more search resource properties that the API response will include. Set the parameter value to snippet.",
+					    "schema":{"type":"string"},
+						"example": "snippet"
+					},	
+					{
+						"name": "forContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request, and it is intended exclusively for YouTube content partners. The forContentOwner parameter restricts the search to only retrieve videos owned by the content owner identified by the onBehalfOfContentOwner parameter. If forContentOwner is set to true, the request must also meet these requirements: The onBehalfOfContentOwner parameter is required, The user authorizing the request must be using an account linked to the specified content owner, The type parameter value must be set to video, None of the following other parameters can be set: videoDefinition, videoDimension, videoDuration, videoLicense, videoEmbeddable, videoSyndicated, videoType.",
+						"schema":{
+							"type":"boolean", 
+							"enum":["true","false"]
+							}
+					},	
+					{
+						"name": "forDeveloper",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. The forDeveloper parameter restricts the search to only retrieve videos uploaded via the developer's application or website. The API server uses the request's authorization credentials to identify the developer. The forDeveloper parameter can be used in conjunction with optional search parameters like the q parameter. For this feature, each uploaded video is automatically tagged with the project number that is associated with the developer's application in the Google Developers Console. When a search request subsequently sets the forDeveloper parameter to true, the API server uses the request's authorization credentials to identify the developer. Therefore, a developer can restrict results to videos uploaded through the developer's own app or website but not to videos uploaded through other apps or sites.",
+						"schema":{
+							"type":"boolean", 
+							"enum":["true","false"]
+						}
+					},	
+					{
+						"name": "forMine",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. The forMine parameter restricts the search to only retrieve videos owned by the authenticated user. If you set this parameter to true, then the type parameter's value must also be set to video. In addition, none of the following other parameters can be set in the same request: videoDefinition, videoDimension, videoDuration, videoLicense, videoEmbeddable, videoSyndicated, videoType.",
+						"schema":{
+							"type":"boolean", 
+							"enum":["true","false"]
+						}
+					},	
+					{
+						"name": "relatedToVideoId",
+						"in": "query",
+						"description": "The relatedToVideoId parameter retrieves a list of videos that are related to the video that the parameter value identifies. The parameter value must be set to a YouTube video ID and, if you are using this parameter, the type parameter must be set to video. Note that if the relatedToVideoId parameter is set, the only other supported parameters are part, maxResults, pageToken, regionCode, relevanceLanguage, safeSearch, type (which must be set to video), and fields.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "channelId",
+						"in": "query",
+						"description": "The channelId parameter indicates that the API response should only contain resources created by the channel. Note: Search results are constrained to a maximum of 500 videos if your request specifies a value for the channelId parameter and sets the type parameter value to video, but it does not also set one of the forContentOwner, forDeveloper, or forMine filters.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "channelType",
+						"in": "query",
+						"description": "The channelType parameter lets you restrict a search to a particular type of channel. Acceptable values are: any - Return all channels, show - Only retrieve shows.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "show"]
+							}
+						}
+					},	
+					{
+						"name": "eventType",
+						"in": "query",
+						"description": "The eventType parameter restricts a search to broadcast events. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are:completed - Only include completed broadcasts, live - Only include active broadcasts, upcoming - Only include upcoming broadcasts.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["completed", "live", "upcoming"]
+							}
+						}
+					},	
+					{
+						"name": "location",
+						"in": "query",
+						"description": "The location parameter, in conjunction with the locationRadius parameter, defines a circular geographic area and also restricts a search to videos that specify, in their metadata, a geographic location that falls within that area. The parameter value is a string that specifies latitude/longitude coordinates e.g. (37.42307,-122.08427). The location parameter value identifies the point at the center of the area. The locationRadius parameter specifies the maximum distance that the location associated with a video can be from that point for the video to still be included in the search results. The API returns an error if your request specifies a value for the location parameter but does not also specify a value for the locationRadius parameter.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "locationRadius",
+						"in": "query",
+						"description": "The locationRadius parameter, in conjunction with the location parameter, defines a circular geographic area. The parameter value must be a floating point number followed by a measurement unit. Valid measurement units are m, km, ft, and mi. For example, valid parameter values include 1500m, 5km, 10000ft, and 0.75mi. The API does not support locationRadius parameter values larger than 1000 kilometers. Note: See the definition of the location parameter for more information.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. The default value is 5.",
+						"schema":{"type":"unsigned integer"}
+					},	
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "order",
+						"in": "query",
+						"description": "The order parameter specifies the method that will be used to order resources in the API response. The default value is relevance. Acceptable values are: date - Resources are sorted in reverse chronological order based on the date they were created, rating - Resources are sorted from highest to lowest rating, relevance - Resources are sorted based on their relevance to the search query. This is the default value for this parameter, title - Resources are sorted alphabetically by title, videoCount - Channels are sorted in descending order of their number of uploaded videos, viewCount - Resources are sorted from highest to lowest number of views. For live broadcasts, videos are sorted by number of concurrent viewers while the broadcasts are ongoing.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["date", "rating", "relevance", "title", "videoCount", "viewCount"]
+							}
+						}
+					},	
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken and prevPageToken properties identify other pages that could be retrieved.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "publishedAfter",
+						"in": "query",
+						"description": "The publishedAfter parameter indicates that the API response should only contain resources created at or after the specified time. The value is an RFC 3339 formatted date-time value (1970-01-01T00:00:00Z).",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "publishedBefore",
+						"in": "query",
+						"description": "The publishedBefore parameter indicates that the API response should only contain resources created before or at the specified time. The value is an RFC 3339 formatted date-time value (1970-01-01T00:00:00Z).",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "q",
+						"in": "query",
+						"description": "The q parameter specifies the query term to search for. Your request can also use the Boolean NOT (-) and OR (|) operators to exclude videos or to find videos that are associated with one of several search terms. For example, to search for videos matching either 'boating' or 'sailing', set the q parameter value to boating|sailing. Similarly, to search for videos matching either 'boating' or 'sailing' but not 'fishing', set the q parameter value to boating|sailing -fishing. Note that the pipe character must be URL-escaped when it is sent in your API request. The URL-escaped value for the pipe character is %7C.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},	
+					{
+						"name": "regionCode",
+						"in": "query",
+						"description": "The regionCode parameter instructs the API to return search results for videos that can be viewed in the specified country. The parameter value is an ISO 3166-1 alpha-2 country code.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "relevanceLanguage",
+						"in": "query",
+						"description": "The relevanceLanguage parameter instructs the API to return search results that are most relevant to the specified language. The parameter value is typically an ISO 639-1 two-letter language code. However, you should use the values zh-Hans for simplified Chinese and zh-Hant for traditional Chinese. Please note that results in other languages will still be returned if they are highly relevant to the search query term.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "safeSearch",
+						"in": "query",
+						"description": "The safeSearch parameter indicates whether the search results should include restricted content as well as standard content. Acceptable values are: moderate - YouTube will filter some content from search results and, at the least, will filter content that is restricted in your locale. Based on their content, search results could be removed from search results or demoted in search results. This is the default parameter value, none - YouTube will not filter the search result set, strict - YouTube will try to exclude all restricted content from the search result set. Based on their content, search results could be removed from search results or demoted in search results.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["moderate", "none", "strict"]
+							}
+						}
+					},	
+					{
+						"name": "topicId",
+						"in": "query",
+						"description": "The topicId parameter indicates that the API response should only contain resources associated with the specified topic. The value identifies a Freebase topic ID. Important: Due to the deprecation of Freebase and the Freebase API, the topicId parameter started working differently as of February 27, 2017. At that time, YouTube started supporting a small set of curated topic IDs, and you can only use that smaller set of IDs as values for this parameter. See topic IDs supported as of February 15, 2017",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "type",
+						"in": "query",
+						"description": "The type parameter restricts a search query to only retrieve a particular type of resource. The value is a comma-separated list of resource types. The default value is video,channel,playlist. Acceptable values are: channel, playlist, video.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["channel", "playlist", "video"]
+							}
+						}
+					},	
+					{
+						"name": "videoCaption",
+						"in": "query",
+						"description": "The videoCaption parameter indicates whether the API should filter video search results based on whether they have captions. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Do not filter results based on caption availability, closedCaption - Only include videos that have captions, none - Only include videos that do not have captions.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "closedCaption", "none"]
+							}
+						}
+					},	
+					{
+						"name": "videoCategoryId",
+						"in": "query",
+						"description": "The videoCategoryId parameter filters video search results based on their category. If you specify a value for this parameter, you must also set the type parameter's value to video.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "videoDefinition",
+						"in": "query",
+						"description": "The videoDefinition parameter lets you restrict a search to only include either high definition (HD) or standard definition (SD) videos. HD videos are available for playback in at least 720p, though higher resolutions, like 1080p, might also be available. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, regardless of their resolution, high - Only retrieve HD videos, standard - Only retrieve videos in standard definition.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "high", "standard"]
+							}
+						}
+					},	
+					{
+						"name": "videoDimension",
+						"in": "query",
+						"description": "The videoDimension parameter lets you restrict a search to only retrieve 2D or 3D videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: 2d - Restrict search results to exclude 3D videos, 3d - Restrict search results to only include 3D videos., any - Include both 3D and non-3D videos in returned results. This is the default value.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["2d", "3d", "any"]
+							}
+						}
+					},	
+					{
+						"name": "videoDuration",
+						"in": "query",
+						"description": "The videoDuration parameter filters video search results based on their duration. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Do not filter video search results based on their duration. This is the default value, long - Only include videos longer than 20 minutes, medium - Only include videos that are between four and 20 minutes long (inclusive), short - Only include videos that are less than four minutes long.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "long", "medium", "short"]
+							}
+						}
+					},	
+					{
+						"name": "videoEmbeddable",
+						"in": "query",
+						"description": "The videoEmbeddable parameter lets you to restrict a search to only videos that can be embedded into a webpage. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, embeddable or not, true - Only retrieve embeddable videos.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "true"]
+							}
+						}
+					},	
+					{
+						"name": "videoLicense",
+						"in": "query",
+						"description": "The videoLicense parameter filters search results to only include videos with a particular license. YouTube lets video uploaders choose to attach either the Creative Commons license or the standard YouTube license to each of their videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, regardless of which license they have, that match the query parameters, creativeCommon - Only return videos that have a Creative Commons license. Users can reuse videos with this license in other videos that they create. Learn more, youtube - Only return videos that have the standard YouTube license.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "creativeCommon", "youtube"]
+							}
+						}
+					},	
+					{
+						"name": "videoSyndicated",
+						"in": "query",
+						"description": "The videoSyndicated parameter lets you to restrict a search to only videos that can be played outside youtube.com. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, syndicated or not, true - Only retrieve syndicated videos.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "true"]
+							}
+						}
+					},	
+					{
+						"name": "videoType",
+						"in": "query",
+						"description": "The videoType parameter lets you restrict a search to a particular type of videos. If you specify a value for this parameter, you must also set the type parameter's value to video. Acceptable values are: any - Return all videos, episode - Only retrieve episodes of shows, movie - Only retrieve movies.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["any", "episode", "movie"]
+							}
+						}
+					}	
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a collection of search results that match the query parameters specified in the API request. By default, a search result set identifies matching video, channel, and playlist resources, but you can also configure queries to only retrieve a specific type of resource.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#searchListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"regionCode": {"description": "The region code that was used for the search query. The property value is a two-letter ISO country code that identifies the region. The i18nRegions.list method returns a list of supported regions. The default value is US. If a non-supported region is specified, YouTube might still select another region, rather than the default value, to handle the query."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/search/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}	
+		},
+		"/subscriptions": {
+            "get" : {
+                "summary" : "A subscription resource contains information about a YouTube user subscription. A subscription notifies a user when new videos are added to a channel or when another user takes one of several actions on YouTube, such as uploading a video, rating a video, or commenting on a video.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/subscriptions"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more subscription resource properties that the API response will include. If the parameter identifies a property that contains child properties, the child properties will be included in the response. For example, in a subscription resource, the snippet property contains other properties, such as a display title for the subscription. If you set part=snippet, the API response will also contain all of those nested properties. The following list contains the part names that you can include in the parameter value and the quota cost for each part: contentDetails: 2, id: 0, snippet: 2, subscriberSnippet: 2",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["contentDetails", "id", "snippet", "subscriberSnippet"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "channelId",
+						"in": "query",
+						"description": "The channelId parameter specifies a YouTube channel ID. The API will only return that channel's subscriptions.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},	
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of the YouTube subscription ID(s) for the resource(s) that are being retrieved. In a subscription resource, the id property specifies the YouTube subscription ID.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "mine",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to true to retrieve a feed of the authenticated user's subscriptions.",
+						"schema":{
+							"type":"boolean",
+							"enum":["true","false"]
+							}
+					},	
+					{
+						"name": "myRecentSubscribers",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to true to retrieve a feed of the subscribers of the authenticated user in reverse chronological order (newest first). Note that this parameter only supports retrieval of the most recent 1000 subscribers to the authenticated user's channel. To retrieve a complete list of subscribers, use the mySubscribers parameter. That parameter, which does not return subscribers in a particular order, does not limit the number of subscribers that can be retrieved.",
+						"schema":{
+							"type":"boolean",
+							"enum":["true","false"]
+							}
+					},	
+					{
+						"name": "mySubscribers",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to true to retrieve a feed of the subscribers of the authenticated user in no particular order.",
+						"schema":{
+							"type":"boolean",
+							"enum":["true","false"]
+							}
+					},	
+					{
+						"name": "forChannelId",
+						"in": "query",
+						"description": "The forChannelId parameter specifies a comma-separated list of channel IDs. The API response will then only contain subscriptions matching those channels.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. The default value is 5.",
+						"schema":{"type":"unsigned integer"}
+					},	
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "onBehalfOfContentOwnerChannel",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwnerChannel parameter specifies the YouTube channel ID of the channel to which a video is being added. This parameter is required when a request specifies a value for the onBehalfOfContentOwner parameter, and it can only be used in conjunction with that parameter. In addition, the request must be authorized using a CMS account that is linked to the content owner that the onBehalfOfContentOwner parameter specifies. Finally, the channel that the onBehalfOfContentOwnerChannel parameter value specifies must be linked to the content owner that the onBehalfOfContentOwner parameter specifies. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and perform actions on behalf of the channel specified in the parameter value, without having to provide authentication credentials for each separate channel.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "order",
+						"in": "query",
+						"description": "The order parameter specifies the method that will be used to sort resources in the API response. The default value is SUBSCRIPTION_ORDER_RELEVANCE. Acceptable values are: alphabetical - Sort alphabetically. relevance - Sort by relevance. unread - Sort by order of activity.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["alphabetical", "relevance", "unread"]
+							}
+						}
+					},	
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken and prevPageToken properties identify other pages that could be retrieved.",
+						"schema":{"type":"string"}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns subscription resources that match the API request criteria.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#subscriptionListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/subscription/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}	
+		},
+		"/videoAbuseReportReasons": {
+            "get" : {
+                "summary" : "A videoAbuseReportReason resource contains information about a reason that a video would be flagged for containing abusive content. When your application calls the videos.reportAbuse method to report an abusive video, the request uses the information from a videoAbuseReportReason resource to identify the reason that the video is being reported.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/videoAbuseReportReasons"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies the videoCategory resource parts that the API response will include. Supported values are id and snippet. The snippet part has a quota cost of 2 units.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["id", "snippet"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter specifies the language that should be used for text values in the API response. The default value is en_US.",
+						"schema":{"type":"string"}
+					}
+				],
+               "responses" : {
+                    "200" : {
+                        "description" : "Retrieve a list of reasons that can be used to report abusive videos.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#videoAbuseReportReasonListResponse."},
+										"etag": {"description":"The Etag of this resource."},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"kind": {"description":"Identifies the API resource's type. The value will be youtube#videoAbuseReportReason."},
+													"etag": {"description":"The Etag of this resource."},
+													"id": {"description":"The ID that YouTube uses to identify the reason. When calling the videos.reportAbuse method, your application should use this value to set the reasonId property."},
+													"snippet": {
+														"description":"The snippet object contains basic details about the reason.",
+														"type": "object", 
+														"properties": {
+															"label": {"description":"The localized label text for the abuse report reason."},
+															"secondaryReasons": {
+																"description": "A list of secondary reasons associated with the reason, if any are available. (There might be 0 or more.)",
+																"type": "array"
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}					
+		},
+		"/videoCategories": {
+            "get" : {
+                "summary" : "A videoCategory resource identifies a category that has been or could be associated with uploaded videos.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/videoCategories"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies the videoCategory resource properties that the API response will include. Set the parameter value to snippet. The snippet part has a quota cost of 2 units. ",
+					    "schema":{"type":"string"},
+						"example": "snippet"
+					},
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of video category IDs for the resources that you are retrieving.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},	
+					{
+						"name": "regionCode",
+						"in": "query",
+						"description": "The regionCode parameter instructs the API to return the list of video categories available in the specified country. The parameter value is an ISO 3166-1 alpha-2 country code.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter specifies the language that should be used for text values in the API response. The default value is en_US.",
+						"schema":{"type":"string"}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a list of categories that can be associated with YouTube videos.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#videoCategoryListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"kind": {"description": "Identifies the API resource's type. The value will be youtube#videoCategory."},
+													"etag": {"description": "The Etag of this resource."},
+													"id": {"description": "The ID that YouTube uses to uniquely identify the video category."},
+													"snippet": {
+														"description": "The snippet object contains basic details about the video category, including its title.", 
+														"type": "object", 
+														"properties": {
+															"channelId": {"description":"The YouTube channel that created the video category."},
+															"title": {"description":"The video category's title."},
+															"assignable": {"description":"Indicates whether videos can be associated with the category."}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}			
+		},
+		"/videos": {
+            "get" : {
+                "summary" : "A video resource represents a YouTube video.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/videos"
+                },  
+                "parameters" : [                 
+					{
+						"name" : "part",
+						"required": true, 
+						"in" : "query",
+						"description" : "The part parameter specifies a comma-separated list of one or more video resource properties that the API response will include. If the parameter identifies a property that contains child properties, the child properties will be included in the response. For example, in a video resource, the snippet property contains the channelId, title, description, tags, and categoryId properties. As such, if you set part=snippet, the API response will contain all of those properties. The following list contains the part names that you can include in the parameter value and the quota cost for each part: contentDetails: 2, fileDetails: 1, id: 0, liveStreamingDetails: 2, localizations: 2, player: 0,  processingDetails: 1, recordingDetails: 2, snippet: 2, statistics: 2, status: 2, suggestions: 1, topicDetails: 2",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["contentDetails", "fileDetails", "id", "liveStreamingDetails", "localizations", "player", "processingDetails", "recordingDetails",  "snippet", "statistics", "status", "suggestions", "topicDetails"]
+								}
+							},
+					   "example": "snippet"
+					},
+					{
+						"name": "chart",
+						"in": "query",
+						"description": "The chart parameter identifies the chart that you want to retrieve. Acceptable values are: mostPopular - Return the most popular videos for the specified content region and video category.",
+						"schema":  {
+								"type": "string",
+								"enum": ["mostPopular"]
+								},					
+						"example": "mostPopular"
+					},	
+					{
+						"name": "id",
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of the YouTube video ID(s) for the resource(s) that are being retrieved. In a video resource, the id property specifies the video's ID.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "myRating",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Set this parameter's value to like or dislike to instruct the API to only return videos liked or disliked by the authenticated user. Acceptable values are: dislike - Returns only videos disliked by the authenticated user. like - Returns only video liked by the authenticated user.",
+						"schema":
+							{"type":"array",
+							"items": {
+								"type": "string",
+								"enum": ["dislike", "like"]
+								}
+							}
+					},	
+					{
+						"name": "hl",
+						"in": "query",
+						"description": "The hl parameter instructs the API to retrieve localized resource metadata for a specific application language that the YouTube website supports. The parameter value must be a language code included in the list returned by the i18nLanguages.list method. If localized resource details are available in that language, the resource's snippet.localized object will contain the localized values. However, if localized details are not available, the snippet.localized object will contain resource details in the resource's default language.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "maxHeight",
+						"in": "query",
+						"description": "The maxHeight parameter specifies the maximum height of the embedded player returned in the player.embedHtml property. You can use this parameter to specify that instead of the default dimensions, the embed code should use a height appropriate for your application layout. If the maxWidth parameter is also provided, the player may be shorter than the maxHeight in order to not violate the maximum width. Acceptable values are 72 to 8192, inclusive.",
+						"schema":{"type":"unsigned integer"}
+					},	
+					{
+						"name": "maxResults",
+						"in": "query",
+						"description": "The maxResults parameter specifies the maximum number of items that should be returned in the result set. Note: This parameter is supported for use in conjunction with the myRating parameter, but it is not supported for use in conjunction with the id parameter. Acceptable values are 1 to 50, inclusive. The default value is 5.",
+						"schema":{"type":"unsigned integer"}
+					},	
+					{
+						"name": "maxWidth",
+						"in": "query",
+						"description": "The maxWidth parameter specifies the maximum width of the embedded player returned in the player.embedHtml property. You can use this parameter to specify that instead of the default dimensions, the embed code should use a width appropriate for your application layout. If the maxHeight parameter is also provided, the player may be narrower than maxWidth in order to not violate the maximum height. Acceptable values are 72 to 8192, inclusive.",
+						"schema":{"type":"unsigned integer"}
+					},	
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "pageToken",
+						"in": "query",
+						"description": "The pageToken parameter identifies a specific page in the result set that should be returned. In an API response, the nextPageToken and prevPageToken properties identify other pages that could be retrieved. Note: This parameter is supported for use in conjunction with the myRating parameter, but it is not supported for use in conjunction with the id parameter.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "regionCode",
+						"in": "query",
+						"description": "The regionCode parameter instructs the API to select a video chart available in the specified region. This parameter can only be used in conjunction with the chart parameter. The parameter value is an ISO 3166-1 alpha-2 country code.",
+						"schema":{"type":"string"}
+					},	
+					{
+						"name": "videoCategoryId",
+						"in": "query",
+						"description": "The videoCategoryId parameter identifies the video category for which the chart should be retrieved. This parameter can only be used in conjunction with the chart parameter. By default, charts are not restricted to a particular category. The default value is 0.",
+						"schema":{"type":"string"}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Returns a list of videos that match the API request parameters.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#videoListResponse."},
+										"etag":{"description":"The Etag of this resource."},
+										"nextPageToken":{"description":"The token that can be used as the value of the pageToken parameter to retrieve the next page in the result set."},
+										"prevPageToken": {"description": "The token that can be used as the value of the pageToken parameter to retrieve the previous page in the result set."},
+										"pageInfo":{
+											"description":"The pageInfo object encapsulates paging information for the result set.",
+											"type": "object", 
+											"properties": {
+												"totalResults": {"description": "The total number of results in the result set."},
+												"resultsPerPage": {"description": "The number of results included in the API response."}
+											}
+										},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"$ref" : "#components/schema/video/properties"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}	
+		},
+		"/videos/getRating": {
+            "get" : {
+                "summary" : "Retrieves the ratings that the authorized user gave to a list of specified videos.",
+                "externalDocs": {
+                    "url":"https://developers.google.com/youtube/v3/docs/videos/getRating"
+                },  
+                "parameters" : [  
+					{
+						"name": "id",
+						"required": true, 
+						"in": "query",
+						"description": "The id parameter specifies a comma-separated list of the YouTube video ID(s) for the resource(s) for which you are retrieving rating data. In a video resource, the id property specifies the video's ID.",
+						"schema":{"type":"string"},
+						"example": "<Object ID>"
+					},	
+					{
+						"name": "onBehalfOfContentOwner",
+						"in": "query",
+						"description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. The onBehalfOfContentOwner parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+						"schema":{"type":"string"}
+					}
+				],
+				"responses": {
+                    "200" : {
+                        "description" : "Retrieves the ratings that the authorized user gave to a list of specified videos.",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "type" : "object",
+									"properties": {
+										"kind":{"description":"Identifies the API resource's type. The value will be youtube#videoGetRatingResponse."},
+										"etag":{"description":"The Etag of this resource."},
+                                        "items" : {
+                                            "type" : "array",
+                                            "items" : {
+                                                "type":"object",
+                                                "properties": {
+													"videoId": {"description": "The ID that YouTube uses to uniquely identify the video."},
+													"rating": {"description": "The rating that the authorized user gave to the video. Valid values for this property are: dislike, like, none, unspecified"}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}	
+		}
+	},
+	"components": {
+		"schema":{
+			"activities": {
+				"properties": {
+					"kind":{"description":"Identifies the API resource's type. The value will be youtube#activity."},
+					"etag": {"description": "The Etag of this resource."},
+					"id": {"description": "The ID that YouTube uses to uniquely identify the activity."},
+					"snippet":{
+						"description": "The snippet object contains basic details about the activity, including the activity's type and group ID.", 
+						"type": "object",
+						"properties": {
+							"publishedAt": {"description": "The date and time that the activity occurred. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"channelId": {"description": "The ID that YouTube uses to uniquely identify the channel associated with the activity."},
+							"title": {"description": "The title of the resource primarily associated with the activity."},
+							"description": {"description": "The description of the resource primarily associated with the activity."},
+							"thumbnails": {
+								"description": "A map of thumbnail images associated with the resource that is primarily associated with the activity. For each object in the map, the key is the name of the thumbnail image, and the value is an object that contains other information about the thumbnail.",
+								"type": "object",
+								"properties": {}
+							},
+							"channelTitle": {"description": "Channel title for the channel responsible for this activity"},
+							"type": {"description": "The type of activity that the resource describes."},
+							"groupId": {"description": "The group ID associated with the activity. A group ID identifies user events that are associated with the same user and resource. For example, if a user rates a video and marks the same video as a favorite, the entries for those events would have the same group ID in the user's activity feed. In your user interface, you can avoid repetition by grouping events with the same groupId value."}
+						}
+					},
+					"contentDetails": {
+						"description": "The contentDetails object contains information about the content associated with the activity. For example, if the snippet.type value is videoRated, then the contentDetails object's content identifies the rated video.", 
+						"type": "object",
+						"properties": {
+							"upload": {
+								"description": "The upload object contains information about the uploaded video. This property is only present if the snippet.type is upload.",
+								"type": "object", 
+								"properties": {}
+							},
+							"like": {
+								"description": "The like object contains information about a resource that received a positive (like) rating. This property is only present if the snippet.type is like.",
+								"type": "object",
+								"properties": {}
+							},
+							"favorite": {
+								"description": "The favorite object contains information about a video that was marked as a favorite video. This property is only present if the snippet.type is favorite.",
+								"type": "object", 
+								"properties": {}
+							},
+							"comment": {
+								"description": "The comment object contains information about a resource that received a comment. This property is only present if the snippet.type is comment.",
+								"type": "object", 
+								"properties": {}
+							},
+							"subscription": {
+								"description": "The subscription object contains information about a channel that a user subscribed to. This property is only present if the snippet.type is subscription.",
+								"type": "object", 
+								"properties": {}
+							},
+							"playlistItems": {
+								"description": "The playlistItem object contains information about a new playlist item. This property is only present if the snippet.type is playlistItem.",
+								"type": "object", 
+								"properties": {}
+							},
+							"recommendation": {
+								"description": "The recommendation object contains information about a recommended resource. This property is only present if the snippet.type is recommendation.", 
+								"type": "object", 
+								"properties": {}
+							},
+							"bulletin": {
+								"description": "The bulletin object contains details about a channel bulletin post. This object is only present if the snippet.type is bulletin.", 
+								"type": "object", 
+								"properties": {}
+							},
+							"social": {
+								"description": "The social object contains details about a social network post. This property is only present if the snippet.type is social.",
+								"type": "object", 
+								"properties": {}
+							},
+							"channelItem": {
+								"description": "The channelItem object contains details about a resource that was added to a channel. This property is only present if the snippet.type is channelItem.",
+								"type": "object", 
+								"properties": {}
+								}
+							}
+						}
+					}
+				},
+			"channel": {
+				"properties": {
+					"kind":{"description":"Identifies the API resource's type. The value will be youtube#channel."},
+					"etag": {"description": "The Etag of this resource."},
+					"id": {"description": "The ID that YouTube uses to uniquely identify the channel."},
+					"snippet":{
+						"description":"The snippet object contains basic details about the channel, such as its title, description, and thumbnail images.",
+						"type": "object",
+						"properties": {
+						  	"title": {"description": "The channel's title."},
+							"description": {"description": "The channel's description. The property's value has a maximum length of 1000 characters."},
+							"customUrl": {"description": "The channel's custom URL. The YouTube Help Center explains eligibility requirements for getting a custom URL as well as how to set up the URL."},
+							"publishedAt": {"description": "The date and time that the channel was created. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"thumbnails": {
+								"description": "A map of thumbnail images associated with the channel. For each object in the map, the key is the name of the thumbnail image, and the value is an object that contains other information about the thumbnail. When displaying thumbnails in your application, make sure that your code uses the image URLs exactly as they are returned in API responses. For example, your application should not use the http domain instead of the https domain in a URL returned in an API response. Beginning in July 2018, channel thumbnail URLs will only be available in the https domain, which is how the URLs appear in API responses. After that time, you might see broken images in your application if it tries to load YouTube images from the http domain.",
+								"type": "object",
+								"properties": {}
+							},
+							"defaultLanguage": {"description": "The language of the text in the channel resource's snippet.title and snippet.description properties."},
+							"localized": {
+								"description": "The snippet.localized object contains a localized title and description for the channel or it contains the channel's title and description in the default language for the channel's metadata. Localized text is returned in the resource snippet if the channels.list request used the hl parameter to specify a language for which localized text should be returned, the hl parameter value identifies a YouTube application language, and localized text is available in that language. Metadata for the default language is returned if an hl parameter value is not specified or a value is specified but localized metadata is not available for the specified language. The property contains a read-only value. Use the localizations object to add, update, or delete localized metadata.",
+								"type": "object", 
+								"properties": {}		
+							},
+							"country": {"description": "The country with which the channel is associated. To set this property's value, update the value of the brandingSettings.channel.country property."}
+						}
+					},
+					"contentDetails": {
+						"description": "The contentDetails object encapsulates information about the channel's content.",
+						"type": "object",
+						"properties": {
+							"relatedPlaylists": {
+								"description": "The relatedPlaylists object is a map that identifies playlists associated with the channel, such as the channel's uploaded videos or liked videos. You can retrieve any of these playlists using the playlists.list method.",
+								"type": "object",
+								"properties": {}
+							}
+						}
+					},
+					"statistics": {
+						"description": "The statistics object encapsulates statistics for the channel.",
+						"type": "object",
+						"properties": {
+							"viewCount": {"description": "The number of times the channel has been viewed."},
+							"commentCount": {"description": "The number of comments for the channel."},
+							"subscriberCount": {"description": "The number of subscribers that the channel has."},
+							"hiddenSubscriberCount": {"description": "Indicates whether the channel's subscriber count is publicly visible."},
+							"videoCount": {"description": "The number of videos uploaded to the channel."}
+						}
+					},
+					"status": {
+						"description": "The status object encapsulates information about the privacy status of the channel.",
+						"type": "object",
+						"properties": {
+							"privacyStatus": {"description": "Privacy status of the channel."},
+							"isLinked": {"description": "Indicates whether the channel data identifies a user that is already linked to either a YouTube username or a Google+ account. A user that has one of these links already has a public YouTube identity, which is a prerequisite for several actions, such as uploading videos."},
+							"longUploadsStatus": {"description": "Indicates whether the channel is eligible to upload videos that are more than 15 minutes long. This property is only returned if the channel owner authorized the API request. See the YouTube Help Center for more information about this feature."}
+						}
+					},
+					"brandSettings": {
+						"description": "The brandingSettings object encapsulates information about the branding of the channel.",
+						"type": "object", 
+						"properties": {
+							"channel": {
+								"description": "The channel object encapsulates branding properties of the channel page.", 
+								"type": "object", 
+								"properties": {}
+							},
+							"image": {
+								"description": "The image object encapsulates information about images that display on the channel's channel page or video watch pages.",
+								"type": "object",
+								"properties": {}
+							},
+							"hints": {
+								"description": "The hints object encapsulates additional branding properties",
+								"type": "array"
+							}
+						}						
+					},
+					"auditDetails": {
+						"description": "The auditDetails object encapsulates channel data that a multichannel network (MCN) would evaluate while determining whether to accept or reject a particular channel. Note that any API request that retrieves this resource part must provide an authorization token that contains the https://www.googleapis.com/auth/youtubepartner-channel-audit scope. In addition, any token that uses that scope must be revoked when the MCN decides to accept or reject the channel or within two weeks of the date that the token was issued.",
+						"type": "object", 
+						"properties": {
+							"overallGoodStanding": {"description": "This field indicates whether there are any issues with the channel. Currently, this field represents the result of the logical AND operation over the communityGuidelinesGoodStanding, copyrightStrikesGoodStanding, and contentIdClaimsGoodStanding properties, meaning that this property has a value of true if all of those other properties also have a value of true. However, this property will have a value of false if any of those properties has a value of false. Note, however, that the methodology used to set this property's value is subject to change."},
+							"communityGuidelinesGoodStanding": {"description": "Indicates whether the channel respects YouTube's community guidelines."},
+							"copyrightStrikesGoodStanding": {"description": "Indicates whether the channel has any copyright strikes."},
+							"contentIdClaimsGoodStanding": {"description": "Indicates whether the channel has any unresolved claims."}
+						}
+					},
+					"contentOwnerDetails": {
+						"description": "The contentOwnerDetails object encapsulates channel data that is relevant for YouTube Partners linked with the channel.", 
+						"type": "object", 
+						"properties": {
+							"contentOwner": {"description": "The ID of the content owner linked to the channel"},
+							"timeLinked": {"description": "The date and time of when the channel was linked to the content owner. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."}						
+						}
+					},
+					"localizations": {
+						"description": "The localizations object encapsulates translations of the channel's metadata.",
+						"type": "object", 
+						"properties": {}
+					}
+				}
+			},
+			"channelSections": {
+				"properties": {
+					"kind": {"description": "Identifies the API resource's type. The value will be youtube#channelSection."},
+					"etag": {"description": "The Etag of this resource."},
+					"id": {"description": "The ID that YouTube uses to uniquely identify the channel section."},
+					"snippet": {
+						"description": "The snippet object contains basic details about the channel section, such as its type, display style, and title.",
+						"type": "object", 
+						"properties": {
+							"type": {"description": "The channel section's type."},
+							"style": {"description": "The format in which the channel section displays."},
+							"channelId": {"description": "The ID that YouTube uses to uniquely identify the channel that published the channel section."},
+							"title": {"description": "The section's title. You can only set the title of a channel section that has a snippet.type value of either multiplePlaylists or multipleChannels, and, in fact, you must specify a title when inserting or updating either of those types of sections. If you specify a title for other types of channel sections, the value will be ignored. This property's value has a maximum length of 100 characters and may contain all valid UTF-8 characters except < and >."},
+							"position": {"description": "The section's position on the channel page. This property uses a 0-based index. A value of 0 identifies the first section that appears on the channel, a value of 1 identifies the second section, and so forth. If you do not specify a value for this property when inserting a channel section, the default behavior is to display the new section last."},
+							"defaultLanguage": {"description": "The language of the text in the channelSection resource's snippet.title property."},
+							"localized": {
+								"description": "The snippet.localized object contains either a localized title for the channel section or the title in the default language for the channel section's metadata. Localized text is returned if the channelSections.list request used the hl parameter to specify a language for which localized text should be returned and localized text is available in that language. Metadata for the default language is returned if an hl parameter value is not specified or a value is specified but localized metadata is not available for the specified language. The property contains a read-only value. Use the localizations object to add, update, or delete localized titles.",
+								"type": "object", 
+								"properties": {}
+							}
+						}
+					},
+					"contentDetails": {
+						"description": "The contentDetails object contains details about the channel section's content, such as a list of playlists or channels featured in the section.",
+						"type": "object", 
+						"properties": {}
+					},
+					"localizations": {
+						"description": "The localizations object encapsulates translations of the channel section's metadata.",
+						"type": "object", 
+						"properties": {}
+					},
+					"targeting": {
+						"description": "The targeting object contains targeting settings for the channel section. Note that a user must meet all of the targeting settings for a channel section to be visible. The following examples help to explain the behavior: If the targeting.languages[] property value is ['en','es'], the channel section will be visible to users who have selected English or Spanish as their application language.If the targeting.languages[] property value is ['en','es'], and the targeting.regions[] property value is ['CA','FR'], the channel section will be visible to users in Canada and France who also have selected English or Spanish as their application language.",
+						"type": "object", 
+						"properties": {}
+					}
+				}
+			},
+			"comments" : {
+				"properties": {
+					"kind":{"description":"Identifies the API resource's type. The value will be youtube#comment."},
+					"etag": {"description": "The Etag of this resource."},
+					"id": {"description": "The ID that YouTube uses to uniquely identify the comment."},
+					"snippet":{
+						"description": "The snippet object contains basic details about the comment.", 
+						"type": "object",
+						"properties": {
+							"authorDisplayName":{"description":"The display name of the user who posted the comment."},
+							"authorProfileImageUrl": {"description":"The URL for the avatar of the user who posted the comment."},
+							"authorChannelUrl": {"description":"The URL of the comment author's YouTube channel, if available."},
+							"authorChannelId": {
+								"description":"This object encapsulates information about the comment author's YouTube channel, if available.",
+								"type": "object",
+								"properties": {}
+								},
+							"channelId": {"description":"The ID of the YouTube channel associated with the comment. If the comment is a video comment, then this property identifies the video's channel, and the snippet.videoId property identifies the video. If the comment is a channel comment, then this property identifies the channel that the comment is about."},
+							"videoId": {"description":"The ID of the video that the comment refers to. This property is only present if the comment was made on a video."},
+							"textDisplay": {"description":"The comment's text. The text can be retrieved in either plain text or HTML. (The comments.list and commentThreads.list methods both support a textFormat parameter, which specifies the desired text format.) Note that even the plain text may differ from the original comment text. For example, it may replace video links with video titles."},
+							"textOriginal": {"description":"The original, raw text of the comment as it was initially posted or last updated. The original text is only returned if it is accessible to the authenticated user, which is only guaranteed if the user is the comment's author."},
+							"parentId": {"description":"The unique ID of the parent comment. This property is only set if the comment was submitted as a reply to another comment."},
+							"canRate": {"description":"This setting indicates whether the current viewer can rate the comment."},
+							"viewerRating": {"description":"The rating the viewer has given to this comment. Note that this property does not currently identify dislike ratings, though this behavior is subject to change. In the meantime, the property value is like if the viewer has rated the comment positively. The value is none in all other cases, including the user having given the comment a negative rating or not having rated the comment. Valid values for this property are: like, none."},
+							"likeCount": {"description":"The total number of likes (positive ratings) the comment has received."},
+							"moderationStatus": {"description":"The comment's moderation status. This property is only returned if the API request was authorized by the owner of the channel or the video on which the requested comments were made. In addition, note that this property is not set if the API request used the id filter parameter. Valid values for this property are: heldForReview, likelySpam, published, rejected"},
+							"publishedAt": {"description":"The date and time when the comment was orignally published. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"updatedAt": {"description":"The date and time when the comment was last updated. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."}
+							}
+						}
+					}
+				},
+			"commentThreads": {
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#commentThread."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the comment thread."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the comment thread. It also contains the thread's top-level comment, which is a comment resource.",
+						"type": "object",
+						"properties": {
+							"channelId": {"description":"The YouTube channel that is associated with the comments in the thread. (The snippet.videoId property identifies the video.) If the comments are about a video, then the value identifies the channel that uploaded the video. (The snippet.videoId property identifies the video.) If the comments refer to the channel itself, the snippet.videoId property will not have a value"},
+							"videoId": {"description": "The ID of the video that the comments refer to, if any. If this property is not present or does not have a value, then the thread applies to the channel and not to a specific video."},
+							"topLevelComment": {
+								"description": "The thread's top-level comment. The property's value is a comment resource.",
+								"type": "object", 
+								"properties": {
+									"$ref" : "#components/schema/comments/properties"
+									}
+								},
+							"canReply": {"description":"This setting indicates whether the current viewer can reply to the thread."},
+							"totalReplyCount": {"description":"The total number of replies that have been submitted in response to the top-level comment."},
+							"isPublic": {"description":"This setting indicates whether the thread, including all of its comments and comment replies, is visible to all YouTube users."}		
+							}
+						},
+					"replies": {
+						"description":"The replies object is a container that contains a list of replies to the comment, if any exist. The replies.comments property represents the list of comments itself.",
+						"type":"object",
+						"properties": {
+							"comments": {
+								"description": "A list of one or more replies to the top-level comment. Each item in the list is a comment resource. The list contains a limited number of replies, and unless the number of items in the list equals the value of the snippet.totalReplyCount property, the list of replies is only a subset of the total number of replies available for the top-level comment. To retrieve all of the replies for the top-level comment, you need to call the comments.list method and use the parentId request parameter to identify the comment for which you want to retrieve replies.",
+								"type": "array",
+                                "items" : {
+                                    "type":"object",
+                                    "properties": {
+										"$ref" : "#components/schema/comments/properties"
+										}
+									}
+								}	
+							}
+						}
+					}				
+				},
+			"guideCategories": {
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#guideCategory."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the guide category."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the category, such as its title.",
+						"type": "object",
+						"properties": {
+							"channelId": {"description":"The ID that YouTube uses to uniquely identify the channel publishing the guide category."},
+							"title": {"description":"The category's title."}
+						}
+					}
+				}
+			},
+			"i18nLanguage": {
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#i18nLanguage."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the i18n language."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the i18n language, such as its language code and name.",
+						"type": "object",
+						"properties": {
+							"hl": {"description":"A BCP-47 code that uniquely identifies a language."},
+							"name": {"description":"The name of the language as it is written in the language specified using the i18nLanguage.list method's hl parameter."}
+						}
+					}
+				}
+			},
+			"i18nRegion": {
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#i18nRegion."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the i18n region."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the i18n region, such as its region code and name.",
+						"type": "object",
+						"properties": {
+							"gl": {"description":"The two-letter ISO country code that identifies the region."},
+							"name": {"description":"The name of the region."}
+						}
+					}					
+				}
+			},
+			"playlistItem": {
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#playlistItem."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the playlist item."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the playlist item, such as its title and position in the playlist.",
+						"type": "object",
+						"properties": {
+							"publishedAt": {"description":"The date and time that the item was added to the playlist. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"channelId": {"description":"The ID that YouTube uses to uniquely identify the user that added the item to the playlist."},
+							"title": {"description":"The item's title."},
+							"description": {"description":"The item's description."},
+							"thumbnails": {
+								"description":"A map of thumbnail images associated with the playlist item. For each object in the map, the key is the name of the thumbnail image, and the value is an object that contains other information about the thumbnail.",
+								"type": "object",
+								"properties": {}
+								},
+							"channelTitle": {"description":"The channel title of the channel that the playlist item belongs to."},
+							"playlistId": {"description":"The ID that YouTube uses to uniquely identify the playlist that the playlist item is in."},
+							"position": {"description":"The order in which the item appears in the playlist. The value uses a zero-based index, so the first item has a position of 0, the second item has a position of 1, and so forth."},
+							"resourceId": {
+								"description":"The id object contains information that can be used to uniquely identify the resource that is included in the playlist as the playlist item.",
+								"type": "object",
+								"properties": {}
+								}
+							}
+						},
+					"contentDetails": {
+						"description":"The contentDetails object is included in the resource if the included item is a YouTube video. The object contains additional information about the video.",
+						"type": "object",
+						"properties": {
+							"videoId": {"description":"The ID that YouTube uses to uniquely identify a video. To retrieve the video resource, set the id query parameter to this value in your API request."},
+							"note": {"description":"A user-generated note for this item. The property value has a maximum length of 280 characters."},
+							"videoPublishedAt": {"description":"The date and time that the video was published to YouTube. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."}
+							}	
+						},
+					"status": {
+						"description":"The status object contains information about the playlist item's privacy status.",
+						"type":"object",
+						"properties": {
+							"privacyStatus": {"description": "The playlist item's privacy status. The channel that uploaded the video that the playlist item represents can set this value using either the videos.insert or videos.update method."}
+						}
+					}
+				}
+			},
+			"playlist":{
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#playlist."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the playlist."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the playlist, such as its title and description.",
+						"type": "object",
+						"properties": {
+							"publishedAt": {"description":"The date and time that the playlist was created. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"channelId": {"description":"The ID that YouTube uses to uniquely identify the channel that published the playlist."},
+							"title": {"description":"The playlist's title."},
+							"description": {"description":"The playlist's description."},
+							"thumbnails": {
+								"description":"A map of thumbnail images associated with the playlist. For each object in the map, the key is the name of the thumbnail image, and the value is an object that contains other information about the thumbnail.",
+								"type": "object",
+								"properties": {}
+								},
+							"channelTitle": {"description":"The channel title of the channel that the video belongs to."},
+							"tags": {
+								"description": "Keyword tags associated with the playlist.",
+								"type": "array"
+								},
+							"defaultLanguage": {"description":"The language of the text in the playlist resource's snippet.title and snippet.description properties."},
+							"localized": {
+								"description": "The snippet.localized object contains either a localized title and description for the playlist or the title in the default language for the playlist's metadata. Localized text is returned in the resource snippet if the playlists.list request used the hl parameter to specify a language for which localized text should be returned and localized text is available in that language. Metadata for the default language is returned if an hl parameter value is not specified or a value is specified but localized metadata is not available for the specified language. The property contains a read-only value. Use the localizations object to add, update, or delete localized titles.",
+								"type": "object",
+								"properties": {}
+							}
+						}
+					},
+					"status": {
+						"description": "The status object contains status information for the playlist.",
+						"type": "object",
+						"properties": {
+							"privacyStatus": {"description":"The playlist's privacy status. Valid values for this property are: private, public, unlisted."}
+						}
+					},
+					"contentDetails": {
+						"description": "The contentDetails object contains information about the playlist content, including the number of videos in the playlist.",
+						"type": "object",
+						"properties": {
+							"itemCount": {"description":"The number of videos in the playlist."}
+						}
+					},
+					"player": {
+						"description": "The player object contains information that you would use to play the playlist in an embedded player.",
+						"type": "object",
+						"properties": {
+							"embedHtml": {"description":"An <iframe> tag that embeds a player that will play the playlist."}
+						}
+					},
+					"localizations": {
+						"description": "The localizations object encapsulates translations of the playlist's metadata.",
+						"type": "object",
+						"properties": {
+							"embedHtml": {"description":"An <iframe> tag that embeds a player that will play the playlist."}
+						}
+					}
+				}
+			},
+			"search": {
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#searchResult."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {
+						"description":"The id object contains information that can be used to uniquely identify the resource that matches the search request.",
+						"type": "object",
+						"properties": {
+							"kind": {"description":"The type of the API resource."},
+							"videoId": {"description":"If the id.type property's value is youtube#video, then this property will be present and its value will contain the ID that YouTube uses to uniquely identify a video that matches the search query."},
+							"channelId": {"description":"If the id.type property's value is youtube#channel, then this property will be present and its value will contain the ID that YouTube uses to uniquely identify a channel that matches the search query."},
+							"playlistId": {"description":"If the id.type property's value is youtube#playlist, then this property will be present and its value will contain the ID that YouTube uses to uniquely identify a playlist that matches the search query."}
+						}
+					},
+					"snippet": {
+						"description":"The snippet object contains basic details about a search result, such as its title or description. For example, if the search result is a video, then the title will be the video's title and the description will be the video's description.",
+						"type": "object",
+						"properties": {
+							"publishedAt": {"description":"The creation date and time of the resource that the search result identifies. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"channelId": {"description":"The value that YouTube uses to uniquely identify the channel that published the resource that the search result identifies."},
+							"title": {"description":"The title of the search result."},
+							"description": {"description":"A description of the search result."},
+							"thumbnails": {
+								"description":"A map of thumbnail images associated with the search result. For each object in the map, the key is the name of the thumbnail image, and the value is an object that contains other information about the thumbnail.",
+								"type": "object"
+							},
+							"channelTitle": {"description": "The title of the channel that published the resource that the search result identifies."},
+							"liveBroadcastContent": {"description": "An indication of whether a video or channel resource has live broadcast content. Valid property values are upcoming, live, and none. For a video resource, a value of upcoming indicates that the video is a live broadcast that has not yet started, while a value of live indicates that the video is an active live broadcast. For a channel resource, a value of upcoming indicates that the channel has a scheduled broadcast that has not yet started, while a value of live indicates that the channel has an active live broadcast."}
+						}						
+					}				
+				}
+			},			
+			"subscription":{
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#subscription."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the subscription."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the subscription, including its title and the channel that the user subscribed to.",
+						"type": "object",
+						"properties": {
+							"publishedAt": {"description":"The date and time that the subscription was created. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"channelTitle": {"description":"The title of the channel that the subscription belongs to."},
+							"title": {"description":"The subscription's title."},
+							"description": {"description":"The subscription's details."},
+							"resourceId": {
+								"description": "The id object contains information about the channel that the user subscribed to.",
+								"type": "object",
+								"properties": {}
+							},
+							"channelId": {"description":"The ID that YouTube uses to uniquely identify the subscriber's channel. The resource_id object identifies the channel that the user subscribed to."},
+							"thumbnail": {
+								"description": "A map of thumbnail images associated with the subscription. For each object in the map, the key is the name of the thumbnail image, and the value is an object that contains other information about the thumbnail.",
+								"type": "object",
+								"properties": {}
+							}
+						}
+					},
+					"contentDetails": {
+						"description":"The contentDetails object contains basic statistics about the subscription.",
+						"type": "object",
+						"properties": {
+							"totalItemCount": {"description":"The approximate number of items that the subscription points to."},
+							"newItemCount": {"description":"The number of new items in the subscription since its content was last read."},
+							"activityType": {"description":"The type of activity this subscription is for (only uploads, everything). Valid values for this property are: all, uploads"}
+						}
+					},
+					"subscriberSnippet": {
+						"description": "The subscriberSnippet object contains basic details about the subscriber.",
+						"type": "object",
+						"properties": {
+							"title": {"description":"The title of the subscriber's channel."},
+							"description": {"description":"The description of the subscriber's channel."},
+							"channelId": {"description":"The ID that YouTube assigns to uniquely identify the subscriber's channel."},
+							"thumbnails": {
+								"description":"Thumbnail images for the subscriber's channel.",
+								"type": "object"
+							}
+						}
+					}
+				}
+			},
+			"video":{
+				"properties": {
+					"kind": {"description":"Identifies the API resource's type. The value will be youtube#video."},
+					"etag": {"description":"The Etag of this resource."},
+					"id": {"description":"The ID that YouTube uses to uniquely identify the video."},
+					"snippet": {
+						"description":"The snippet object contains basic details about the video, such as its title, description, and category.",
+						"type": "object",
+						"properties": {
+							"publishedAt": {"description":"The date and time that the video was published. Note that this time might be different than the time that the video was uploaded. For example, if a video is uploaded as a private video and then made public at a later time, this property will specify the time that the video was made public. There are a couple of special cases: If a video is uploaded as a private video and the video metadata is retrieved by the channel owner, then the property value specifies the date and time that the video was uploaded. If a video is uploaded as an unlisted video, the property value also specifies the date and time that the video was uploaded. In this case, anyone who knows the video's unique video ID can retrieve the video metadata. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"channelId": {"description":"The ID that YouTube uses to uniquely identify the channel that the video was uploaded to."},
+							"title": {"description":"The video's title. The property value has a maximum length of 100 characters and may contain all valid UTF-8 characters except < and >. You must set a value for this property if you call the videos.update method and are updating the snippet part of a video resource."},
+							"description": {"description":"The video's description. The property value has a maximum length of 5000 bytes and may contain all valid UTF-8 characters except < and >."},
+							"thumbnails": {
+								"description":"A map of thumbnail images associated with the video. For each object in the map, the key is the name of the thumbnail image, and the value is an object that contains other information about the thumbnail.",
+								"type": "object"
+							},
+							"channelTitle": {"description":"Channel title for the channel that the video belongs to."},
+							"tags": {
+								"description":"A list of keyword tags associated with the video. Tags may contain spaces. The property value has a maximum length of 500 characters. Note the following rules regarding the way the character limit is calculated: The property value is a list, and commas between items in the list count toward the limit. If a tag contains a space, the API server handles the tag value as though it were wrapped in quotation marks, and the quotation marks count toward the character limit. So, for the purposes of character limits, the tag Foo-Baz contains seven characters, but the tag Foo Baz contains nine characters.", 
+								"type": "array"
+							},
+							"categoryId": {"description":"The YouTube video category associated with the video. You must set a value for this property if you call the videos.update method and are updating the snippet part of a video resource."},
+							"liveBroadcastContent": {"description":"Indicates if the video is an upcoming/active live broadcast. Or it's 'none' if the video is not an upcoming/active live broadcast. Valid values for this property are: live, none, upcoming"},
+							"defaultLanguage": {"description":"The language of the text in the video resource's snippet.title and snippet.description properties."},
+							"localized": {
+								"description":"The snippet.localized object contains either a localized title and description for the video or the title in the default language for the video's metadata. Localized text is returned in the resource snippet if the videos.list request used the hl parameter to specify a language for which localized text should be returned and localized text is available in that language. Metadata for the default language is returned if an hl parameter value is not specified or a value is specified but localized metadata is not available for the specified language. The property contains a read-only value. Use the localizations object to add, update, or delete localized titles.",
+								"type": "object", 
+								"properties": {}
+							}
+						}
+					},
+					"contentDetails": {
+						"description": "The contentDetails object contains information about the video content, including the length of the video and an indication of whether captions are available for the video.", 
+						"type": "object",
+						"properties": {
+							"duration": {"description":"The length of the video. The property value is an ISO 8601 duration. For example, for a video that is at least one minute long and less than one hour long, the duration is in the format PT#M#S, in which the letters PT indicate that the value specifies a period of time, and the letters M and S refer to length in minutes and seconds, respectively. The # characters preceding the M and S letters are both integers that specify the number of minutes (or seconds) of the video. For example, a value of PT15M33S indicates that the video is 15 minutes and 33 seconds long. If the video is at least one hour long, the duration is in the format PT#H#M#S, in which the # preceding the letter H specifies the length of the video in hours and all of the other details are the same as described above. If the video is at least one day long, the letters P and T are separated, and the value's format is P#DT#H#M#S. Please refer to the ISO 8601 specification for complete details."},
+							"dimension": {"description":"Indicates whether the video is available in 3D or in 2D."},
+							"definition": {"description":"Indicates whether the video is available in high definition (HD) or only in standard definition. Valid values for this property are: hd, sd"},
+							"caption": {"description":"Indicates whether captions are available for the video. Valid values for this property are: false, true."},
+							"licensedContent": {"description":"Indicates whether the video represents licensed content, which means that the content was uploaded to a channel linked to a YouTube content partner and then claimed by that partner."},
+							"regionRestriction": {
+								"description":"The regionRestriction object contains information about the countries where a video is (or is not) viewable. The object will contain either the contentDetails.regionRestriction.allowed property or the contentDetails.regionRestriction.blocked property.", 
+								"type": "object", 
+								"properties": {}
+							},
+							"contentRating": {
+								"description": "Specifies the ratings that the video received under various rating schemes.", 
+								"type": "object", 
+								"properties": {}
+							},
+							"projection": {"description": "Specifies the projection format of the video. Valid values for this property are: 360, rectangular"},
+							"hasCustomThumbnail": {"description": "Indicates whether the video uploader has provided a custom thumbnail image for the video. This property is only visible to the video uploader."}
+						}
+					},
+					"status": {
+						"description": "The status object contains information about the video's uploading, processing, and privacy statuses.",
+						"type": "object", 
+						"properties": {
+							"uploadStatus": {"description":"The status of the uploaded video. Valid values for this property are: deleted, failed, processed, rejected, uploaded"},
+							"failureReason": {"description":"This value explains why a video failed to upload. This property is only present if the uploadStatus property indicates that the upload failed. Valid values for this property are: codec, conversion, emptyFile, invalidFile, tooSmall, uploadAborted."},
+							"rejectionReason": {"description":"This value explains why YouTube rejected an uploaded video. This property is only present if the uploadStatus property indicates that the upload was rejected. Valid values for this property are: claim, copyright, duplicate, inappropriate, legal, length, termsOfUse, trademark, uploaderAccountClosed, uploaderAccountSuspended."},
+							"privacyStatus": {"description":"The video's privacy status. Valid values for this property are: private, public, unlisted."},
+							"publishAt": {"description":"The date and time when the video is scheduled to publish. It can be set only if the privacy status of the video is private. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format. Note the following two additional points about this property's behavior: If you set this property's value when calling the videos.update method, you must also set the status.privacyStatus property value to private even if the video is already private. If your request schedules a video to be published at some time in the past, the video will be published right away. As such, the effect of setting the status.publishAt property to a past date and time is the same as of changing the video's privacyStatus from private to public."},
+							"license": {"description":"The video's license. Valid values for this property are: creativeCommon, youtube"},
+							"embeddable": {"description":"This value indicates whether the video can be embedded on another website."},
+							"publicStatsViewable": {"description": "This value indicates whether the extended video statistics on the video's watch page are publicly viewable. By default, those statistics are viewable, and statistics like a video's viewcount and ratings will still be publicly visible even if this property's value is set to false."}
+						}
+					},
+					"statistics": {
+						"description": "The statistics object contains statistics about the video.",
+						"type": "object", 
+						"properties": {
+							"viewCount": {"description":"The number of times the video has been viewed."},
+							"likeCount": {"description":"The number of users who have indicated that they liked the video."},
+							"dislikeCount": {"description":"The number of users who have indicated that they disliked the video."},
+							"commentCount": {"description":"The number of comments for the video."}
+						}
+					},
+					"player": {
+						"description": "The player object contains information that you would use to play the video in an embedded player.", 
+						"type": "object", 
+						"properties": {
+							"embedHtml": {"description":"An <iframe> tag that embeds a player that plays the video. If the API request to retrieve the resource specifies a value for the maxHeight and/or maxWidth parameters, the size of the embedded player is scaled to satisfy the maxHeight and/or maxWidth requirements. If the video's aspect ratio is unknown, the embedded player defaults to a 4:3 format."},
+							"embedHeight": {"description":"The height of the embedded player returned in the player.embedHtml property. This property is only returned if the request specified a value for the maxHeight and/or maxWidth parameters and the video's aspect ratio is known."},
+							"embedWidth": {"description":"The width of the embedded player returned in the player.embedHtml property. This property is only returned if the request specified a value for the maxHeight and/or maxWidth parameters and the video's aspect ratio is known."}
+						}
+					},
+					"topicDetails": {
+						"description": "The topicDetails object encapsulates information about topics associated with the video. Important: See the definitions of the topicDetails.relevantTopicIds[] and topicDetails.topicIds[] properties as well as the revision history for more details about upcoming changes related to topic IDs.",
+						"type": "object", 
+						"properties": {
+							"topicCategories": {
+								"description": "A list of Wikipedia URLs that provide a high-level description of the video's content.", 
+								"type": "array"
+							}
+						}
+					
+					},
+					"recordingDetails": {
+						"description": "The recordingDetails object encapsulates information about the location, date and address where the video was recorded.",
+						"type": "object", 
+						"properties": {
+							"location": {
+								"description": "The geolocation information associated with the video. Note that the child property values identify the location that the video owner wants to associate with the video. The value is editable, searchable on public videos, and might be displayed to users for public videos.",
+								"type": "object",
+								"properties": {}
+							},
+							"recordingDate": {"description": "The date and time when the video was recorded. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sssZ) format."}
+						}
+					},
+					"fileDetails": {
+						"description": "The fileDetails object encapsulates information about the video file that was uploaded to YouTube, including the file's resolution, duration, audio and video codecs, stream bitrates, and more. This data can only be retrieved by the video owner. The fileDetails object will only be returned if the processingDetails.fileAvailability property has a value of available.",
+						"type": "object", 
+						"properties": {
+							"fileName": {"description":"The uploaded file's name. This field is present whether a video file or another type of file was uploaded."},
+							"fileSize": {"description":"The uploaded file's size in bytes. This field is present whether a video file or another type of file was uploaded."},
+							"fileType": {"description":"The uploaded file's type as detected by YouTube's video processing engine. Currently, YouTube only processes video files, but this field is present whether a video file or another type of file was uploaded. Valid values for this property are: archive - The file is an archive file, such as a .zip archive, audio - The file is a known audio file type, such as an .mp3 file, document - The file is a document or text file, such as a MS Word document, image - The file is an image file, such as a .jpeg image, other - The file is another non-video file type, project - The file is a video project file, such as a Microsoft Windows Movie Maker project, that does not contain actual video data, video - The file is a known video file type, such as an .mp4 file."},
+							"container": {"description":"The uploaded video file's container format."},
+							"videoStreams": {
+								"description":"A list of video streams contained in the uploaded video file. Each item in the list contains detailed metadata about a video stream.",
+								"type": "array"
+							},
+							"audioStreams": {
+								"description":"A list of audio streams contained in the uploaded video file. Each item in the list contains detailed metadata about an audio stream.",
+								"type": "array"
+							},
+							"durationMs": {"description":"The length of the uploaded video in milliseconds."},
+							"bitrateBps": {"description":"The uploaded video file's combined (video and audio) bitrate in bits per second."},
+							"creationTime": {"description":"The date and time when the uploaded video file was created. The value is specified in ISO 8601 format. Currently, the following ISO 8601 formats are supported: Date only: YYYY-MM-DD, Naive time: YYYY-MM-DDTHH:MM:SS, Time with timezone: YYYY-MM-DDTHH:MM:SS+HH:MM"}
+						}
+					},
+					"processingDetails": {
+						"description": "The processingDetails object encapsulates information about YouTube's progress in processing the uploaded video file. The properties in the object identify the current processing status and an estimate of the time remaining until YouTube finishes processing the video. This part also indicates whether different types of data or content, such as file details or thumbnail images, are available for the video. The processingProgress object is designed to be polled so that the video uploaded can track the progress that YouTube has made in processing the uploaded video file. This data can only be retrieved by the video owner.",
+						"type": "object", 
+						"properties": {
+							"processingStatus": {"description": "The video's processing status. This value indicates whether YouTube was able to process the video or if the video is still being processed. Valid values for this property are: failed - Video processing has failed. See ProcessingFailureReason, processing - Video is currently being processed. See ProcessingProgress, succeeded - Video has been successfully processed, terminated - Processing information is no longer available."},
+							"processingProgress": {
+								"description": "The processingProgress object contains information about the progress YouTube has made in processing the video. The values are really only relevant if the video's processing status is processing.",
+								"type": "object", 
+								"properties": {}
+							},
+							"processingFailureReason": {"description":"The reason that YouTube failed to process the video. This property will only have a value if the processingStatus property's value is failed. Valid values for this property are: other - Some other processing component has failed, streamingFailed - Video could not be sent to streamers, transcodeFailed - Content transcoding has failed, uploadFailed - File delivery has failed."},
+							"fileDetailsAvailability": {"description":"This value indicates whether file details are available for the uploaded video. You can retrieve a video's file details by requesting the fileDetails part in your videos.list() request."},
+							"processingIssuesAvailability": {"description":"This value indicates whether the video processing engine has generated suggestions that might improve YouTube's ability to process the the video, warnings that explain video processing problems, or errors that cause video processing problems. You can retrieve these suggestions by requesting the suggestions part in your videos.list() request."},
+							"tagSuggestionsAvailability": {"description":"This value indicates whether keyword (tag) suggestions are available for the video. Tags can be added to a video's metadata to make it easier for other users to find the video. You can retrieve these suggestions by requesting the suggestions part in your videos.list() request."},
+							"editorSuggestionsAvailability": {"description":"This value indicates whether video editing suggestions, which might improve video quality or the playback experience, are available for the video. You can retrieve these suggestions by requesting the suggestions part in your videos.list() request."},
+							"thumbnailsAvailability": {"description":"This value indicates whether thumbnail images have been generated for the video."}
+						}
+					},
+					"suggestions": {
+						"description": "The suggestions object encapsulates suggestions that identify opportunities to improve the video quality or the metadata for the uploaded video. This data can only be retrieved by the video owner. The suggestions object will only be returned if the processingDetails.tagSuggestionsAvailability property or the processingDetails.editorSuggestionsAvailability property has a value of available.",
+						"type": "object", 
+						"properties": {
+							"processingErrors": {
+								"description": "A list of errors that will prevent YouTube from successfully processing the uploaded video. These errors indicate that, regardless of the video's current processing status, eventually, that status will almost certainly be failed. Valid values for this property are: archiveFile - An archive file (e.g., a ZIP archive), audioFile - File contains audio only (e.g., an MP3 file), docFile - Document or text file (e.g., MS Word document), imageFile - Image file (e.g., a JPEG image), notAVideoFile - Other non-video file, projectFile - Movie project file (e.g., Microsoft Windows Movie Maker project).",
+								"type": "array"
+							},
+							"processingWarnings": {
+								"description": "A list of reasons why YouTube may have difficulty transcoding the uploaded video or that might result in an erroneous transcoding. These warnings are generated before YouTube actually processes the uploaded video file. In addition, they identify issues that do not necessarily indicate that video processing will fail but that still might cause problems such as sync issues, video artifacts, or a missing audio track. Valid values for this property are: hasEditlist - Edit lists are not currently supported, inconsistentResolution - Conflicting container and stream resolutions, problematicAudioCodec - Audio codec that is known to cause problems was used, problematicVideoCodec - Video codec that is known to cause problems was used, unknownAudioCodec - Unrecognized audio codec, transcoding is likely to fail, unknownContainer - Unrecognized file format, transcoding is likely to fail, unknownVideoCodec - Unrecognized video codec, transcoding is likely to fail.",
+								"type": "array"
+							},
+							"processingHints": {
+								"description": "A list of suggestions that may improve YouTube's ability to process the video. Valid values for this property are: nonStreamableMov - The MP4 file is not streamable, this will slow down the processing, sendBestQualityVideo - Probably a better quality version of the video exists.",
+								"type": "array"
+							},
+							"tagSuggestions": {
+								"description": "A list of keyword tags that could be added to the video's metadata to increase the likelihood that users will locate your video when searching or browsing on YouTube.",
+								"type": "array"
+							},
+							"editorSuggestions": {
+								"description": "A list of video editing operations that might improve the video quality or playback experience of the uploaded video. Valid values for this property are: audioQuietAudioSwap - The audio track appears silent and could be swapped with a better quality one, videoAutoLevels - Picture brightness levels seem off and could be corrected, videoCrop - Margins (mattes) detected around the picture could be cropped, videoStabilize - The video appears shaky and could be stabilized.",
+								"type": "array"
+							}
+						}
+					},
+					"liveStreamingDetails": {
+						"description": "The liveStreamingDetails object contains metadata about a live video broadcast. The object will only be present in a video resource if the video is an upcoming, live, or completed live broadcast.",
+						"type": "object", 
+						"properties": {
+							"actualStartTime": {"description":"The time that the broadcast actually started. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format. This value will not be available until the broadcast begins."},
+							"actualEndTime": {"description":"The time that the broadcast actually ended. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format. This value will not be available until the broadcast is over."},
+							"scheduledStartTime": {"description":"The time that the broadcast is scheduled to begin. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format."},
+							"scheduledEndTime": {"description":"The time that the broadcast is scheduled to end. The value is specified in ISO 8601 (YYYY-MM-DDThh:mm:ss.sZ) format. If the value is empty or the property is not present, then the broadcast is scheduled to continue indefinitely."},
+							"concurrentViewers": {"description":"The number of viewers currently watching the broadcast. The property and its value will be present if the broadcast has current viewers and the broadcast owner has not hidden the viewcount for the video. Note that YouTube stops tracking the number of concurrent viewers for a broadcast when the broadcast ends. So, this property would not identify the number of viewers watching an archived video of a live broadcast that already ended."},
+							"activeLiveChatId": {"description":"The ID of the currently active live chat attached to this video. This field is filled only if the video is a currently live broadcast that has live chat. Once the broadcast transitions to complete this field will be removed and the live chat closed down. For persistent broadcasts that live chat id will no longer be tied to this video but rather to the new video being displayed at the persistent page."}
+						}
+					},
+					"localizations": {
+						"description": "The localizations object contains translations of the video's metadata.",
+						"type": "object"
+					}
+				}
+			}
+		}
+	}
+}
