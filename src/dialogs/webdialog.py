@@ -63,14 +63,15 @@ class PreLoginWebDialog(QDialog):
         self.buttonProceed.setDisabled(True)
         hLayout.addWidget(self.buttonProceed)
 
-        self.loadPage()
         #browser.setBackgroundRole(QPalette.Window)
 
     def loadPage(self):
-        self.browser.load(QUrl(self.url))
+        #self.browser.load(QUrl(self.url))
+        self.browser.load(self.url)
 
     def show(self):
         #super(WebDialog, self).show()
+        self.loadPage()
         return self.exec_()
 
 
