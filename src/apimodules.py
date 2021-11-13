@@ -2956,6 +2956,12 @@ class AmazonTab(AuthTab):
         }
 
         if headers is not None:
+            # Remove authorization headers from previous request (in pagination scenarios)
+            headers.pop("x-amz-date", None)
+            headers.pop("x-amz-content-sha256", None)
+            headers.pop("Authorization", None)
+
+            # Add remaining headers
             canonical_headers.update(headers)
 
         canonical_headers = {k.lower(): v for k, v in list(canonical_headers.items())}
