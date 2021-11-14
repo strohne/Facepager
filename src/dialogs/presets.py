@@ -444,6 +444,8 @@ class PresetWindow(QDialog):
                 self.progressMax.emit(len(files))
 
                 for filename in files:
+                    if self.progress.wasCanceled:
+                        raise (f"Downloading default presets was canceled by you.")
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
                     if response.status_code != 200:
                         raise(f"GitHub is not available (status code {response.status_code})")
