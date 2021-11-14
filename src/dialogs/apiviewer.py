@@ -381,7 +381,7 @@ class ApiViewer(QDialog):
                 for filename in files:
                     response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
                     if response.status_code != 200:
-                        raise(f"GitHub is not available (status code {response.status_code})")
+                        raise Exception(f"GitHub is not available (status code {response.status_code})")
                     with open(os.path.join(tmp.name, os.path.basename(filename)), 'wb') as f:
                         f.write(response.content)
                     if progress is not None:
