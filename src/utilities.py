@@ -187,11 +187,12 @@ def extractValue(data, key, dump=True, folder="", default=''):
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
 
-            if modifier.startswith('js:'):
+            modifier = modifier.split(":",1)
+            if modifier[0] == 'js':
                 # Input: list of strings.
                 # Output if dump==True: list of strings
                 # Output if dump==False: list of dict, list, string or number
-                selector = modifier[3:]
+                selector = modifier[1]
 
                 items = []
                 for x in value:
@@ -211,11 +212,11 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 else:
                     value = items
 
-            elif modifier.startswith('json:'):
+            elif modifier[0] == 'json':
                 # Input: list of strings.
                 # Output if dump==True: list of strings
                 # Output if dump==False: list of dict, list, string or number
-                selector = modifier[5:]
+                selector = modifier[1]
                 items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
 
                 # Flatten list if not dumped
@@ -224,20 +225,20 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 else:
                     value = items
 
-            elif modifier.startswith('not:'):
-                selector = modifier[4:]
+            elif modifier[0] == 'not':
+                selector = modifier[1]
                 check = [x == selector for x in value]
                 value = not any(check)
 
-            elif modifier.startswith('is:'):
-                selector = modifier[3:]
+            elif modifier[0] == 'is':
+                selector =modifier[1]
                 check = [x == selector for x in value]
                 value = any(check)
 
-            elif modifier.startswith('re:'):
+            elif modifier[0] == 'not':
                 # Input: list of strings.
                 # Output: list of strings
-                selector = modifier[3:]
+                selector = modifier[1]
                 items = [re.findall(selector,x) for x in value]
 
                 # Flatten (first group in match if re.findall returns multiple groups)
@@ -250,40 +251,55 @@ def extractValue(data, key, dump=True, folder="", default=''):
                             value.append(match)
 
             # Example: encode:utf-8
-            elif modifier.startswith('encode:'):
+            elif modifier[0] == 'encode':
                 # Input: list of strings.
                 # Output: list of strings
-                encoding = modifier[7:]
+                encoding = modifier[1]
                 value = [x.encode(encoding) for x in value]
 
-            elif modifier.startswith('css:'):
+
+            elif modifier[0] == 'css':
                 # Input: list of strings.
                 # Output: list of strings
-                selector = modifier[4:]
+                selector = modifier[1]
                 value = [extractHtml(x, selector, type='css') for x in value]
                 value = [y for x in value for y in x]
-            elif modifier.startswith('xpath:'):
+
+            elif modifier[0] == 'xpath':
                 # Input: list of strings.
                 # Output: list of strings
-                selector = modifier[6:]
+                selector = modifier[1]
                 value = [extractHtml(x, selector, type='xpath') for x in value]
                 value = [y for x in value for y in x]
 
             # Load file contents (using modifiers after a pipe symbol)
-            elif modifier == 'file':
+            elif modifier[0] == 'file':
                 value = value[0]
                 with open(os.path.join(folder, value), 'rb') as file:
                     value = file.read()
 
-            elif modifier == 'base64':
+            elif modifier[0] == 'base64':
                 value = value[0]
                 value = b64encode(value.encode('utf-8')).decode('utf-8')
 
-            elif modifier == 'length':
+            elif modifier[0] == 'length':
                 value = len(value)
-            elif modifier == "timestamp":
+
+            elif modifier[0] == 'utc':
                 value = [datetime.utcfromtimestamp(float(x)).isoformat() for x in value]
-            elif modifier == "shortdate":
+
+            elif modifier[0] == 'timestamp':
+
+                # Example mydate|timestamp:%Y-%m-%d %H:%M:%S
+                if len(modifier) > 1:
+                    format = modifier[1]
+                    value = [str(int(datetime.strptime(x, format).timestamp())) for x in value]
+
+                # Example mydate|timestamp
+                else:
+                    value = [str(int(datetime.fromisoformat(x).timestamp())) for x in value]
+
+            elif modifier[0] == 'shortdate':
                 value = [str(datetime.strptime(x, '%a %b %d %H:%M:%S %z %Y')) for x in value]
 
         # If modified in pipeline (otherwise already handled by getDictValue)...
