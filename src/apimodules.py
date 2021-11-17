@@ -1241,27 +1241,32 @@ class ApiTab(QScrollArea):
         if (options['nodedata'] is not None) and not hasValue(data, options['nodedata']):
             return None
 
+        # Stop if key exists and is not false
+        stopvalue = not extractValue(data, options.get('paging_stop'), dump=False, default=True)[1]
+        if stopvalue:
+            return None
+
         # paging by auto count
         if (options.get('paging_type') == "count") and (options.get('param_paging') is not None):
+
             offset = options['params'][options['param_paging']]
+
             offset = offset + options.get('offset_step', 1)
             options['params'][options['param_paging']] = offset
 
         # paging by key
         elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (
                 options.get('param_paging') is not None):
+
             cursor = getDictValueOrNone(data, options['key_paging'])
             if cursor is None:
-                return None
-
-            stopvalue = not extractValue(data, options.get('paging_stop'), dump=False, default=True)[1]
-            if stopvalue:
                 return None
 
             options['params'][options['param_paging']] = cursor
 
         # url based paging
         elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
+
             url = getDictValueOrNone(data, options['key_paging'])
             if url is not None:
                 url, params = self.parseURL(url)
@@ -1269,6 +1274,7 @@ class ApiTab(QScrollArea):
                 options['url'] = url
             else:
                 return None
+
         elif (options.get('paging_type') == "decrease"):
             # manual paging with max-id
             # if there are still statuses in the response, use the last ID-1 for further pagination
@@ -2460,7 +2466,7 @@ class AuthTab(ApiTab):
             if url.startswith(options['redirect_uri']) and token is not None:
 
                 # Check access and set token
-                self.checkPregigisteredAcces(token)
+                self.checkPreregisteredAccess(token)
                 self.tokenEdit.setText(token)
                 try:
                     self.authEdit.setCurrentIndex(self.authEdit.findText('header'))

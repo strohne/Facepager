@@ -101,18 +101,6 @@ def parseKey(key):
 
     return (name, key, pipeline)
 
-
-def hasValue(data,key):
-    name, value = extractValue(data, key, False)
-    if (value is None):
-        return False
-    elif (value == False):
-        return False
-    elif (type(value) is list) and (len(value) == 0):
-        return False
-    else:
-        return True
-
 def dict_generator(indict, pre=None):
     pre = pre[:] if pre else []
     if isinstance(indict, dict):
@@ -168,6 +156,64 @@ def jsWalkValues(indict, pre=None):
                 for k, v in enumerate(value):
                     for d in jsWalkValues(v, pre + [key] + [k]):
                         yield d
+
+
+def hasValue(data, key):
+    keys = tokenize_with_escape(key,separator=',')
+
+    for key in keys:
+        name, value = extractValue(data, key, False)
+        if (((value is not None) and (value != False)  and (value != '') and (type(value) is not list)) or \
+             ((type(value) is list) and (len(value) > 0))):
+            return True
+
+    return False
+
+
+def sliceData(data, headers=None, options={}):
+    """Filter response data and extract nodes"""
+    if options['nodedata'] is None:
+        nodes = toDictListTuple(data)
+        offcut = None
+    else:
+        keys = tokenize_with_escape(options['nodedata'], separator=',')
+        nodes = []
+        offcut = data
+
+        for key in keys:
+            if hasDictValue(data, key, piped=True):
+                name, newnodes = extractValue(data, key, False)
+                newnodes = toDictListTuple(newnodes,key)
+
+                nodes.extend(newnodes)
+                offcut = filterDictValue(offcut, key, False, piped=True) \
+                    if options.get('offcut', True) else None
+
+    #empty records
+    if (len(nodes) == 0) and options.get('empty', True):
+        empty = {}
+    else:
+        empty = None
+
+    # offcut
+    if not options.get('offcut', True):
+        offcut = None
+    elif options.get('fulloffcut', False):
+        offcut = data
+
+
+    # headers
+    if not options.get('saveheaders', False):
+        headers = None
+
+    data={
+        'nodes': nodes,
+        'offcut': offcut,
+        'empty': empty,
+        'headers': headers
+    }
+
+    return data
 
 def extractValue(data, key, dump=True, folder="", default=''):
     """Extract value from dict and pipe through modifiers
@@ -350,51 +396,6 @@ def toDictListTuple(data, key=''):
         key += '.*'
 
     data = [(key, n if isinstance(n, Mapping) else {subkey: n}) for n in data]
-
-    return data
-
-def sliceData(data, headers=None, options={}):
-    """Filter response data and extract nodes"""
-    if options['nodedata'] is None:
-        nodes = toDictListTuple(data)
-        offcut = None
-    else:
-        keys = options['nodedata'].split(',')
-        nodes = []
-        offcut = data
-
-        for key in keys:
-            if hasDictValue(data, key, piped=True):
-                name, newnodes = extractValue(data, key, False)
-                newnodes = toDictListTuple(newnodes,key)
-
-                nodes.extend(newnodes)
-                offcut = filterDictValue(offcut, key, False, piped=True) \
-                    if options.get('offcut', True) else None
-
-    #empty records
-    if (len(nodes) == 0) and options.get('empty', True):
-        empty = {}
-    else:
-        empty = None
-
-    # offcut
-    if not options.get('offcut', True):
-        offcut = None
-    elif options.get('fulloffcut', False):
-        offcut = data
-
-
-    # headers
-    if not options.get('saveheaders', False):
-        headers = None
-
-    data={
-        'nodes': nodes,
-        'offcut': offcut,
-        'empty': empty,
-        'headers': headers
-    }
 
     return data
 
