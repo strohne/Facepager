@@ -20,7 +20,7 @@ from requests.exceptions import *
 from rauth import OAuth1Service
 from requests_oauthlib import OAuth2Session
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import urlparse, parse_qs, parse_qsl
 
 import webbrowser
 import cchardet
@@ -1241,27 +1241,32 @@ class ApiTab(QScrollArea):
         if (options['nodedata'] is not None) and not hasValue(data, options['nodedata']):
             return None
 
+        # Stop if key exists and is not false
+        stopvalue = not extractValue(data, options.get('paging_stop'), dump=False, default=True)[1]
+        if stopvalue:
+            return None
+
         # paging by auto count
         if (options.get('paging_type') == "count") and (options.get('param_paging') is not None):
+
             offset = options['params'][options['param_paging']]
+
             offset = offset + options.get('offset_step', 1)
             options['params'][options['param_paging']] = offset
 
         # paging by key
         elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (
                 options.get('param_paging') is not None):
+
             cursor = getDictValueOrNone(data, options['key_paging'])
             if cursor is None:
-                return None
-
-            stopvalue = not extractValue(data, options.get('paging_stop'), dump=False, default=True)[1]
-            if stopvalue:
                 return None
 
             options['params'][options['param_paging']] = cursor
 
         # url based paging
         elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
+
             url = getDictValueOrNone(data, options['key_paging'])
             if url is not None:
                 url, params = self.parseURL(url)
@@ -1269,6 +1274,7 @@ class ApiTab(QScrollArea):
                 options['url'] = url
             else:
                 return None
+
         elif (options.get('paging_type') == "decrease"):
             # manual paging with max-id
             # if there are still statuses in the response, use the last ID-1 for further pagination
@@ -2116,6 +2122,7 @@ class AuthTab(ApiTab):
             if clientid == '':
                 raise Exception('Client Id is missing, please adjust settings!')
 
+            # Add params from settings
             params = {'client_id': clientid,
                       'redirect_uri': options['redirect_uri'],
                       'response_type': options.get('response_type', 'code')}
@@ -2123,9 +2130,10 @@ class AuthTab(ApiTab):
             if scope is not None:
                 params['scope'] = scope
 
+            # Add params from login URL
+            loginurl, loginparams = self.parseURL(loginurl)
+            params.update(loginparams)
 
-            #params = '&'.join('%s=%s' % (key, value) for key, value in iter(params.items()))
-            #url =  loginurl + "?" + params
             urlpath, urlparams, templateparams = self.getURL(loginurl,params,{},{})
             url = urlpath + '?' + urllib.parse.urlencode(urlparams)
 
@@ -2431,16 +2439,7 @@ class AuthTab(ApiTab):
                                                    self.oauthdata['requesttoken_secret'], method="POST",
                                                    data={'oauth_verifier': self.oauthdata['oauth_verifier']})
 
-                # Get user ID
-                if self.auth_preregistered:
-                    userid = self.getUserId(session)
-                    if userid is None:
-                        raise Exception("Could not retrieve user ID. Check settings and try again.")
-
-                    self.authorizeUser(userid)
-                    if not self.auth_userauthorized:
-                        raise Exception("You are not registered at Facepager.")
-
+                self.checkPreregisteredAccess(session)
                 self.tokenEdit.setText(session.access_token)
                 self.tokensecretEdit.setText(session.access_token_secret)
 
@@ -2454,10 +2453,30 @@ class AuthTab(ApiTab):
         try:
             options = self.getSettings()
 
+            # Parse URL
             urlparsed = urlparse(url)
-            query = parse_qs(urlparsed.query)
+            query = dict(parse_qsl(urlparsed.query))        # dict & parse_qsl to get single values instead of lists
+            fragment = dict(parse_qsl(urlparsed.fragment))  # dict & parse_qsl to get single values instead of lists
 
-            if url.startswith(options['redirect_uri']) and query.get('code') is not None:
+            # Get code or token
+            code = query.get('code', fragment.get('code', None))
+            token = query.get('token', fragment.get('access_token', None))
+
+            # Flow: response_type=token
+            if url.startswith(options['redirect_uri']) and token is not None:
+
+                # Check access and set token
+                self.checkPreregisteredAccess(token)
+                self.tokenEdit.setText(token)
+                try:
+                    self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
+                except AttributeError:
+                    pass
+                success = True
+
+
+            # Flow: response_type=code
+            if url.startswith(options['redirect_uri']) and code is not None:
                 try:
                     clientid = self.clientIdEdit.text() if self.clientIdEdit.text() != "" \
                         else self.defaults.get('client_id', '')
@@ -2472,23 +2491,15 @@ class AuthTab(ApiTab):
                     session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'], scope=scope)
                     token = session.fetch_token(
                         options['token_uri'],
+                        code,
                         authorization_response=str(url),
                         client_secret=clientsecret,
                         headers=headers
                     )
 
-                    # Get user ID
-                    if self.auth_preregistered:
-                        userid = self.getUserId(token.get('access_token',''))
-                        if userid is None:
-                            raise Exception("Could not retrieve user ID. Check settings and try again.")
-
-                        self.authorizeUser(userid)
-                        if not self.auth_userauthorized:
-                            raise Exception("You are not registered at Facepager.")
-
+                    # Check access and set token
+                    self.checkPreregisteredAccess(token)
                     self.tokenEdit.setText(token.get('access_token',''))
-
                     try:
                         self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
                     except AttributeError:
@@ -2530,7 +2541,7 @@ class AuthTab(ApiTab):
 
     # Retrieves a user ID from the API that
     # later is hashed for maintaining the
-    # anonymized user list. REimplement in the modules.
+    # anonymized user list. Reimplement in the modules.
     def getUserId(self):
         return None
 
@@ -2567,6 +2578,21 @@ class AuthTab(ApiTab):
         self.auth_userauthorized = status == 'fetched (200)'
 
         return self.auth_userauthorized
+
+    def checkPreregisteredAccess(self, token):
+        if self.auth_preregistered:
+
+            # Get user ID
+            userid = self.getUserId(token)
+            if userid is None:
+                raise Exception("Could not retrieve user ID. Check settings and try again.")
+
+            # Authorize
+            self.authorizeUser(userid)
+            if not self.auth_userauthorized:
+                raise Exception("You are not registered at Facepager.")
+
+        return True
 
 
 class GenericTab(AuthTab):
