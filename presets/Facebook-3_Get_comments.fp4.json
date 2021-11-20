@@ -1,10 +1,10 @@
 {
   "name": "3 Get comments",
   "category": "Facebook",
-  "description": "Get comments of a post and some basic information about the comments. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. See the preset named \"Get Facebook posts\".\n\nReplies are comments to comments. Thus, you can use the same preset to get replies to the comments. Alternatively, set the filter parameter to \"stream\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v4.0/comment for information about available fields.\n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.\n\nBy the way: you cannot access data about the author of comments (if you are not the owner of the page).",
+  "description": "*** Please remind: This preset was developed for the deprecated Facebook Graph API Version v4.0. Be aware that APIs are changing constantly, so that you may have to change things by hand. ***\n\n*** Despite the changes in the Facebook API, fetching comments still works, but with some exceptions: Facebook additionally introduced the New Page Experience, so that the API is more restricted for pages that have been migrated. See https://developers.facebook.com/docs/pages/new-pages-experience/overview/ and https://www.facebook.com/business/help/2752670058165459?id=418112142508425 for further information. ***\n\n\nGet comments of a post and some basic information about the comments. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. See the preset named \"Get Facebook posts\".\n\nReplies are comments to comments. Thus, you can use the same preset to get replies to the comments. Alternatively, set the filter parameter to \"stream\".\n\nSee https://developers.facebook.com/docs/graph-api/reference/v4.0/comment for information about available fields.\n\nNotice: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.\n\nBy the way: you cannot access data about the author of comments (if you are not the owner of the page).",
   "module": "Facebook",
   "options": {
-    "basepath": "https://graph.facebook.com/v4.0",
+    "basepath": "https://graph.facebook.com/v5.0",
     "resource": "/<post-id>/comments",
     "params": {
       "<post-id>": "<Object ID>",
