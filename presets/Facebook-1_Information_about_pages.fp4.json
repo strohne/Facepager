@@ -1,10 +1,10 @@
 {
   "name": "1 Information about pages",
   "category": "Facebook",
-  "description": "Add Facebook-IDs as nodes, e.g. \"Uni.Greifswald.de\".\n\nThis preset fetches the most basic information about a Facebook page for you. In case you want to fetch more data just add the fields you like. For example, add \"likes\" to get to know which pages this page liked. See https://developers.facebook.com/docs/graph-api/reference/page/ for more possibilities.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.\n",
+  "description": "*** Please remind: This preset was developed for the deprecated Facebook Graph API Version v4.0. Due to changes in the Facebook API, you can't request metadata about pages anymore so that this preset unfortunately NO LONGER WORKS. ***\n\n\nAdd Facebook-IDs as nodes, e.g. \"Uni.Greifswald.de\".\n\nThis preset fetches the most basic information about a Facebook page for you. In case you want to fetch more data just add the fields you like. For example, add \"likes\" to get to know which pages this page liked. See https://developers.facebook.com/docs/graph-api/reference/page/ for more possibilities.\n\nNotice: If you add more fields, also add them in the column setup to make the data visible in the nodes view.\n",
   "module": "Facebook",
   "options": {
-    "basepath": "https://graph.facebook.com/v4.0",
+    "basepath": "https://graph.facebook.com/v5.0",
     "resource": "/<page-id>",
     "params": {
       "<page-id>": "<Object ID>",

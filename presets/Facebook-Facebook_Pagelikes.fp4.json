@@ -1,10 +1,10 @@
 {
   "name": "Facebook Pagelikes",
   "category": "Facebook",
-  "description": "Get the pages a page likes. Add page IDs as seed nodes. You can get page IDs using the preset \"Information about pages\".  \n\n\nSee https://developers.facebook.com/docs/graph-api/reference/page/likes/ for more information about the endpoint. \n",
+  "description": "*** Please remind: This preset was developed for the deprecated Facebook Graph API Version v4.0. Due to changes in the Facebook API, you can't request metadata about pages anymore so that this preset unfortunately NO LONGER WORKS. *** \n\n\nGet the pages a page likes. Add page IDs as seed nodes. You can get page IDs using the preset \"Information about pages\".  \n\nSee https://developers.facebook.com/docs/graph-api/reference/page/likes/ for more information about the endpoint. \n",
   "module": "Facebook",
   "options": {
-    "basepath": "https://graph.facebook.com/v4.0",
+    "basepath": "https://graph.facebook.com/v5.0",
     "resource": "/<page-id>/likes",
     "params": {
       "<page-id>": "<Object ID>",
