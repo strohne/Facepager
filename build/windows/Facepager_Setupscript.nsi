@@ -13,7 +13,7 @@ ShowUninstDetails "nevershow"
 ;Include Modern UI
 
 !include "MUI2.nsh"
-!define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\icon_facepager.ico"
+!define MUI_ICON "icon_facepager.ico"
 
 ;——————————E
 ;Interface Settings

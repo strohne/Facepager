@@ -29,7 +29,7 @@ The right version of PySide2 matters. Not every version includes the WebEngineWi
 
 # Steps to runder under Windows 10
 
-Install Python3 64bit: https://www.python.org/downloads/windows/
+Install Python3 64bit: https://www.python.org/downloads/windows/ (we still use version 3.7)
 Make sure python.exe are in the path. See https://docs.python.org/3/using/windows.html#using-on-windows for further details.
 
 Open the command line in a directory of your choice and execute the comments indicated by the $ sign
@@ -39,8 +39,8 @@ Open the command line in a directory of your choice and execute the comments ind
   $ cd Facepager
 
 - Setup Python environment  
-  $ python -m venv pyenv  
-  $ pyenv\Scripts\activate.bat  
+  $ python -m venv venv  
+  $ venv\Scripts\activate.bat  
   
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect  
   $ pip install PySide2==5.15.2
@@ -48,6 +48,9 @@ Open the command line in a directory of your choice and execute the comments ind
 - Start Facepager  
   $ cd src  
   $ python Facepager.py  
+
+Note: After the first time installation, you only need to activate venv and run Facepager.py.
+Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
 
 # Steps to runder under macOS High Sierra
 
@@ -58,8 +61,8 @@ Open terminal in a directory of your choice and execute the commands indicated b
    $ cd Facepager  
 
 - Setup Python environment  
-  $ python3 -m venv pyenv  
-  $ source pyenv/bin/activate  
+  $ python3 -m venv venv  
+  $ source venv/bin/activate  
   
   $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect  
   $ pip install PySide2==5.15.2 
@@ -67,6 +70,9 @@ Open terminal in a directory of your choice and execute the commands indicated b
 - Start Facepager  
   $ cd src  
   $ python Facepager.py  
+
+Note: After the first time installation, you only need to activate venv and run Facepager.py.
+Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
 
 # Steps to runder under Ubuntu 18.04.1 LTS
 
@@ -81,8 +87,8 @@ Open terminal in a directory of your choice and execute the commands indicated b
    $ cd Facepager  
 
 - Setup Python environment  
-  $ python3 -m venv pyenv  
-  $ source pyenv/bin/activate  
+  $ python3 -m venv venv  
+  $ source venv/bin/activate  
   
   $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect   
   $ pip3 install PySide2==5.15.2
@@ -91,4 +97,5 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ cd src  
   $ python3 Facepager.py  
   
+Note: After the first time installation, you only need to activate venv and run Facepager.py. 
 Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
