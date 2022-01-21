@@ -15,7 +15,7 @@ class TimerWindow(QDialog):
     timerstarted = Signal(QDateTime)    
     timercountdown = Signal(int)
     #timerwaiting = Signal(int)
-    timerfired = Signal(list)
+    timerfired = Signal(dict)
     timerstopped = Signal()
     
 
