@@ -34,7 +34,7 @@ else:
 import dateutil.parser
 
 from dialogs.folder import SelectFolderDialog
-from dialogs.webdialog import PreLoginWebDialog, BrowserDialog, WebPageCustom
+from dialogs.webdialog import PreLoginWebDialog, LoginWebDialog, BrowserDialog, WebPageCustom
 from server import LoginServer
 from widgets.paramedit import *
 from utilities import *
@@ -1609,12 +1609,6 @@ class ApiTab(QScrollArea):
 
         return True
 
-    @Slot()
-    def loadFinished(self, success):
-        if (not success and not self.loginWindow.stopped):
-            self.logMessage('Error loading web page')
-
-
     def selectFolder(self):
         datadir = self.folderEdit.text()
         datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', '')) if datadir == '' else datadir 
@@ -2093,11 +2087,7 @@ class AuthTab(ApiTab):
             self.oauthdata['requesttoken'], self.oauthdata[
                 'requesttoken_secret'] = service.get_request_token()
 
-            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
-                                 service.get_authorize_url(self.oauthdata['requesttoken']),
-                                 self.defaults.get('login_window_width', 600),
-                                 self.defaults.get('login_window_height', 600)
-                                 )
+            self.showLoginWindow(service.get_authorize_url(self.oauthdata['requesttoken']))
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
                                  str(e),
@@ -2137,11 +2127,7 @@ class AuthTab(ApiTab):
             urlpath, urlparams, templateparams = self.getURL(loginurl,params,{},{})
             url = urlpath + '?' + urllib.parse.urlencode(urlparams)
 
-            self.showLoginWindow(self.defaults.get('login_window_caption', 'Login'),
-                                 url,
-                                 self.defaults.get('login_window_width', 600),
-                                 self.defaults.get('login_window_height', 600)
-                                 )
+            self.showLoginWindow(url)
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",
                                  str(e),
@@ -2264,49 +2250,24 @@ class AuthTab(ApiTab):
 
 
     @Slot()
-    def showLoginWindow(self, caption='', url='',width=600,height=600):
-        """
-        Create a SSL-capable WebView for the login-process
-        Uses a Custom QT-Webpage Implementation
-        Supply a onLoginWindowChanged-Slot to fetch the API-Token
-        """
+    def showLoginWindow(self, url=''):
+        self.loginWindow = LoginWebDialog(
+            self.mainWindow,
+            self.defaults.get('login_window_caption', 'Login'),
+            self.defaults.get('login_window_width', 600),
+            self.defaults.get('login_window_height', 600)
+        )
 
-        self.loginWindow = QMainWindow(self.mainWindow)
-        self.loginWindow.setAttribute(Qt.WA_DeleteOnClose)
-        self.loginWindow.resize(width, height)
-        self.loginWindow.setWindowTitle(caption)
-        self.loginWindow.stopped = False
-        self.loginWindow.cookie = ''
+        self.loginWindow.logMessage.connect(self.logMessage)
+        self.loginWindow.urlChanged.connect(self.onLoginWindowChanged)
 
-
-        #create WebView with Facebook log-Dialog, OpenSSL needed
-        self.loginStatus = self.loginWindow.statusBar()
-        self.login_webview = QWebEngineView(self.loginWindow)
-        self.loginWindow.setCentralWidget(self.login_webview)
-
-        # Use the custom- WebPage class
-        webpage = WebPageCustom(self.login_webview)
-        webpage.logMessage.connect(self.logMessage)
-        self.login_webview.setPage(webpage)
-
-        #Connect to the onLoginWindowChanged-method
-        self.login_webview.urlChanged.connect(self.onLoginWindowChanged)
-        webpage.urlNotFound.connect(self.onLoginWindowChanged) #catch redirects to localhost or nonexistent uris
-
-        # Connect to the loadFinished-Slot for an error message
-        self.login_webview.loadFinished.connect(self.loadFinished)
-
-        self.login_webview.load(QUrl(url))
-        self.login_webview.show()
-        self.loginWindow.show()
+        self.loginWindow.showPage(url)
 
     @Slot()
     def closeLoginWindow(self):
         if self.loginWindow is None:
             return False
 
-        self.loginWindow.stopped = True
-        self.login_webview.stop()
         self.loginWindow.close()
         self.loginWindow = None
 
@@ -2317,7 +2278,7 @@ class AuthTab(ApiTab):
         if options['auth_type'] == 'OAuth2 Client Credentials':
             return False
         elif options['auth_type'] == 'OAuth1':
-            url = self.login_webview.url().toString()
+            url = url.toString()
             success = self.getOAuth1Token(url)
             if success:
                 self.closeLoginWindow()
@@ -2794,8 +2755,7 @@ class FacebookTab(AuthTab):
             
 
             url = self.defaults['auth_uri'] +"?client_id=" + clientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
-            caption = "Facebook Login Page"
-            self.showLoginWindow(caption, url)
+            self.showLoginWindow(url)
         except Exception as e:
             QMessageBox.critical(self, "Login canceled",str(e),QMessageBox.StandardButton.Ok)
 

@@ -95,6 +95,97 @@ class PreLoginWebDialog(QDialog):
             self.buttonProceed.setDisabled(True)
             self.loadingLabel.setText('Loading failed.')
 
+class LoginWebDialog(QDialog):
+
+    logMessage = Signal(str)
+    urlChanged = Signal(QUrl)
+
+    def __init__(self, parent=None, caption = "", width=600, height=600):
+        super().__init__(parent)
+
+        self.url = None
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.resize(width, height)
+        self.setWindowTitle(caption)
+
+        vLayout = QVBoxLayout()
+        self.setLayout(vLayout)
+
+        self.browser = QWebEngineView(self)
+        self.page = WebPageCustom(self.browser)
+        self.page.allowLinks = False
+
+        self.page.loadFinished.connect(self.loadFinished)
+        self.page.loadStarted.connect(self.loadStarted)
+        self.page.logMessage.connect(self.onLogMessage)
+
+        self.browser.urlChanged.connect(self.onUrlChanged)
+        self.page.urlNotFound.connect(self.onUrlChanged) #catch redirects to localhost or nonexistent uris
+
+        self.browser.setPage(self.page)
+        vLayout.addWidget(self.browser)
+
+
+        # Buttons
+        hLayout = QHBoxLayout()
+        vLayout.addLayout(hLayout)
+
+        # Status bar
+        self.reloadButton = QPushButton(self)
+        self.reloadButton.setText("Retry")
+        self.reloadButton.clicked.connect(self.loadPage)
+        self.reloadButton.setVisible(False)
+        hLayout.addWidget(self.reloadButton)
+
+        self.loadingLabel = QLabel()
+        hLayout.addWidget(self.loadingLabel)
+
+        hLayout.addStretch(5)
+
+        buttonDismiss = QPushButton(self)
+        buttonDismiss.setText("Cancel")
+        buttonDismiss.clicked.connect(self.reject)
+        hLayout.addWidget(buttonDismiss)
+
+    def close(self):
+        self.browser.stop()
+        super().close()
+
+    def loadPage(self):
+        #self.browser.load(QUrl(self.url))
+        self.browser.load(self.url)
+
+    def showPage(self, url):
+        #super(WebDialog, self).show()
+        self.url = url
+        self.loadPage()
+        self.show()
+
+    @Slot(str)
+    def onLogMessage(self,message):
+        self.logMessage.emit(message)
+
+    @Slot(QUrl)
+    def onUrlChanged(self, url):
+        self.urlChanged.emit(url)
+
+    @Slot()
+    def loadStarted(self):
+        self.ready = False
+        self.loadingLabel.setText('Loading...')
+
+
+    @Slot()
+    def loadFinished(self, ok):
+        if ok:
+            self.ready = True
+            self.reloadButton.setVisible(False)
+            self.loadingLabel.setText('Loading finished.')
+        else:
+            self.ready = False
+            self.reloadButton.setVisible(True)
+            self.loadingLabel.setText('Loading failed.')
+
 class BrowserDialog(QMainWindow):
     logMessage = Signal(str)
     captureData = Signal(dict, dict, dict)
