@@ -23,7 +23,7 @@ venv
 *.DS_Store
 src/.eggs
 src/Facepager.spec
-*.exe
+Facepager*.exe
 *.app.zip
 *.app.macosx.zip
 *.bat
