@@ -3,7 +3,7 @@
 @rem ;set PYTHONPATH="C:\AndereProgramme\Python37\Lib;C:\AndereProgramme\Python37\DLLs"
 
 cd ../../src
-call "..\pyenv\Scripts\activate.bat"
+call "..\venv\Scripts\activate.bat"
 
 rmdir /s / q build
 rmdir /s / q dist
