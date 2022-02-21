@@ -22,10 +22,11 @@ class TextViewer(QTextBrowser):
         
     def setText(self,text):
         text = '' if text is None else text
+        text = self.autoLinkText(text)
+        text = self.autoBrText(text)
         text = markdown(text)
         # text = html.escape(text)
-        # text = self.autoLinkText(text)
-        # text = self.autoBrText(text)
+
         self.setHtml(text)
 
     def autoBrText(self,html):
