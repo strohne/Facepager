@@ -1,6 +1,6 @@
 # General notes
 
-Facepager 4 is developed for Python 3.7 (64 bit) and PySide2 (Qt5)
+Facepager 4 is developed for Python 3.10 (64 bit) and PySide2 (Qt5)
 
 Facepager depends on the following packages:
 
@@ -22,6 +22,7 @@ Facepager depends on the following packages:
 - datetime
 - pyjsparser: pip install pyjsparser (MIT)
 - tldextract
+- markdown: pip install markdown
 
 Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
@@ -42,7 +43,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ python -m venv venv  
   $ venv\Scripts\activate.bat  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown  
   $ pip install PySide2==5.15.2
 
 - Start Facepager  
@@ -64,7 +65,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown  
   $ pip install PySide2==5.15.2 
 
 - Start Facepager  
@@ -90,7 +91,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect   
+  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown   
   $ pip3 install PySide2==5.15.2
 
 - Start Facepager  

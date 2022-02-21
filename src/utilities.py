@@ -10,7 +10,7 @@ import html
 import urllib.parse
 import tldextract
 from collections import OrderedDict
-from collections import Mapping
+from collections.abc import Mapping
 from xmljson import BadgerFish
 import io
 import pyjsparser
