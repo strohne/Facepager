@@ -1,7 +1,3 @@
-@rem setlocal
-@rem ;SET PATH=%PATH%;C:\AndereProgramme\Python37
-@rem ;set PYTHONPATH="C:\AndereProgramme\Python37\Lib;C:\AndereProgramme\Python37\DLLs"
-
 cd ../../src
 call "..\venv\Scripts\activate.bat"
 
