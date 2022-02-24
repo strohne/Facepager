@@ -67,7 +67,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown  
+  $ pip install sqlalchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown  
   $ pip install PySide2==5.15.*
 
 - Start Facepager  
