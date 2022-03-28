@@ -76,17 +76,21 @@ class ExportFileDialog(QFileDialog):
                 QMessageBox.information(self,"Facepager","Could not overwrite file:"+str(e))
                 return False
 
-            output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
             try:
-                if self.optionBOM.isChecked():
-                    output.write('\ufeff')
+                output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
+                try:
+                    if self.optionBOM.isChecked():
+                        output.write('\ufeff')
 
-                if self.optionAll.currentIndex() == 0:
-                    self.exportAllNodes(output)
-                else:
-                    self.exportSelectedNodes(output)
-            finally:
-                output.close()
+                    if self.optionAll.currentIndex() == 0:
+                        self.exportAllNodes(output)
+                    else:
+                        self.exportSelectedNodes(output)
+                finally:
+                    output.close()
+            except Exception as e:
+                QMessageBox.information(self,"Facepager","Could not export file:"+str(e))
+                return False
 
     def exportSelectedNodes(self,output):
         progress = ProgressBar("Exporting data...", self.mainWindow)
