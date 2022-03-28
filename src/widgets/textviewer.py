@@ -23,7 +23,11 @@ class TextViewer(QTextBrowser):
     def setText(self,text):
         text = '' if text is None else text
         text = self.autoLinkText(text)
+
+        # auto br prevents markdown parsing
+        # todo: make presets markdown compatible
         text = self.autoBrText(text)
+
         text = markdown(text)
         # text = html.escape(text)
 

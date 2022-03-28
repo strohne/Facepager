@@ -571,7 +571,7 @@ class ApiViewer(QDialog):
                     api = v
 
                 # Prio 3: docs matching module
-                elif (api_module == module):
+                elif (api_module == module) and (module != "Generic"):
                     api = v if api is None else api
 
             return api
