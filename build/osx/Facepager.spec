@@ -4,10 +4,10 @@ block_cipher = None
 
 
 a = Analysis(['Facepager.py'],
-             pathex=['/Users/devel/Documents/GitHub/Facepager/src'],
+             pathex=['../src'],
              binaries=[],
              datas=[],
-             hiddenimports=['credentials','PySide2.QtPrintSupport'],
+             hiddenimports=['PySide2.QtPrintSupport'],
              hookspath=['hooks'],
              runtime_hooks=[],
              excludes=[],
@@ -26,7 +26,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=False,
-          console=False , icon='..\\icons\\icon_facepager.icns')
+          console=False , icon='../icons/icon_facepager.icns')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -37,4 +37,4 @@ coll = COLLECT(exe,
 app = BUNDLE(coll,
              name='Facepager.app',
              icon='../icons/icon_facepager.icns',
-             bundle_identifier='com.strohne.facepager')
+             bundle_identifier=None)

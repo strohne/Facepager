@@ -10,7 +10,8 @@ rm -rf build
 rm -rf dist
 
 source ../venv/bin/activate
-pyinstaller --onefile --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
+#../venv/bin/pyinstaller --onefile --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
+../venv/bin/pyinstaller --onefile --windowed --noconfirm Facepager.spec
 
 cd dist
 zip -r Facepager.app.zip Facepager.app
