@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "x-facepager-module":"Twitter",
 
-    "x-facepager-extract" : "results",
+    "x-facepager-extract" : null,
 	"x-facepager-objectid" : "id",
 	"x-facepager-pagination": {
 		"method" : "key",
