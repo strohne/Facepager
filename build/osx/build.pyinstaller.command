@@ -9,8 +9,8 @@ cp ../build/osx/Facepager.spec Facepager.spec
 rm -rf build
 rm -rf dist
 
-source ../pyenv/bin/activate
-pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
+source ../venv/bin/activate
+pyinstaller --onefile --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
 
 cd dist
 zip -r Facepager.app.zip Facepager.app
