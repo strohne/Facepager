@@ -257,6 +257,7 @@ class PresetWindow(QDialog):
             self.progress.step()
 
     def setProgressStop(self):
+        self.presetsDownloaded = True
         self.progress.close()
         self.progress = None
 
