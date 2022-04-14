@@ -1,0 +1,36 @@
+{
+  "name": "Detail data about posts (v13.0)",
+  "category": "Facebook",
+  "description": "This preset fetches data about a post.\n\n\n**Get started with the preset**\n\n1. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. Full post IDs consist of the page ID, an underscore and the post ID, e.g. \"20373776304_10158930464676305\". You can fetch posts using the preset \"Get Facebook posts\".\n\n2. Load the preset by clicking the \"Apply\" button.\n\n3. Login to Facebook in the Facebook module\n\n4. Select the post nodes and click the button \"Fetch Data\". \n\n\n**Facebook API documentation**\n\nFor information about all available fields see https://developers.facebook.com/docs/graph-api/reference/v13.0/post \n\n",
+  "module": "Facebook",
+  "options": {
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "basepath": "https://graph.facebook.com/v13.0",
+    "extension": "",
+    "key_paging": "paging.next",
+    "nodedata": "data",
+    "objectid": "id",
+    "pages": 1,
+    "paging_type": "url",
+    "params": {
+      "<post-id>": "<Object ID>",
+      "fields": "from,likes.limit(0).summary(1),picture,attachments"
+    },
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "resource": "/<post-id>",
+    "scope": "",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "from.name",
+    "error.message"
+  ]
+}

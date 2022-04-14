@@ -1,0 +1,43 @@
+{
+  "name": "Get reactions (v13.0)",
+  "category": "Facebook",
+  "description": "This preset fetches all different types of reactions in one call, instead of querying every single edge.\n\n\n**Get started with the preset**\n\n1. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. Full post IDs consist of the page ID, an underscore and the post ID, e.g. \"20373776304_10158930464676305\". You can fetch posts using the preset \"Get posts\".\n\n2. Load the preset by clicking \"Apply\" in the preset window.\n\n3. Login to Facebook in the Facebook module.\n\n4. Select the seed node and then click the \"Fetch Data\" button.\n\n\n**Facebook API documentation**\n\nFor information about available fields see the Facebook API reference: https://developers.facebook.com/docs/graph-api/reference/v13.0/object/reactions",
+  "module": "Facebook",
+  "options": {
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "basepath": "https://graph.facebook.com/v13.0",
+    "extension": "",
+    "key_paging": "paging.next",
+    "nodedata": null,
+    "objectid": "id",
+    "pages": 10,
+    "paging_type": "url",
+    "params": {
+      "<post-id>": "<Object ID>",
+      "fields": "comments.limit(0).summary(1),\nshares, reactions.limit(0).summary(1),\nreactions.type(LIKE).limit(0).summary(1).as(like),\nreactions.type(LOVE).limit(0).summary(1).as(love),\nreactions.type(HAHA).limit(0).summary(1).as(haha),\nreactions.type(WOW).limit(0).summary(1).as(wow),\nreactions.type(SAD).limit(0).summary(1).as(sad),\nreactions.type(ANGRY).limit(0).summary(1).as(angry)"
+    },
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "resource": "/<post-id>",
+    "scope": "",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "comments.summary.total_count",
+    "shares.count",
+    "reactions.summary.total_count",
+    "like.summary.total_count",
+    "love.summary.total_count",
+    "wow.summary.total_count",
+    "haha.summary.total_count",
+    "sad.summary.total_count",
+    "angry.summary.total_count"
+  ]
+}
