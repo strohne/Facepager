@@ -1,7 +1,7 @@
 {
   "name": "Get page insights (v13.0)",
   "category": "Facebook",
-  "description": "This preset can be used by page admins to fetch page analytics\n\n\n**Get started with the preset**\n\n1. You need to be admin of the Facebook page to get insights such as page impressions. \n\n2. Load the preset by clicking \"Apply\" in the preset window.\n\n3. To authorize, click the settings button (next to login) and set the Page ID (the name of your page, e.g. Uni.Greifswald.de). \n\n4. Login to Facebook in the Facebook module.\n\n5. Select the seed node and then click the \"Fetch Data\" button.\n\n\n**Facebook API documentation**\n\nSee the Facebook API reference for further options: https://developers.facebook.com/docs/graph-api/reference/page/insights/#availmetrics",
+  "description": "This preset can be used by page admins to fetch page analytics.\n\n\n**Get started with the preset**\n\n1. You need to be admin of the Facebook page to get insights such as page impressions. \n\n2. Load the preset by clicking \"Apply\" in the preset window.\n\n3. To authorize, click the settings button (next to login) and set the Page ID (the name of your page, e.g. Uni.Greifswald.de). \n\n4. Login to Facebook in the Facebook module.\n\n5. Select the seed node and then click the \"Fetch Data\" button.\n\n\n**Facebook API documentation**\n\nSee the Facebook API reference for further options: https://developers.facebook.com/docs/graph-api/reference/page/insights/#availmetrics",
   "module": "Facebook",
   "options": {
     "auth": "param",
