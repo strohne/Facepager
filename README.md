@@ -24,7 +24,7 @@ You can get help regarding specific problems in the [Facepager Usergroup on Face
 
 ### Citation
 
-[Jünger, Jakob](https://ipk.uni-greifswald.de/kommunikationswissenschaft/dr-jakob-juenger/) / [Keyling, Till](http://tillkeyling.com/) (2019). Facepager. An application for automated data retrieval on the web. Source code and releases available at https://github.com/strohne/Facepager/.
+[Jünger, Jakob](https://www.uni-muenster.de/Kowi/personen/jakob-juenger.html) / [Keyling, Till](http://tillkeyling.com/) (2019). Facepager. An application for automated data retrieval on the web. Source code and releases available at https://github.com/strohne/Facepager/.
 
 ### Licence
 
