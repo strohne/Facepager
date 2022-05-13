@@ -1,0 +1,41 @@
+{
+  "name": "GTP 3 Classification ",
+  "category": "Open AI ",
+  "description": "Text classification   \n\nThis preset uses text classification aiming to predict the most likely label for the query. GTP 3 is powered by four models, which are differently powerful and suitable for different purposes (https://beta.openai.com/docs/engines/overview). This preset uses ada as search model and curie as model for completion. \n\n**Authorization**\n \nOpenAI\u2019s API provides access to GPT-3. In order to use the OpenAI\u2019 API, you need to register on https://openai.com/api/. A secret API key is generated, which can be used in all API requests as an access token (See get started 3). \n*Careful*: There is a free trial usage, however limited. \n\n\n**Get started with the preset**  \n\n1. After creating or opening a database, add a node with your prompt (e.g. \u201cI love you\u201d) as a seed node using the \"Add Nodes\" button. \n\n2. Load the preset by clicking \"Apply\" in the preset window. \n\n3. Login to OpenAI and use your secret API key as access token (Bearer YOUR_API_KEY). Do not forget \u201cBearer\u201d, it is an HTTP authentication scheme. \n\n4. Select the seed node and then click \u201cFetch Data\u201d. \n\n**Further Options**\n\nWithin the Payload field, you can make further adaptions for your query. \n\n*Examples*: Defines labeled examples, which are the search basis of the query. Adopt the format used in the preset. \n\n*Query*: Defines your Query, for example \u201cI love you\u201d. Required field. You can use Object-ID as a placeholder. \n\n*Search Model*: Defines the search model, GTP 3 is powered by four models: ada, davinci, curie, babbage. \n\n*Model*: Defines the model for completion, GTP 3 is powered by four models: ada, davinci, curie, babbage. Required field. \n\n*Other*: For more Adaptations see the documentation on classification (https://beta.openai.com/docs/api-reference/classifications).     ",
+  "module": "Generic",
+  "options": {
+    "auth": "header",
+    "auth_tokenname": "Authorization",
+    "auth_type": "API key",
+    "auth_uri": "",
+    "basepath": "https://api.openai.com/v1",
+    "encoding": "<None>",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "key_paging": "result.pagination.nextPage",
+    "nodedata": "result.posts",
+    "objectid": "platformId",
+    "pages": 1,
+    "paging_type": "url",
+    "params": {},
+    "payload": "{\n  \"examples\": [\n    [\"A happy moment\", \"Positive\"],\n    [\"I am sad.\", \"Negative\"],\n    [\"I am feeling awesome\", \"Positive\"]\n  ],\n  \"labels\": [\"Positive\", \"Negative\", \"Neutral\"],\n  \"query\": \"<Object ID>\",\n  \"search_model\": \"ada\",\n  \"model\": \"curie\"\n}\n",
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/classifications",
+    "scope": "",
+    "token_uri": "",
+    "verb": "POST"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "label"
+  ]
+}

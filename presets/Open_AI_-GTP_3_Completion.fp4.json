@@ -1,0 +1,41 @@
+{
+  "name": "GTP 3 Completion",
+  "category": "Open AI ",
+  "description": "Text completion with Davinci \n\nThis preset uses text completion with Davinci. In response to a prompt, the model returns one or more predicted completions. \nGTP 3 is powered by four models, which are differently powerful (https://beta.openai.com/docs/engines/overview). This preset uses Davinci, the most capable engine. You can use other engines by changing the base path. \n\n**Authorization**\n \nOpenAI\u2019s API provides access to GPT-3. In order to use the OpenAI\u2019 API, you need to register on https://openai.com/api/. A secret API key is generated, which can be used in all API requests as an access token (See get started 3). \n*Careful*: There is a free trial usage, however limited. \n\n\n**Get started with the preset**\n \n1. After creating or opening a database, add a node with your prompt (e.g. \u201cSay this is a test\u201d) as a seed node using the \"Add Nodes\" button. \n\n2. Load the preset by clicking \"Apply\" in the preset window. \n\n3. Login to OpenAI and use your secret API key as access token (Bearer YOUR_API_KEY). Do not forget \u201cBearer\u201d, it is an HTTP authentication scheme. \n\n4. Select the seed node and then click \u201cFetch Data\u201d. \n\n**Further Options**\n \nWithin the Payload field, you can make further adaptions for your query. \n\n*Prompt*: Is defined as your Object-ID or node. The Preset uses \u201cSay this is a test\u201d for example, which get the response \u201cThis is a test\u201d. You can use any other string or array. \n\n*Temperature*: Defines the sampling temperature. Higher values indicate riskier (or more creative) applications. \n\n*Max Tokens*: Defines the maximal tokens of your completion. Mind that each model has a context-length which cannot be exceed (e.g. Davinci 4000 tokens). \n\n*Other*: For more Adaptations see the documentation on completions (https://beta.openai.com/docs/api-reference/completions). \n",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://api.openai.com/v1",
+    "resource": "/engines/text-davinci-002/completions",
+    "params": {},
+    "extension": "",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "verb": "POST",
+    "format": "json",
+    "encoding": "<None>",
+    "payload": "{\"prompt\": \"<Object ID>\", \"temperature\": 0, \"max_tokens\": 20}",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 1,
+    "paging_type": "url",
+    "key_paging": "result.pagination.nextPage",
+    "nodedata": "choices",
+    "objectid": "text",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "API key",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "header",
+    "auth_tokenname": "Authorization"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "text"
+  ]
+}
