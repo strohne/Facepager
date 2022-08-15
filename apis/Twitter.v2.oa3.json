@@ -105,7 +105,7 @@
 							"application/json": {
                                "schema" : {
                                     "type" : "object",
-                                    "x-facepager-extract" : "users",
+                                    "x-facepager-extract" : "data",
 									"properties": {
 										"data" : {
 											"type": "array",
@@ -470,7 +470,7 @@
 							"application/json": {
                                "schema" : {
                                     "type" : "object",
-                                    "x-facepager-extract" : "users",
+                                    "x-facepager-extract" : "data",
 									"properties": {
 										"data" : {
 											"type": "array",
