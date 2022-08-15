@@ -2,7 +2,7 @@
 	"openapi": "3.0.0",
 	"x-facepager-module": "Twitter",
 
-	"x-facepager-extract": "data",
+	"x-facepager-extract": "data,includes.users,includes.tweets,includes.media,includes.polls,includes.places",
 	"x-facepager-objectid": "id",
 	"x-facepager-pagination": {
 		"method": "key",
@@ -105,7 +105,6 @@
 							"application/json": {
                                "schema" : {
                                     "type" : "object",
-                                    "x-facepager-extract" : "data",
 									"properties": {
 										"data" : {
 											"type": "array",
@@ -470,7 +469,6 @@
 							"application/json": {
                                "schema" : {
                                     "type" : "object",
-                                    "x-facepager-extract" : "data",
 									"properties": {
 										"data" : {
 											"type": "array",
