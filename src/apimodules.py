@@ -65,6 +65,8 @@ class ApiTab(QScrollArea):
         self.connected = False
         self.lastrequest = None
         self.speed = None
+        self.appusage = 0        # Percent of rate limit
+        self.appusageLimit = 90  # Throttles speed down to 1 if exceeded
         self.lock_session = threading.Lock()
         self.sessions = []
 
@@ -1431,10 +1433,11 @@ class ApiTab(QScrollArea):
 
         #Throttle speed
         if (self.speed is not None) and (self.lastrequest is not None):
-            pause = ((60 * 1000) / float(self.speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+            currentSpeed = 1 if self.appusage > self.appusageLimit else self.speed
+            pause = ((60 * 1000) / float(currentSpeed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
             while (self.connected) and (pause > 0):
                 time.sleep(0.1)
-                pause = ((60 * 1000) / float(self.speed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
+                pause = ((60 * 1000) / float(currentSpeed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
 
         self.lastrequest = QDateTime.currentDateTime()
 
@@ -2673,7 +2676,7 @@ class FacebookTab(AuthTab):
             raise Exception('Access token is missing, login please!')
 
         self.connected = True
-        self.speed = options.get('speed',None)
+        self.speed = options.get('speed', None)
         self.timeout = options.get('timeout', 15)
         self.maxsize = options.get('maxsize', 5)
         session_no = options.get('threadnumber', 0)
@@ -2707,13 +2710,21 @@ class FacebookTab(AuthTab):
             options['ratelimit'] = False
             options['querystatus'] = status
 
-            # rate limit info
+            # rate limit info and throttling
             if 'x-app-usage' in headers:
                 appusage = json.loads(headers['x-app-usage'])
-                appusage = appusage.get('call_count', 'Undefined')
-                if appusage > 0:
-                    options['info'] = {'x-app-usage': "{} percent of app level rate limit reached.".format(appusage)}
+                self.appusage = max([
+                    appusage.get('call_count', 0),
+                    appusage.get('total_time', 0),
+                    appusage.get('total_cputime', 0)
+                ])
+                if self.appusage > 0:
+                    if self.appusage > self.appusageLimit:
+                        msg = "{} percent of app level rate limit reached,\n speed will be throttled to one request per minute."
+                    else:
+                        msg = "{} percent of app level rate limit reached."
 
+                    options['info'] = {'x-app-usage': msg.format(self.appusage)}
 
             if (status != "fetched (200)"):
                 msg = getDictValue(data,"error.message")
