@@ -1,0 +1,46 @@
+{
+  "name": "1 Get tweets by hashtag (v1.1)",
+  "category": "Twitter",
+  "description": "This preset searches tweets. Add any search term as seed node. You can, for example, search for hashtags (starting with #) and users (starting with @).\n\n**Login Process**\n\nFor standard access with v1 you can login via the \"Login to Twitter\" button. After that, access tokens are created and you can start fetching data.\n\n**Get those tweets**\n\nThis preset gives you back the 50 most recent tweets matching the query. In case you want to fetch more, change the count-parameter or increase the maximum pages.\n\nTake a look at the documentation on https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets.html to learn handling the parameters.\n\n**Differences between v1.1 & v2**\n\nPlease remind that Twitter provides different API versions (https://developer.twitter.com/en/products/twitter-api). Facepager presets are available for API version 1 (v1) and API version 2 (v2). Each version comes with different access levels and limits. For example, if you're looking for older tweets from years ago this will not work with the standard search of v1, only with elevated access levels or v2. In the corresponding presets you will find information about how to work with API version 2. ",
+  "module": "Twitter",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "OAuth1",
+    "auth_uri": "",
+    "basepath": "https://api.twitter.com/1.1",
+    "extension": ".json",
+    "key_paging": "next_cursor_str",
+    "nodedata": "statuses",
+    "objectid": "id",
+    "pages": 1,
+    "paging_stop": "next_cursor",
+    "paging_type": "key",
+    "param_paging": "cursor",
+    "params": {
+      "count": "50",
+      "q": "<Object ID>",
+      "result_type": "recent"
+    },
+    "redirect_uri": "",
+    "resource": "/search/tweets",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "created_at",
+    "user.screen_name",
+    "text",
+    "favorite_count",
+    "retweet_count",
+    "entities.hashtags.*.text",
+    "entities.user_mentions.*.name",
+    "entities.urls.*.display_url",
+    "lang"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "4 Get list of followers (v2)",
+  "category": "Twitter",
+  "description": "This preset gives you the followers of users. Add numeric user IDs as seed nodes (e.g. \"865971338\"). You can get users IDs with the \"2 Get information about user\" preset.\n\n**Login Process**\n\n*To use version 2 presets, you have to register an own app, which is easy. An app is nothing more than a specific user account. See below.* \n\nOnce your app is registered (whether the essential version or in the academic research track), you will get an API key and an API secret key. You have to keep these well and should not show them to anyone.\n\nTo use your credentials with Facepager, click on \"Settings\" and change the \"Authentication Type\" to \"OAuth2 Client Credentials\". Enter your personal API key into the \"Consumer Key\" field and your API secret key into the \"Consumer Secret\" field. \n\nClick the \"Login to Twitter\" button to get an access token. Then you can start fetching data.\n\n**Get the followers**\n\nThis preset collects 100 followers of a user. In case you want to fetch more, change the max_result parameter (maximum per request is 1000) or increase the maximum pages.\n\nThe preset collects the fields id, name, username and description. Take a look at the documentation on https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/to learn handling parameters.\n\n**Differences between v1.1 & v2**\n\nPlease remind that Twitter provides different API versions (https://developer.twitter.com/en/products/twitter-api). Facepager presets are available for API version 1 (v1) and for API version 2 (v2). Each API version has different access levels and limits. To use version 2, in general, you have to register your own app. Registering an app sounds complicated but is easy. In the world of APIs, an app simply is a specific type of user account.\n\nWhen registering an app, you can apply for different access levels, see https://developer.twitter.com/en/docs/twitter-api/getting-started/about-twitter-api. \nAcademic researchers can apply for higher tweet caps or full-archive access, see https://developer.twitter.com/en/solutions/academic-research.",
+  "module": "Twitter",
+  "options": {
+    "auth": "header",
+    "auth_prefix": "Bearer ",
+    "auth_tokenname": "Authorization",
+    "auth_type": "OAuth2 Client Credentials",
+    "auth_uri": "https://api.twitter.com/oauth2/token/",
+    "basepath": "https://api.twitter.com/2",
+    "extension": "",
+    "key_paging": "next_cursor_str",
+    "nodedata": "data",
+    "objectid": "id",
+    "pages": 1,
+    "paging_stop": "next_cursor",
+    "paging_type": "key",
+    "param_paging": "cursor",
+    "params": {
+      "<id>": "<Object ID>",
+      "max_results": "100",
+      "user.fields": "id,name,username,description"
+    },
+    "redirect_uri": "",
+    "resource": "/users/<id>/followers",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "name",
+    "username",
+    "description"
+  ]
+}

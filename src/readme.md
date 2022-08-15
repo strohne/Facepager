@@ -32,7 +32,7 @@ The right version of PySide2 matters. Not every version includes the WebEngineWi
 
 Install Python3 64bit: https://www.python.org/downloads/windows/
 Make sure python.exe is in the path. See https://docs.python.org/3/using/windows.html#using-on-windows for further details.  
-Install the Microsoft C++ Build Tools from https://visualstudio.microsoft.com/visual-cpp-build-tools/ (needed by cchardet)
+Install the Microsoft C++ Build Tools from https://visualstudio.microsoft.com/visual-cpp-build-tools/ (needed by cchardet, choose the packages for desktop development with c++)
 
 
 Open the command line in a directory of your choice and execute the comments indicated by the $ sign
