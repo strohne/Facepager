@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
 
-        self.setWindowTitle("Facepager 4.4")
+        self.setWindowTitle("Facepager 4.5")
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
         QApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton)
 
@@ -565,7 +565,7 @@ class MainWindow(QMainWindow):
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
-        self.settings.setValue("version","4.4")
+        self.settings.setValue("version","4.5")
         self.settings.endGroup()
 
 
