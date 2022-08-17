@@ -11,7 +11,7 @@ rm -rf dist
 
 source ../venv/bin/activate
 #../venv/bin/pyinstaller --onefile --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
-../venv/bin/pyinstaller --onefile --windowed --noconfirm Facepager.spec
+../venv/bin/pyinstaller Facepager.spec
 
 cd dist
 zip -r Facepager.app.zip Facepager.app

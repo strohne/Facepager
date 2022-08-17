@@ -70,6 +70,45 @@ The following steps can alternatively be executed with build/osx/build.pyinstall
   $ cp Facepager.app.zip ../../build/osx/Facepager_4.app.zip  
 
 
+## Code signing and packaging
+
+See https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
+
+### Get certificates
+- Create an Apple Developer Account
+- Login to your account and create two certificates (Account -> Identifiers & Profiles): 1. Installer outside AppStore, 2. Application outside AppStore. Download the certificates and install them in the login KeyChain
+
+### Sign the app
+- Unpack the Facepager.zip or directly use the dist folder 
+- Fix PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt. 
+  sudo pip3 install macholib  
+  python3 fix_app_qt_folder_names_for_codesign.py Facepager.app
+
+- Create the entitlements.plist anlegen, see https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
+- Find the developer hashes:  
+  security find-identity -p basic -v
+- Codesign with the application hash:  
+  codesign --deep --force --options=runtime --entitlements ./entitlements.plist --sign "C5675C9047BC5F500D88849509790AEEBCB99534" --timestamp ./Facepager.app
+
+### Create package
+
+mkdir /tmp/Facepager.app
+ditto ./Facepager.app /tmp/Facepager.app/Applications/Facepager.app
+productbuild --identifier "com.strohne.facepager.pkg" --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" --timestamp --root /tmp/Facepager.app / Facepager.pkg
+
+
+## Notarize
+**Not working yet.**
+You need altoll which comes with Xcode. Alternatively, download "Transporter.app" from the app store. You will find altos in /Applications/Transporter.app/Contents/Frameworks/ContentDeliveryServices.framework/Versions/A/Frameworks/AppStoreService.framework/Versions/A/Support/altool
+
+(To find a file: sudo find /Applications -name altool -print)
+
+Create a password item in KeyChain, name it Developer-altool and set the app specific password
+
+xcrun /Applications/Transporter.app/Contents/Frameworks/ContentDeliveryServices.framework/Versions/A/Frameworks/AppStoreService.framework/Versions/A/Support/altool --notarize-app --primary-bundle-id "com.strohne.facepager" --username="jakob.juenger@uni-muenster.de" --password "@keychain:Developer-altool" --file ./Facepager.pkg --verbose
+
+
+
 __Hints for solving errors:__
 
 - Remove all system wide installations of PySide2: "PyInstaller will pick a system installation of PySide2 or Shiboken2 instead of your virtualenv version without notice, if it exists" (https://doc.qt.io/qtforpython/deployment-pyinstaller.html).
