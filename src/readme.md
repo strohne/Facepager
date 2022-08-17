@@ -45,7 +45,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ python -m venv venv  
   $ venv\Scripts\activate.bat  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown  
+  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson cchardet pyjsparser tldextract cssselect markdown  
   $ pip install PySide2==5.15.*
 
 - Start Facepager  
@@ -55,8 +55,9 @@ Open the command line in a directory of your choice and execute the comments ind
 Note: After the first time installation, you only need to activate venv and run Facepager.py.
 Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
 
-# Steps to runder under macOS High Sierra
+# Steps to runder under macOS BigSur
 
+Install at least Python 3.8 e.g. via homebrew.
 Open terminal in a directory of your choice and execute the commands indicated by the $ sign.
 
 - Clone Facepager  
@@ -67,7 +68,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip install sqlalchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown  
+  $ pip install sqlalchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson cchardet pyjsparser tldextract cssselect markdown  
   $ pip install PySide2==5.15.*
 
 - Start Facepager  
@@ -93,7 +94,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson numpy pandas cchardet pyjsparser tldextract cssselect markdown   
+  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson cchardet pyjsparser tldextract cssselect markdown   
   $ pip3 install PySide2==5.15.*
 
 - Start Facepager  
