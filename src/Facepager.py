@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
         # This is needed to display the app icon on the taskbar on Windows 7
         if os.name == 'nt':
             import ctypes
-            myappid = 'Facepager.4.4' # arbitrary string
+            myappid = 'Facepager.4.5' # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         self.setMinimumSize(1100,680)

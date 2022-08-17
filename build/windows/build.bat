@@ -1,12 +1,13 @@
-cd ../../src
+cd ../..
 call "..\venv\Scripts\activate.bat"
 
+cd src
 rmdir /s / q build
 rmdir /s / q dist
 
-copy ..\build\windows\Facepager.spec Facepager.spec
+copy "..\build\windows\Facepager.spec" Facepager.spec
 
-pyinstaller --noconfirm --debug all Facepager.spec
+pyinstaller --noconfirm Facepager.spec
 @rem pyinstaller --debug all --noconfirm --upx-exclude vcruntime140.dll Facepager.spec --upx-dir ..\build\windows\upx-3.96-win64\
 
 cd dist
