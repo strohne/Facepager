@@ -6,9 +6,9 @@
 	"x-facepager-objectid": "id",
 	"x-facepager-pagination": {
 		"method": "key",
-		"param": "cursor",
-		"key": "next_cursor_str",
-		"stop": "next_cursor"
+		"param": "pagination_token",
+		"key": "meta.next_token",
+		"stop": "meta.next_token"
 	},
     "x-facepager-authorization" : {         
          "auth_type":"OAuth2 Client Credentials",
