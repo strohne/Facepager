@@ -92,9 +92,8 @@ See https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
 
 ### Create package
 
-mkdir /tmp/Facepager.app
-ditto ./Facepager.app /tmp/Facepager.app/Applications/Facepager.app
-productbuild --identifier "com.strohne.facepager.pkg" --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" --timestamp --root /tmp/Facepager.app / Facepager.pkg
+
+productbuild --identifier "com.strohne.facepager.pkg" --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" --timestamp --root ./Facepager.app /Applications/Facepager.app Facepager.pkg
 
 
 ## Notarize
