@@ -253,6 +253,12 @@ class BrowserDialog(QMainWindow):
         #self.browserWebview.loadFinished.connect(self.loadFinished)
         #self.browserWebview.loadStarted.connect(self.loadStarted)
 
+        #Request list
+        # TODO: capture requests
+        # self.requestLayout = QHBoxLayout()
+        # self.topLayout.addLayout(self.requestLayout)
+
+
         # Button layout
         self.buttonLayout = QHBoxLayout()
         self.topLayout.addLayout(self.buttonLayout)

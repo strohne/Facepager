@@ -328,6 +328,18 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 value = value[0]
                 value = b64encode(value.encode('utf-8')).decode('utf-8')
 
+            elif modifier[0] == 'last':
+                value = value[-1]
+
+            elif modifier[0] == 'first':
+                value = value[0]
+
+            elif modifier[0] == 'max':
+                value = max(value)
+
+            elif modifier[0] == 'min':
+                value = min(value)
+
             elif modifier[0] == 'length':
                 value = len(value)
 
@@ -480,7 +492,7 @@ def getDictValue(data, multikey, dump=True, default=''):
 def getDictValueOrNone(data, key, dump = True):
     if (key is None) or (key == ''):
         return None
-    elif not (isinstance(data, dict)):
+    elif not (isinstance(data, dict) or isinstance(data, list)):
         return None
     elif not hasDictValue(data, key, piped=True):
         return None

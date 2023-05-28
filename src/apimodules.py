@@ -874,6 +874,7 @@ class ApiTab(QScrollArea):
             self.pagingTypeEdit.addItem('key')
             self.pagingTypeEdit.addItem('count')
             self.pagingTypeEdit.addItem('url')
+            self.pagingTypeEdit.addItem('decrease')
 
             self.pagingTypeEdit.setToolTip(wraptip("Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount. Select 'url' if the response contains a complete URL to the next page."))
             self.pagingTypeEdit.currentIndexChanged.connect(self.pagingChanged)
@@ -1459,7 +1460,7 @@ class ApiTab(QScrollArea):
                         # Use cookie jar instead of header to persist redirects
                         cookies = headers.pop('Cookie', None) if headers is not None else None
                         if cookies is not None:
-                            cookies = dict(item.split("=",maxsplit=1) for item in cookies.split(";"))
+                            cookies = dict(item.split("=", maxsplit=1) for item in cookies.split(";"))
 
                         # Send request
                         response = session.request(method,path, params=args, headers=headers, cookies=cookies,
@@ -2116,6 +2117,7 @@ class AuthTab(ApiTab):
                 raise Exception('Client Id is missing, please adjust settings!')
 
             # Add params from settings
+            # TODO: make configurable, tiktok uses client_key instead o client_id
             params = {'client_id': clientid,
                       'redirect_uri': options['redirect_uri'],
                       'response_type': options.get('response_type', 'code')}
