@@ -1,0 +1,48 @@
+{
+  "name": "COCI: references",
+  "category": "Bibliometrics",
+  "description": "Add DOIs as seed nodes, e.g. \"10.1111/j.1460-2466.2008.01401.x\". \n\nGets the references contained in the seed title. \n\nEach item is a citation record. To get bibliographic date use the metadata preset.\n\nSee https://opencitations.net/index/coci/api/v1#/references/{doi}\n\n",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://w3id.org/oc/index/coci/api/v1",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "nodedata": null,
+    "objectid": "cited",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "params": {
+      "<doi>": "<Object ID>"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/references/<doi>",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "creation",
+    "timespan",
+    "author_sc",
+    "journal_sc",
+    "oci",
+    "citing",
+    "cited"
+  ]
+}
