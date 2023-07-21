@@ -233,7 +233,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
 
-            modifier = modifier.split(":",1)
+            modifier = modifier.split(":", 1)
             if modifier[0] == 'js':
                 # Input: list of strings.
                 # Output if dump==True: list of strings
@@ -281,11 +281,11 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 check = [x == selector for x in value]
                 value = any(check)
 
-            elif modifier[0] == 'not':
+            elif modifier[0] == 're':
                 # Input: list of strings.
                 # Output: list of strings
                 selector = modifier[1]
-                items = [re.findall(selector,x) for x in value]
+                items = [re.findall(selector, x) for x in value]
 
                 # Flatten (first group in match if re.findall returns multiple groups)
                 value = []
