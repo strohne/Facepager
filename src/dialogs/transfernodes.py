@@ -28,15 +28,27 @@ class TransferNodes(QDialog):
         layout.addLayout(self.extractLayout)
 
         # Options
-        self.allnodesCheckbox = QCheckBox("Select all nodes")
-        self.allnodesCheckbox.setToolTip(wraptip("Check if you want to transfer all nodes."))
-        self.allnodesCheckbox.setChecked(False)
-        self.extractLayout.addRow("Nodes", self.allnodesCheckbox)
-
         self.levelEdit=QSpinBox()
         self.levelEdit.setMinimum(1)
         self.levelEdit.setToolTip(wraptip("Based on the selected nodes, only subnodes of the specified level are processed (base level is 1)"))
         self.extractLayout.addRow("Node level", self.levelEdit)
+
+        self.allnodesCheckbox = QCheckBox("Transfer all nodes")
+        self.allnodesCheckbox.setToolTip(wraptip("Check if you want to transfer all nodes on the level, even if not selected."))
+        self.allnodesCheckbox.setChecked(False)
+        self.extractLayout.addRow("Nodes", self.allnodesCheckbox)
+
+        self.keyEdit = QLineEdit("key")
+        self.keyEdit.setToolTip(wraptip("Which value should be extracted from the source node? Leave empty to use the Object ID (default)."))
+        self.extractLayout.addRow("Extraction key", self.keyEdit)
+        self.keyEdit.setText('Object ID')
+
+        self.noduplicatesCheckbox = QCheckBox("Skip duplicates")
+        self.noduplicatesCheckbox.setToolTip(
+            wraptip("Check if you want to skip duplicates, which is advised.")
+        )
+        self.noduplicatesCheckbox.setChecked(True)
+        self.extractLayout.addRow("Duplicates", self.noduplicatesCheckbox)
 
         self.objecttypeEdit = QLineEdit("offcut")
         self.objecttypeEdit.setToolTip(wraptip("Skip nodes with these object types."))
@@ -91,15 +103,19 @@ class TransferNodes(QDialog):
             self.initProgress()
 
             # Get list of seed nodes to avoid duplicates
-            seednodes = Node.query.filter(Node.parent_id == None).add_columns('objectid')
+            skipduplicates = self.noduplicatesCheckbox.isChecked()
+            seednodes = Node.query.filter(Node.parent_id == None).add_columns(Node.objectid)
             seednodes = [node.objectid for node in seednodes]
 
             # Iterate nodes
+            key = self.keyEdit.text()
             objecttypes = self.objecttypeEdit.text().replace(' ', '').split(',')
             level = self.levelEdit.value() - 1
             allnodes = self.allnodesCheckbox.isChecked()
-            conditions = {'filter': {'level': level, '!objecttype': objecttypes},
-                          'selectall': allnodes}
+            conditions = {
+                'filter': {'level': level, '!objecttype': objecttypes},
+                'selectall': allnodes
+            }
             selected = self.mainWindow.tree.selectedIndexesAndChildren(conditions, self.updateProgress)
             nodes_new = 0
             nodes_dupl = 0
@@ -112,19 +128,28 @@ class TransferNodes(QDialog):
                     continue
 
                 treenode = item.internalPointer()
-                objectid = treenode.data.get("objectid")
 
-                # no duplicates
-                if not objectid in seednodes:
-                    seednodes.append(objectid)
-                    treenode.copyNode(delaycommit=True)
-                    nodes_new += 1
+                if key == 'Object ID' or key == '':
+                    objectids = treenode.data.get("objectid")
                 else:
-                    nodes_dupl += 1
+                    objectids = extractValue(treenode.data.get('response',''),key, dump=False)[1]
+                objectids = objectids if type(objectids) is list else [objectids]
+
+                for objectid in objectids:
+                    # count duplicates
+                    if objectid in seednodes:
+                        nodes_dupl += 1
+
+                    # copy node
+                    if (not skipduplicates) or (not objectid in seednodes):
+                        treenode.model.addSeedNodes([objectid], delaycommit=True)
+                        seednodes.append(objectid)
+                        nodes_new += 1
 
             self.mainWindow.tree.treemodel.commitNewNodes()
             self.mainWindow.tree.selectLastRow()
-            self.mainWindow.logmessage(f"{nodes_new} nodes added as seed nodes. {nodes_dupl} duplicate nodes skipped.")
+            nodes_skipped = 'skipped' if skipduplicates else 'created'
+            self.mainWindow.logmessage(f"{nodes_new} nodes added as seed nodes. {nodes_dupl} duplicate nodes {nodes_skipped}.")
             self.close()
 
         except Exception as e:

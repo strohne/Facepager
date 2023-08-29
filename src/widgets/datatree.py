@@ -302,11 +302,6 @@ class TreeItem(object):
         data = sliceData(self.data.get("response", {}), None, options)
         self.appendNodes(data, options, delaycommit=delaycommit)
 
-    def copyNode(self, delaycommit=False):
-        objectid = self.data.get("objectid")
-        self.model.addSeedNodes([objectid],delaycommit=delaycommit)
-
-
     def __repr__(self):
         return self.id
 

@@ -1,5 +1,5 @@
 cd ../..
-call "..\venv\Scripts\activate.bat"
+call "venv\Scripts\activate.bat"
 
 cd src
 rmdir /s / q build
