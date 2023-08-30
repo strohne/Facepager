@@ -1,0 +1,48 @@
+{
+  "name": "OpenAlex: Get list of references ",
+  "category": "Bibliometrics",
+  "description": " penAlex (https://openalex.org/about) is a free and open online repository of the world's research system. It includes works, authors, sources, concepts, institutions, publishers, funders, and their interconnections. As an open-source project, it requires no authentication. Each user is allowed a maximum of 100,000 API calls per day. If you need a higher limit, you can register for OpenAlex Premium (https://openalex.org/pricing).\n \nThis preset allows you to get a reference lists of a work defined by your seed node (e.g. https://doi.org/10.7717/peerj.4375). The result is a list containing OpenAlex IDs for works that this work cites. If you want to fetch meta data for the referenced works again, apply preset \u201cGet a single work\u201d again. ",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://api.openalex.org",
+    "resource": "/works/<doi>",
+    "params": {
+      "<doi>": "<Object ID>",
+      "select": "id, doi, title,\ndisplay_name, publication_year, referenced_works"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "GET",
+    "format": "json",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 1,
+    "paging_type": "key",
+    "key_paging": null,
+    "paging_stop": null,
+    "param_paging": null,
+    "nodedata": "referenced_works",
+    "objectid": "referenced_works",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "disable",
+    "auth_tokenname": "",
+    "auth_prefix": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "doi",
+    "title",
+    "display_name",
+    "publication_year",
+    "referenced_works"
+  ]
+}
