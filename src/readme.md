@@ -45,8 +45,7 @@ Open the command line in a directory of your choice and execute the comments ind
   $ python -m venv venv  
   $ venv\Scripts\activate.bat  
   
-  $ pip install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson cchardet pyjsparser tldextract cssselect markdown  
-  $ pip install PySide2==5.15.*
+  $ pip install -r requirements.txt
 
 - Start Facepager  
   $ cd src  
@@ -68,8 +67,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip install sqlalchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson cchardet pyjsparser tldextract cssselect markdown  
-  $ pip install PySide2==5.15.*
+  $ pip install -r requirements.txt
 
 - Start Facepager  
   $ cd src  
@@ -94,8 +92,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip3 install SQLAlchemy python-dateutil requests_oauthlib requests-toolbelt rauth lxml xmljson cchardet pyjsparser tldextract cssselect markdown   
-  $ pip3 install PySide2==5.15.*
+  $ pip install -r requirements.txt
 
 - Start Facepager  
   $ cd src  
