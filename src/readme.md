@@ -92,7 +92,7 @@ Open terminal in a directory of your choice and execute the commands indicated b
   $ python3 -m venv venv  
   $ source venv/bin/activate  
   
-  $ pip install -r requirements.txt
+  $ pip3 install -r requirements.txt
 
 - Start Facepager  
   $ cd src  
