@@ -1,0 +1,13 @@
+SQLAlchemy 
+python-dateutil 
+requests_oauthlib 
+requests-toolbelt 
+rauth 
+lxml 
+xmljson 
+cchardet 
+pyjsparser 
+tldextract 
+cssselect 
+markdown
+PySide2==5.15.*
