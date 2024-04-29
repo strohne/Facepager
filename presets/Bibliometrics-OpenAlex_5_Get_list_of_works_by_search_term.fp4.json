@@ -1,0 +1,50 @@
+{
+  "name": "OpenAlex 5: Get list of works by search term",
+  "category": "Bibliometrics",
+  "description": "This preset accompanies the fifth tutorial of our [Getting Started with OpenAlex](https://github.com/strohne/Facepager/wiki/Getting-Started-with-OpenAlex) guide.  \n\nIt retrieves a list of scholarly works by one or more arbitrary search terms as a seed nodes. For starters, add a seed node (e.g., computational methods) to get all works containing this text string in their title, abstract, or full-text. The query will return a list of works each designated by its unique OpenAlexID.  For now the preset limits the number of calls to 100. Up the *per-page* parameter to fetch more. \n\nThe results are sorted by their publication year. Of course that is only one way to arrange the results. Refer to [OpenAlex' documentation](https://docs.openalex.org/how-to-use-the-api/get-lists-of-entities/sort-entity-lists) to learn about your options.\n\nTo obtain the metadata of any work, apply the \"OpenAlex: Get a single work\" preset, select the node(s) of interest, and hit Fetch data once more. \n\nPlease note that each user is allowed a maximum of 100,000 API calls per day and 10 API calls per second. If you need a higher limit, you can register for [OpenAlex Premium](https://openalex.org/pricing).",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://api.openalex.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "results",
+    "objectid": "id",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "per-page": "100",
+      "search": "<Object ID>",
+      "select": "id, doi,\ntitle, authorships,referenced_works, publication_year",
+      "sort": "publication_year"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/works",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "doi",
+    "title",
+    "authorships",
+    "referenced_works",
+    "publication_year"
+  ]
+}

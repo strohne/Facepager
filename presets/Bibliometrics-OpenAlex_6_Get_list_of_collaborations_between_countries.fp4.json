@@ -1,0 +1,49 @@
+{
+  "name": "OpenAlex 6: Get list of collaborations between countries",
+  "category": "Bibliometrics",
+  "description": "This preset accompanies the sixth tutorial of our [Getting Started with OpenAlex](https://github.com/strohne/Facepager/wiki/Getting-Started-with-OpenAlex) guide.  \n\nIt retrieves a list of scholarly works based on one or more arbitrary search terms refined by the use of geographical filters. To begin, add a seed node (e.g., colonialism) to receive works that at least one author from a Brazilian institution as well as at least one author from a Portuguese institution has contributed and that contains this text string in their title, abstract, or full-text. For now the preset limits the number of calls to 100. Up the *per-page* parameter to fetch more. \n\nThe results are sorted by their publication date. Of course that is only one way to arrange the results. Refer to [OpenAlex' documentation](https://docs.openalex.org/how-to-use-the-api/get-lists-of-entities/sort-entity-lists) to learn about your options.\n\nTo obtain the metadata of any work, apply the \"OpenAlex: Get a single work\" preset, select the node(s) of interest, and hit Fetch data once more. \n\nPlease note that each user is allowed a maximum of 100,000 API calls per day and 10 API calls per second. If you need a higher limit, you can register for [OpenAlex Premium](https://openalex.org/pricing).",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://api.openalex.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "results",
+    "objectid": "id",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "filter": "authorships.countries:BR,authorships.countries:PT",
+      "per-page": "100",
+      "search": "<Object ID>",
+      "select": "id, doi,\ntitle, authorships, publication_date,relevance_score",
+      "sort": "publication_date:desc"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/works",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "doi",
+    "title",
+    "publication_date"
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "name": "OpenAlex: Get list of references ",
+  "name": "OpenAlex 4: Get list of references ",
   "category": "Bibliometrics",
   "description": "This preset accompanies the fourth tutorial of our [Getting Started with OpenAlex](https://github.com/strohne/Facepager/wiki/Getting-Started-with-OpenAlex) guide.  \n\nIt allows you to get a reference lists of a scholarly work defined by your seed node. For starters insert an OpenAlexID referencing a work (e.g., W2957825729). OpenAlexIDs are not your only option. Alternatively, use a DOI, MAG (Microsoft Academic Graph), Pubmed Identifier, or Pubmed Central Identifier. Find an always up-to-date list of all possible identifiers at [OpenAlex' documentation](https://docs.openalex.org/api-entities/works/work-object#ids). Include as many nodes as you like here. The query will return the reference list od the 'seed' work in the form of further OpenAlexIDs.  \n\nTo obtain the metadata of any reference, apply the \"OpenAlex: Get a single work\" preset, select the node(s) of interest, and hit *Fetch data* once more. \n\nPlease note that each user is allowed a maximum of 100,000 API calls per day and 10 API calls per second. If you need a higher limit, you can register for [OpenAlex Premium](https://openalex.org/pricing).",
   "module": "Generic",
