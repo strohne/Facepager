@@ -1,0 +1,48 @@
+{
+  "name": "OpenAlex 2: Get author",
+  "category": "Bibliometrics",
+  "description": "[OpenAlex](https://openalex.org/about) is a free and open online repository of the world's research system maintained by the nonprofit [OurResearch](https://ourresearch.org/). It includes scholarly works, authors, sources, concepts, institutions, publishers, funders, their interconnections, and all kinds of metadata about each. The project aims to create an universal collection and index of scholarship. Notably, due to its open-source nature, OpenAlex requires no user nor institutional authentication.\n\nApply this preset, if you are interested in getting detailed information about an author. For detailed instructions, see the step-by-step guide below.\n\n**1. Create a database:** Click *New Database* in the [Menu Bar](https://github.com/strohne/Facepager/wiki/Layout#menu-bar) of Facepager to create a blank database. Save it in a directory of your choice.\n**2. Setup the Generic module:** Apply the preset at hand. The [Generic module](https://github.com/strohne/Facepager/wiki/Query-Setup.-Generic) in the [Query Setup](https://github.com/strohne/Facepager/wiki/Layout#query-setup) will refresh automatically.  Notice that the base path is now set to call OpenAlex' API and a node placeholder has been installed. Additionally, the *select* parameter determines what information Facepager will fetch from OpenAlex. Specify the input to narrow down your query. The preset at hand asks for id, orcid, display_name, works_count, cited_by_count, and last_known_institution of the stated author. Check out [OpenAlex' documentation on author-objects](https://docs.openalex.org/api-entities/authors/author-object) to get an overview over the broad range of options.\n**3. Add nodes:** Before fetching data, you will need to provide one or more seed nodes which will fill in said placeholder later on. For this, select *Add Nodes* in the Menu Bar. In the open dialogue box either add an OpenAlex ID (e.g. A5088931518) or external IDs such as ORCID (e.g. https://orcid.org/0000-0003-1860-6695 or in URN format orcid:0000-0003-1860-6695), ScopusID, Twitter, or Wikipedia. Check [OpenAlex' documentation](https://docs.openalex.org/api-entities/authors/author-object#ids) for an up-to-date list of all possibilities. Include as many nodes as you like here.\n**4. Fetch data:** Select one or more seed nodes and hit *Fetch Data* at the bottom of the Query Setup afterwards. Facepager will now fetch data on the basis of your setup. Once finished, you can inspect the data by expanding your seed node or clicking *Expand nodes* in the Menu Bar. For more detail, select a child node and review the raw data displayed in the [Data View](https://github.com/strohne/Facepager/wiki/Layout#data-view) to the right.  If you want to fetch other information about an author such as, for example, the author's citation metrics or institution, have a look at [OpenAlex' documentation on author-objects](https://docs.openalex.org/api-entities/authors/author-object) and adjust the *select* parameter in the Query Setup accordingly.\n**5. Export data:** Expand all nodes and select the ones you want to export. Hit [*Export Data*](https://github.com/strohne/Facepager/wiki/Export-Data) to get a CSV-file. Notice the options provided by the export dialogue. You can open CSV files with Excel or any statistics software you like.   \n\nPlease note that each user is allowed a maximum of 100,000 API calls per day and 10 API calls per second. If you need a higher limit, you can register for OpenAlex Premium. ",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://api.openalex.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": null,
+    "objectid": null,
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "<entity_id>": "<Object ID>",
+      "select": "id, orcid,\ndisplay_name, works_count,\ncited_by_count, last_known_institution"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/authors/<entity_id>",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "orcid",
+    "display_name",
+    "works_count",
+    "cited_by_count",
+    "last_known_institution.id"
+  ]
+}
