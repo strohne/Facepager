@@ -1,0 +1,41 @@
+{
+  "name": "3 Get comments (v14.0)",
+  "category": "Facebook",
+  "description": "Fetch the last 20 comments of a post or the last 20 replies to a comment.\n\n\n**Get started with the preset**\n\n1. Before you can use this preset, you have to fetch posts or add Facebook IDs of some posts. See the preset named \"Get posts\".\n\n2. Load the preset by clicking the \"Apply\" button.\n\n3. Login to Facebook in the Facebook module\n\n4. Select post or comment nodes and click the button \"Fetch Data\".\n\n\n**Some hints**\n\n1. Replies: Replies are comments to comments. Thus, you can use the comment preset to get replies to the comments. Alternatively, set the filter parameter to \"stream\" to get replies along with the comments.\n\n2. About the author of comments: you cannot access data about the author of comments (if you are not the owner of the page).\n\n3. Adding fields: When adding fields to the fields-parameter also add them in the column setup to make the data visible in the nodes view.\n\n\n**Facebook API documentation**\n\nSee the reference of the comments edge for further information: https://developers.facebook.com/docs/graph-api/reference/v14.0/object/comments\n\nFor information about available fields see the Facebook API reference: https://developers.facebook.com/docs/graph-api/reference/v13.0/comment\n\n",
+  "module": "Facebook",
+  "options": {
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "basepath": "https://graph.facebook.com/v14.0",
+    "extension": "",
+    "key_paging": "paging.next",
+    "nodedata": "data",
+    "objectid": "id",
+    "pages": 1,
+    "paging_type": "url",
+    "params": {
+      "<post-id>": "<Object ID>",
+      "fields": "message, created_time, parent, comment_count, like_count",
+      "filter": "stream",
+      "summary": "1"
+    },
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "resource": "/<post-id>/comments",
+    "scope": "",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "message",
+    "created_time",
+    "like_count",
+    "comment_count",
+    "error.message"
+  ]
+}
