@@ -1,8 +1,9 @@
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QMainWindow
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QMainWindow
 
-from PySide2.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWebEngineCore import QWebEnginePage
 
 
 

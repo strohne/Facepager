@@ -12,8 +12,8 @@ import io
 from collections import OrderedDict
 import threading
 
-from PySide2.QtWebEngineWidgets import QWebEngineView
-from PySide2.QtCore import Qt, QUrl
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtCore import Qt, QUrl
 
 import requests
 from requests.exceptions import *

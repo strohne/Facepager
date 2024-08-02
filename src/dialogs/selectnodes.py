@@ -1,5 +1,5 @@
-from PySide2.QtCore import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtWidgets import *
 from datetime import datetime, timedelta
 
 class SelectNodesWindow(QDialog):

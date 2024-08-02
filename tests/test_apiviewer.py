@@ -1,5 +1,5 @@
 from unittest import TestCase
-from PySide2.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QMainWindow
 from dialogs.apiviewer import ApiViewer
 
 class Test_Utilities(TestCase):

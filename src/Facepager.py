@@ -29,9 +29,9 @@ from datetime import datetime
 
 import html
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import QWidget, QStyleFactory, QMainWindow
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import QWidget, QStyleFactory, QMainWindow
 
 
 from icons import *
@@ -53,10 +53,10 @@ import threading
 from server import Server, RequestHandler
 
 # Some hackery required for pyInstaller
-# See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/#could-not-find-qtwebengineprocessexe-on-windows
+# See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide6/#could-not-find-qtwebengineprocessexe-on-windows
 # if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
 #     os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.normpath(os.path.join(
-#         sys._MEIPASS, 'PySide2', 'Qt', 'lib',
+#         sys._MEIPASS, 'PySide6', 'Qt', 'lib',
 #         'QtWebEngineCore.framework', 'Helpers', 'QtWebEngineProcess.app',
 #         'Contents', 'MacOS', 'QtWebEngineProcess'
 #     ))

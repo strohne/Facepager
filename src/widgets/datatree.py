@@ -1,5 +1,5 @@
-from PySide2.QtCore import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtWidgets import *
 from database import *
 import json
 from collections import defaultdict

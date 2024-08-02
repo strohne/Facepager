@@ -1,6 +1,6 @@
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import QFileDialog, QCheckBox, QComboBox, QLabel, QHBoxLayout
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import QFileDialog, QCheckBox, QComboBox, QLabel, QHBoxLayout
 import csv
 from widgets.progressbar import ProgressBar
 from database import *

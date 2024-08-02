@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import cgi
-from PySide2.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QObject, Signal, Slot
 from urllib.parse import urlparse, parse_qs, unquote
 
 class Server(ThreadingHTTPServer, QObject):
