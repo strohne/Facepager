@@ -28,7 +28,7 @@ class Database(object):
             if self.connected:
                 self.disconnect()
 
-            self.engine = create_engine('sqlite:///%s'%filename, convert_unicode=True)
+            self.engine = create_engine('sqlite:///%s'%filename)
             self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
             Base.query = self.session.query_property()
             #Create a query attribute by inheritance from the declarative base
