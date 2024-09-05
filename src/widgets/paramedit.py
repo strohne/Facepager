@@ -336,6 +336,7 @@ class ValueEdit(QWidget):
     def editValue(self):
         dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         dialog.setWindowTitle("Edit value")
+        dialog.resize(600, 600)
         layout = QVBoxLayout()
 
 
