@@ -12,17 +12,17 @@
 	},
 
     "info": {
-        "title": "Facebook Graph API v13.0",
-        "description": "Please note: though some things might work, the settings are not yet fully compatible with v13.0.\n\nThe Graph API is the primary way to get data into and out of the Facebook platform.",
+        "title": "Facebook Graph API v20.0",
+        "description": "Please note: though some things might work, the settings are not yet fully compatible with v20.0.\n\nThe Graph API is the primary way to get data into and out of the Facebook platform.",
         "termsOfService": "https://www.facebook.com/policies/",
-        "version": "13.0"
+        "version": "20.0"
     },
     "externalDocs": {
         "url":"https://developers.facebook.com/docs/graph-api"
     },
     "servers": [
         {
-            "url":"https://graph.facebook.com/v13.0"
+            "url":"https://graph.facebook.com/v20.0"
         }
     ],
     "paths":{
@@ -367,7 +367,7 @@
             "get" : {
                 "summary" : "The feed of posts (including status updates) and links published by this page, or by others on this page. There are other edges which provide more specific sets of posts.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/page/feed"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/page/feed"
                 },
                 "parameters" : [ 
                     {
@@ -890,7 +890,7 @@
 			"get":{
 			"summary": "The location Pages that are children of this Page. For example, pages for each restaurant in a chain of restaurants.",
 			"externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/page/locations"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/page/locations"
                 },
 			"parameters" : [
                     {
@@ -1421,7 +1421,7 @@
             "get" : {
                 "summary" : "Shows only the posts that were published by this page.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/page/feed"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/page/feed"
                 },
                 "parameters" : [ 
                     {
@@ -1727,7 +1727,7 @@
             "get" : {
                 "summary" : "An individual entry in a profile's feed. The profile could be a user, page, app, or group.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/post"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/post"
                 },             
                 "parameters" : [                 
                     {
@@ -1861,7 +1861,7 @@
             "get" : {
                 "summary" : "Comments on a Facebook post.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/object/comments"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/object/comments"
                 },             
                 "parameters" : [                 
                     {
@@ -2018,7 +2018,7 @@
             "get" : {
                 "summary" : "Reactions on a Facebook post.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/object/reactions"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/object/reactions"
                 },             
                 "parameters" : [                 
                     {
@@ -2074,7 +2074,7 @@
             "get" : {
                 "summary" : "This edge represents any posts where the original object was shared on Facebook.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/object/sharedposts"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/object/sharedposts"
                 },             
                 "parameters" : [                 
                     {
@@ -2214,7 +2214,7 @@
             "get" : {
                 "summary" : "This node returns a single comment.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/comment"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/comment"
                 },             
                 "parameters" : [                 
                     {
@@ -2295,7 +2295,7 @@
             "get" : {
                 "summary" : "Comments that reply to this comment.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/object/comments"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/object/comments"
                 },             
                 "parameters" : [                 
                     {
@@ -2451,7 +2451,7 @@
             "get" : {
                 "summary" : "People who have reacted to this post.",
                 "externalDocs": {
-					"url":"https://developers.facebook.com/docs/graph-api/reference/v13.0/object/reactions"
+					"url":"https://developers.facebook.com/docs/graph-api/reference/v20.0/object/reactions"
 					}, 
                 "parameters" : [                 
                     {

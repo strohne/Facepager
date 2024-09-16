@@ -1,0 +1,52 @@
+{
+  "name": "Pages a page likes (v20.0)",
+  "category": "Facebook",
+  "description": "*Please note: This endpoint is not supported for Pages that have been migrated to Facebook's [New Pages Experience](https://developers.facebook.com/docs/pages/new-pages-experience).*\n\nGet the pages a page likes.\n\n\n**Get started with the preset**\n1. After creating or opening a database, add page IDs as seed nodes using the \"Add Nodes\" button, e.g. \"116949331668018\". You can get page IDs using the preset \"Get page data\".\n\n2. Load the preset by clicking \"Apply\" in the preset window.\n\n3. Login to Facebook in the Facebook module.\n\n4. Select the seed node and then click the \"Fetch Data\" button.\n\n**Facebook documentation**\n\nSee https://developers.facebook.com/docs/graph-api/reference/page/likes/ for more information about the endpoint. \n",
+  "module": "Facebook",
+  "options": {
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "basepath": "https://graph.facebook.com/v20.0",
+    "extension": "",
+    "key_paging": "paging.next",
+    "nodedata": null,
+    "objectid": null,
+    "pages": 1,
+    "paging_type": "url",
+    "params": {
+      "<page-id>": "<Object ID>",
+      "fields": "id,about,bio,category,company_overview,description,fan_count,general_info,keywords,link,location,members,name,release_date,start_info,talking_about_count,username,website,were_here_count,written_by"
+    },
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "resource": "/<page-id>/likes",
+    "scope": "",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "about",
+    "category",
+    "fan_count",
+    "link",
+    "location.city",
+    "location.country",
+    "location.latitude",
+    "location.longitude",
+    "location.street",
+    "location.zip",
+    "name",
+    "start_info.type",
+    "start_info.date.year",
+    "start_info.date.month",
+    "talking_about_count",
+    "username",
+    "website",
+    "were_here_count"
+  ]
+}
