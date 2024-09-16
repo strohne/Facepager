@@ -30,7 +30,7 @@
             "get" : {
                 "summary" : "This represents a Facebook Page. The /{page-id} node returns a single page.",
                 "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/v4.0/page"
+                    "url":"https://developers.facebook.com/docs/graph-api/reference/v14.0/page"
                 },             
                 "parameters" : [                 
                     {
@@ -1222,77 +1222,6 @@
 					}
 				}
 			}	
-		},	
-		"/{page-id}/milestones": {
-            "get" : {
-                "summary" : "Milestones which are also known as Life Events for a Facebook Page.",
-                "externalDocs": {
-                    "url":"https://developers.facebook.com/docs/graph-api/reference/page/milestones/"
-                },             
-                "parameters" : [                 
-                    {
-                      "name" : "page-id",
-                      "in" : "path",
-                      "description" : "ID of the page",
-                      "required" : true,
-                      "schema":{"type":"string"}
-                    },
-                    {
-                      "name" : "fields",
-                      "in" : "query",
-                      "description" : "A comma-separated list of fields (see response fields).",
-                      "schema" : {
-                        "type" : "array",
-                        "items" : {
-                            "type":"string",
-                            "oneOf":[
-                                {"const":"created_time","description":"The time when this milestone was published"},
-								{"const":"description","description":"Description of the milestone"},
-								{"const":"end_time","description":"The time when this milestone came to an end"},
-								{"const":"from","description":"The information of the Page that ownes the milestone"},
-								{"const":"id","description":"The milestone ID"},
-								{"const":"is_hidden","description":"Whether the milestone is hidden or not"},
-								{"const":"start_time","description":"The time when this milestone was started"},
-								{"const":"title","description":"The title of the milestone"},
-								{"const":"updated_time","description":"The time when this milestone was updated"}
-							]
-                        }
-                      },
-                      "example" : "id,created_time,end_time,title,description,from"
-                    }
-                ],
-			"responses" : {
-				"200" : {
-					"description" : "Page milestone information.",
-					"content" : {
-						"application/json" : {
-                                "schema" : {
-                                    "type" : "object",
-                                    "properties" : {
-                                        "data" : {
-                                            "type" : "array",
-                                            "items" : {
-                                                "type":"object",
-                                                "properties": {
-													"created_time":{"description":"The time when this milestone was published"},
-													"description":{"description":"Description of the milestone"},
-													"end_time":{"description":"The time when this milestone came to an end"},
-													"from":{"description":"The information of the Page that ownes the milestone"},
-													"id":{"description":"The milestone ID"},
-													"is_hidden":{"description":"Whether the milestone is hidden or not"},
-													"start_time":{"description":"The time when this milestone was started"},
-													"title":{"description":"The title of the milestone"},
-													"updated_time":{"description":"The time when this milestone was updated"}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
 		},
 		"/{page-id}/photos": {
             "get" : {
