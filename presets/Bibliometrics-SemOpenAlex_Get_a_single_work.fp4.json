@@ -1,0 +1,48 @@
+{
+  "name": "SemOpenAlex: Get a single work",
+  "category": "Bibliometrics",
+  "description": "This SemOpenAlex preset poses an alternative to fetching data from OpenAlex's API using SPARQL instead.  In terms of what information will be fetched, it mirrors the \"OpenAlex 1: Get a single work\" preset (not all information is readily available yet, see the SPARQL query for details).\n\n[SemOpenAlex](https://semopenalex.org/resource/semopenalex:UniversalSearch) is built upon [OpenAlex](https://openalex.org/about) and contains the same comprehensive information on scholarly works and related entities, such as authors, sources, etc.. It can practically be understood as a semantic extension of OpenAlex and aims at making the shared data base more accessible for use in semantic web technologies and linked open data applications. For this purpose, it offers an URI Resolution as well as a [SPARQL endpoint](https://semopenalex.org/sparql) available through the [SemOpenAlex Ontology](https://semopenalex.org/resource/?uri=https://semopenalex.org/ontology/).\n\nApply this preset, if you are interested in using SemOpenAlex's SPARQL endpoint to retrieve a range of information about scholarly works based on its title (e.g.,  \"Computational Methods f\u00fcr die Sozial- und Geisteswissenschaften\").  Although featured in SemOpenAlex's Ontology, finding scholarly works by their DOI does not work yet. Should no result return, always check if any of the data you are intereseted in is not available on SemOpenAlex. For other (more complex) queries, please, see [SemOpenAlex's SPARQL examples](https://semopenalex.org/resource/semopenalex:About).\n\nTo learn more about the basic usage of SPARQL and its semantic structure, please, see our [Getting Started with Wikidata](https://github.com/strohne/Facepager/wiki/Getting-Started-with-Wikidata) where we dedicated a whole chapter to a SPARQL introduction. Or have a look into [SemOpenAlex's own documentation](https://semopenalex.org/resource/Help:WorkingWithData#querying-retrieving-data).",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://semopenalex.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {
+      "Accept": "application/sparql-results+json",
+      "Content-Type": "application/sparql-query"
+    },
+    "key_paging": null,
+    "nodedata": "results.bindings",
+    "objectid": null,
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "query": "PREFIX rdf: \\<http://www.w3.org/1999/02/22-rdf-syntax-ns#\\> \nPREFIX dct: \\<http://purl.org/dc/terms/\\>\nPREFIX xsd: \\<http://www.w3.org/2001/XMLSchema#\\>\nPREFIX prism: \\<http://prismstandard.org/namespaces/basic/2.0/\\>\nPREFIX fabio: \\<http://purl.org/spar/fabio/\\>\nPREFIX cito: \\<http://purl.org/spar/cito/\\>\nPREFIX soa: \\<https://semopenalex.org/ontology/\\>\nPREFIX mplabel: \\<http://www.metaphacts.com/ontologies/platform/service/label/\\>\nPREFIX foaf: \\<http://xmlns.com/foaf/0.1/\\>\n\nSELECT ?work ?title ?doi ?year ?references ?author ?authoruri WHERE {\n\n  # Defining the class of our main subject\n  ?work rdf:type \\<https://semopenalex.org/ontology/Work\\>.\n\n  # Setting up a placeholder\n  ?work dct:title \"<Object ID>\";\n\n        # Fetching the title (only useful if resolving a DOI)\n        #dct:title ?title;\n\n        # Although featured in SemOpenAlex's ontology, fetching or resolving DOIs of scholarly works is not yet available\n        #prism:doi ?doi;\n\n        fabio:hasPublicationYear ?year;\n\n        # If any of the requested data is not available, no results will be shown,\n        # here for example references are not stored. This is entity dependend!\n        #cito:cites ?references;\n\n        dct:creator ?authoruri.\n  ?authoruri foaf:name ?author.\n\n}"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/sparql",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "work.value",
+    "year.value",
+    "author.value",
+    "authoruri.value"
+  ]
+}
