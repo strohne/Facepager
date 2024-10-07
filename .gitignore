@@ -21,7 +21,7 @@ venv
 .idea/
 .idea/*
 .settings/org.eclipse.core.resources.prefs
-*.DS_Store
+.DS_Store
 src/.eggs
 src/Facepager.spec
 Facepager*.exe

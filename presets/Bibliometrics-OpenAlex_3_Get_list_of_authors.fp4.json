@@ -1,0 +1,49 @@
+{
+  "name": "OpenAlex 3: Get list of authors",
+  "category": "Bibliometrics",
+  "description": "[OpenAlex](https://openalex.org/about) is a free and open online repository of the world's research system maintained by the nonprofit [OurResearch](https://ourresearch.org/). It includes scholarly works, authors, sources, concepts, institutions, publishers, funders, their interconnections, and all kinds of metadata about each. The project aims to create an universal collection and index of scholarship. Notably, due to its open-source nature, OpenAlex requires no user nor institutional authentication.\n\nApply this preset, to fetch a list of authors filtered by the name of their last known institution. For detailed instructions, see the step-by-step guide below.\n\n**1. Create a database:** Click *New Database* in the [Menu Bar](https://github.com/strohne/Facepager/wiki/Layout#menu-bar) of Facepager to create a blank database. Save it in a directory of your choice.\n**2. Setup the Generic module:** Apply the preset at hand. The [Generic module](https://github.com/strohne/Facepager/wiki/Query-Setup.-Generic) in the [Query Setup](https://github.com/strohne/Facepager/wiki/Layout#query-setup) will refresh automatically. Notice that the base path is now set to call OpenAlex' API and a node placeholder has been installed. Additionally, you will find a couple of pre-configured parameters: \n\t- The *filter* parameter filters the results returned from your query according to your seed node. \n\t- *Per-page* sets how many results are returned for each page. To understand paging and how Facepager builds on-top, revisit [Facepager's basic concepts](https://github.com/strohne/Facepager/wiki/Basic-Concepts). Up the number to fetch more results.\n\t- *Select* determines what information Facepager will fetch from OpenAlex. Specify the input to narrow down your query. The preset at hand asks for id, orcid, display_name, works_count, and cited_by_count of all authors associated with the stated institution. Check out [OpenAlex' documentation on author-objects](https://docs.openalex.org/api-entities/authors/author-object) to get an overview over all options.\n\t- Lastly, the *sort* parameter dictates the order in which the results will appear. In the case at hand we decided to sort them descending by their citation count. Of course that is only one way to arrange the results. Refer to [OpenAlex' documentation](https://docs.openalex.org/how-to-use-the-api/get-lists-of-entities/sort-entity-lists) to learn about your options.\n**3. Add nodes:** Before fetching data, you will need to provide one or more seed nodes which will fill in said placeholder later on. While the query is based on an OpenAlexID referencing an institution and you can insert one as usual, you do have the chance to repurpose the preset \"OpenAlex 2: Get author\" by leveraging Facepagers *Response* feature as well (scroll down further to learn about a user-friendlier workflow available on Windows only at the moment). To do so, first apply the \u201cOpenAlex: Get author\u201d preset. In the Query Setup set last_known_institution as *Key to extract* and id *Key for Object ID*. Hit *Fetch Data* once more. Note that your query returns a new node containing an OpenAlexID referencing the last known institution of your stated author. Now, apply the \"OpenAlex: Get list of authors\" preset again, select the newly created seed node and retrieve all authors affiliated with the institution.   \n**(For Windows users only)** Alternatively use the user-friendly *Transfer nodes*. First apply the \u201cOpenAlex: Get author\u201d preset and fetch data. Next, select *Transfer nodes* and set last_known_institution.id as *Extraction key*. By applying this feature Facepager will automatically generate a new seed node containing an OpenAlexID referencing the last known institution of your stated author. Apply the \"OpenAlex: Get list of authors\" preset again, select the newly created seed node and fetch all authors affiliated with the institution.\nShould you want to add nodes conventionally, simply select *Add Nodes* in the Menu Bar. In the open dialogue box add any OpenAlexID referencing an institution (e.g., I22465464). Include as many nodes as you like here.\n**4. Fetch data:** Select one or more seed nodes and hit *Fetch Data* at the bottom of the Query Setup afterwards. Facepager will now fetch data on the basis of your setup. Once finished, you can inspect the data by expanding your seed node or clicking *Expand nodes* in the Menu Bar. For more detail, select a child node and review the raw data displayed in the [Data View](https://github.com/strohne/Facepager/wiki/Layout#data-view) to the right.  If you want to include other information in your list of authors related through their last know institution, have a look at [OpenAlex' documentation on author-objects](https://docs.openalex.org/api-entities/authors/author-object) and adjust the *select* parameter in the Query Setup accordingly.\n**5. Export data:** Expand all nodes and select the ones you want to export. Hit [*Export Data*](https://github.com/strohne/Facepager/wiki/Export-Data) to get a CSV-file. Notice the options provided by the export dialogue. You can open CSV files with Excel or any statistics software you like.   \n\nPlease note that each user is allowed a maximum of 100,000 API calls per day and 10 API calls per second. If you need a higher limit, you can register for OpenAlex Premium. ",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://api.openalex.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "results",
+    "objectid": null,
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "filter": "last_known_institution.id:<Object ID>",
+      "per-page": "50",
+      "select": "id, orcid, display_name, works_count,\ncited_by_count",
+      "sort": "cited_by_count:desc"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/authors",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "orcid",
+    "display_name",
+    "works_count",
+    "cited_by_count"
+  ]
+}

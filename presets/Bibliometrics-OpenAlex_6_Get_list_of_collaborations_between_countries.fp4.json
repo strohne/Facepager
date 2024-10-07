@@ -1,0 +1,49 @@
+{
+  "name": "OpenAlex 6: Get list of collaborations between countries",
+  "category": "Bibliometrics",
+  "description": "[OpenAlex](https://openalex.org/about) is a free and open online repository of the world's research system maintained by the nonprofit [OurResearch](https://ourresearch.org/). It includes scholarly works, authors, sources, concepts, institutions, publishers, funders, their interconnections, and all kinds of metadata about each. The project aims to create an universal collection and index of scholarship. Notably, due to its open-source nature, OpenAlex requires no user nor institutional authentication.\n\nApply this preset, to retrieve a list of scholarly works based on one or more arbitrary search terms refined by the use of geographical filters. For detailed instructions, see the step-by-step guide below.\n\n**1. Create a database:** Click *New Database* in the [Menu Bar](https://github.com/strohne/Facepager/wiki/Layout#menu-bar) of Facepager to create a blank database. Save it in a directory of your choice.\n**2. Setup the Generic module:** Apply the preset at hand. The [Generic module](https://github.com/strohne/Facepager/wiki/Query-Setup.-Generic) in the [Query Setup](https://github.com/strohne/Facepager/wiki/Layout#query-setup) will refresh automatically. Notice that the base path is now set to call OpenAlex' API and a node placeholder has been installed. Additionally, you will find a couple of pre-configured parameters: \n\t- *Filter* allows to specify the geographical filter. For more geographical filter options than the one presented here, see [OpenAlex' Geo documentation](https://docs.openalex.org/api-entities/geo). Or head to [OpenAlex' documentation about Filter entity lists](https://docs.openalex.org/how-to-use-the-api/get-lists-of-entities/filter-entity-lists) to find all possible filter options.\n\t- *Per-page* sets how many results are returned for each page. To understand paging and how Facepager builds on-top, revisit [Facepager's basic concepts](https://github.com/strohne/Facepager/wiki/Basic-Concepts). Up the number to fetch more results. Mind, however, that calling for works based on one or more search terms, depending on the term, the number of returns can potentially skyrocket. Though, our query returns less than a 100 results.\n\t- *Search* serves as the placeholder for your Object ID or search term respectively. The query thus prompts OpenAlex' API to return any work that contains your Object ID in its title, abstract, or even full-text.  \n\t- *Select* determines what information Facepager will fetch from OpenAlex. Specify the input to narrow down your query. The preset at hand asks for id, doi, title, authorships, referenced_works, and publication_year of all returned works associated with the search term. Check out [OpenAlex' documentation on work-objects](https://docs.openalex.org/api-entities/works/work-object) to get an overview over all options.\n\t- The *sort* parameter, finally, dictates the order in which the results will appear. In the case at hand their order will be decided by their publication date. Of course that is only one way to arrange the results. Refer to [OpenAlex' documentation](https://docs.openalex.org/how-to-use-the-api/get-lists-of-entities/sort-entity-lists) to learn about your options.\n3. **Add nodes:** Before fetching data, you will need to provide one or more seed nodes which will fill in said placeholder later on. For this, select *Add Nodes* in the Menu Bar. In the open dialogue box add one or more arbitrary search terms (e.g., colonialism). Include as many nodes as you like here.\n**4. Fetch data:** Select one or more seed nodes and hit *Fetch Data* at the bottom of the Query Setup afterwards. Facepager will now fetch data on the basis of your setup. Once finished, you can inspect the data by expanding your seed node or clicking *Expand nodes* in the Menu Bar. For more detail, select a child node and review the raw data displayed in the [Data View](https://github.com/strohne/Facepager/wiki/Layout#data-view) to the right. If you want to fetch other information than what we display here, have a look at [OpenAlex' documentation on work-objects](https://docs.openalex.org/api-entities/works/work-object) and adjust the *select* parameter in the Query Setup accordingly. For now, the query will return scholarly works that at least one author from a Brazilian institution as well as at least one author from a Portuguese institution has contributed to. To obtain the metadata of any of the works, apply the \"OpenAlex: Get a single work\" preset, select the node(s) of interest, and hit *Fetch data* once more. \n**5. Export data:** Expand all nodes and select the ones you want to export. Hit [*Export Data*](https://github.com/strohne/Facepager/wiki/Export-Data) to get a CSV-file. Notice the options provided by the export dialogue. You can open CSV files with Excel or any statistics software you like.   \n\nPlease note that each user is allowed a maximum of 100,000 API calls per day and 10 API calls per second. If you need a higher limit, you can register for [OpenAlex Premium](https://openalex.org/pricing).",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://api.openalex.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "key_paging": null,
+    "nodedata": "results",
+    "objectid": "id",
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "filter": "authorships.countries:BR,authorships.countries:PT",
+      "per-page": "100",
+      "search": "<Object ID>",
+      "select": "id, doi,\ntitle, authorships, publication_date,relevance_score",
+      "sort": "publication_date:desc"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/works",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "doi",
+    "title",
+    "publication_date"
+  ]
+}
