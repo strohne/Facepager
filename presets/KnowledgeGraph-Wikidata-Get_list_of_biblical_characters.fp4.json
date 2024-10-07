@@ -1,6 +1,6 @@
 {
-  "name": "Get list of biblical characters",
-  "category": "Wikidata",
+  "name": "Wikidata: Get list of biblical characters",
+  "category": "Knowledge Graph",
   "description": "This preset gets a list of biblical characters, along with the sections in which they occur, from WikiData. Add an arbitrary seed node and fetch data.\n\nSee https://www.wikidata.org/wiki/Wikidata:Lists/List_of_biblical_characters\n\nYou can try out different query on https://query.wikidata.org/ (paste the value of the query parameter to get started).\n\n\nPlease be aware that expressions in angle brackets are handled as placeholder by Facepager. Thus, if your query contains angle brackets, escape them with a backslash. Pagination is handled by the <offset> placeholder.",
   "module": "Generic",
   "options": {

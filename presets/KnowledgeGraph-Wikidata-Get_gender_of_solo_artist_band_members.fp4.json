@@ -1,6 +1,6 @@
 {
-  "name": "Get gender of solo artist/band members",
-  "category": "Wikidata",
+  "name": "Wikidata: Get gender of solo artist/band members",
+  "category": "Knowledge Graph",
   "description": "This preset fetches a list of muscial artists and their sex or gender as provided by Wikidata. To start add the English name (label) of an arbitary musical solo artist or band as seed node, e.g. \"Peter Maffay\" or \"Coldplay\". The query automatically extracts names of band members and their respective on the basis of the group's name, e.g. \"Coldplay\". \n\nSee https://www.wikidata.org/ for further information. You can try out different queries on https://query.wikidata.org/ (paste the value of the query parameter).\n\nAlways ensure to comply to Wikidata's User-Agent policy and be mindful of potential query limits.\n\nPlease be aware that expressions in angle brackets are handled as placeholder by Facepager. Thus, the brackets of the prefixes have to be escaped with a backslash.\n\nPagination is handled by the placeholder.",
   "module": "Generic",
   "options": {
