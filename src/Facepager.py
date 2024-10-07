@@ -385,6 +385,7 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(FacebookTab(self), "Facebook")
         self.RequestTabs.addTab(AmazonTab(self),"Amazon")
         self.RequestTabs.addTab(GenericTab(self),"Generic")
+        self.RequestTabs.addTab(SparqlTab(self),"SPARQL")
 
         module = self.settings.value('module',False)
         tab = self.getModule(module)

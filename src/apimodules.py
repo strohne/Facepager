@@ -2605,6 +2605,49 @@ class GenericTab(AuthTab):
     #     reply.ignoreSslErrors()
     #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
 
+class SparqlTab(AuthTab):
+    def __init__(self, mainWindow=None):
+        super(SparqlTab, self).__init__(mainWindow, "SPARQL")
+
+        #Defaults
+        self.timeout = 60
+        self.defaults['basepath'] = '<Object ID>'
+
+        # Standard inputs
+        self.initInputs()
+
+        # Header, Verbs
+        self.initHeaderInputs()
+        self.initVerbInputs()
+        self.initUploadFolderInput()
+
+        # Extract input
+        self.initPagingInputs(True)
+        self.initResponseInputs(True)
+
+        self.initFileInputs()
+
+        # Login inputs
+        self.initAuthSetupInputs()
+        self.initLoginInputs()
+
+        self.loadDoc()
+        self.loadSettings()
+
+
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(SparqlTab, self).getSettings(purpose)
+
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+
+        return options
+
+    # def onSslErrors(self, reply, errors):
+    #     url = str(reply.url().toString())
+    #     reply.ignoreSslErrors()
+    #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
+
 
 class FacebookTab(AuthTab):
     def __init__(self, mainWindow=None):
