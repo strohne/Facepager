@@ -14,7 +14,7 @@ import webbrowser
 import platform
 from widgets.dictionarytree import DictionaryTree
 from widgets.progressbar import ProgressBar
-from utilities import wraptip, formatdict
+from utilities import *
 
 class PresetWindow(QDialog):
     logmessage = Signal(str)
@@ -81,12 +81,12 @@ class PresetWindow(QDialog):
         self.categoryLayout.addWidget(self.pipelineName)
 
         # Pipeline items
-        # self.pipelineWidget = QTreeWidget()
-        # self.pipelineWidget.setIndentation(0)
-        # self.pipelineWidget.setUniformRowHeights(True)
-        # self.pipelineWidget.setColumnCount(4)
-        # self.pipelineWidget.setHeaderLabels(['Name','Module','Basepath','Resource'])
-        # self.categoryLayout.addWidget(self.pipelineWidget)
+        self.pipelineWidget = QTreeWidget()
+        self.pipelineWidget.setIndentation(0)
+        self.pipelineWidget.setUniformRowHeights(True)
+        self.pipelineWidget.setColumnCount(4)
+        self.pipelineWidget.setHeaderLabels(['Name','Module','Basepath','Resource'])
+        self.categoryLayout.addWidget(self.pipelineWidget)
 
         # preset widget
         self.presetWidget = QWidget()
@@ -306,23 +306,23 @@ class PresetWindow(QDialog):
 
             # Category
             else:
-#                self.pipelineName.setText(str(data.get('category')))
+                self.pipelineName.setText(str(data.get('category')))
 
-#                 self.pipelineWidget.clear()
-#                 for i in range(current.childCount()):
-#                     presetitem = current.child(i)
-#                     preset = presetitem.data(0, Qt.UserRole)
-#
-#                     treeitem = QTreeWidgetItem(self.pipelineWidget)
-#                     treeitem.setText(0,preset.get('name'))
-#                     treeitem.setText(1, preset.get('module'))
-#                     treeitem.setText(2, getDictValue(preset,'options.basepath'))
-#                     treeitem.setText(3, getDictValue(preset,'options.resource'))
-# #                   treeitem.setText(4, preset.get('description'))
-#
-#                     self.pipelineWidget.addTopLevelItem(treeitem)
+                self.pipelineWidget.clear()
+                for i in range(current.childCount()):
+                    presetitem = current.child(i)
+                    preset = presetitem.data(0, Qt.UserRole)
 
-                #self.applyButton.setText("Run pipeline")
+                    treeitem = QTreeWidgetItem(self.pipelineWidget)
+                    treeitem.setText(0,preset.get('name'))
+                    treeitem.setText(1, preset.get('module'))
+                    treeitem.setText(2, getDictValue(preset,'options.basepath'))
+                    treeitem.setText(3, getDictValue(preset,'options.resource'))
+                # treeitem.setText(4, preset.get('description'))
+
+                    self.pipelineWidget.addTopLevelItem(treeitem)
+
+                self.applyButton.setText("Run pipeline")
                 self.categoryView.show()
 
     def showPresets(self):
@@ -571,8 +571,8 @@ class PresetWindow(QDialog):
 
         data = self.presetList.currentItem().data(0,Qt.UserRole)
         if data.get('iscategory',False):
-            return False
-            #self.startPipeline()
+            #return False
+            self.startPipeline()
         else:
             self.mainWindow.apiActions.applySettings(data)
 
