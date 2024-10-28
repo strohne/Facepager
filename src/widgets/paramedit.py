@@ -334,7 +334,7 @@ class ValueEdit(QWidget):
         self.mainLayout.addWidget(self.button,0)
 
     def editValue(self):
-        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)
         dialog.setWindowTitle("Edit value")
         dialog.resize(600, 600)
         layout = QVBoxLayout()
@@ -365,5 +365,4 @@ class ValueEdit(QWidget):
         #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(setValue)
         buttons.rejected.connect(close)
-        dialog.exec_()
-
+        dialog.show()
