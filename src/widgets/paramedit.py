@@ -310,59 +310,159 @@ class QParamEdit(QTableWidget):
         self.setMinimumHeight(rowTotalHeight)
         self.setMaximumHeight(rowTotalHeight)
 
+
+class EditValueDialog(QDialog):
+    def __init__(self, parent=None):
+        super(EditValueDialog, self).__init__(parent, Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)
+
+        self.comboBox = None
+
+        self.setWindowTitle("Edit value")
+        self.resize(600, 600)
+
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+
+        self.input = QPlainTextEdit(self)
+        self.input.setMinimumWidth(50)
+        layout.addWidget(self.input)
+
+        # buttons
+        buttons = QHBoxLayout()
+
+        buttons.addStretch()
+
+        self.cancelButton = QPushButton('Cancel')
+        self.cancelButton.clicked.connect(self.reject)
+        self.cancelButton.setToolTip("Close the window without applying parameteres.")
+        buttons.addWidget(self.cancelButton)
+
+        self.closeButton = QPushButton('Close')
+        self.closeButton.clicked.connect(self.setValue)
+        self.closeButton.setToolTip("Apply parameters and close the window.")
+        buttons.addWidget(self.closeButton)
+
+        self.applyButton = QPushButton('Apply')
+        self.applyButton.setDefault(True)
+        self.applyButton.clicked.connect(self.applyValue)
+        self.applyButton.setToolTip("Apply parameters to module.")
+        buttons.addWidget(self.applyButton)
+        layout.addLayout(buttons)
+
+    def show(self, comboBox):
+        self.comboBox = comboBox
+        self.input.setPlainText(self.comboBox.currentText())
+        self.input.setFocus()
+
+        super(EditValueDialog, self).show()
+
+    def setValue(self):
+        value = self.input.toPlainText()
+        self.comboBox.setEditText(value)
+        self.accept()
+
+    def applyValue(self):
+        value = self.input.toPlainText()
+        self.comboBox.setEditText(value)
+
 class ValueEdit(QWidget):
-    def __init__(self,parent):
+    def __init__(self, parent=None):
         super(ValueEdit, self).__init__(parent)
 
+        self.moreEditor = None
+
         self.mainLayout = QHBoxLayout(self)
-        self.mainLayout.setContentsMargins(5,0,0,0)
+        self.mainLayout.setContentsMargins(5, 0, 0, 0)
         self.setLayout(self.mainLayout)
 
         self.comboBox = QComboBox(self)
         self.comboBox.setEditable(True)
 
-
-        self.actionEditValue = QAction('...',self)
+        self.actionEditValue = QAction('...', self)
         self.actionEditValue.setText('..')
-        self.actionEditValue.triggered.connect(self.editValue)
+        self.actionEditValue.triggered.connect(self.openEditDialog)
 
-        self.button =QToolButton(self)
+        self.button = QToolButton(self)
         self.button.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.button.setDefaultAction(self.actionEditValue)
 
-        self.mainLayout.addWidget(self.comboBox,2)
-        self.mainLayout.addWidget(self.button,0)
+        self.mainLayout.addWidget(self.comboBox, 2)
+        self.mainLayout.addWidget(self.button, 0)
 
-    def editValue(self):
-        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)
-        dialog.setWindowTitle("Edit value")
-        dialog.resize(600, 600)
-        layout = QVBoxLayout()
+    def openEditDialog(self):
+        if self.moreEditor is None:
+            self.moreEditor = EditValueDialog(self)
+        self.moreEditor.show(self.comboBox)
 
-
-        input = QPlainTextEdit()
-        input.setMinimumWidth(50)
-        input.setPlainText(self.comboBox.currentText())
-        #input.LineWrapMode = QPlainTextEdit.NoWrap
-        #input.acceptRichText=False
-        input.setFocus()
-        layout.addWidget(input)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        layout.addWidget(buttons)
-
-        dialog.setLayout(layout)
-
-        def setValue():
-            value = input.toPlainText() #input.toPlainText().splitlines()
-            self.comboBox.setEditText(value)
-
-            dialog.close()
-
-        def close():
-            dialog.close()
-
-        #connect the nested functions above to the dialog-buttons
-        buttons.accepted.connect(setValue)
-        buttons.rejected.connect(close)
-        dialog.show()
+# class ValueEdit(QWidget):
+#     def __init__(self,parent):
+#         super(ValueEdit, self).__init__(parent)
+#
+#         self.mainLayout = QHBoxLayout(self)
+#         self.mainLayout.setContentsMargins(5,0,0,0)
+#         self.setLayout(self.mainLayout)
+#
+#         self.comboBox = QComboBox(self)
+#         self.comboBox.setEditable(True)
+#
+#
+#         self.actionEditValue = QAction('...',self)
+#         self.actionEditValue.setText('..')
+#         self.actionEditValue.triggered.connect(self.editValue)
+#
+#         self.button =QToolButton(self)
+#         self.button.setToolButtonStyle(Qt.ToolButtonTextOnly)
+#         self.button.setDefaultAction(self.actionEditValue)
+#
+#         self.mainLayout.addWidget(self.comboBox,2)
+#         self.mainLayout.addWidget(self.button,0)
+#
+#     def editValue(self):
+#         dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)
+#         dialog.setWindowTitle("Edit value")
+#         dialog.resize(600, 600)
+#         layout = QVBoxLayout()
+#         dialog.setLayout(layout)
+#
+#
+#         input = QPlainTextEdit()
+#         input.setMinimumWidth(50)
+#         input.setPlainText(self.comboBox.currentText())
+#         input.setFocus()
+#         layout.addWidget(input)
+#
+#         # buttons
+#         buttons = QDialogButtonBox()
+#
+#         # Add Close button (acts as "OK" button but also closes and applies changes)
+#         close_button = buttons.addButton(QDialogButtonBox.Ok)
+#         close_button.setText("Close")
+#
+#         # Add Apply button
+#         apply_button = buttons.addButton("Apply", QDialogButtonBox.ActionRole)
+#
+#         # Add Cancel button
+#         cancel_button = buttons.addButton(QDialogButtonBox.Cancel)
+#         cancel_button.setText("Cancel")
+#
+#         def setValue():
+#             value = input.toPlainText() #input.toPlainText().splitlines()
+#             self.comboBox.setEditText(value)
+#
+#             dialog.close()
+#
+#         def applyValue():
+#             value = input.toPlainText()
+#             self.comboBox.setEditText(value)
+#
+#         def close():
+#             dialog.close()
+#
+#         # Connect the nested functions above to the dialog-buttons
+#         close_button.clicked.connect(setValue)
+#         apply_button.clicked.connect(applyValue)
+#         cancel_button.clicked.connect(close)
+#
+#         # Add buttons to the layout
+#         layout.addWidget(buttons)
+#         dialog.show()
