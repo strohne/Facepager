@@ -459,11 +459,23 @@ class MainWindow(QMainWindow):
         f.setPointSize(11)
         button=QPushButton(QIcon(":/icons/fetch.png"),"Fetch Data", self.mainWidget)
         button.setToolTip(wraptip("Fetch data from the API with the current settings. If you click the button with the control key pressed, a browser window is opened instead."))
-        button.setMinimumSize(QSize(120,40))
+        button.setMinimumSize(QSize(60,40))
         button.setIconSize(QSize(32,32))
         button.clicked.connect(self.guiActions.actionQuery.trigger)
         button.setFont(f)
         fetchdata.addWidget(button,1)
+
+        # -preview button
+        f = QFont()
+        f.setPointSize(11)
+        button = QPushButton(QIcon(":/icons/preview.png"), "Preview Fetching", self.mainWidget)
+        button.setToolTip(wraptip(
+            "Preview fetch data with the current settings. Preview won't affect Nodes View."))
+        button.setMinimumSize(QSize(60, 40))
+        button.setIconSize(QSize(32, 32))
+        button.clicked.connect(self.guiActions.actionQuery.trigger)
+        button.setFont(f)
+        fetchdata.addWidget(button, 1)
 
         #-timer button
         button=QToolButton(self.mainWidget)
