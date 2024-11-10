@@ -724,7 +724,7 @@ class ApiTab(QScrollArea):
 
         return options
 
-    def initInputs(self):
+    def initInputs(self, show_resource=True, show_parameters=True):
         '''
         Create base path edit, resource edit and param edit
         Set resource according to the APIdocs, if any docs are available
@@ -740,10 +740,10 @@ class ApiTab(QScrollArea):
 
         #Resource
         self.resourceLayout = QHBoxLayout()
-        self.actionApiHelp = QAction('Open documentation if available.',self)
+        self.actionApiHelp = QAction('Open documentation if available.', self)
         self.actionApiHelp.setText('?')
         self.actionApiHelp.triggered.connect(self.showDoc)
-        self.buttonApiHelp =QToolButton(self)
+        self.buttonApiHelp = QToolButton(self)
         self.buttonApiHelp.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.buttonApiHelp.setDefaultAction(self.actionApiHelp)
         self.buttonApiHelp.setVisible(False)
@@ -754,11 +754,19 @@ class ApiTab(QScrollArea):
         self.resourceLayout.addWidget(self.resourceEdit)
         self.resourceLayout.addWidget(self.buttonApiHelp)
 
-        self.mainLayout.addRow("Resource", self.resourceLayout)
+        if show_resource:
+            self.mainLayout.addRow("Resource", self.resourceLayout)
+        else:
+            for i in range(self.resourceLayout.count()):
+                widget = self.resourceLayout.itemAt(i).widget()
+                if widget:
+                    widget.setVisible(False)
 
         #Parameters
         self.paramEdit = QParamEdit(self)
-        self.mainLayout.addRow("Parameters", self.paramEdit)
+        if show_parameters:
+            self.mainLayout.addRow("Parameters", self.paramEdit)
+
         self.resourceEdit.currentIndexChanged.connect(self.onChangedResource)
 
     def getFileFolderName(self,options, nodedata):
@@ -975,7 +983,7 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Headers", self.headerEdit)
 
 
-    def initVerbInputs(self):
+    def initVerbInputs(self, payload_label="Payload"):
         # Verb and encoding
         self.verbEdit = QComboBox(self)
         self.verbEdit.addItems(['GET','HEAD','POST','PUT','PATCH','DELETE'])
@@ -1005,13 +1013,22 @@ class ApiTab(QScrollArea):
         self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.payloadLayout.addWidget(self.payloadEdit)
         self.payloadLayout.setStretch(0, 1);
-        
+
         self.multipartEdit = QParamEdit()
         self.payloadLayout.addWidget(self.multipartEdit)
-        self.payloadLayout.setStretch(0, 1);        
+        self.payloadLayout.setStretch(0, 1);
 
-        self.payloadLayout.setStretch(2, 1);    
-        self.mainLayout.addRow("Payload", self.payloadWidget)
+        self.editButton = QToolButton(self)
+        self.editButton.setText("..")
+        self.editButton.clicked.connect(self.openEditDialog)
+        self.payloadLayout.addWidget(self.editButton)
+        self.payloadLayout.setStretch(2, 1);
+
+        self.mainLayout.addRow(payload_label, self.payloadWidget)
+
+    def openEditDialog(self):
+        dialog = EditValueDialog(self)
+        dialog.show(self.payloadEdit)
 
     def verbChanged(self):
         if self.verbEdit.currentText() in ['GET','DELETE','HEAD']:
@@ -1024,6 +1041,7 @@ class ApiTab(QScrollArea):
             self.folderwidget.hide()
             self.mainLayout.labelForField(self.folderwidget).hide()
         else:
+
             self.payloadWidget.show()
             self.mainLayout.labelForField(self.payloadWidget).show()
 
@@ -2604,6 +2622,78 @@ class GenericTab(AuthTab):
     #     url = str(reply.url().toString())
     #     reply.ignoreSslErrors()
     #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
+
+class SparqlTab(AuthTab):
+    def __init__(self, mainWindow=None):
+        super(SparqlTab, self).__init__(mainWindow, "SPARQL")
+
+        #Defaults
+        self.timeout = 60
+        self.defaults['basepath'] = '<Object ID>'
+
+        # Alternate (standard) inputs
+        self.initInputs(show_resource=False, show_parameters=False)
+        self.mainLayout.labelForField(self.basepathEdit).setText("Endpoint URL")
+
+        # Verbs
+        self.initVerbInputs(payload_label="Query (Payload)")
+        self.initUploadFolderInput()
+
+        # Parameter
+        self.mainLayout.addRow("Parameters", self.paramEdit)
+        self.defaults['params'] = {'query': 'SELECT * WHERE {?s ?p ?o}'} # needs fix
+
+        # Header
+        self.initHeaderInputs()
+
+        # Extract input
+        self.initResponseInputs(True)
+
+        self.initFileInputs()
+
+        self.loadDoc()
+        self.loadSettings()
+
+
+    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        options = super(SparqlTab, self).getSettings(purpose)
+
+        if purpose != 'preset':
+            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+
+        return options
+
+
+    def verbChanged(self):
+        if self.verbEdit.currentText() in ['GET', 'DELETE', 'HEAD']:
+            self.paramEdit.show()
+            self.mainLayout.labelForField(self.paramEdit).show()
+
+            self.payloadWidget.hide()
+            self.mainLayout.labelForField(self.payloadWidget).hide()
+
+            self.encodingEdit.hide()
+            self.encodingLabel.hide()
+
+            self.folderwidget.hide()
+            self.mainLayout.labelForField(self.folderwidget).hide()
+        else:
+            self.paramEdit.hide()
+            self.mainLayout.labelForField(self.paramEdit).hide()
+
+            self.payloadWidget.show()
+            self.mainLayout.labelForField(self.payloadWidget).show()
+
+            self.multipartEdit.hide()
+
+            # Folder
+            self.folderwidget.show()
+            self.mainLayout.labelForField(self.folderwidget).show()
+
+
+def openEditDialog(self):
+        dialog = EditValueDialog(self)
+        dialog.show(self.payloadEdit)
 
 
 class FacebookTab(AuthTab):

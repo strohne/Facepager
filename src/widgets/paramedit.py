@@ -349,21 +349,33 @@ class EditValueDialog(QDialog):
         buttons.addWidget(self.applyButton)
         layout.addLayout(buttons)
 
-    def show(self, comboBox):
-        self.comboBox = comboBox
-        self.input.setPlainText(self.comboBox.currentText())
+
+    def show(self, editWidget):
+        self.editWidget = editWidget
+
+        if isinstance(self.editWidget, QComboBox):
+            self.input.setPlainText(self.editWidget.currentText())
+        elif isinstance(self.editWidget, QPlainTextEdit):
+            self.input.setPlainText(self.editWidget.toPlainText())
+
         self.input.setFocus()
 
         super(EditValueDialog, self).show()
 
     def setValue(self):
         value = self.input.toPlainText()
-        self.comboBox.setEditText(value)
+        if isinstance(self.editWidget, QComboBox):
+            self.editWidget.setEditText(value)
+        elif isinstance(self.editWidget, QPlainTextEdit):
+            self.editWidget.setPlainText(value)
         self.accept()
 
     def applyValue(self):
         value = self.input.toPlainText()
-        self.comboBox.setEditText(value)
+        if isinstance(self.editWidget, QComboBox):
+            self.editWidget.setEditText(value)
+        elif isinstance(self.editWidget, QPlainTextEdit):
+            self.editWidget.setPlainText(value)
 
 class ValueEdit(QWidget):
     def __init__(self, parent=None):
