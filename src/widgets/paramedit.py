@@ -315,7 +315,8 @@ class EditValueDialog(QDialog):
     def __init__(self, parent=None):
         super(EditValueDialog, self).__init__(parent, Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)
 
-        self.comboBox = None
+        # The original widget
+        self.editWidget = None
 
         self.setWindowTitle("Edit value")
         self.resize(600, 600)
@@ -405,76 +406,3 @@ class ValueEdit(QWidget):
         if self.moreEditor is None:
             self.moreEditor = EditValueDialog(self)
         self.moreEditor.show(self.comboBox)
-
-# class ValueEdit(QWidget):
-#     def __init__(self,parent):
-#         super(ValueEdit, self).__init__(parent)
-#
-#         self.mainLayout = QHBoxLayout(self)
-#         self.mainLayout.setContentsMargins(5,0,0,0)
-#         self.setLayout(self.mainLayout)
-#
-#         self.comboBox = QComboBox(self)
-#         self.comboBox.setEditable(True)
-#
-#
-#         self.actionEditValue = QAction('...',self)
-#         self.actionEditValue.setText('..')
-#         self.actionEditValue.triggered.connect(self.editValue)
-#
-#         self.button =QToolButton(self)
-#         self.button.setToolButtonStyle(Qt.ToolButtonTextOnly)
-#         self.button.setDefaultAction(self.actionEditValue)
-#
-#         self.mainLayout.addWidget(self.comboBox,2)
-#         self.mainLayout.addWidget(self.button,0)
-#
-#     def editValue(self):
-#         dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)
-#         dialog.setWindowTitle("Edit value")
-#         dialog.resize(600, 600)
-#         layout = QVBoxLayout()
-#         dialog.setLayout(layout)
-#
-#
-#         input = QPlainTextEdit()
-#         input.setMinimumWidth(50)
-#         input.setPlainText(self.comboBox.currentText())
-#         input.setFocus()
-#         layout.addWidget(input)
-#
-#         # buttons
-#         buttons = QDialogButtonBox()
-#
-#         # Add Close button (acts as "OK" button but also closes and applies changes)
-#         close_button = buttons.addButton(QDialogButtonBox.Ok)
-#         close_button.setText("Close")
-#
-#         # Add Apply button
-#         apply_button = buttons.addButton("Apply", QDialogButtonBox.ActionRole)
-#
-#         # Add Cancel button
-#         cancel_button = buttons.addButton(QDialogButtonBox.Cancel)
-#         cancel_button.setText("Cancel")
-#
-#         def setValue():
-#             value = input.toPlainText() #input.toPlainText().splitlines()
-#             self.comboBox.setEditText(value)
-#
-#             dialog.close()
-#
-#         def applyValue():
-#             value = input.toPlainText()
-#             self.comboBox.setEditText(value)
-#
-#         def close():
-#             dialog.close()
-#
-#         # Connect the nested functions above to the dialog-buttons
-#         close_button.clicked.connect(setValue)
-#         apply_button.clicked.connect(applyValue)
-#         cancel_button.clicked.connect(close)
-#
-#         # Add buttons to the layout
-#         layout.addWidget(buttons)
-#         dialog.show()

@@ -228,6 +228,17 @@ class ApiTab(QScrollArea):
         return url
 
     def getPayload(self,payload, params, nodedata,options, logProgress=None):
+        """
+        Encodes the payload
+
+        :param payload:
+        :param params:
+        :param nodedata:
+        :param options:
+        :param logProgress:
+        :return:
+        """
+
         #Return nothing
         if (payload is None) or (payload == ''):            
             return None
@@ -281,10 +292,18 @@ class ApiTab(QScrollArea):
         defaults = self.getDefaultAndDocOptions()
         #options['module'] = self.name
 
-        #options for request
+        # Request options
         try:
             options['basepath'] = self.basepathEdit.currentText().strip()
+        except AttributeError:
+            pass
+
+        try:
             options['resource'] = self.resourceEdit.currentText().strip()
+        except AttributeError:
+            pass
+
+        try:
             options['params'] = self.paramEdit.getParams()
         except AttributeError:
             pass
@@ -294,7 +313,7 @@ class ApiTab(QScrollArea):
         if (options['extension'] != '') and options['resource'].endswith(options['extension']):
             options['extension'] = ''
 
-        #headers and verbs
+        # Headers and verbs
         try:
             options['headers'] = self.headerEdit.getParams()
             options['verb'] = self.verbEdit.currentText().strip()            
@@ -306,13 +325,13 @@ class ApiTab(QScrollArea):
         # if doc_resource == '':
         #     doc_resource = '0'
 
-        #format
+        # Format
         try:
             options['format'] = self.formatEdit.currentText().strip()
         except AttributeError:
             pass
 
-        #payload
+        # Payload
         try:
             if options.get('verb','GET') in ['POST','PUT','PATCH']:
                 options['encoding'] = self.encodingEdit.currentText().strip()
@@ -330,7 +349,7 @@ class ApiTab(QScrollArea):
         except AttributeError:
             pass
 
-        #paging
+        # Paging
         try:
             options['pages'] = self.pagesEdit.value()
         except AttributeError:
@@ -367,7 +386,7 @@ class ApiTab(QScrollArea):
             options.pop('key_paging')
             options.pop('paging_stop')
 
-        #options for data handling
+        # Data handling options
         try:
             options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else defaults.get('nodedata')
             options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else defaults.get('objectid')
@@ -390,7 +409,10 @@ class ApiTab(QScrollArea):
         # Options not saved to preset but to settings
         if purpose != 'preset':
             # query type
-            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()            
+            try:
+                options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
+            except AttributeError:
+                options['querytype'] = self.name
 
             # uploadfolder
             try:
@@ -427,66 +449,76 @@ class ApiTab(QScrollArea):
         return options
 
     def updateBasePath(self, options=None):
-        if options is None:
-            basepath = self.basepathEdit.currentText().strip()
-            options = {'basepath' : basepath}
-        else:
-            basepath = options.get('basepath', '')
-            self.basepathEdit.setEditText(basepath)
+        try:
+            if options is None:
+                basepath = self.basepathEdit.currentText().strip()
+                options = {'basepath' : basepath}
+            else:
+                basepath = options.get('basepath', '')
+                self.basepathEdit.setEditText(basepath)
 
-        index = self.basepathEdit.findText(basepath)
-        if index != -1:
-            self.basepathEdit.setCurrentIndex(index)
+            index = self.basepathEdit.findText(basepath)
+            if index != -1:
+                self.basepathEdit.setCurrentIndex(index)
 
-        # Get general doc
-        apidoc = self.mainWindow.apiWindow.getApiDoc(self.name, basepath)
+            # Get general doc
+            apidoc = self.mainWindow.apiWindow.getApiDoc(self.name, basepath)
 
-        # apidoc = self.basepathEdit.itemData(index, Qt.UserRole)
+            # apidoc = self.basepathEdit.itemData(index, Qt.UserRole)
 
-        # Add endpoints in reverse order
-        self.resourceEdit.clear()
-        if apidoc and isinstance(apidoc, dict):
-            endpoints = apidoc.get("paths", {})
-            paths = endpoints.keys()
-            for path in list(paths):
-                operations = endpoints[path]
-                path = path.replace("{", "<").replace("}", ">")
+            # Add endpoints in reverse order
+            self.resourceEdit.clear()
+            if apidoc and isinstance(apidoc, dict):
+                endpoints = apidoc.get("paths", {})
+                paths = endpoints.keys()
+                for path in list(paths):
+                    operations = endpoints[path]
+                    path = path.replace("{", "<").replace("}", ">")
 
-                self.resourceEdit.addItem(path)
-                idx = self.resourceEdit.count() - 1
-                self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations, "get.summary", "")), Qt.ToolTipRole)
+                    self.resourceEdit.addItem(path)
+                    idx = self.resourceEdit.count() - 1
+                    self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations, "get.summary", "")), Qt.ToolTipRole)
 
-                # store params for later use in onChangedResource
-                self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
+                    # store params for later use in onChangedResource
+                    self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
 
-            self.buttonApiHelp.setVisible(True)
-        else:
-            self.resourceEdit.insertItem(0, "/<Object ID>")
+                self.buttonApiHelp.setVisible(True)
+            else:
+                self.resourceEdit.insertItem(0, "/<Object ID>")
+        except AttributeError:
+            # In case one of the inputs does not exist
+            pass
 
     def updateResource(self, options=None):
-        if options is None:
-            resource = self.resourceEdit.currentText().strip()
-            options = {'resource' : resource}
-        else:
-            resource = options.get('resource', '')
-            self.resourceEdit.setEditText(resource)
+        try:
+            if options is None:
+                resource = self.resourceEdit.currentText().strip()
+            else:
+                resource = options.get('resource', '')
+                self.resourceEdit.setEditText(resource)
 
-        index = self.resourceEdit.findText(resource)
-        if index != -1:
-            self.resourceEdit.setCurrentIndex(index)
+            index = self.resourceEdit.findText(resource)
+            if index != -1:
+                self.resourceEdit.setCurrentIndex(index)
 
+            operations = self.resourceEdit.itemData(index, Qt.UserRole)
+            params = getDictValue(operations, "get.parameters", False) if operations else []
 
-        operations = self.resourceEdit.itemData(index, Qt.UserRole)
-        params = getDictValue(operations, "get.parameters", False) if operations else []
+            # Set param names
+            self.paramEdit.setNameOptionsAll(params)
 
-        # Set param names
-        self.paramEdit.setNameOptionsAll(params)
+        except AttributeError:
+            # In case one of the inputs does not exist
+            pass
 
-    # Populates input fields from loaded options and presets
-    # Select boxes are updated by onChangedBasepath and onChangedResource
-    # based on the API docs.
-    # @settings Dict with options
     def setSettings(self, settings = {}):
+        """
+        Populates input fields from loaded options and presets
+        Select boxes are updated by onChangedBasepath and onChangedResource
+        based on the API docs.
+        :param settings: Dict with options
+        :return:
+        """
 
         # Base path
         options = self.getDefaultAndDocOptions(settings)
@@ -504,7 +536,11 @@ class ApiTab(QScrollArea):
         return options
 
     def updateParams(self, options):
-        self.paramEdit.setParams(options.get('params', ''))
+        try:
+            self.paramEdit.setParams(options.get('params', ''))
+        except AttributeError:
+            # In case one of the inputs does not exist
+            pass
 
     def updateOptions(self, options):
 
@@ -667,11 +703,14 @@ class ApiTab(QScrollArea):
         basepath = self.basepathEdit.currentText().strip()
         apidoc = self.mainWindow.apiWindow.getApiDoc(self.name,basepath)
 
-        # Get response doc
-        resourceidx = self.resourceEdit.findText(self.resourceEdit.currentText())
-        operations = self.resourceEdit.itemData(resourceidx,Qt.UserRole) if resourceidx != -1 else {}
-        schema = getDictValue(operations, "get.responses.200.content.application/json.schema", []) if operations else []
+        # Get response doc from the resourceEdit if a resourceEdit exists
+        try:
+            resourceIdx = self.resourceEdit.findText(self.resourceEdit.currentText())
+            operations = self.resourceEdit.itemData(resourceIdx,Qt.UserRole) if resourceIdx != -1 else {}
+        except AttributeError:
+            operations = {}
 
+        schema = getDictValue(operations, "get.responses.200.content.application/json.schema", []) if operations else []
         options = {}
 
         # Params
@@ -724,21 +763,32 @@ class ApiTab(QScrollArea):
 
         return options
 
-    def initInputs(self, show_resource=True, show_parameters=True):
+    def initBasicInputs(self):
         '''
         Create base path edit, resource edit and param edit
-        Set resource according to the APIdocs, if any docs are available
         '''
 
-        #Base path
+        # Base path
+        self.initBasepathInput()
+        self.initResourceInput()
+        self.initParamsInput()
+
+    def initBasepathInput(self, label="Base path"):
+        '''
+        Create base path edit
+        '''
         self.basepathEdit = QComboBox(self)
         if not self.defaults.get('basepath',None) is None:
             self.basepathEdit.insertItems(0, [self.defaults.get('basepath','')])
         self.basepathEdit.setEditable(True)
-        self.mainLayout.addRow("Base path", self.basepathEdit)
+        self.mainLayout.addRow(label, self.basepathEdit)
         self.basepathEdit.currentIndexChanged.connect(self.onChangedBasepath)
 
-        #Resource
+    def initResourceInput(self):
+        '''
+        Create resource edit.
+        Set resource according to the APIdocs, if any docs are available
+        '''
         self.resourceLayout = QHBoxLayout()
         self.actionApiHelp = QAction('Open documentation if available.', self)
         self.actionApiHelp.setText('?')
@@ -754,20 +804,17 @@ class ApiTab(QScrollArea):
         self.resourceLayout.addWidget(self.resourceEdit)
         self.resourceLayout.addWidget(self.buttonApiHelp)
 
-        if show_resource:
-            self.mainLayout.addRow("Resource", self.resourceLayout)
-        else:
-            for i in range(self.resourceLayout.count()):
-                widget = self.resourceLayout.itemAt(i).widget()
-                if widget:
-                    widget.setVisible(False)
-
-        #Parameters
-        self.paramEdit = QParamEdit(self)
-        if show_parameters:
-            self.mainLayout.addRow("Parameters", self.paramEdit)
-
+        self.mainLayout.addRow("Resource", self.resourceLayout)
+        
         self.resourceEdit.currentIndexChanged.connect(self.onChangedResource)
+
+    def initParamsInput(self):
+        '''
+        Create parameter inputs
+        '''
+        self.paramEdit = QParamEdit(self)
+        self.mainLayout.addRow("Parameters", self.paramEdit)
+        
 
     def getFileFolderName(self,options, nodedata):
         # Folder
@@ -983,7 +1030,7 @@ class ApiTab(QScrollArea):
         self.mainLayout.addRow("Headers", self.headerEdit)
 
 
-    def initVerbInputs(self, payload_label="Payload"):
+    def initVerbInputs(self):
         # Verb and encoding
         self.verbEdit = QComboBox(self)
         self.verbEdit.addItems(['GET','HEAD','POST','PUT','PATCH','DELETE'])
@@ -1016,19 +1063,9 @@ class ApiTab(QScrollArea):
 
         self.multipartEdit = QParamEdit()
         self.payloadLayout.addWidget(self.multipartEdit)
-        self.payloadLayout.setStretch(0, 1);
-
-        self.editButton = QToolButton(self)
-        self.editButton.setText("..")
-        self.editButton.clicked.connect(self.openEditDialog)
-        self.payloadLayout.addWidget(self.editButton)
         self.payloadLayout.setStretch(2, 1);
 
-        self.mainLayout.addRow(payload_label, self.payloadWidget)
-
-    def openEditDialog(self):
-        dialog = EditValueDialog(self)
-        dialog.show(self.payloadEdit)
+        self.mainLayout.addRow("Payload", self.payloadWidget)
 
     def verbChanged(self):
         if self.verbEdit.currentText() in ['GET','DELETE','HEAD']:
@@ -1063,24 +1100,17 @@ class ApiTab(QScrollArea):
             self.folderwidget.show()
             self.mainLayout.labelForField(self.folderwidget).show()                        
 
-    def initResponseInputs(self, format=False):
+    def initResponseInputs(self, format=True):
+        """
+        Create inputs for extraction keys
+
+        :param format: Whether to create a format selector
+        :return:
+        """
         layout= QHBoxLayout()
 
-        if not format:
-            #Extract
-            self.extractEdit = QLineEdit(self)
-            layout.addWidget(self.extractEdit)
-            layout.setStretch(0, 1)
-
-            layout.addWidget(QLabel("Key for Object ID"))
-            self.objectidEdit = QLineEdit(self)
-            layout.addWidget(self.objectidEdit)
-            layout.setStretch(2, 1)
-
-            #Add layout
-            self.extraLayout.addRow("Key to extract", layout)
-        else:
-            # Format
+        # Format
+        if format:
             self.formatEdit = QComboBox(self)
             self.formatEdit.addItems(['json', 'text', 'links','xml','file'])
             self.formatEdit.setToolTip("<p>JSON: default option, data will be parsed as JSON. </p> \
@@ -1089,28 +1119,36 @@ class ApiTab(QScrollArea):
                                         <p>XML: data will be parsed as XML and converted to JSON. </p> \
                                         <p>File: data will only be downloaded to files, specify download folder and filename.</p>")
             layout.addWidget(self.formatEdit)
-            layout.setStretch(0, 0)
             # self.formatEdit.currentIndexChanged.connect(self.formatChanged)
 
-            # Extract
-            layout.addWidget(QLabel("Key to extract"))
-            self.extractEdit = QLineEdit(self)
-            self.extractEdit.setToolTip(wraptip(
-                "If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
-            layout.addWidget(self.extractEdit)
+            layout.setStretch(0, 0)
             layout.setStretch(1, 0)
             layout.setStretch(2, 2)
-
-            layout.addWidget(QLabel("Key for Object ID"))
-            self.objectidEdit = QLineEdit(self)
-            self.objectidEdit.setToolTip(
-                wraptip("If your data contains unique IDs for every node, define the corresponding key."))
-            layout.addWidget(self.objectidEdit)
             layout.setStretch(3, 0)
             layout.setStretch(4, 2)
 
-            # Add layout
-            self.extraLayout.addRow("Response", layout)
+            rowLabel = "Response"
+            layout.addWidget(QLabel("Key to extract"))
+        else:
+            layout.setStretch(0, 1)
+            layout.setStretch(2, 1)
+            rowLabel = "Key to extract"
+
+        # Extract
+        self.extractEdit = QLineEdit(self)
+        self.extractEdit.setToolTip(wraptip(
+            "If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
+        layout.addWidget(self.extractEdit)
+
+
+        layout.addWidget(QLabel("Key for Object ID"))
+        self.objectidEdit = QLineEdit(self)
+        self.objectidEdit.setToolTip(
+            wraptip("If your data contains unique IDs for every node, define the corresponding key."))
+        layout.addWidget(self.objectidEdit)
+
+        # Add layout
+        self.extraLayout.addRow(rowLabel, layout)
 
     @Slot()
     def onChangedBasepath(self, index = None):
@@ -2589,7 +2627,7 @@ class GenericTab(AuthTab):
         self.defaults['basepath'] = '<Object ID>'
 
         # Standard inputs
-        self.initInputs()
+        self.initBasicInputs()
 
         # Header, Verbs
         self.initHeaderInputs()
@@ -2598,7 +2636,7 @@ class GenericTab(AuthTab):
 
         # Extract input
         self.initPagingInputs(True)
-        self.initResponseInputs(True)
+        self.initResponseInputs()
 
         self.initFileInputs()
 
@@ -2614,7 +2652,7 @@ class GenericTab(AuthTab):
         options = super(GenericTab, self).getSettings(purpose)
 
         if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+            options['querytype'] = self.name + ':' + options['basepath'] + options['resource']
 
         return options
 
@@ -2629,72 +2667,96 @@ class SparqlTab(AuthTab):
 
         #Defaults
         self.timeout = 60
-        self.defaults['basepath'] = '<Object ID>'
+        self.defaults['basepath'] = 'https://query.wikidata.org/sparql'
+        self.defaults['params'] = {'query': 'SELECT * WHERE {?s ?p ?o} LIMIT 100'}
 
-        # Alternate (standard) inputs
-        self.initInputs(show_resource=False, show_parameters=False)
-        self.mainLayout.labelForField(self.basepathEdit).setText("Endpoint URL")
+        # Inputs
+        self.initBasepathInput("Endpoint")
+        self.initQueryInput("Query")
+        self.initResponseInputs(False)
 
-        # Verbs
-        self.initVerbInputs(payload_label="Query (Payload)")
-        self.initUploadFolderInput()
-
-        # Parameter
-        self.mainLayout.addRow("Parameters", self.paramEdit)
-        self.defaults['params'] = {'query': 'SELECT * WHERE {?s ?p ?o}'} # needs fix
-
-        # Header
-        self.initHeaderInputs()
-
-        # Extract input
-        self.initResponseInputs(True)
-
-        self.initFileInputs()
-
+        # Load options and settings
         self.loadDoc()
         self.loadSettings()
+        
+    def initQueryInput(self, rowLabel = "Query"):
+        # Payload
+        self.queryWidget = QWidget()
+        self.queryLayout = QHBoxLayout()
+        self.queryLayout.setContentsMargins(0, 0, 0, 0)
+        self.queryWidget.setLayout(self.queryLayout)
 
+        self.queryEdit = QPlainTextEdit()
+        self.queryEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.queryLayout.addWidget(self.queryEdit)
+        self.queryLayout.setStretch(0, 1);
 
-    def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
+        self.queryEditButton = QToolButton(self)
+        self.queryEditButton.setText("..")
+        self.queryEditButton.clicked.connect(self.openQueryEditDialog)
+        self.queryLayout.addWidget(self.queryEditButton)
+        self.queryLayout.setStretch(2, 1);
+
+        self.mainLayout.addRow(rowLabel, self.queryWidget)
+
+        queryValue = getDictValue(self.defaults, 'params.query')
+        self.queryEdit.setPlainText(queryValue)
+
+    def openQueryEditDialog(self):
+        dialog = EditValueDialog(self)
+        dialog.show(self.queryEdit)
+
+    def getSettings(self, purpose='fetch'):
+        """
+        Get the settings
+
+        :param purpose: 'fetch' for fetching data,
+                        'settings' for saving settings when closing the app,
+                        'preset' for saving settings to a preset
+        :return:
+        """
         options = super(SparqlTab, self).getSettings(purpose)
 
+        # We don't have a resource and a format input in the SPARQL tab.
+        # Thus, provide hardwired values. And set the user-agent
+        options['resource'] = ''
+        options['format'] = 'json'
+        options['headers'] = {'User-Agent': 'FACEPAGERBOT/4.5 ([https://github.com/strohne/Facepager](https://github.com/strohne/Facepager)) fp/4.5'}
+
+        # Get the query value
+        queryValue = self.queryEdit.toPlainText()
+
         if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+            # Save the endpoint so we see it later in the exports
+            options['querytype'] = self.name + ':' + options['basepath']
+
+            # Add a LIMIT if not set
+            if not re.search(r'\bLIMIT\b\s+\d+\s*$', queryValue, re.IGNORECASE):
+                queryValue += " LIMIT 100"
+
+
+        # Set query parameters
+        options['params'] = {
+            'query' : queryValue,
+            'format' : 'json'
+        }
 
         return options
 
+    def setSettings(self, settings = {}):
+        """
+        Populates input fields from loaded options and presets
+        :param settings: Dict with options
+        :return:
+        """
 
-    def verbChanged(self):
-        if self.verbEdit.currentText() in ['GET', 'DELETE', 'HEAD']:
-            self.paramEdit.show()
-            self.mainLayout.labelForField(self.paramEdit).show()
+        settings = super(SparqlTab, self).setSettings(settings)
 
-            self.payloadWidget.hide()
-            self.mainLayout.labelForField(self.payloadWidget).hide()
+        # Insert the query parameter value into the query box
+        queryValue = getDictValue(settings, 'params.query')
+        self.queryEdit.setPlainText(queryValue)
 
-            self.encodingEdit.hide()
-            self.encodingLabel.hide()
-
-            self.folderwidget.hide()
-            self.mainLayout.labelForField(self.folderwidget).hide()
-        else:
-            self.paramEdit.hide()
-            self.mainLayout.labelForField(self.paramEdit).hide()
-
-            self.payloadWidget.show()
-            self.mainLayout.labelForField(self.payloadWidget).show()
-
-            self.multipartEdit.hide()
-
-            # Folder
-            self.folderwidget.show()
-            self.mainLayout.labelForField(self.folderwidget).show()
-
-
-def openEditDialog(self):
-        dialog = EditValueDialog(self)
-        dialog.show(self.payloadEdit)
-
+        return settings
 
 class FacebookTab(AuthTab):
     def __init__(self, mainWindow=None):
@@ -2714,7 +2776,7 @@ class FacebookTab(AuthTab):
         self.defaults['login_buttoncaption'] = " Login to Facebook "
 
         # Query Box
-        self.initInputs()
+        self.initBasicInputs()
 
         # Pages Box
         self.initPagingInputs()
@@ -2918,7 +2980,7 @@ class AmazonTab(AuthTab):
         self.defaults['format'] = 'xml'
 
         # Standard inputs
-        self.initInputs()
+        self.initBasicInputs()
 
         # Header, Verbs
         self.initHeaderInputs()
@@ -2926,7 +2988,7 @@ class AmazonTab(AuthTab):
         self.initUploadFolderInput()
 
         # Extract input
-        self.initResponseInputs(True)
+        self.initResponseInputs()
 
         # Pages Box
         self.initPagingInputs(True)
@@ -3132,7 +3194,7 @@ class TwitterTab(AuthTab):
         self.defaults['login_window_caption'] = 'Twitter Login Page'
 
         # Query and Parameter Box
-        self.initInputs()
+        self.initBasicInputs()
         self.initPagingInputs()
 
         self.initAuthSetupInputs()
@@ -3293,7 +3355,7 @@ class TwitterStreamingTab(TwitterTab):
         self.defaults['key_nodedata'] = None
 
         # Query Box
-        self.initInputs()
+        self.initBasicInputs()
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
@@ -3426,7 +3488,7 @@ class YoutubeTab(AuthTab):
         self.defaults['params'] = {'q':'<Object ID>','part':'snippet','maxResults':'50'}
 
         # Standard inputs
-        self.initInputs()
+        self.initBasicInputs()
 
         # Pages Box
         self.initPagingInputs()
