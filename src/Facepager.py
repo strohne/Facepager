@@ -39,6 +39,7 @@ from widgets.datatree import DataTree
 from widgets.dictionarytree import DictionaryTree
 from actions import *
 from apimodules import *
+from monitormodules import *
 from dialogs.help import *
 from widgets.progressbar import ProgressBar
 from dialogs.presets import *
@@ -485,19 +486,21 @@ class MainWindow(QMainWindow):
         button.clicked.connect(self.guiActions.actionTimer.trigger)
         fetchdata.addWidget(button,1)
 
-        #Status
-        detailGroup=QGroupBox("Status Log")
-        groupLayout=QVBoxLayout()
-        detailGroup.setLayout(groupLayout)
-        statusLayout.addWidget(detailGroup,1)
+        #Status/Preview modules
+        self.MonitorTabs = QTabWidget()
+        statusLayout.addWidget(self.MonitorTabs)
 
+        self.status_tab = StatusTab(self)
+        self.loglist = self.status_tab.loglist
+        self.MonitorTabs.addTab(self.status_tab, "Status Log")
 
-        self.loglist=QTextEdit()
-        self.loglist.setLineWrapMode(QTextEdit.NoWrap)
-        self.loglist.setWordWrapMode(QTextOption.NoWrap)
-        self.loglist.acceptRichText=False
-        self.loglist.clear()
-        groupLayout.addWidget(self.loglist)
+        self.MonitorTabs.addTab(PreviewTab(self), "Preview")
+
+        module = self.settings.value('module', False)
+        tab = self.getModule(module)
+        if tab is not None:
+            self.MonitorTabs.setCurrentWidget(tab)
+
 
     def setStyle(self):
         style = self.styleEdit.currentText()

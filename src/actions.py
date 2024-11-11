@@ -542,6 +542,10 @@ class GuiActions(object):
         self.actionQuery = self.dataActions.addAction(QIcon(":/icons/fetch.png"), "Query")
         self.actionQuery.triggered.connect(self.querySelectedNodes)
 
+        self.actionPreview = self.dataActions.addAction(QIcon(":/icons/preview.png"), "Preview")
+        self.actionPreview.setToolTip(wraptip("Preview fetch data with the current settings. Preview won't affect Nodes View."))
+        self.actionPreview.triggered.connect(self.previewSelectedNodes)
+
         self.actionSettings = self.dataActions.addAction(QIcon(":/icons/more.png"), "More settings")
         self.actionSettings.setToolTip(wraptip("Can't get enough? Here you will find even more settings."))
         self.actionSettings.triggered.connect(self.openSettings)
@@ -963,6 +967,10 @@ class GuiActions(object):
             self.openBrowser()
         else:
             self.apiActions.fetchData()
+
+    @Slot()
+    def previewSelectedNodes(self):
+        self.apiActions.fetchData()
 
     @Slot()
     def setupTimer(self):
