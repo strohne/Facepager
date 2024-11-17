@@ -413,6 +413,7 @@ def toDictListTuple(data, key=''):
 
 def getDictValue(data, multikey, dump=True, default=''):
     """Extract value from dict
+
     :param data:
     :param multikey:
     :param dump:
