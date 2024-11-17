@@ -970,7 +970,7 @@ class GuiActions(object):
 
     @Slot()
     def previewSelectedNodes(self):
-        self.apiActions.fetchData()
+        self.previewData()
 
     @Slot()
     def setupTimer(self):
@@ -1050,6 +1050,43 @@ class GuiActions(object):
         if not apimodule.auth_userauthorized and apimodule.auth_preregistered:
             msg = 'You are not authorized, login please!'
             QMessageBox.critical(self.mainWindow, "Not authorized",msg,QMessageBox.StandardButton.Ok)
+            return False
+
+        # Get seed nodes
+        indexes = self.apiActions.getIndexes(options, indexes)
+        index = next(indexes, False)
+        if not index or not index.isValid():
+            return False
+
+        # Prepare job
+        job = self.apiActions.prepareJob(index, options)
+
+        # Open browser
+        def logData(data, options, headers):
+            data = sliceData(data, headers, options)
+
+            # Add data
+            treeindex = job['nodeindex']
+            treenode = treeindex.internalPointer()
+
+            newcount = treenode.appendNodes(data, options, False)
+            if options.get('expand', False):
+                self.mainWindow.tree.setExpanded(treeindex, True)
+
+        apimodule.captureData(job['nodedata'], job['options'], logData, self.mainWindow.logmessage, logProgress=None)
+
+    @Slot()
+    def previewData(self, indexes=None, apimodule=False, options=None):
+        # Check seed nodes
+        if not (self.mainWindow.tree.selectedCount() or self.mainWindow.allnodesCheckbox.isChecked() or (
+                indexes is not None)):
+            return False
+
+        # Get options
+        apimodule, options = self.apiActions.getQueryOptions(apimodule, options)
+        if not apimodule.auth_userauthorized and apimodule.auth_preregistered:
+            msg = 'You are not authorized, login please!'
+            QMessageBox.critical(self.mainWindow, "Not authorized", msg, QMessageBox.StandardButton.Ok)
             return False
 
         # Get seed nodes

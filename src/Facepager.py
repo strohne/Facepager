@@ -474,7 +474,7 @@ class MainWindow(QMainWindow):
             "Preview fetch data with the current settings. Preview won't affect Nodes View."))
         button.setMinimumSize(QSize(60, 40))
         button.setIconSize(QSize(32, 32))
-        button.clicked.connect(self.guiActions.actionQuery.trigger)
+        button.clicked.connect(self.guiActions.actionPreview.trigger)
         button.setFont(f)
         fetchdata.addWidget(button, 1)
 
