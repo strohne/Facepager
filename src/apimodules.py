@@ -2668,34 +2668,16 @@ class SparqlTab(AuthTab):
         #Defaults
         self.timeout = 60
         self.defaults['basepath'] = 'https://query.wikidata.org/sparql'
-        self.defaults['method'] = 'GET'
         self.defaults['params'] = {'query': 'SELECT * WHERE {?s ?p ?o} LIMIT 100'}
 
         # Inputs
         self.initBasepathInput("Endpoint")
-        self.initMethodInput("Method")
         self.initQueryInput("Query")
         self.initResponseInputs(False)
 
         # Load options and settings
         self.loadDoc()
         self.loadSettings()
-
-    def initMethodInput(self, rowLabel="Method"):
-        # Verb
-        self.methodWidget = QWidget()
-        self.methodLayout = QHBoxLayout()
-        self.methodLayout.setContentsMargins(0, 0, 0, 0)
-        self.methodWidget.setLayout(self.methodLayout)
-
-        self.methodDropdown = QComboBox()
-        self.methodDropdown.addItems(["GET", "POST"])
-        self.methodLayout.addWidget(self.methodDropdown)
-
-        self.mainLayout.addRow(rowLabel, self.methodWidget)
-
-        methodValue = getDictValue(self.defaults, 'method')
-        self.methodDropdown.setCurrentText(methodValue)
 
     def initQueryInput(self, rowLabel = "Query"):
         # Payload
@@ -2734,14 +2716,12 @@ class SparqlTab(AuthTab):
         :return:
         """
         options = super(SparqlTab, self).getSettings(purpose)
-        method = self.methodDropdown.currentText()
 
         # We don't have a resource and a format input in the SPARQL tab.
         # Thus, provide hardwired values. And set the user-agent
         options['resource'] = ''
         options['format'] = 'json'
         options['headers'] = {'User-Agent': 'FACEPAGERBOT/4.5 ([https://github.com/strohne/Facepager](https://github.com/strohne/Facepager)) fp/4.5'}
-        options['method'] = method
 
         # Get the query value
         queryValue = self.queryEdit.toPlainText()
@@ -2754,16 +2734,11 @@ class SparqlTab(AuthTab):
             if not re.search(r'\bLIMIT\b\s+\d+\s*$', queryValue, re.IGNORECASE):
                 queryValue += " LIMIT 100"
 
-        if method == 'GET':
-            # Set query parameters for GET request
-            options['params'] = {
-                'query' : queryValue,
-                'format' : 'json'
-            }
-        elif method == 'POST':
-            # Set query parameters for POST request
-            options['payload'] = queryValue
-            options['headers']['Content-Type'] = 'application/sparql-query'
+        # Set query parameters for GET request
+        options['params'] = {
+            'query' : queryValue,
+            'format' : 'json'
+        }
 
         return options
 
@@ -2773,15 +2748,11 @@ class SparqlTab(AuthTab):
         :param settings: Dict with options
         :return:
         """
-
         settings = super(SparqlTab, self).setSettings(settings)
 
         # Insert the query parameter value into the query box
         queryValue = getDictValue(settings, 'params.query')
         self.queryEdit.setPlainText(queryValue)
-
-        methodValue = getDictValue(settings, 'method', default="GET")
-        self.methodDropdown.setCurrentText(methodValue)
 
         return settings
 
