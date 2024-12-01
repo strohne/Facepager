@@ -1098,7 +1098,7 @@ class GuiActions(object):
         # Prepare job
         job = self.apiActions.prepareJob(index, options)
 
-        # Open browser
+        # Open Preview
         def logData(data, options, headers):
             data = sliceData(data, headers, options)
 
@@ -1110,8 +1110,7 @@ class GuiActions(object):
             if options.get('expand', False):
                 self.mainWindow.tree.setExpanded(treeindex, True)
 
-        apimodule.captureData(job['nodedata'], job['options'], logData, self.mainWindow.logmessage, logProgress=None)
-
+        apimodule.passPreview(job['nodedata'], job['options'], logData, self.mainWindow.logmessage, logProgress=None)
     @Slot()
     def treeNodeSelected(self, current):
         #show details

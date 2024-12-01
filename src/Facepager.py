@@ -242,7 +242,7 @@ class MainWindow(QMainWindow):
 
         #
         # Settings widget
-        #s
+        #
 
         self.settingsWidget = QWidget()
         self.settingsLayout = QFormLayout()
@@ -488,19 +488,20 @@ class MainWindow(QMainWindow):
         fetchdata.addWidget(button,1)
 
         #Status/Preview modules
-        self.MonitorTabs = QTabWidget()
-        statusLayout.addWidget(self.MonitorTabs)
+        self.monitorTabs = QTabWidget()
+        statusLayout.addWidget(self.monitorTabs)
 
         self.status_tab = StatusTab(self)
         self.loglist = self.status_tab.loglist
-        self.MonitorTabs.addTab(self.status_tab, "Status Log")
+        self.monitorTabs.addTab(self.status_tab, "Status Log")
 
-        self.MonitorTabs.addTab(PreviewTab(self), "Preview")
+        self.preview_tab = PreviewTab(self)
+        self.monitorTabs.addTab(self.preview_tab, "Preview")
 
         module = self.settings.value('module', False)
         tab = self.getModule(module)
         if tab is not None:
-            self.MonitorTabs.setCurrentWidget(tab)
+            self.monitorTabs.setCurrentWidget(tab)
 
 
     def setStyle(self):

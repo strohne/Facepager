@@ -38,6 +38,7 @@ from dialogs.webdialog import PreLoginWebDialog, LoginWebDialog, BrowserDialog, 
 from server import LoginServer
 from widgets.paramedit import *
 from utilities import *
+from monitormodules import PreviewTab
 
 try:
     from credentials import *
@@ -1667,6 +1668,51 @@ class ApiTab(QScrollArea):
         #     options['querytime'] = str(datetime.now())
         #     options['querystatus'] = status
         #     logData(data, options, headers)
+
+        return True
+
+    @Slot()
+    def passPreview(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
+        session_no = options.get('threadnumber', 0)
+        self.connected = True
+
+        # Init pagination
+        options = self.initPagingOptions(nodedata, options)
+        if options is None:
+            return False
+
+        # File settings
+        foldername, filename, fileext = self.getFileFolderName(options, nodedata)
+
+        format = options.get('format', 'json')
+        if format == 'file':
+            if (foldername is None) or (not os.path.isdir(foldername)):
+                raise Exception("Folder does not exists, select download folder, please!")
+
+        # Build url
+        method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
+
+        if not urlpath:
+            logMessage("Empty path, node {0} skipped.".format(nodedata['objectid']))
+            return False
+
+        if not urlpath.startswith(('https://', 'http://', 'file://')):
+            logMessage("Http or https missing in path, node {0} skipped.".format(nodedata['objectid']))
+            return False
+
+        if options['logrequests']:
+            logpath = self.getLogURL(urlpath, urlparams, options)
+            logMessage("Previewing data for {0} from {1}".format(nodedata['objectid'], logpath))
+
+        # Show Preview
+        self.previewTab = PreviewTab(self.mainWindow)
+        self.previewTab.logMessage.connect(logMessage)
+        # self.previewTab.activateCaptureButton(logData)
+        url = urlpath + '?' + urllib.parse.urlencode(urlparams)
+        self.previewTab.loadPage(url, requestheaders, options, foldername, filename, fileext)
+
+        # Automatically switch to preview tab
+        self.mainWindow.monitorTabs.setCurrentWidget(self.previewTab)
 
         return True
 
