@@ -384,6 +384,7 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
         self.RequestTabs.addTab(FacebookTab(self), "Facebook")
         self.RequestTabs.addTab(AmazonTab(self),"Amazon")
+        self.RequestTabs.addTab(SparqlTab(self),"SPARQL")
         self.RequestTabs.addTab(GenericTab(self),"Generic")
 
         module = self.settings.value('module',False)
