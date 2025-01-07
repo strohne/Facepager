@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from xmljson import BadgerFish
 import io
 import pyjsparser
+import rdflib
 
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
@@ -644,6 +645,17 @@ def elementToJson(element, context=True):
     return out
 
 
+def extractTriples(data, format='turtle'):
+    g = rdflib.Graph()
+    g.parse(data=data, format=format)
+
+    triples = [{
+        'subject': str(triple[0]),
+        'predicate': str(triple[1]),
+        'object': str(triple[2])
+    } for triple in g]
+
+    return triples
 
 def extractLinks(data,baseurl,parseurl=True):
     links = []
@@ -663,6 +675,8 @@ def extractLinks(data,baseurl,parseurl=True):
         links.append(link)
 
     return links, base
+
+
 
 urlcache = {}
 def extractURLparts(url_absolut,prefix="url_",usecache=False):

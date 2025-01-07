@@ -1113,7 +1113,7 @@ class ApiTab(QScrollArea):
         # Format
         if format:
             self.formatEdit = QComboBox(self)
-            self.formatEdit.addItems(['json', 'text', 'links','xml','file'])
+            self.formatEdit.addItems(['json', 'text', 'links','xml','file','rdf','ttl','json-ld'])
             self.formatEdit.setToolTip("<p>JSON: default option, data will be parsed as JSON. </p> \
                                         <p>Text: data will not be parsed and embedded in JSON. </p> \
                                         <p>Links: data will be parsed as xml and links will be extracted (set key to extract to 'links' and key for Object ID to 'url'). </p> \
@@ -1480,14 +1480,6 @@ class ApiTab(QScrollArea):
                 if file is not None:
                     file.close()
 
-            # if file is not None:
-            #     try:
-            #         for chunk in response.iter_content(1024):
-            #             file.write(chunk)
-            #     finally:
-            #         file.close()
-
-
             return (fullfilename, out)
 
         #Throttle speed
@@ -1556,55 +1548,12 @@ class ApiTab(QScrollArea):
                     data['filename'] = os.path.basename(fullfilename)
                     data['filepath'] = fullfilename
 
-                # Text
-                if format == 'text':
-                        data['text'] = content  # str(response.text)
-
-                 # Scrape links
-                elif format == 'links':
-                    try:
-                        links, base = extractLinks(content, response.url)
-                        data['links'] = links
-                        data['base'] = base
-                    except Exception as  e:
-                        data['error'] = 'Could not extract Links.'
-                        data['message'] = str(e)
-                        data['response'] = content
-
-                # JSON
-                elif format == 'json':
-                    try:
-                        data = json.loads(content) if content != '' else []
-                    except Exception as e:
-                        # self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
-                        # try:
-                        #     data = xmlToJson(response.text)
-                        # except:
-                        data = {
-                            'error': 'Data could not be converted to JSON',
-                            'response': content,
-                            'exception':str(e)
-                        }
-
-                # JSON
-                elif format == 'xml':
-                    try:
-                        data = xmlToJson(content)
-                    except Exception as e:
-                        data = {
-                            'error': 'Data could not be converted to JSON',
-                            'response': content,
-                            'exception':str(e)
-                        }
-
+                data = self.postProcessData(data, content, response, format)
 
             except Exception as e:
-            #except (DataTooBigError, HTTPError, ReadTimeout, ConnectionError, InvalidURL, MissingSchema) as e:
                 status = 'request error'
                 data = {'error':str(e)}
                 headers = {}
-
-                #raise Exception("Request Error: {0}".format(str(e)))
         finally:
             if response is not None:
                 response.close()
@@ -1621,6 +1570,81 @@ class ApiTab(QScrollArea):
 
         #self.response.raw._fp.close()
         #self.response.close()
+
+    def postProcessData(self, data, content, response, format):
+        """
+        Post process data, e.g. by extracting links or format conversions
+
+        :param data:
+        :param content:
+        :param response:
+        :return:
+        """
+        # Text
+        if format == 'text':
+            data['text'] = content
+
+        # Scrape links
+        elif format == 'links':
+            try:
+                links, base = extractLinks(content, response.url)
+                data['links'] = links
+                data['base'] = base
+            except Exception as e:
+                data['error'] = 'Could not extract links.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # Get triples
+        elif format == 'ttl':
+            try:
+                data['triples'] = extractTriples(content, 'turtle')
+            except Exception as e:
+                data['error'] = 'Could not extract triples.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # Get triples
+        elif format == 'rdf':
+            try:
+                data['triples'] = extractTriples(content, 'xml')
+            except Exception as e:
+                data['error'] = 'Could not extract triples.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # Get triples
+        elif format == 'json-ld':
+            try:
+                data['triples'] = extractTriples(content, 'json-ld')
+            except Exception as e:
+                data['error'] = 'Could not extract triples.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # JSON
+        elif format == 'json':
+            try:
+                data = json.loads(content) if content != '' else []
+            except Exception as e:
+                data = {
+                    'error': 'Data could not be converted to JSON',
+                    'response': content,
+                    'exception': str(e)
+                }
+
+        # JSON
+        elif format == 'xml':
+            try:
+                data = xmlToJson(content)
+            except Exception as e:
+                data = {
+                    'error': 'Data could not be converted to JSON',
+                    'response': content,
+                    'exception': str(e)
+                }
+
+        return data
 
     @Slot()
     def captureData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
