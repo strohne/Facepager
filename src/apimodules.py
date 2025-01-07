@@ -2673,6 +2673,7 @@ class SparqlTab(AuthTab):
         # Inputs
         self.initBasepathInput("Endpoint")
         self.initQueryInput("Query")
+        self.initPagingInputs(True)
         self.initResponseInputs(False)
 
         # Load options and settings
