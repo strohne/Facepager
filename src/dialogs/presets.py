@@ -15,6 +15,7 @@ import platform
 from widgets.dictionarytree import DictionaryTree
 from widgets.progressbar import ProgressBar
 from utilities import *
+from settings import settings
 
 class PresetWindow(QDialog):
     logmessage = Signal(str)
@@ -290,7 +291,7 @@ class PresetWindow(QDialog):
 
             self.detailName.setText(data.get('name'))
             self.detailModule.setText(data.get('module'))
-            self.detailDescription.setText(data.get('description')+"\n")
+            self.detailDescription.setText(data.get('description', '')+"\n")
             self.detailOptions.setHtml(formatdict(data.get('options',[])))
             self.detailColumns.setText("\r\n".join(data.get('columns', [])))
             self.detailSpeed.setText(str(data.get('speed','')))
@@ -339,8 +340,8 @@ class PresetWindow(QDialog):
         :param data: A dict with the keys module and category
         :return: A PresetWidgetItem() with the iscategory property set to True
         """
-        module = data.get('module','')
-        category = data.get('category','')
+        module = data.get('module')
+        category = data.get('category')
 
         if not category in self.categoryNodes:
             categoryItem = PresetWidgetItem()
@@ -380,11 +381,11 @@ class PresetWindow(QDialog):
     def addPipelineItem(self, parentItem, data, default):
         if data.get('type','preset') == 'pipeline':
             pipelineData = data
-            pipelineData['category'] = data.get('category', '')
+            pipelineData['category'] = data.get('category', 'No category')
             pipelineData['caption'] = data.get('name', '')
         else:
             pipelineData = {}
-            pipelineData['category'] = data.get('category','')
+            pipelineData['category'] = data.get('category','No category')
             pipelineData['caption'] = data.get('pipeline','')
 
         if default:
@@ -401,6 +402,7 @@ class PresetWindow(QDialog):
                 pipelineItem.setForeground(0, QBrush(QColor("darkblue")))
             pipelineItem.setData(0, Qt.UserRole, pipelineData)
             parentItem.addChild(pipelineItem)
+            pipelineCategory[pipelineData['caption']] = pipelineItem
         else:
             pipelineItem = pipelineCategory[pipelineData['caption']]
             if data.get('type', 'preset') == 'pipeline':
@@ -420,9 +422,10 @@ class PresetWindow(QDialog):
             data['folder'] = folder
             data['default'] = default
             data['online'] = online
+            data['type'] = data.get('type', 'preset')
 
             # First level: category
-            data['category'] = data.get('category', '')
+            data['category'] = data.get('category', 'No category')
             if (data['category'] == ''):
                 if (data.get('module') in ['Generic', 'Files']):
                     try:
@@ -436,7 +439,7 @@ class PresetWindow(QDialog):
             categoryItem = self.addCategoryItem(data, default)
 
             # Pipelines on second level
-            if data.get('pipline', '') != '':
+            if data.get('pipeline', '') != '':
                 parentItem = self.addPipelineItem(categoryItem, data, default)
             else:
                 parentItem = categoryItem
@@ -491,14 +494,14 @@ class PresetWindow(QDialog):
             tmp = TemporaryDirectory(suffix='FacepagerDefaultPresets')
             try:
                 #Download
-                files = requests.get("https://api.github.com/repos/strohne/Facepager/contents/presets").json()
+                files = requests.get(settings.get("presetUrl")).json()
                 files = [f['path'] for f in files if f['path'].endswith(tuple(self.presetSuffix))]
                 self.progressMax.emit(len(files))
 
                 for filename in files:
                     if self.progress.wasCanceled:
                         raise Exception(f"Downloading default presets was canceled by you.")
-                    response = requests.get("https://raw.githubusercontent.com/strohne/Facepager/master/"+filename)
+                    response = requests.get(settings.get("repoUrl") + filename)
                     if response.status_code != 200:
                         raise Exception(f"GitHub is not available (status code {response.status_code})")
                     with open(os.path.join(tmp.name, os.path.basename(filename)), 'wb') as f:
@@ -581,12 +584,12 @@ class PresetWindow(QDialog):
         for i in range(root.childCount()):
             item = root.child(i)
             data = item.data(0, Qt.UserRole)
-            categories.append(data.get('category', ''))
+            categories.append(data.get('category', 'No category'))
 
         return categories
 
     def getPipelines(self):
-        pipelines = []
+        pipelines = ['']
 
         root = self.presetList.invisibleRootItem()
         for i in range(root.childCount()):
@@ -694,7 +697,7 @@ class PresetWindow(QDialog):
 
         self.currentData = data if data is not None else {}
         self.currentFilename = self.currentData.get('filename',None)
-        itemType = self.currentData.get('type','item')
+        itemType = self.currentData.get('type','preset')
 
         if self.currentFilename is None:
             dialog.setWindowTitle("New {0}".format(itemType))
@@ -710,21 +713,21 @@ class PresetWindow(QDialog):
 
         label=QLabel("<b>Category</b>")
         layout.addWidget(label)
-        category= QComboBox(self)
-        category.addItems(self.getCategories())
-        category.setEditable(True)
-        category.setCurrentText(self.currentData.get('category',''))
-        layout.addWidget(category,0)
+        categoryWidget = QComboBox(self)
+        categoryWidget.addItems(self.getCategories())
+        categoryWidget.setEditable(True)
+        categoryWidget.setCurrentText(self.currentData.get('category','No category'))
+        layout.addWidget(categoryWidget,0)
 
         if itemType == 'preset':
             label=QLabel("<b>Pipeline</b>")
             layout.addWidget(label)
-            pipeline= QComboBox(self)
-            pipeline.addItems(self.getPipelines())
-            pipeline.setCurrentIndex(pipeline.findText(self.currentData.get('pipeline', '')))
-            layout.addWidget(pipeline,0)
+            pipelineWidget = QComboBox(self)
+            pipelineWidget.addItems(self.getPipelines())
+            pipelineWidget.setCurrentIndex(pipelineWidget.findText(self.currentData.get('pipeline', '')))
+            layout.addWidget(pipelineWidget,0)
         else:
-            pipeline = None
+            pipelineWidget = None
 
         label=QLabel("<b>Description</b>")
         layout.addWidget(label)
@@ -755,10 +758,17 @@ class PresetWindow(QDialog):
         dialog.setLayout(layout)
 
         def save():
+            if pipelineWidget:
+                pipelineName = pipelineWidget.currentText()
+                if pipelineName == '':
+                    pipelineName = None
+            else:
+                pipelineName = None
+
             data_meta = {
                     'name':name.text(),
-                    'category':category.currentText(),
-                    'pipeline': pipeline.currentText() if pipeline is not None else None,
+                    'category':categoryWidget.currentText(),
+                    'pipeline': pipelineName,
                     'description':description.toPlainText()
             }
             self.currentData.update(data_meta)
@@ -778,7 +788,7 @@ class PresetWindow(QDialog):
                         self.currentData.update(data_settings)
 
             # Sanitize and reorder
-            keys = ['name', 'category', 'pipeline', 'description', 'module', 'options', 'speed', 'saveheaders','timeout','maxsize','columns']
+            keys = ['name', 'category','type', 'pipeline', 'description', 'module', 'options', 'speed', 'saveheaders','timeout','maxsize','columns']
             self.currentData = {k: self.currentData.get(k, None) for k in keys}
 
             # Create folder
@@ -792,11 +802,11 @@ class PresetWindow(QDialog):
                     os.remove(filepath)
 
             # Save new file
-            catname = category.currentText() if category.currentText() != "" else self.mainWindow.RequestTabs.currentWidget().name
-            self.currentFilename = self.uniqueFilename(catname+"-"+name.text())
+            category = self.currentData.get('category', 'No category')
+            self.currentFilename = self.uniqueFilename(category+"-"+name.text())
 
             with open(os.path.join(self.presetFolder,self.currentFilename), 'w') as outfile:
-                json.dump(self.currentData, outfile,indent=2, separators=(',', ': '))
+                json.dump(self.currentData, outfile, indent=2, separators=(',', ': '))
 
             dialog.close()
             return True

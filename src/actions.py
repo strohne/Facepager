@@ -377,8 +377,10 @@ class ApiActions(object):
 
         # Set columns
         columns = list(dict.fromkeys(columns))
-        self.mainWindow.fieldList.setPlainText("\n".join(columns))
-        self.showColumns()
+        if columns is not None:
+            self.mainWindow.fieldList.setPlainText("\n".join(columns))
+            self.mainWindow.guiActions.showColumns()
+
 
 
 
