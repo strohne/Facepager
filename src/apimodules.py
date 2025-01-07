@@ -2743,10 +2743,9 @@ class SparqlTab(AuthTab):
         """
         options = super(SparqlTab, self).getSettings(purpose)
 
-        # We don't have a resource and a format input in the SPARQL tab.
+        # We don't have a resource input in the SPARQL tab.
         # Thus, provide hardwired values. And set the user-agent
         options['resource'] = ''
-        options['format'] = 'json'
         options['headers'] = {'User-Agent': settings.get('userAgent')}
 
         # Get the query value
@@ -2764,7 +2763,7 @@ class SparqlTab(AuthTab):
         # Set query parameters
         options['params'] = {
             'query' : queryValue,
-            'format' : 'json'
+            'format' : self.formatEdit.currentText().strip()
         }
 
         return options
