@@ -15,7 +15,7 @@ import platform
 from widgets.dictionarytree import DictionaryTree
 from widgets.progressbar import ProgressBar
 from utilities import *
-from settings import settings
+from settings import *
 
 class PresetWindow(QDialog):
     logmessage = Signal(str)

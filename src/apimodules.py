@@ -38,6 +38,7 @@ from dialogs.webdialog import PreLoginWebDialog, LoginWebDialog, BrowserDialog, 
 from server import LoginServer
 from widgets.paramedit import *
 from utilities import *
+from settings import *
 
 try:
     from credentials import *
@@ -2722,7 +2723,7 @@ class SparqlTab(AuthTab):
         # Thus, provide hardwired values. And set the user-agent
         options['resource'] = ''
         options['format'] = 'json'
-        options['headers'] = {'User-Agent': 'FACEPAGERBOT/4.5 ([https://github.com/strohne/Facepager](https://github.com/strohne/Facepager)) fp/4.5'}
+        options['headers'] = {'User-Agent': settings.get('userAgent')}
 
         # Get the query value
         queryValue = self.queryEdit.toPlainText()
