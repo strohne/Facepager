@@ -490,28 +490,52 @@ class PresetWindow(QDialog):
             if not silent:
                 self.progressShow.emit()
 
+            # Create folder
+            if not os.path.exists(self.presetFolderDefault):
+                os.makedirs(self.presetFolderDefault)
+
+            # Lock file handling
+            lockedShas = {}
+            newShas = {}
+            lock_file_path = os.path.join(self.presetFolderDefault, 'presets.lock')
+            if not os.path.exists(lock_file_path):
+                open(lock_file_path, 'w').close()
+            else:
+                with open(lock_file_path, 'r') as file:
+                    lockedShas = {line.strip().split(' ', 1)[1]: line.strip().split(' ', 1)[0] for line in
+                                     file.readlines()}
+
             # Create temporary download folder
             tmp = TemporaryDirectory(suffix='FacepagerDefaultPresets')
             try:
                 #Download
-                files = requests.get(settings.get("presetUrl")).json()
-                files = [f['path'] for f in files if f['path'].endswith(tuple(self.presetSuffix))]
+                files = requests.get(settings.get("presetListUrl")).json()
+                files = [f for f in files if f['path'].endswith(tuple(self.presetSuffix))]
                 self.progressMax.emit(len(files))
 
-                for filename in files:
+                for fileInfo in files:
                     if self.progress.wasCanceled:
                         raise Exception(f"Downloading default presets was canceled by you.")
-                    response = requests.get(settings.get("repoUrl") + filename)
-                    if response.status_code != 200:
-                        raise Exception(f"GitHub is not available (status code {response.status_code})")
-                    with open(os.path.join(tmp.name, os.path.basename(filename)), 'wb') as f:
-                        f.write(response.content)
+
+                    sha = fileInfo['sha']
+                    filename = fileInfo['path']
+                    basename = os.path.basename(filename)
+
+                    tmpPath = os.path.join(tmp.name, basename)
+                    targetPath = os.path.join(self.presetFolderDefault, basename)
+
+                    if sha not in lockedShas.values() or lockedShas.get(basename) != sha:
+                        response = requests.get(settings.get("presetFileUrl") + filename)
+                        if response.status_code != 200:
+                            raise Exception(f"GitHub is not available (status code {response.status_code})")
+                        with open(tmpPath, 'wb') as f:
+                            f.write(response.content)
+                        newShas[basename] = sha
+                    elif os.path.exists(targetPath):
+                        shutil.copyfile(targetPath, tmpPath)
+                        newShas[basename] = sha
 
                     self.progressStep.emit()
-
-                #Create folder
-                if not os.path.exists(self.presetFolderDefault):
-                    os.makedirs(self.presetFolderDefault)
 
                 #Clear folder
                 for filename in os.listdir(self.presetFolderDefault):
@@ -519,7 +543,12 @@ class PresetWindow(QDialog):
 
                 # Move files from tempfolder
                 for filename in os.listdir(tmp.name):
-                    shutil.move(os.path.join(tmp.name,filename), self.presetFolderDefault)
+                    shutil.move(os.path.join(tmp.name, filename), self.presetFolderDefault)
+
+                # Update the lock file to reflect actual directory contents
+                with open(lock_file_path, 'w') as file:
+                    for filename, sha in newShas.items():
+                        file.write(f"{sha} {filename}\n")
 
                 self.logmessage.emit("Default presets downloaded from GitHub.")
             except Exception as e:
