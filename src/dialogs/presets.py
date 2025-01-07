@@ -355,8 +355,7 @@ class PresetWindow(QDialog):
         :param data: A dict with the keys module and category
         :return: A PresetWidgetItem() with the iscategory property set to True
         """
-        module = data.get('module')
-        category = data.get('category')
+        category = data.get('category', 'No category')
 
         if not category in self.categoryNodes:
             categoryItem = PresetWidgetItem()
@@ -366,8 +365,10 @@ class PresetWindow(QDialog):
             ft.setWeight(QFont.Bold)
             categoryItem.setFont(0, ft)
 
-            categoryItem.setData(0, Qt.UserRole,
-                                 {'iscategory': True, 'name': module, 'category': category, 'type': 'category'})
+            categoryItem.setData(
+                0, Qt.UserRole,
+                {'iscategory': True, 'name': category, 'category': category, 'type': 'category'}
+            )
 
             self.presetList.addTopLevelItem(categoryItem)
             self.categoryNodes[category] = categoryItem
@@ -433,7 +434,18 @@ class PresetWindow(QDialog):
 
         return pipelineItem
 
-    def addItem(self,folder,filename,default=False,online=False):
+    def addItem(self, folder, filename, parentItem = None, default=False, online=False):
+        """
+        Add a new item to the preset tree widget
+
+        :param folder: The folder with the preset or pipeline file (default or custom presets folder)
+        :param filename: The preset or pipeline file name
+        :param parentItem: The parent item in the tree widget (for presets within a pipeline).
+                       If None, the parent is automatically determined.
+        :param default: Whether this is a preset or pipeline shipped with Facepager
+        :param online: Whether folder and filename together are a download URL
+        :return:
+        """
         try:
             if online:
                 data= requests.get(folder+filename).json()
@@ -448,7 +460,15 @@ class PresetWindow(QDialog):
             data['type'] = data.get('type', 'preset')
 
             # First level: category
-            data['category'] = data.get('category', 'No category')
+            if parentItem is None:
+                data['category'] = data.get('category', 'No category')
+            else:
+                parentData = parentItem.data(0, Qt.UserRole)
+                data['category'] = parentData.get('category', 'No category')
+                if parentData.get('type','') == 'pipeline':
+                    data['pipeline'] = parentData.get('name')
+
+
             if (data['category'] == ''):
                 if (data.get('module') in ['Generic', 'Files']):
                     try:
@@ -462,10 +482,11 @@ class PresetWindow(QDialog):
             categoryItem = self.addCategoryItem(data, default)
 
             # Pipelines on second level
-            if data.get('pipeline', '') != '':
-                parentItem = self.addPipelineItem(categoryItem, data, default)
-            else:
-                parentItem = categoryItem
+            if parentItem is None:
+                if (data.get('pipeline', '') != '') and (data.get('pipeline', '') is not None):
+                    parentItem = self.addPipelineItem(categoryItem, data, default)
+                else:
+                    parentItem = categoryItem
 
             # Presets on second (standalone) or third (in pipeline) level
             if data.get('type', 'preset') == 'pipeline':
@@ -609,7 +630,7 @@ class PresetWindow(QDialog):
         if os.path.exists(self.presetFolderDefault):
             files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
-                newitem = self.addItem(self.presetFolderDefault,filename,True)
+                newitem = self.addItem(self.presetFolderDefault,filename,None, True)
                 if self.lastSelected is not None and (self.lastSelected == os.path.join(self.presetFolderDefault,filename)):
                     selectitem = newitem
 
@@ -908,17 +929,26 @@ class PresetWindow(QDialog):
         if data.get('type','preset') == 'category':
             return False
 
-        filename = self.editItem(data)
+        itemFilename = self.editItem(data)
 
-        if filename is not None:
-            newItem = self.addItem(self.presetFolder,filename)
+        # Reload
+        if itemFilename is not None:
 
+            # Remove children
+            reloadFiles = []
             while (item.childCount() > 0):
-                child = item.child(0)
-                item.removeChild(child)
-                newItem.addChild(child)
+                childItem = item.child(0)
+                childData = childItem.data(0,Qt.UserRole)
+                reloadFiles.append(childData.get('filename'))
+                item.removeChild(childItem)
 
+            # Re-add item
             item.parent().removeChild(item)
+            newItem = self.addItem(self.presetFolder, itemFilename)
+
+            # Reload children
+            for childFilename in reloadFiles:
+                self.addItem(self.presetFolder, childFilename, newItem)
 
             self.presetList.sortItems(0,Qt.AscendingOrder)
             self.presetList.setCurrentItem(newItem,0)
@@ -928,19 +958,7 @@ class PresetWidgetItem(QTreeWidgetItem):
         data1 = self.data(0,Qt.UserRole)
         data2 = other.data(0,Qt.UserRole)
 
-        if data1.get('iscategory') and data2.get('iscategory'):
-            #order = ['Facebook','YouTube','Twitter','Twitter Streaming','Amazon','Files','Generic']
-            # if data1.get('name','') in order and data2.get('name','') in order:
-            #     if data1.get('name','') == data2.get('name',''):
-            #         return data1.get('category','') < data2.get('category','')
-            #     else:
-            #         return order.index(data1.get('name','')) < order.index(data2.get('name',''))
-            #
-            # elif (data1.get('name','') in order) != (data2.get('name','') in order):
-            #     return data1.get('name','') in order
-            # else:
-            return data1.get('category','').lower()  < data2.get('category','').lower()
-        elif data1.get('default',False) != data2.get('default',False):
+        if data1.get('default',False) != data2.get('default',False):
             return data1.get('default',False)
         else:
             return data1.get('name','').lower() < data2.get('name','').lower()
