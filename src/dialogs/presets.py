@@ -65,21 +65,25 @@ class PresetWindow(QDialog):
         self.categoryWidget.setAutoFillBackground(True)
 
 
-        self.categoryLayout=QVBoxLayout()
-        #self.categoryLayout.setContentsMargins(0, 0, 0, 0)
-        self.categoryWidget.setLayout(self.categoryLayout)
+        self.pipelineLayout=QVBoxLayout()
+        #self.pipelineLayout.setContentsMargins(0, 0, 0, 0)
+        self.categoryWidget.setLayout(self.pipelineLayout)
 
-        self.categoryView=QScrollArea()
-        self.categoryView.setWidgetResizable(True)
-        self.categoryView.setWidget(self.categoryWidget)
-        central.addWidget(self.categoryView)
+        self.pipelineView=QScrollArea()
+        self.pipelineView.setWidgetResizable(True)
+        self.pipelineView.setWidget(self.categoryWidget)
+        central.addWidget(self.pipelineView)
         central.setStretchFactor(1, 2)
 
         # Pipeline header
         self.pipelineName = QLabel('')
         self.pipelineName.setWordWrap(True)
         self.pipelineName.setStyleSheet("QLabel  {font-size:15pt;}")
-        self.categoryLayout.addWidget(self.pipelineName)
+        self.pipelineLayout.addWidget(self.pipelineName)
+
+        # Pipeline description
+        self.pipelineDescription = TextViewer()
+        self.pipelineLayout.addWidget(self.pipelineDescription)
 
         # Pipeline items
         self.pipelineWidget = QTreeWidget()
@@ -87,7 +91,7 @@ class PresetWindow(QDialog):
         self.pipelineWidget.setUniformRowHeights(True)
         self.pipelineWidget.setColumnCount(4)
         self.pipelineWidget.setHeaderLabels(['Name','Module','Basepath','Resource'])
-        self.categoryLayout.addWidget(self.pipelineWidget)
+        self.pipelineLayout.addWidget(self.pipelineWidget)
 
         # preset widget
         self.presetWidget = QWidget()
@@ -172,7 +176,7 @@ class PresetWindow(QDialog):
         buttons.addWidget(self.newPipelineButton)
 
         self.overwriteButton = QPushButton('Edit')
-        self.overwriteButton.clicked.connect(self.overwritePreset)
+        self.overwriteButton.clicked.connect(self.overwriteItem)
         self.overwriteButton.setToolTip(wraptip("Edit the selected preset or pipeline."))
         buttons.addWidget(self.overwriteButton)
 
@@ -292,7 +296,7 @@ class PresetWindow(QDialog):
             self.detailName.setText(data.get('name'))
             self.detailModule.setText(data.get('module'))
             self.detailDescription.setText(data.get('description', '')+"\n")
-            self.detailOptions.setHtml(formatdict(data.get('options',[])))
+            self.detailOptions.setHtml(formatdict(data.get('options',{})))
             self.detailColumns.setText("\r\n".join(data.get('columns', [])))
             self.detailSpeed.setText(str(data.get('speed','')))
             self.detailTimeout.setText(str(data.get('timeout', '')))
@@ -301,9 +305,10 @@ class PresetWindow(QDialog):
             self.applyButton.setText("Apply")
             self.presetView.show()
 
-        # Category
+        # Pipeline
         elif itemType == 'pipeline':
-            self.pipelineName.setText(str(data.get('name')))
+            self.pipelineName.setText("Pipeline {0}".format(str(data.get('name'))))
+            self.pipelineDescription.setText(data.get('description', '') + "\n")
 
             self.pipelineWidget.clear()
             for i in range(current.childCount()):
@@ -320,7 +325,17 @@ class PresetWindow(QDialog):
                 self.pipelineWidget.addTopLevelItem(treeitem)
 
             self.applyButton.setText("Run pipeline")
-            self.categoryView.show()
+            self.pipelineView.show()
+
+    def selectItem(self, item, step = None):
+        self.presetList.setCurrentItem(item)
+        if step is not None:
+            stepRoot = self.pipelineWidget.invisibleRootItem()
+            if stepRoot and stepRoot.childCount() > step:
+                stepItem = stepRoot.child(step)
+                self.pipelineWidget.clearSelection()
+                self.pipelineWidget.setItemSelected(stepItem, True)
+
 
     def showPresets(self):
         self.clear()
@@ -386,7 +401,9 @@ class PresetWindow(QDialog):
         else:
             pipelineData = {}
             pipelineData['category'] = data.get('category','No category')
+            pipelineData['name'] = data.get('pipeline', '')
             pipelineData['caption'] = data.get('pipeline','')
+            pipelineData['type'] = 'pipeline'
 
         if default:
             pipelineData['caption'] = pipelineData['caption'] + " *"
@@ -397,6 +414,11 @@ class PresetWindow(QDialog):
 
         if not pipelineData['caption'] in pipelineCategory:
             pipelineItem = PresetWidgetItem()
+
+            ft = pipelineItem.font(0)
+            ft.setWeight(QFont.Bold)
+            pipelineItem.setFont(0, ft)
+
             pipelineItem.setText(0, pipelineData['caption'])
             if default:
                 pipelineItem.setForeground(0, QBrush(QColor("darkblue")))
@@ -405,6 +427,7 @@ class PresetWindow(QDialog):
             pipelineCategory[pipelineData['caption']] = pipelineItem
         else:
             pipelineItem = pipelineCategory[pipelineData['caption']]
+            pipelineItem.setText(0, pipelineData['caption'])
             if data.get('type', 'preset') == 'pipeline':
                 pipelineItem.setData(0, Qt.UserRole, pipelineData)
 
@@ -444,7 +467,7 @@ class PresetWindow(QDialog):
             else:
                 parentItem = categoryItem
 
-            # Presets on second or third level
+            # Presets on second (standalone) or third (in pipeline) level
             if data.get('type', 'preset') == 'pipeline':
                 newItem = self.addPipelineItem(categoryItem, data, default)
             else:
@@ -466,12 +489,13 @@ class PresetWindow(QDialog):
         self.detailColumns.setText("")
 
         self.presetView.hide()
-        self.categoryView.hide()
+        self.pipelineDescription.setText("")
+        self.pipelineView.hide()
 
     def clear(self):
         self.presetList.clear()
         self.presetView.hide()
-        self.categoryView.hide()
+        self.pipelineView.hide()
         self.loadingIndicator.show()
 
     def checkDefaultFiles(self):
@@ -575,7 +599,7 @@ class PresetWindow(QDialog):
         self.pipelineNodes = {}
         self.presetList.clear()
         self.presetView.hide()
-        self.categoryView.hide()
+        self.pipelineView.hide()
 
         selectitem = None
 
@@ -636,16 +660,19 @@ class PresetWindow(QDialog):
             return False
 
         # Get pipeline item
-        root_item = self.presetList.currentItem()
-        root_data = root_item.data(0, Qt.UserRole)
+        pipelineItem = self.presetList.currentItem()
+        root_data = pipelineItem.data(0, Qt.UserRole)
         if root_data.get('type', '') != 'pipeline':
             return False
 
         # Create pipeline
-        pipeline = []
+        pipeline = {
+            'item' : pipelineItem,
+            'presets' : []
+        }
 
-        for i in range(root_item.childCount()):
-            item = root_item.child(i)
+        for i in range(pipelineItem.childCount()):
+            item = pipelineItem.child(i)
 
             preset = item.data(0, Qt.UserRole)
             module = self.mainWindow.getModule(preset.get('module', None))
@@ -653,8 +680,9 @@ class PresetWindow(QDialog):
             options.update(preset.get('options', {}))
             preset['options'] = options.copy()
             preset['item'] = item
+            preset['step'] = i
 
-            pipeline.append(preset)
+            pipeline['presets'].append(preset)
 
         # Process pipeline
         return self.mainWindow.apiActions.queryPipeline(pipeline)
@@ -721,7 +749,7 @@ class PresetWindow(QDialog):
         os.remove(filePath)
         self.initPresets()
 
-    def editPreset(self,data = None):
+    def editItem(self,data = None):
         dialog=QDialog(self.mainWindow)
 
         self.currentData = data if data is not None else {}
@@ -853,20 +881,20 @@ class PresetWindow(QDialog):
 
 
     def newPreset(self):
-        filename = self.editPreset({'type':'preset'})
+        filename = self.editItem({'type':'preset'})
         if filename is not None:
             newitem = self.addItem(self.presetFolder,filename)
             self.presetList.sortItems(0,Qt.AscendingOrder)
             self.presetList.setCurrentItem(newitem, 0)
 
     def newPipeline(self):
-        filename = self.editPreset({'type':'pipeline'})
+        filename = self.editItem({'type':'pipeline'})
         if filename is not None:
             newitem = self.addItem(self.presetFolder,filename)
             self.presetList.sortItems(0,Qt.AscendingOrder)
             self.presetList.setCurrentItem(newitem, 0)
 
-    def overwritePreset(self):
+    def overwriteItem(self):
         if not self.presetList.currentItem():
             return False
 
@@ -880,14 +908,20 @@ class PresetWindow(QDialog):
         if data.get('type','preset') == 'category':
             return False
 
-        filename = self.editPreset(data)
+        filename = self.editItem(data)
 
         if filename is not None:
+            newItem = self.addItem(self.presetFolder,filename)
+
+            while (item.childCount() > 0):
+                child = item.child(0)
+                item.removeChild(child)
+                newItem.addChild(child)
+
             item.parent().removeChild(item)
-            item = self.addItem(self.presetFolder,filename)
 
             self.presetList.sortItems(0,Qt.AscendingOrder)
-            self.presetList.setCurrentItem(item,0)
+            self.presetList.setCurrentItem(newItem,0)
 
 class PresetWidgetItem(QTreeWidgetItem):
     def __lt__(self, other):
