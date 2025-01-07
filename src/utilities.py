@@ -843,7 +843,10 @@ def formatdict(data):
                 out.extend([child])
         return out
 
-    return "\n".join(getdictvalues(data))
+    if data is None:
+        return "None"
+    else:
+        return "\n".join(getdictvalues(data))
 
 
 

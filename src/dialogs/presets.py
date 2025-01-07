@@ -158,26 +158,27 @@ class PresetWindow(QDialog):
         self.presetForm.addRow('<b>Header nodes</b>', self.detailHeaders)
         
         # Buttons
-        buttons= QHBoxLayout() #QDialogButtonBox()
+        buttons= QHBoxLayout()
+
         self.saveButton = QPushButton('New preset')
         self.saveButton.clicked.connect(self.newPreset)
         self.saveButton.setToolTip(wraptip("Create a new preset using the current tab and parameters"))
-        #buttons.addButton(self.saveButton,QDialogButtonBox.ActionRole)
         buttons.addWidget(self.saveButton)
 
-        self.overwriteButton = QPushButton('Edit preset')
+        self.newPipelineButton = QPushButton('New pipeline')
+        self.newPipelineButton.clicked.connect(self.newPipeline)
+        self.newPipelineButton.setToolTip(wraptip("Create a new pipeline"))
+        buttons.addWidget(self.newPipelineButton)
+
+        self.overwriteButton = QPushButton('Edit')
         self.overwriteButton.clicked.connect(self.overwritePreset)
-        self.overwriteButton.setToolTip(wraptip("Edit the selected preset."))
-        #buttons.addButton(self.overwriteButton,QDialogButtonBox.ActionRole)
+        self.overwriteButton.setToolTip(wraptip("Edit the selected preset or pipeline."))
         buttons.addWidget(self.overwriteButton)
 
-        self.deleteButton = QPushButton('Delete preset')
+        self.deleteButton = QPushButton('Delete')
         self.deleteButton.clicked.connect(self.deletePreset)
-        self.deleteButton.setToolTip(wraptip("Delete the selected preset. Default presets can not be deleted."))
-        #buttons.addButton(self.deleteButton,QDialogButtonBox.ActionRole)
+        self.deleteButton.setToolTip(wraptip("Delete the selected preset or pipeline. Default items can not be deleted."))
         buttons.addWidget(self.deleteButton)
-
-        #layout.addWidget(buttons,1)
 
         buttons.addStretch()
 
@@ -231,6 +232,7 @@ class PresetWindow(QDialog):
         self.progressMax.connect(self.setProgressMax)
         self.progressStep.connect(self.setProgressStep)
         self.progressStop.connect(self.setProgressStop)
+
 #         if getattr(sys, 'frozen', False):
 #             self.defaultPresetFolder = os.path.join(os.path.dirname(sys.executable),'presets')
 #         elif __file__:
@@ -272,58 +274,52 @@ class PresetWindow(QDialog):
         else:
             webbrowser.open('file:///'+self.presetFolder)
 
-
     def currentChanged(self):
-        #hide
-        self.detailName.setText("")
-        self.detailModule.setText("")
-        self.detailDescription.setText("")
-        self.detailOptions.setText("")
-        self.detailColumns.setText("")
-
-        self.presetView.hide()
-        self.categoryView.hide()
+        self.hideDetails()
 
         current = self.presetList.currentItem()
-        if current and current.isSelected():
-            data = current.data(0,Qt.UserRole)
+        if not current or not current.isSelected():
+            return
 
-            # Single preset
-            if not data.get('iscategory',False):
-                self.lastSelected = os.path.join(data.get('folder',''),data.get('filename',''))
+        data = current.data(0,Qt.UserRole)
+        itemType = data.get('type', 'preset')
 
-                self.detailName.setText(data.get('name'))
-                self.detailModule.setText(data.get('module'))
-                self.detailDescription.setText(data.get('description')+"\n")
-                self.detailOptions.setHtml(formatdict(data.get('options',[])))
-                self.detailColumns.setText("\r\n".join(data.get('columns', [])))
-                self.detailSpeed.setText(str(data.get('speed','')))
-                self.detailTimeout.setText(str(data.get('timeout', '')))
-                self.detailMaxsize.setText(str(data.get('maxsize', '')))
+        # Single preset
+        if itemType == 'preset':
+            self.lastSelected = os.path.join(data.get('folder',''),data.get('filename',''))
 
-                #self.applyButton.setText("Apply")
-                self.presetView.show()
+            self.detailName.setText(data.get('name'))
+            self.detailModule.setText(data.get('module'))
+            self.detailDescription.setText(data.get('description')+"\n")
+            self.detailOptions.setHtml(formatdict(data.get('options',[])))
+            self.detailColumns.setText("\r\n".join(data.get('columns', [])))
+            self.detailSpeed.setText(str(data.get('speed','')))
+            self.detailTimeout.setText(str(data.get('timeout', '')))
+            self.detailMaxsize.setText(str(data.get('maxsize', '')))
 
-            # Category
-            else:
-                self.pipelineName.setText(str(data.get('category')))
+            self.applyButton.setText("Apply")
+            self.presetView.show()
 
-                self.pipelineWidget.clear()
-                for i in range(current.childCount()):
-                    presetitem = current.child(i)
-                    preset = presetitem.data(0, Qt.UserRole)
+        # Category
+        elif itemType == 'pipeline':
+            self.pipelineName.setText(str(data.get('name')))
 
-                    treeitem = QTreeWidgetItem(self.pipelineWidget)
-                    treeitem.setText(0,preset.get('name'))
-                    treeitem.setText(1, preset.get('module'))
-                    treeitem.setText(2, getDictValue(preset,'options.basepath'))
-                    treeitem.setText(3, getDictValue(preset,'options.resource'))
+            self.pipelineWidget.clear()
+            for i in range(current.childCount()):
+                presetitem = current.child(i)
+                preset = presetitem.data(0, Qt.UserRole)
+
+                treeitem = QTreeWidgetItem(self.pipelineWidget)
+                treeitem.setText(0,preset.get('name'))
+                treeitem.setText(1, preset.get('module'))
+                treeitem.setText(2, getDictValue(preset,'options.basepath'))
+                treeitem.setText(3, getDictValue(preset,'options.resource'))
                 # treeitem.setText(4, preset.get('description'))
 
-                    self.pipelineWidget.addTopLevelItem(treeitem)
+                self.pipelineWidget.addTopLevelItem(treeitem)
 
-                self.applyButton.setText("Run pipeline")
-                self.categoryView.show()
+            self.applyButton.setText("Run pipeline")
+            self.categoryView.show()
 
     def showPresets(self):
         self.clear()
@@ -336,7 +332,83 @@ class PresetWindow(QDialog):
         self.raise_()
 
 
-    def addPresetItem(self,folder,filename,default=False,online=False):
+    def addCategoryItem(self, data, default):
+        """
+        Add a category item if it does not exist, otherwise return the existing item
+
+        :param data: A dict with the keys module and category
+        :return: A PresetWidgetItem() with the iscategory property set to True
+        """
+        module = data.get('module','')
+        category = data.get('category','')
+
+        if not category in self.categoryNodes:
+            categoryItem = PresetWidgetItem()
+            categoryItem.setText(0, category)
+
+            ft = categoryItem.font(0)
+            ft.setWeight(QFont.Bold)
+            categoryItem.setFont(0, ft)
+
+            categoryItem.setData(0, Qt.UserRole,
+                                 {'iscategory': True, 'name': module, 'category': category, 'type': 'category'})
+
+            self.presetList.addTopLevelItem(categoryItem)
+            self.categoryNodes[category] = categoryItem
+
+        else:
+            categoryItem = self.categoryNodes[category]
+
+        return categoryItem
+
+    def addPresetItem(self, parentItem, data, default):
+        data['type'] = 'preset'
+        data['caption'] = data.get('name')
+        if default:
+            data['caption'] = data['caption'] + " *"
+
+        newItem = PresetWidgetItem()
+        newItem.setText(0, data['caption'])
+        newItem.setData(0, Qt.UserRole, data)
+        if default:
+            newItem.setForeground(0, QBrush(QColor("darkblue")))
+
+        parentItem.addChild(newItem)
+
+        return newItem
+
+    def addPipelineItem(self, parentItem, data, default):
+        if data.get('type','preset') == 'pipeline':
+            pipelineData = data
+            pipelineData['category'] = data.get('category', '')
+            pipelineData['caption'] = data.get('name', '')
+        else:
+            pipelineData = {}
+            pipelineData['category'] = data.get('category','')
+            pipelineData['caption'] = data.get('pipeline','')
+
+        if default:
+            pipelineData['caption'] = pipelineData['caption'] + " *"
+
+        if not pipelineData['category'] in self.pipelineNodes:
+            self.pipelineNodes[pipelineData['category']] = {}
+        pipelineCategory = self.pipelineNodes[pipelineData['category']]
+
+        if not pipelineData['caption'] in pipelineCategory:
+            pipelineItem = PresetWidgetItem()
+            pipelineItem.setText(0, pipelineData['caption'])
+            if default:
+                pipelineItem.setForeground(0, QBrush(QColor("darkblue")))
+            pipelineItem.setData(0, Qt.UserRole, pipelineData)
+            parentItem.addChild(pipelineItem)
+        else:
+            pipelineItem = pipelineCategory[pipelineData['caption']]
+            if data.get('type', 'preset') == 'pipeline':
+                pipelineItem.setData(0, Qt.UserRole, pipelineData)
+
+        return pipelineItem
+
+    def addItem(self,folder,filename,default=False,online=False):
         try:
             if online:
                 data= requests.get(folder+filename).json()
@@ -349,70 +421,49 @@ class PresetWindow(QDialog):
             data['default'] = default
             data['online'] = online
 
-            if data.get('type','preset') == 'pipeline':
-                data['category'] = data.get('category', 'noname')
-                if not data['category'] in self.categoryNodes:
-                    categoryItem = PresetWidgetItem()
-                    categoryItem.setText(0, data['category'])
-
-                    ft = categoryItem.font(0)
-                    ft.setWeight(QFont.Bold)
-                    categoryItem.setFont(0, ft)
-
-                    self.presetList.addTopLevelItem(categoryItem)
-                else:
-                    categoryItem = self.categoryNodes[data['category']]
-
-                data['iscategory'] = True
-                categoryItem.setData(0, Qt.UserRole,data)
-
-            else:
-                data['caption'] = data.get('name')
-                if default:
-                    data['caption'] = data['caption'] +" *"
-
-                data['category'] = data.get('category','')
-                if (data['category'] == ''):
-                    if (data.get('module') in ['Generic','Files']):
-                        try:
-                            data['category'] = data.get('module') + " ("+urlparse(data['options']['basepath']).netloc+")"
-                        except:
-                            data['category'] = data.get('module')
-                    else:
+            # First level: category
+            data['category'] = data.get('category', '')
+            if (data['category'] == ''):
+                if (data.get('module') in ['Generic', 'Files']):
+                    try:
+                        data['category'] = data.get('module') + " (" + urlparse(
+                            data['options']['basepath']).netloc + ")"
+                    except:
                         data['category'] = data.get('module')
-
-
-                if not data['category'] in self.categoryNodes:
-                    categoryItem = PresetWidgetItem()
-                    categoryItem.setText(0,data['category'])
-
-                    ft = categoryItem.font(0)
-                    ft.setWeight(QFont.Bold)
-                    categoryItem.setFont(0,ft)
-
-                    categoryItem.setData(0,Qt.UserRole,{'iscategory':True,'name':data['module'],'category':data['category']})
-
-                    self.presetList.addTopLevelItem(categoryItem)
-                    self.categoryNodes[data['category']] = categoryItem
-
                 else:
-                    categoryItem = self.categoryNodes[data['category']]
+                    data['category'] = data.get('module')
 
-                newItem = PresetWidgetItem()
-                newItem.setText(0,data['caption'])
-                newItem.setData(0,Qt.UserRole,data)
-                if default:
-                    newItem.setForeground(0,QBrush(QColor("darkblue")))
-                categoryItem.addChild(newItem)
+            categoryItem = self.addCategoryItem(data, default)
+
+            # Pipelines on second level
+            if data.get('pipline', '') != '':
+                parentItem = self.addPipelineItem(categoryItem, data, default)
+            else:
+                parentItem = categoryItem
+
+            # Presets on second or third level
+            if data.get('type', 'preset') == 'pipeline':
+                newItem = self.addPipelineItem(categoryItem, data, default)
+            else:
+                newItem = self.addPresetItem(parentItem, data, default)
 
             #self.presetList.setCurrentItem(newItem,0)
             QApplication.processEvents()
-
             return newItem
 
         except Exception as e:
              QMessageBox.information(self,"Facepager","Error loading preset:"+str(e))
              return None
+
+    def hideDetails(self):
+        self.detailName.setText("")
+        self.detailModule.setText("")
+        self.detailDescription.setText("")
+        self.detailOptions.setText("")
+        self.detailColumns.setText("")
+
+        self.presetView.hide()
+        self.categoryView.hide()
 
     def clear(self):
         self.presetList.clear()
@@ -488,8 +539,8 @@ class PresetWindow(QDialog):
     def initPresets(self):
         self.loadingIndicator.show()
 
-        #self.defaultPresetFolder
         self.categoryNodes = {}
+        self.pipelineNodes = {}
         self.presetList.clear()
         self.presetView.hide()
         self.categoryView.hide()
@@ -502,14 +553,14 @@ class PresetWindow(QDialog):
         if os.path.exists(self.presetFolderDefault):
             files = [f for f in os.listdir(self.presetFolderDefault) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
-                newitem = self.addPresetItem(self.presetFolderDefault,filename,True)
+                newitem = self.addItem(self.presetFolderDefault,filename,True)
                 if self.lastSelected is not None and (self.lastSelected == os.path.join(self.presetFolderDefault,filename)):
                     selectitem = newitem
 
         if os.path.exists(self.presetFolder):
             files = [f for f in os.listdir(self.presetFolder) if f.endswith(tuple(self.presetSuffix))]
             for filename in files:
-                newitem = self.addPresetItem(self.presetFolder,filename)
+                newitem = self.addItem(self.presetFolder,filename)
                 if self.lastSelected is not None and (self.lastSelected == str(os.path.join(self.presetFolder,filename))):
                     selectitem = newitem
 
@@ -534,16 +585,29 @@ class PresetWindow(QDialog):
 
         return categories
 
-    def startPipeline(self):
+    def getPipelines(self):
+        pipelines = []
+
+        root = self.presetList.invisibleRootItem()
+        for i in range(root.childCount()):
+            categoryItem = root.child(i)
+            for j in range(categoryItem.childCount()):
+                pipelineItem = categoryItem.child(j)  # Second-level items within each category
+                data = pipelineItem.data(0, Qt.UserRole)
+                if data and data.get('type') == 'pipeline':
+                    pipelines.append(data.get('name', ''))  # Add the name if the type is 'pipeline'
+
+        return pipelines
+
+    def startPipeline(self, pipelineData):
         if not self.presetList.currentItem():
             return False
 
-        # Get category item
+        # Get pipeline item
         root_item = self.presetList.currentItem()
         root_data = root_item.data(0, Qt.UserRole)
-        if not root_data.get('iscategory', False):
-            root_item = root_item.parent()
-            root_data = root_item.data(0, Qt.UserRole)
+        if root_data.get('type', '') != 'pipeline':
+            return False
 
         # Create pipeline
         pipeline = []
@@ -562,18 +626,16 @@ class PresetWindow(QDialog):
 
         # Process pipeline
         return self.mainWindow.apiActions.queryPipeline(pipeline)
-        #self.close()
-
 
     def applyPreset(self):
         if not self.presetList.currentItem():
             return False
 
         data = self.presetList.currentItem().data(0,Qt.UserRole)
-        if data.get('iscategory',False):
-            #return False
-            self.startPipeline()
-        else:
+        itemType = data.get('type', 'preset')
+        if  itemType == 'pipeline':
+            self.startPipeline(data)
+        elif itemType == 'preset':
             self.mainWindow.apiActions.applySettings(data)
 
         self.close()
@@ -583,7 +645,7 @@ class PresetWindow(QDialog):
             return False
 
         data = self.presetList.currentItem().data(0,Qt.UserRole)
-        if not data.get('iscategory',False):
+        if data.get('type','preset') == 'preset':
             self.mainWindow.apiActions.addColumns(data)
 
 
@@ -606,14 +668,25 @@ class PresetWindow(QDialog):
             QMessageBox.information(self,"Facepager","Cannot delete default presets.")
             return False
 
-        if data.get('iscategory',False):
+        if self.presetList.currentItem().childCount() > 0:
+            QMessageBox.information(self, "Facepager", "Delete the child nodes first.")
+
+        if data.get('type', 'preset') == 'category':
             return False
 
-        reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the preset \"{0}\"?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if (data.get('filename', '') == ''):
+            return False
+
+        filePath = os.path.join(self.presetFolder, data.get('filename'))
+        if not os.path.exists(filePath):
+            return False
+
+        reply = QMessageBox.question(self, 'Delete Preset',"Are you sure to delete the {0} \"{1}\"?".format(data.get('type',''), data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes:
             return False
 
-        os.remove(os.path.join(self.presetFolder, data.get('filename')))
+
+        os.remove(filePath)
         self.initPresets()
 
     def editPreset(self,data = None):
@@ -621,11 +694,12 @@ class PresetWindow(QDialog):
 
         self.currentData = data if data is not None else {}
         self.currentFilename = self.currentData.get('filename',None)
+        itemType = self.currentData.get('type','item')
 
         if self.currentFilename is None:
-            dialog.setWindowTitle("New Preset")
+            dialog.setWindowTitle("New {0}".format(itemType))
         else:
-            dialog.setWindowTitle("Edit selected preset")
+            dialog.setWindowTitle("Edit selected {0}".format(itemType))
 
         layout=QVBoxLayout()
         label=QLabel("<b>Name</b>")
@@ -639,10 +713,18 @@ class PresetWindow(QDialog):
         category= QComboBox(self)
         category.addItems(self.getCategories())
         category.setEditable(True)
-
         category.setCurrentText(self.currentData.get('category',''))
         layout.addWidget(category,0)
 
+        if itemType == 'preset':
+            label=QLabel("<b>Pipeline</b>")
+            layout.addWidget(label)
+            pipeline= QComboBox(self)
+            pipeline.addItems(self.getPipelines())
+            pipeline.setCurrentIndex(pipeline.findText(self.currentData.get('pipeline', '')))
+            layout.addWidget(pipeline,0)
+        else:
+            pipeline = None
 
         label=QLabel("<b>Description</b>")
         layout.addWidget(label)
@@ -654,16 +736,19 @@ class PresetWindow(QDialog):
         layout.addWidget(description,1)
 
 
-        overwriteLayout =QHBoxLayout()
-        self.overwriteCheckbox = QCheckBox(self)
-        self.overwriteCheckbox.setCheckState(Qt.Unchecked)
-        overwriteLayout.addWidget(self.overwriteCheckbox)
-        label=QLabel("<b>Overwrite parameters with current settings</b>")
-        overwriteLayout.addWidget(label)
-        overwriteLayout.addStretch()
+        if itemType == 'preset':
+            overwriteLayout =QHBoxLayout()
+            overwriteCheckbox = QCheckBox(self)
+            overwriteCheckbox.setCheckState(Qt.Unchecked)
+            overwriteLayout.addWidget(overwriteCheckbox)
+            label=QLabel("<b>Overwrite parameters with current settings</b>")
+            overwriteLayout.addWidget(label)
+            overwriteLayout.addStretch()
 
-        if self.currentFilename is not None:
-            layout.addLayout(overwriteLayout)
+            if self.currentFilename is not None:
+                layout.addLayout(overwriteLayout)
+        else:
+            overwriteCheckbox = None
 
         buttons=QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel)
         layout.addWidget(buttons,0)
@@ -673,26 +758,27 @@ class PresetWindow(QDialog):
             data_meta = {
                     'name':name.text(),
                     'category':category.currentText(),
+                    'pipeline': pipeline.currentText() if pipeline is not None else None,
                     'description':description.toPlainText()
             }
-
-            data_settings = self.mainWindow.apiActions.getPresetOptions()
             self.currentData.update(data_meta)
 
-            if self.currentFilename is None:
-                self.currentData.update(data_settings)
-
-            elif self.overwriteCheckbox.isChecked():
-                reply = QMessageBox.question(self, 'Overwrite Preset',"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if reply != QMessageBox.Yes:
-                    dialog.close()
-                    self.currentFilename = None
-                    return False
-                else:
+            if itemType == 'preset':
+                data_settings = self.mainWindow.apiActions.getPresetOptions()
+                if self.currentFilename is None:
                     self.currentData.update(data_settings)
 
+                elif overwriteCheckbox is not None and overwriteCheckbox.isChecked():
+                    reply = QMessageBox.question(self, 'Overwrite Preset',"Are you sure to overwrite the selected preset \"{0}\" with the current settings?".format(data.get('name','')), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if reply != QMessageBox.Yes:
+                        dialog.close()
+                        self.currentFilename = None
+                        return False
+                    else:
+                        self.currentData.update(data_settings)
+
             # Sanitize and reorder
-            keys = ['name', 'category', 'description', 'module', 'options', 'speed', 'saveheaders','timeout','maxsize','columns']
+            keys = ['name', 'category', 'pipeline', 'description', 'module', 'options', 'speed', 'saveheaders','timeout','maxsize','columns']
             self.currentData = {k: self.currentData.get(k, None) for k in keys}
 
             # Create folder
@@ -728,12 +814,18 @@ class PresetWindow(QDialog):
 
 
     def newPreset(self):
-        filename = self.editPreset()
+        filename = self.editPreset({'type':'preset'})
         if filename is not None:
-            newitem = self.addPresetItem(self.presetFolder,filename)
+            newitem = self.addItem(self.presetFolder,filename)
             self.presetList.sortItems(0,Qt.AscendingOrder)
-            self.presetList.setCurrentItem(newitem,0)
+            self.presetList.setCurrentItem(newitem, 0)
 
+    def newPipeline(self):
+        filename = self.editPreset({'type':'pipeline'})
+        if filename is not None:
+            newitem = self.addItem(self.presetFolder,filename)
+            self.presetList.sortItems(0,Qt.AscendingOrder)
+            self.presetList.setCurrentItem(newitem, 0)
 
     def overwritePreset(self):
         if not self.presetList.currentItem():
@@ -742,18 +834,18 @@ class PresetWindow(QDialog):
         item = self.presetList.currentItem()
         data = item.data(0,Qt.UserRole)
 
-        if data.get('default',False):
+        if data.get('default', False):
             QMessageBox.information(self,"Facepager","Cannot edit default presets.")
             return False
 
-        if data.get('iscategory',False):
+        if data.get('type','preset') == 'category':
             return False
 
         filename = self.editPreset(data)
 
         if filename is not None:
             item.parent().removeChild(item)
-            item = self.addPresetItem(self.presetFolder,filename)
+            item = self.addItem(self.presetFolder,filename)
 
             self.presetList.sortItems(0,Qt.AscendingOrder)
             self.presetList.setCurrentItem(item,0)
