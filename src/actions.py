@@ -1092,7 +1092,6 @@ class GuiActions(object):
         if self.mainWindow.transferWindow.isVisible():
             self.mainWindow.transferWindow.updateNode(current)
 
-
         #select level
         level = 0
         c = current
