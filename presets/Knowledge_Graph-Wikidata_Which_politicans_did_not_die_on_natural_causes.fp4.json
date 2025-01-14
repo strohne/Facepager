@@ -1,7 +1,7 @@
 {
-  "name": "(SPARQL module) Wikidata: Which politicans did not die on natural causes?",
+  "name": "Wikidata: Which politicans did not die on natural causes?",
   "category": "Knowledge Graph",
-  "description": "SPARQL module is work in progress. If reliant on paging stay with Generic module. \n\nThis preset fetches a list of politicians from WikiData that did not die on natural causes. Add an arbitrary node as seed node, e.g. \"politicians\".\n\nSee https://www.wikidata.org/ for further information. You can try out different queries on https://query.wikidata.org/ (paste the value of the query parameter).\n\nPlease be aware that expressions in angle brackets are handled as placeholder by Facepager. Thus, the brackets of the prefixes have to be escaped with a backslash.\n\nPagination is handled by the <offset> placeholder.",
+  "description": "*This preset requires at least Facepager v4.6.* \n\nThis preset fetches a list of politicians from WikiData that did not die on natural causes. Add an arbitrary node as seed node, e.g. \"politicians\".\n\nSee https://www.wikidata.org/ for further information. You can try out different queries on https://query.wikidata.org/ (paste the value of the query parameter).\n\nPlease be aware that expressions in angle brackets are handled as placeholder by Facepager. Thus, the brackets of the prefixes have to be escaped with a backslash.\n\nPagination is handled by the <offset> placeholder.",
   "module": "SPARQL",
   "options": {
     "auth": "disable",
@@ -13,7 +13,7 @@
     "extension": "",
     "format": "json",
     "headers": {
-      "User-Agent": "FACEPAGERBOT/4.5 ([https://github.com/strohne/Facepager](https://github.com/strohne/Facepager)) fp/4.5"
+      "User-Agent": "FACEPAGERBOT/4.6 ([https://github.com/strohne/Facepager](https://github.com/strohne/Facepager)) fp/4.6"
     },
     "key_paging": null,
     "nodedata": "results.bindings",
