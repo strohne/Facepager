@@ -46,7 +46,8 @@ Install software:
   $ pip install pyinstaller  
   $ brew install upx  
 
-The following steps can alternatively be executed with build/osx/build.pyinstaller.command. Double click build.pyinstaller.command in Finder or execute in terminal.
+The following steps can alternatively be executed with build/osx/build.pyinstaller.command. 
+Double click build.pyinstaller.command in Finder or execute in terminal.
 
 - Copy Facepager.spec to src folder:  
   $ cp ../build/osx/Facepager.spec Facepager.spec

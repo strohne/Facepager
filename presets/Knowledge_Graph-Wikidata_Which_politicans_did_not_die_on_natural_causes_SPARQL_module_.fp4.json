@@ -1,0 +1,44 @@
+{
+  "name": "(SPARQL module) Wikidata: Which politicans did not die on natural causes?",
+  "category": "Knowledge Graph",
+  "description": "SPARQL module is work in progress. If reliant on paging stay with Generic module. \n\nThis preset fetches a list of politicians from WikiData that did not die on natural causes. Add an arbitrary node as seed node, e.g. \"politicians\".\n\nSee https://www.wikidata.org/ for further information. You can try out different queries on https://query.wikidata.org/ (paste the value of the query parameter).\n\nPlease be aware that expressions in angle brackets are handled as placeholder by Facepager. Thus, the brackets of the prefixes have to be escaped with a backslash.\n\nPagination is handled by the <offset> placeholder.",
+  "module": "SPARQL",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://query.wikidata.org/sparql",
+    "extension": "",
+    "format": "json",
+    "headers": {
+      "User-Agent": "FACEPAGERBOT/4.5 ([https://github.com/strohne/Facepager](https://github.com/strohne/Facepager)) fp/4.5"
+    },
+    "key_paging": null,
+    "nodedata": "results.bindings",
+    "objectid": "politician.value",
+    "offset_start": 1,
+    "offset_step": 1,
+    "paging_stop": null,
+    "paging_type": null,
+    "param_paging": null,
+    "params": {
+      "format": "json",
+      "query": "PREFIX wd: \\<http://www.wikidata.org/entity/\\> \nPREFIX wdt: \\<http://www.wikidata.org/prop/direct/\\>\n\nSELECT DISTINCT ?politician ?cause ?politicianLabel ?causeLabel WHERE {\n   ?politician wdt:P106 wd:Q82955 .            # find items that have \"occupation (P106): politician (Q82955)\"\n   ?politician wdt:P509|wdt:P1196 ?cause .     # with a P509 (cause of death) or P1196 (manner of death) claim\n   ?cause wdt:P279* wd:Q149086 .               # ... where the cause is a subclass of (P279*) homicide (Q149086)\n   # ?politician wdt:P39 wd:Q11696 .           # Uncomment this line to include only U.S. Presidents \n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" }\n} LIMIT 10"
+    },
+    "redirect_uri": "",
+    "resource": "",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "politicianLabel.value",
+    "causeLabel.value",
+    "politician.value",
+    "cause.value"
+  ]
+}

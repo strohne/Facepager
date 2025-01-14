@@ -15,7 +15,7 @@
     "verb": "POST",
     "format": "json",
     "encoding": "<None>",
-    "payload": "PREFIX cto: \\<https://nfdi4culture.de/ontology#\\>\nPREFIX schema: \\<http://schema.org/\\>\nPREFIX rdf: \\<http://www.w3.org/1999/02/22-rdf-syntax-ns#\\>\nPREFIX rdfs: \\<http://www.w3.org/2000/01/rdf-schema#\\>\nPREFIX n4c: \\<https://nfdi4culture.de/id/\\>\n\nSELECT ?letter ?letterLabel ?date ?gnd_id\nWHERE {\n  n4c:E5378 schema:dataFeedElement/schema:item ?letter .\n  ?letter rdfs:label ?letterLabel ;\n          cto:creationDate ?date ;\n          cto:gnd ?gnd_url .\n  FILTER(YEAR(?date) = <Object ID>).\n  BIND(REPLACE(STR(?gnd_url), \".*://.*/(.*?)\", \"$1\") AS ?gnd_id)\n}",
+    "payload": "PREFIX cto: \\<https://nfdi4culture.de/ontology#\\>\nPREFIX schema: \\<http://schema.org/\\>\nPREFIX rdf: \\<http://www.w3.org/1999/02/22-rdf-syntax-ns#\\>\nPREFIX rdfs: \\<http://www.w3.org/2000/01/rdf-schema#\\>\nPREFIX n4c: \\<https://nfdi4culture.de/id/\\>\n\nSELECT ?letter ?letterLabel ?date ?gnd_id\nWHERE {\n  n4c:E5378 schema:dataFeedElement/schema:item ?letter .\n  ?letter rdfs:label ?letterLabel ;\n          cto:creationDate ?date ;\n          cto:relatedPerson ?gnd_url .\n  FILTER(YEAR(?date) = <Object ID>).\n  BIND(REPLACE(STR(?gnd_url), \".*://.*/(.*?)\", \"$1\") AS ?gnd_id)\n}",
     "filename": "<None>",
     "fileext": "<None>",
     "pages": 1,
