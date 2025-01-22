@@ -13,6 +13,8 @@ build/windows/PySide2
 build/osx/copyfromvm.bat
 build/osx/*.app
 build/osx/*.pkg
+build/osx/Certificates
+build/osx/Codesign
 pyenv
 venv
 .project
