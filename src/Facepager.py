@@ -23,6 +23,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from settings import *
+
 import sys
 import argparse
 from datetime import datetime
@@ -32,7 +34,6 @@ import html
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QWidget, QStyleFactory, QMainWindow
-
 
 from icons import *
 from widgets.datatree import DataTree
@@ -70,7 +71,7 @@ class MainWindow(QMainWindow):
     def __init__(self,central=None):
         super(MainWindow,self).__init__()
 
-        self.setWindowTitle("Facepager 4.5")
+        self.setWindowTitle("Facepager " + settings['version'])
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
         QApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton)
 
@@ -78,7 +79,7 @@ class MainWindow(QMainWindow):
         # This is needed to display the app icon on the taskbar on Windows 7
         if os.name == 'nt':
             import ctypes
-            myappid = 'Facepager.4.5' # arbitrary string
+            myappid = 'Facepager.' + settings['version'] # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         self.setMinimumSize(1100,680)
@@ -384,6 +385,7 @@ class MainWindow(QMainWindow):
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
         self.RequestTabs.addTab(FacebookTab(self), "Facebook")
         self.RequestTabs.addTab(AmazonTab(self),"Amazon")
+        self.RequestTabs.addTab(SparqlTab(self),"SPARQL")
         self.RequestTabs.addTab(GenericTab(self),"Generic")
 
         module = self.settings.value('module',False)
@@ -565,7 +567,7 @@ class MainWindow(QMainWindow):
         self.settings.beginGroup("MainWindow")
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
-        self.settings.setValue("version","4.5")
+        self.settings.setValue("version",settings['version'])
         self.settings.endGroup()
 
 

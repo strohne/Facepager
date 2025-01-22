@@ -15,6 +15,6 @@ copy ..\..\build\windows\Facepager_Setupscript.nsi Facepager_Setupscript.nsi
 copy ..\..\icons\icon_facepager.ico icon_facepager.ico
 "C:\Program Files (x86)\NSIS\makensis.exe" Facepager_Setupscript.nsi
 copy Facepager_Setup.exe ..\..\build\windows\Facepager_Setup.exe 
-
+cd ../../build/windows
 endlocal
 pause

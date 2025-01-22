@@ -1,0 +1,48 @@
+{
+  "name": "OpenCitations Index (COCI): references",
+  "category": "Bibliometrics",
+  "description": "[The OpenCitations Index](https://opencitations.net/index) – formerly known as the OpenCitations Index of Crossref open DOI-to-DOI citations (COCI) – is a bibliographic index recording and storing citations between publications. It pulls its data from various open scholarly sources as described on their website (see link above), thereby providing comprehensive and openly accessible bibliographic and citation data. \n\nEach citation is identified by an unique [Open Citation Identifier (OCI)](https://identifiers.org/oci). However, data can be fetched via various identifiers including DOIs.  Further, each item is a citation record. To get its bibliographic metadata use the \"OpenCitations Index (COCI): Metadata from doi\" preset.\n\nApply this preset to fetch the references contained in the seed title. .  Add as many DOIs as seed nodes as you wish (e.g. , \"10.1111/j.1460-2466.2008.01401.x\").\n\nHere we are calling version 2.0.x of [the REST API for the OpenCitations Index](https://opencitations.net/index/api/v2#/references/%7Bid%7D).",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://opencitations.net/index/api/v2",
+    "resource": "/references/doi:<doi>",
+    "params": {
+      "<doi>": "<Object ID>"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "GET",
+    "format": "json",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "offset_start": 1,
+    "offset_step": 1,
+    "nodedata": null,
+    "objectid": "cited",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "disable",
+    "auth_tokenname": "",
+    "auth_prefix": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "creation",
+    "timespan",
+    "author_sc",
+    "journal_sc",
+    "oci",
+    "citing",
+    "cited"
+  ]
+}

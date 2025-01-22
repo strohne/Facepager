@@ -38,11 +38,13 @@ from dialogs.webdialog import PreLoginWebDialog, LoginWebDialog, BrowserDialog, 
 from server import LoginServer
 from widgets.paramedit import *
 from utilities import *
+from settings import *
 
 try:
     from credentials import *
 except ImportError:
     credentials = {}
+
 
 class ApiTab(QScrollArea):
     """
@@ -65,7 +67,7 @@ class ApiTab(QScrollArea):
         self.connected = False
         self.lastrequest = None
         self.speed = None
-        self.appusage = 0        # Percent of rate limit
+        self.appusage = 0  # Percent of rate limit
         self.appusageLimit = 90  # Throttles speed down to 1 if exceeded
         self.lock_session = threading.Lock()
         self.sessions = []
@@ -75,8 +77,8 @@ class ApiTab(QScrollArea):
         self.mainLayout.setRowWrapPolicy(QFormLayout.DontWrapRows)
         self.mainLayout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.mainLayout.setLabelAlignment(Qt.AlignLeft)
-        self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)    
-        self.mainLayout.setSizeConstraint(QLayout.SetMaximumSize) #QLayout.SetMinimumSize
+        self.mainLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        self.mainLayout.setSizeConstraint(QLayout.SetMaximumSize)  # QLayout.SetMinimumSize
 
         # Extra layout
         self.extraLayout = QFormLayout()
@@ -96,16 +98,15 @@ class ApiTab(QScrollArea):
         page.setLayout(pagelayout)
         self.setWidget(page)
         self.setStyleSheet("QScrollArea {border:0px;background-color:transparent;}")
-        page.setAutoFillBackground(False) #import: place after setStyleSheet
+        page.setAutoFillBackground(False)  # import: place after setStyleSheet
         self.setWidgetResizable(True)
 
-        
         # Popup window for auth settings
         self.authWidget = QWidget()
 
         # Default settings
         try:
-            self.defaults = credentials.get(name.lower().replace(' ','_'),{})
+            self.defaults = credentials.get(name.lower().replace(' ', '_'), {})
         except NameError:
             self.defaults = {}
 
@@ -135,17 +136,17 @@ class ApiTab(QScrollArea):
 
         return path, query
 
-    def parsePlaceholders(self,pattern,nodedata,paramdata={},options = {}):
+    def parsePlaceholders(self, pattern, nodedata, paramdata={}, options={}):
         if not pattern:
             return pattern
-        elif isinstance(pattern,list):
+        elif isinstance(pattern, list):
             return [self.parsePlaceholders(x, nodedata, paramdata, options) for x in pattern]
         else:
             pattern = str(pattern)
 
-        #matches = re.findall(ur"<([^>]*>", pattern)
-        #matches = re.findall(ur"(?<!\\)<([^>]*?)(?<!\\)>", pattern)
-        #Find placeholders in brackets, ignoring escaped brackets (escape character is backslash)
+        # matches = re.findall(ur"<([^>]*>", pattern)
+        # matches = re.findall(ur"(?<!\\)<([^>]*?)(?<!\\)>", pattern)
+        # Find placeholders in brackets, ignoring escaped brackets (escape character is backslash)
         matches = re.findall(r"(?<!\\)(?:\\\\)*<([^>]*?(?<!\\)(?:\\\\)*)>", pattern)
 
         for match in matches:
@@ -156,29 +157,29 @@ class ApiTab(QScrollArea):
             elif key == 'None':
                 value = ''
             elif key == 'Object ID':
-                value = {'Object ID':str(nodedata['objectid'])}
+                value = {'Object ID': str(nodedata['objectid'])}
                 name, value = extractValue(value, match, folder=options.get('folder', ''))
             else:
-                name, value = extractValue(nodedata['response'], match, folder=options.get('folder',''))
+                name, value = extractValue(nodedata['response'], match, folder=options.get('folder', ''))
 
             if (pattern == '<' + match + '>'):
                 pattern = value
                 return pattern
-            else:                
-                #Mask special characters 
-                value = value.replace('\\','\\\\')
-                value = value.replace('<','\\<')
-                value = value.replace('>','\\>')
-                
+            else:
+                # Mask special characters
+                value = value.replace('\\', '\\\\')
+                value = value.replace('<', '\\<')
+                value = value.replace('>', '\\>')
+
                 pattern = pattern.replace('<' + match + '>', value)
-               
+
         pattern = pattern.replace('\\<', '<')
         pattern = pattern.replace('\\>', '>')
         pattern = pattern.replace('\\\\', '\\')
 
         return pattern
 
-    def getURL(self, urlpath, params, nodedata,options):
+    def getURL(self, urlpath, params, nodedata, options):
         """
         Replaces the Facepager placeholders ("<",">")
         by the Object-ID or any other Facepager-Placeholder
@@ -187,7 +188,8 @@ class ApiTab(QScrollArea):
         urlpath, urlparams = self.parseURL(urlpath)
 
         # Filter empty params
-        params = {name: params[name] for name in params if (name != '') and (name != '<None>') and (params[name] != '<None>')}
+        params = {name: params[name] for name in params if
+                  (name != '') and (name != '<None>') and (params[name] != '<None>')}
 
         # Collect template parameters (= placeholders)
         templateparams = {}
@@ -204,7 +206,7 @@ class ApiTab(QScrollArea):
             if not match:
                 # Replace placeholders in parameter value
                 value = self.parsePlaceholders(params[name], nodedata, templateparams, options)
-                if isinstance(value,list):
+                if isinstance(value, list):
                     urlparams[name] = [str(x) for x in value]
                 else:
                     urlparams[name] = str(value)
@@ -227,51 +229,62 @@ class ApiTab(QScrollArea):
 
         return url
 
-    def getPayload(self,payload, params, nodedata,options, logProgress=None):
-        #Return nothing
-        if (payload is None) or (payload == ''):            
+    def getPayload(self, payload, params, nodedata, options, logProgress=None):
+        """
+        Encodes the payload
+
+        :param payload:
+        :param params:
+        :param nodedata:
+        :param options:
+        :param logProgress:
+        :return:
+        """
+
+        # Return nothing
+        if (payload is None) or (payload == ''):
             return None
-        
+
         # Parse JSON and replace placeholders in values
-        elif options.get('encoding','<None>') == 'multipart/form-data':
-            #payload = json.loads(payload)
+        elif options.get('encoding', '<None>') == 'multipart/form-data':
+            # payload = json.loads(payload)
             for name in payload:
                 value = payload[name]
-                
+
                 try:
                     value = json.loads(value)
                 except:
-                    pass 
-                    
-                # Files (convert dict to tuple)
-                if isinstance(value,dict):                
-                   filename = self.parsePlaceholders(value.get('name',''), nodedata, params,options)
-                   filedata = self.parsePlaceholders(value.get('data',''), nodedata, params,options)
-                   filetype = self.parsePlaceholders(value.get('type',''), nodedata, params,options)                   
-                   payload[name] = (filename,filedata,filetype)
-                    
+                    pass
+
+                    # Files (convert dict to tuple)
+                if isinstance(value, dict):
+                    filename = self.parsePlaceholders(value.get('name', ''), nodedata, params, options)
+                    filedata = self.parsePlaceholders(value.get('data', ''), nodedata, params, options)
+                    filetype = self.parsePlaceholders(value.get('type', ''), nodedata, params, options)
+                    payload[name] = (filename, filedata, filetype)
+
                 # Strings
                 else:
                     value = payload[name]
-                    payload[name] = self.parsePlaceholders(value, nodedata, params,options)
+                    payload[name] = self.parsePlaceholders(value, nodedata, params, options)
 
             def callback(monitor):
                 if logProgress is not None:
                     logProgress({'current': monitor.bytes_read, 'total': monitor.len})
 
             payload = MultipartEncoder(fields=payload)
-            payload = MultipartEncoderMonitor(payload,callback)
+            payload = MultipartEncoderMonitor(payload, callback)
 
             return payload
-        
+
         # Replace placeholders in string and setup progress callback
         else:
             def callback(current, total):
                 if logProgress is not None:
                     logProgress({'current': current, 'total': total})
 
-            payload = self.parsePlaceholders(payload, nodedata, params,options)
-            payload = BufferReader(payload,callback)
+            payload = self.parsePlaceholders(payload, nodedata, params, options)
+            payload = BufferReader(payload, callback)
             return payload
 
     # Gets data from input fields or defaults (never gets credentials from default values!)
@@ -279,25 +292,33 @@ class ApiTab(QScrollArea):
         options = {}
 
         defaults = self.getDefaultAndDocOptions()
-        #options['module'] = self.name
+        # options['module'] = self.name
 
-        #options for request
+        # Request options
         try:
             options['basepath'] = self.basepathEdit.currentText().strip()
+        except AttributeError:
+            pass
+
+        try:
             options['resource'] = self.resourceEdit.currentText().strip()
+        except AttributeError:
+            pass
+
+        try:
             options['params'] = self.paramEdit.getParams()
         except AttributeError:
             pass
 
         # Extension (for Twitter, deprecated)
-        options['extension'] = defaults.get('extension','')
+        options['extension'] = defaults.get('extension', '')
         if (options['extension'] != '') and options['resource'].endswith(options['extension']):
             options['extension'] = ''
 
-        #headers and verbs
+        # Headers and verbs
         try:
             options['headers'] = self.headerEdit.getParams()
-            options['verb'] = self.verbEdit.currentText().strip()            
+            options['verb'] = self.verbEdit.currentText().strip()
         except AttributeError:
             pass
         #
@@ -306,17 +327,17 @@ class ApiTab(QScrollArea):
         # if doc_resource == '':
         #     doc_resource = '0'
 
-        #format
+        # Format
         try:
             options['format'] = self.formatEdit.currentText().strip()
         except AttributeError:
             pass
 
-        #payload
+        # Payload
         try:
-            if options.get('verb','GET') in ['POST','PUT','PATCH']:
+            if options.get('verb', 'GET') in ['POST', 'PUT', 'PATCH']:
                 options['encoding'] = self.encodingEdit.currentText().strip()
-                
+
                 if options['encoding'] == 'multipart/form-data':
                     options['payload'] = self.multipartEdit.getParams()
                 else:
@@ -330,17 +351,23 @@ class ApiTab(QScrollArea):
         except AttributeError:
             pass
 
-        #paging
+        # Paging
         try:
             options['pages'] = self.pagesEdit.value()
         except AttributeError:
             pass
 
         try:
-            options['paging_type'] = self.pagingTypeEdit.currentText().strip() if self.pagingTypeEdit.currentText() != "" else defaults.get('paging_type', '')
-            options['key_paging'] = self.pagingkeyEdit.text() if self.pagingkeyEdit.text() != "" else defaults.get('key_paging',None)
-            options['paging_stop'] = self.pagingstopEdit.text() if self.pagingstopEdit.text() != "" else defaults.get('paging_stop',None)
-            options['param_paging'] = self.pagingparamEdit.text() if self.pagingparamEdit.text() != "" else defaults.get('param_paging',None)
+            options[
+                'paging_type'] = self.pagingTypeEdit.currentText().strip() if self.pagingTypeEdit.currentText() != "" else defaults.get(
+                'paging_type', '')
+            options['key_paging'] = self.pagingkeyEdit.text() if self.pagingkeyEdit.text() != "" else defaults.get(
+                'key_paging', None)
+            options['paging_stop'] = self.pagingstopEdit.text() if self.pagingstopEdit.text() != "" else defaults.get(
+                'paging_stop', None)
+            options[
+                'param_paging'] = self.pagingparamEdit.text() if self.pagingparamEdit.text() != "" else defaults.get(
+                'param_paging', None)
             options['offset_start'] = self.offsetStartEdit.value()
             options['offset_step'] = self.offsetStepEdit.value()
         except AttributeError:
@@ -367,10 +394,11 @@ class ApiTab(QScrollArea):
             options.pop('key_paging')
             options.pop('paging_stop')
 
-        #options for data handling
+        # Data handling options
         try:
             options['nodedata'] = self.extractEdit.text() if self.extractEdit.text() != "" else defaults.get('nodedata')
-            options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else defaults.get('objectid')
+            options['objectid'] = self.objectidEdit.text() if self.objectidEdit.text() != "" else defaults.get(
+                'objectid')
         except AttributeError:
             options['nodedata'] = defaults.get('nodedata')
             options['objectid'] = defaults.get('objectid')
@@ -386,11 +414,13 @@ class ApiTab(QScrollArea):
         except AttributeError:
             pass
 
-
         # Options not saved to preset but to settings
         if purpose != 'preset':
             # query type
-            options['querytype'] = self.name + ':' + self.resourceEdit.currentText()            
+            try:
+                options['querytype'] = self.name + ':' + self.resourceEdit.currentText()
+            except AttributeError:
+                options['querytype'] = self.name
 
             # uploadfolder
             try:
@@ -407,17 +437,17 @@ class ApiTab(QScrollArea):
             try:
                 options['access_token'] = self.tokenEdit.text()
             except AttributeError:
-                pass            
+                pass
 
             try:
                 options['access_token_secret'] = self.tokensecretEdit.text()
             except AttributeError:
-                pass    
-                        
+                pass
+
             try:
                 options['client_id'] = self.clientIdEdit.text()
             except AttributeError:
-                pass            
+                pass
 
             try:
                 options['client_secret'] = self.clientSecretEdit.text()
@@ -427,66 +457,77 @@ class ApiTab(QScrollArea):
         return options
 
     def updateBasePath(self, options=None):
-        if options is None:
-            basepath = self.basepathEdit.currentText().strip()
-            options = {'basepath' : basepath}
-        else:
-            basepath = options.get('basepath', '')
-            self.basepathEdit.setEditText(basepath)
+        try:
+            if options is None:
+                basepath = self.basepathEdit.currentText().strip()
+                options = {'basepath': basepath}
+            else:
+                basepath = options.get('basepath', '')
+                self.basepathEdit.setEditText(basepath)
 
-        index = self.basepathEdit.findText(basepath)
-        if index != -1:
-            self.basepathEdit.setCurrentIndex(index)
+            index = self.basepathEdit.findText(basepath)
+            if index != -1:
+                self.basepathEdit.setCurrentIndex(index)
 
-        # Get general doc
-        apidoc = self.mainWindow.apiWindow.getApiDoc(self.name, basepath)
+            # Get general doc
+            apidoc = self.mainWindow.apiWindow.getApiDoc(self.name, basepath)
 
-        # apidoc = self.basepathEdit.itemData(index, Qt.UserRole)
+            # apidoc = self.basepathEdit.itemData(index, Qt.UserRole)
 
-        # Add endpoints in reverse order
-        self.resourceEdit.clear()
-        if apidoc and isinstance(apidoc, dict):
-            endpoints = apidoc.get("paths", {})
-            paths = endpoints.keys()
-            for path in list(paths):
-                operations = endpoints[path]
-                path = path.replace("{", "<").replace("}", ">")
+            # Add endpoints in reverse order
+            self.resourceEdit.clear()
+            if apidoc and isinstance(apidoc, dict):
+                endpoints = apidoc.get("paths", {})
+                paths = endpoints.keys()
+                for path in list(paths):
+                    operations = endpoints[path]
+                    path = path.replace("{", "<").replace("}", ">")
 
-                self.resourceEdit.addItem(path)
-                idx = self.resourceEdit.count() - 1
-                self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations, "get.summary", "")), Qt.ToolTipRole)
+                    self.resourceEdit.addItem(path)
+                    idx = self.resourceEdit.count() - 1
+                    self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations, "get.summary", "")),
+                                                  Qt.ToolTipRole)
 
-                # store params for later use in onChangedResource
-                self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
+                    # store params for later use in onChangedResource
+                    self.resourceEdit.setItemData(idx, operations, Qt.UserRole)
 
-            self.buttonApiHelp.setVisible(True)
-        else:
-            self.resourceEdit.insertItem(0, "/<Object ID>")
+                self.buttonApiHelp.setVisible(True)
+            else:
+                self.resourceEdit.insertItem(0, "/<Object ID>")
+        except AttributeError:
+            # In case one of the inputs does not exist
+            pass
 
     def updateResource(self, options=None):
-        if options is None:
-            resource = self.resourceEdit.currentText().strip()
-            options = {'resource' : resource}
-        else:
-            resource = options.get('resource', '')
-            self.resourceEdit.setEditText(resource)
+        try:
+            if options is None:
+                resource = self.resourceEdit.currentText().strip()
+            else:
+                resource = options.get('resource', '')
+                self.resourceEdit.setEditText(resource)
 
-        index = self.resourceEdit.findText(resource)
-        if index != -1:
-            self.resourceEdit.setCurrentIndex(index)
+            index = self.resourceEdit.findText(resource)
+            if index != -1:
+                self.resourceEdit.setCurrentIndex(index)
 
+            operations = self.resourceEdit.itemData(index, Qt.UserRole)
+            params = getDictValue(operations, "get.parameters", False) if operations else []
 
-        operations = self.resourceEdit.itemData(index, Qt.UserRole)
-        params = getDictValue(operations, "get.parameters", False) if operations else []
+            # Set param names
+            self.paramEdit.setNameOptionsAll(params)
 
-        # Set param names
-        self.paramEdit.setNameOptionsAll(params)
+        except AttributeError:
+            # In case one of the inputs does not exist
+            pass
 
-    # Populates input fields from loaded options and presets
-    # Select boxes are updated by onChangedBasepath and onChangedResource
-    # based on the API docs.
-    # @settings Dict with options
-    def setSettings(self, settings = {}):
+    def setSettings(self, settings={}):
+        """
+        Populates input fields from loaded options and presets
+        Select boxes are updated by onChangedBasepath and onChangedResource
+        based on the API docs.
+        :param settings: Dict with options
+        :return:
+        """
 
         # Base path
         options = self.getDefaultAndDocOptions(settings)
@@ -504,7 +545,11 @@ class ApiTab(QScrollArea):
         return options
 
     def updateParams(self, options):
-        self.paramEdit.setParams(options.get('params', ''))
+        try:
+            self.paramEdit.setParams(options.get('params', ''))
+        except AttributeError:
+            # In case one of the inputs does not exist
+            pass
 
     def updateOptions(self, options):
 
@@ -618,7 +663,7 @@ class ApiTab(QScrollArea):
         self.setSettings(options)
 
     @Slot(str)
-    def logMessage(self,message):
+    def logMessage(self, message):
         self.mainWindow.logmessage(message)
 
     def reloadDoc(self):
@@ -634,7 +679,7 @@ class ApiTab(QScrollArea):
         # Add base paths
         self.basepathEdit.clear()
         urls = self.mainWindow.apiWindow.getApiBasePaths(self.name)
-        self.basepathEdit.insertItems(0,urls)
+        self.basepathEdit.insertItems(0, urls)
 
         # TODO: set API Docs as item data
 
@@ -646,7 +691,7 @@ class ApiTab(QScrollArea):
         path = self.resourceEdit.currentText().strip()
         self.mainWindow.apiWindow.showDoc(self.name, basepath, path)
 
-    def getDefaultAndDocOptions(self, options = {}):
+    def getDefaultAndDocOptions(self, options={}):
         # Set default options
         defaults = self.defaults.copy()
         defaults.update(self.getDocOptions())
@@ -665,13 +710,16 @@ class ApiTab(QScrollArea):
 
         # Get general doc
         basepath = self.basepathEdit.currentText().strip()
-        apidoc = self.mainWindow.apiWindow.getApiDoc(self.name,basepath)
+        apidoc = self.mainWindow.apiWindow.getApiDoc(self.name, basepath)
 
-        # Get response doc
-        resourceidx = self.resourceEdit.findText(self.resourceEdit.currentText())
-        operations = self.resourceEdit.itemData(resourceidx,Qt.UserRole) if resourceidx != -1 else {}
+        # Get response doc from the resourceEdit if a resourceEdit exists
+        try:
+            resourceIdx = self.resourceEdit.findText(self.resourceEdit.currentText())
+            operations = self.resourceEdit.itemData(resourceIdx, Qt.UserRole) if resourceIdx != -1 else {}
+        except AttributeError:
+            operations = {}
+
         schema = getDictValue(operations, "get.responses.200.content.application/json.schema", []) if operations else []
-
         options = {}
 
         # Params
@@ -711,7 +759,6 @@ class ApiTab(QScrollArea):
         options['auth'] = getDictValueOrNone(authorization, 'auth_method')
         options['auth_tokenname'] = getDictValueOrNone(authorization, 'token_name')
 
-
         # Extract options from response reference
         if 'x-facepager-extract' in schema:
             options['nodedata'] = schema.get('x-facepager-extract')
@@ -719,31 +766,41 @@ class ApiTab(QScrollArea):
         if 'x-facepager-objectid' in schema:
             options['objectid'] = schema.get('x-facepager-objectid')
 
-
         options = {k: v for k, v in options.items() if v is not None}
 
         return options
 
-    def initInputs(self):
+    def initBasicInputs(self):
         '''
         Create base path edit, resource edit and param edit
-        Set resource according to the APIdocs, if any docs are available
         '''
 
-        #Base path
+        # Base path
+        self.initBasepathInput()
+        self.initResourceInput()
+        self.initParamsInput()
+
+    def initBasepathInput(self, label="Base path"):
+        '''
+        Create base path edit
+        '''
         self.basepathEdit = QComboBox(self)
-        if not self.defaults.get('basepath',None) is None:
-            self.basepathEdit.insertItems(0, [self.defaults.get('basepath','')])
+        if not self.defaults.get('basepath', None) is None:
+            self.basepathEdit.insertItems(0, [self.defaults.get('basepath', '')])
         self.basepathEdit.setEditable(True)
-        self.mainLayout.addRow("Base path", self.basepathEdit)
+        self.mainLayout.addRow(label, self.basepathEdit)
         self.basepathEdit.currentIndexChanged.connect(self.onChangedBasepath)
 
-        #Resource
+    def initResourceInput(self):
+        '''
+        Create resource edit.
+        Set resource according to the APIdocs, if any docs are available
+        '''
         self.resourceLayout = QHBoxLayout()
-        self.actionApiHelp = QAction('Open documentation if available.',self)
+        self.actionApiHelp = QAction('Open documentation if available.', self)
         self.actionApiHelp.setText('?')
         self.actionApiHelp.triggered.connect(self.showDoc)
-        self.buttonApiHelp =QToolButton(self)
+        self.buttonApiHelp = QToolButton(self)
         self.buttonApiHelp.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.buttonApiHelp.setDefaultAction(self.actionApiHelp)
         self.buttonApiHelp.setVisible(False)
@@ -756,12 +813,16 @@ class ApiTab(QScrollArea):
 
         self.mainLayout.addRow("Resource", self.resourceLayout)
 
-        #Parameters
-        self.paramEdit = QParamEdit(self)
-        self.mainLayout.addRow("Parameters", self.paramEdit)
         self.resourceEdit.currentIndexChanged.connect(self.onChangedResource)
 
-    def getFileFolderName(self,options, nodedata):
+    def initParamsInput(self):
+        '''
+        Create parameter inputs
+        '''
+        self.paramEdit = QParamEdit(self)
+        self.mainLayout.addRow("Parameters", self.paramEdit)
+
+    def getFileFolderName(self, options, nodedata):
         # Folder
         foldername = options.get('downloadfolder', None)
         if foldername == '':
@@ -769,10 +830,10 @@ class ApiTab(QScrollArea):
 
         # File
         filename = options.get('filename', None)
-        if (filename is not None) and (filename  == '<None>'):
+        if (filename is not None) and (filename == '<None>'):
             filename = None
         else:
-            filename = self.parsePlaceholders(filename,nodedata)
+            filename = self.parsePlaceholders(filename, nodedata)
 
         if filename == '':
             filename = None
@@ -783,15 +844,15 @@ class ApiTab(QScrollArea):
         if fileext is not None and fileext == '<None>':
             fileext = None
         elif fileext is not None and fileext != '':
-            fileext = self.parsePlaceholders(fileext,nodedata)
+            fileext = self.parsePlaceholders(fileext, nodedata)
 
-        return (foldername,filename,fileext)
+        return (foldername, filename, fileext)
 
     # Upload folder
     def initUploadFolderInput(self):
         self.folderwidget = QWidget()
         folderlayout = QHBoxLayout()
-        folderlayout.setContentsMargins(0,0,0,0)
+        folderlayout.setContentsMargins(0, 0, 0, 0)
         self.folderwidget.setLayout(folderlayout)
 
         self.folderEdit = QLineEdit()
@@ -808,40 +869,41 @@ class ApiTab(QScrollArea):
 
         self.downloadfolderwidget = QWidget()
         folderlayout = QHBoxLayout()
-        folderlayout.setContentsMargins(0,0,0,0)
+        folderlayout.setContentsMargins(0, 0, 0, 0)
         self.downloadfolderwidget.setLayout(folderlayout)
 
         # Folder edit
         self.downloadfolderEdit = QLineEdit()
         self.downloadfolderEdit.setToolTip(wraptip("Select a folder if you want to save the responses to files."))
-        folderlayout.addWidget(self.downloadfolderEdit,2)
+        folderlayout.addWidget(self.downloadfolderEdit, 2)
 
         # Select folder button
-        self.actionDownloadFolder = QAction('...',self)
+        self.actionDownloadFolder = QAction('...', self)
         self.actionDownloadFolder.setText('..')
         self.actionDownloadFolder.triggered.connect(self.selectDownloadFolder)
-        self.downloadfolderButton =QToolButton(self)
+        self.downloadfolderButton = QToolButton(self)
         self.downloadfolderButton.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.downloadfolderButton.setDefaultAction(self.actionDownloadFolder)
-        folderlayout.addWidget(self.downloadfolderButton,0)
+        folderlayout.addWidget(self.downloadfolderButton, 0)
 
         # filename
-        folderlayout.addWidget(QLabel("Filename"),0)
+        folderlayout.addWidget(QLabel("Filename"), 0)
         self.filenameEdit = QComboBox(self)
-        self.filenameEdit .setToolTip(wraptip("Set the filename, if you want to save the responses to files. <Object ID> usually is a good choice."))
-        self.filenameEdit.insertItems(0, ['<Object ID>','<None>'])
+        self.filenameEdit.setToolTip(wraptip(
+            "Set the filename, if you want to save the responses to files. <Object ID> usually is a good choice."))
+        self.filenameEdit.insertItems(0, ['<Object ID>', '<None>'])
         self.filenameEdit.setEditable(True)
-        folderlayout.addWidget(self.filenameEdit,1)
-
+        folderlayout.addWidget(self.filenameEdit, 1)
 
         # fileext
-        folderlayout.addWidget(QLabel("Custom file extension"),0)
+        folderlayout.addWidget(QLabel("Custom file extension"), 0)
         self.fileextEdit = QComboBox(self)
-        self.fileextEdit  .setToolTip(wraptip("Set the extension of the files, for example .json, .txt or .html. Set to <None> to automatically guess from the response."))
-        self.fileextEdit.insertItems(0, ['<None>','.html','.txt'])
+        self.fileextEdit.setToolTip(wraptip(
+            "Set the extension of the files, for example .json, .txt or .html. Set to <None> to automatically guess from the response."))
+        self.fileextEdit.insertItems(0, ['<None>', '.html', '.txt'])
         self.fileextEdit.setEditable(True)
-        folderlayout.addWidget(self.fileextEdit,1)
-        #layout.setStretch(2, 1)
+        folderlayout.addWidget(self.fileextEdit, 1)
+        # layout.setStretch(2, 1)
 
         self.extraLayout.addRow("Download", self.downloadfolderwidget)
 
@@ -862,10 +924,9 @@ class ApiTab(QScrollArea):
         if self.pagingTypeEdit.count() < 2:
             self.pagingTypeEdit.hide()
 
+    def initPagingInputs(self, keys=False):
+        layout = QHBoxLayout()
 
-    def initPagingInputs(self,keys = False):
-        layout= QHBoxLayout()
-        
         if keys:
             # Paging type
 
@@ -876,7 +937,8 @@ class ApiTab(QScrollArea):
             self.pagingTypeEdit.addItem('url')
             self.pagingTypeEdit.addItem('decrease')
 
-            self.pagingTypeEdit.setToolTip(wraptip("Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount. Select 'url' if the response contains a complete URL to the next page."))
+            self.pagingTypeEdit.setToolTip(wraptip(
+                "Select 'key' if the response contains data about the next page, e.g. page number or offset. Select 'count' if you want to increase the paging param by a fixed amount. Select 'url' if the response contains a complete URL to the next page."))
             self.pagingTypeEdit.currentIndexChanged.connect(self.pagingChanged)
             layout.addWidget(self.pagingTypeEdit)
             layout.setStretch(0, 0)
@@ -884,14 +946,15 @@ class ApiTab(QScrollArea):
             # Paging param
             self.pagingParamWidget = QWidget()
             self.pagingParamLayout = QHBoxLayout()
-            self.pagingParamLayout .setContentsMargins(0, 0, 0, 0)
+            self.pagingParamLayout.setContentsMargins(0, 0, 0, 0)
             self.pagingParamWidget.setLayout(self.pagingParamLayout)
 
             self.pagingParamLayout.addWidget(QLabel("Param"))
             self.pagingparamEdit = QLineEdit(self)
-            self.pagingparamEdit.setToolTip(wraptip("This parameter will be added to the query if you select key-pagination. The value is extracted by the paging key."))
+            self.pagingparamEdit.setToolTip(wraptip(
+                "This parameter will be added to the query if you select key-pagination. The value is extracted by the paging key."))
             self.pagingParamLayout.addWidget(self.pagingparamEdit)
-            self.pagingParamLayout.setStretch(0,0)
+            self.pagingParamLayout.setStretch(0, 0)
             self.pagingParamLayout.setStretch(1, 0)
 
             layout.addWidget(self.pagingParamWidget)
@@ -900,12 +963,13 @@ class ApiTab(QScrollArea):
             # Paging key
             self.pagingKeyWidget = QWidget()
             self.pagingKeyLayout = QHBoxLayout()
-            self.pagingKeyLayout .setContentsMargins(0, 0, 0, 0)
+            self.pagingKeyLayout.setContentsMargins(0, 0, 0, 0)
             self.pagingKeyWidget.setLayout(self.pagingKeyLayout)
 
             self.pagingKeyLayout.addWidget(QLabel("Paging key"))
             self.pagingkeyEdit = QLineEdit(self)
-            self.pagingkeyEdit.setToolTip(wraptip("If the respsonse contains data about the next page, specify the key. The value will be added as paging parameter or used as the URL."))
+            self.pagingkeyEdit.setToolTip(wraptip(
+                "If the respsonse contains data about the next page, specify the key. The value will be added as paging parameter or used as the URL."))
             self.pagingKeyLayout.addWidget(self.pagingkeyEdit)
             self.pagingKeyLayout.setStretch(0, 0)
             self.pagingKeyLayout.setStretch(1, 1)
@@ -942,12 +1006,13 @@ class ApiTab(QScrollArea):
             # Stop if
             layout.addWidget(QLabel("Stop key"))
             self.pagingstopEdit = QLineEdit(self)
-            self.pagingstopEdit.setToolTip(wraptip("Stops fetching data as soon as the given key is present but empty or false. For example, stops fetching if the value of 'hasNext' ist false, none or an empty list. Usually you can leave the field blank, since fetching will stop anyway when the paging key is empty."))
+            self.pagingstopEdit.setToolTip(wraptip(
+                "Stops fetching data as soon as the given key is present but empty or false. For example, stops fetching if the value of 'hasNext' ist false, none or an empty list. Usually you can leave the field blank, since fetching will stop anyway when the paging key is empty."))
             layout.addWidget(self.pagingstopEdit)
             layout.setStretch(4, 0)
             layout.setStretch(5, 1)
 
-            #Page count
+            # Page count
             layout.addWidget(QLabel("Maximum pages"))
             self.pagesEdit = QSpinBox(self)
             self.pagesEdit.setMinimum(1)
@@ -960,12 +1025,12 @@ class ApiTab(QScrollArea):
             rowcaption = "Paging"
 
         else:
-            #Page count
+            # Page count
             self.pagesEdit = QSpinBox(self)
             self.pagesEdit.setMinimum(1)
             self.pagesEdit.setMaximum(50000)
-            layout.addWidget(self.pagesEdit)            
-            
+            layout.addWidget(self.pagesEdit)
+
             rowcaption = "Maximum pages"
 
         self.extraLayout.addRow(rowcaption, layout)
@@ -974,128 +1039,126 @@ class ApiTab(QScrollArea):
         self.headerEdit = QParamEdit(self)
         self.mainLayout.addRow("Headers", self.headerEdit)
 
-
     def initVerbInputs(self):
         # Verb and encoding
         self.verbEdit = QComboBox(self)
-        self.verbEdit.addItems(['GET','HEAD','POST','PUT','PATCH','DELETE'])
+        self.verbEdit.addItems(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'])
         self.verbEdit.currentIndexChanged.connect(self.verbChanged)
 
         self.encodingLabel = QLabel("Encoding")
         self.encodingEdit = QComboBox(self)
-        self.encodingEdit.addItems(['<None>','multipart/form-data'])
+        self.encodingEdit.addItems(['<None>', 'multipart/form-data'])
         self.encodingEdit.currentIndexChanged.connect(self.verbChanged)
-        
 
-        layout= QHBoxLayout()
+        layout = QHBoxLayout()
         layout.addWidget(self.verbEdit)
         layout.setStretch(0, 1)
         layout.addWidget(self.encodingLabel)
         layout.addWidget(self.encodingEdit)
         layout.setStretch(2, 1)
         self.mainLayout.addRow("Method", layout)
-        
+
         # Payload
         self.payloadWidget = QWidget()
         self.payloadLayout = QHBoxLayout()
-        self.payloadLayout.setContentsMargins(0,0,0,0)
+        self.payloadLayout.setContentsMargins(0, 0, 0, 0)
         self.payloadWidget.setLayout(self.payloadLayout)
-        
+
         self.payloadEdit = QPlainTextEdit()
         self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.payloadLayout.addWidget(self.payloadEdit)
         self.payloadLayout.setStretch(0, 1);
-        
+
         self.multipartEdit = QParamEdit()
         self.payloadLayout.addWidget(self.multipartEdit)
-        self.payloadLayout.setStretch(0, 1);        
+        self.payloadLayout.setStretch(2, 1);
 
-        self.payloadLayout.setStretch(2, 1);    
         self.mainLayout.addRow("Payload", self.payloadWidget)
 
     def verbChanged(self):
-        if self.verbEdit.currentText() in ['GET','DELETE','HEAD']:
+        if self.verbEdit.currentText() in ['GET', 'DELETE', 'HEAD']:
             self.payloadWidget.hide()
             self.mainLayout.labelForField(self.payloadWidget).hide()
-            
+
             self.encodingEdit.hide()
-            self.encodingLabel.hide()                        
+            self.encodingLabel.hide()
 
             self.folderwidget.hide()
             self.mainLayout.labelForField(self.folderwidget).hide()
         else:
+
             self.payloadWidget.show()
             self.mainLayout.labelForField(self.payloadWidget).show()
 
-            #Encoding    
+            # Encoding
             self.encodingEdit.show()
             self.encodingLabel.show()
-            
-            #Multipart
+
+            # Multipart
             if self.encodingEdit.currentText().strip() == 'multipart/form-data':
                 self.multipartEdit.show()
                 self.payloadEdit.hide()
-                
-                #self.payloadEdit.setPlainText(json.dumps(self.multipartEdit.getParams(),indent=4,))
+
+                # self.payloadEdit.setPlainText(json.dumps(self.multipartEdit.getParams(),indent=4,))
             else:
                 self.payloadEdit.show()
                 self.multipartEdit.hide()
-            
-            #Folder
+
+            # Folder
             self.folderwidget.show()
-            self.mainLayout.labelForField(self.folderwidget).show()                        
+            self.mainLayout.labelForField(self.folderwidget).show()
 
-    def initResponseInputs(self, format=False):
-        layout= QHBoxLayout()
+    def initResponseInputs(self, format=True):
+        """
+        Create inputs for extraction keys
 
-        if not format:
-            #Extract
-            self.extractEdit = QLineEdit(self)
-            layout.addWidget(self.extractEdit)
-            layout.setStretch(0, 1)
+        :param format: Whether to create a format selector
+        :return:
+        """
+        layout = QHBoxLayout()
 
-            layout.addWidget(QLabel("Key for Object ID"))
-            self.objectidEdit = QLineEdit(self)
-            layout.addWidget(self.objectidEdit)
-            layout.setStretch(2, 1)
-
-            #Add layout
-            self.extraLayout.addRow("Key to extract", layout)
-        else:
-            # Format
+        # Format
+        if format:
             self.formatEdit = QComboBox(self)
-            self.formatEdit.addItems(['json', 'text', 'links','xml','file'])
+            self.formatEdit.addItems(['json', 'text', 'links', 'xml', 'file', 'rdf', 'ttl', 'json-ld'])
             self.formatEdit.setToolTip("<p>JSON: default option, data will be parsed as JSON. </p> \
                                         <p>Text: data will not be parsed and embedded in JSON. </p> \
                                         <p>Links: data will be parsed as xml and links will be extracted (set key to extract to 'links' and key for Object ID to 'url'). </p> \
                                         <p>XML: data will be parsed as XML and converted to JSON. </p> \
                                         <p>File: data will only be downloaded to files, specify download folder and filename.</p>")
             layout.addWidget(self.formatEdit)
-            layout.setStretch(0, 0)
             # self.formatEdit.currentIndexChanged.connect(self.formatChanged)
 
-            # Extract
-            layout.addWidget(QLabel("Key to extract"))
-            self.extractEdit = QLineEdit(self)
-            self.extractEdit.setToolTip(wraptip(
-                "If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
-            layout.addWidget(self.extractEdit)
+            layout.setStretch(0, 0)
             layout.setStretch(1, 0)
             layout.setStretch(2, 2)
-
-            layout.addWidget(QLabel("Key for Object ID"))
-            self.objectidEdit = QLineEdit(self)
-            self.objectidEdit.setToolTip(
-                wraptip("If your data contains unique IDs for every node, define the corresponding key."))
-            layout.addWidget(self.objectidEdit)
             layout.setStretch(3, 0)
             layout.setStretch(4, 2)
 
-            # Add layout
-            self.extraLayout.addRow("Response", layout)
+            rowLabel = "Response"
+            layout.addWidget(QLabel("Key to extract"))
+        else:
+            layout.setStretch(0, 1)
+            layout.setStretch(2, 1)
+            rowLabel = "Key to extract"
+
+        # Extract
+        self.extractEdit = QLineEdit(self)
+        self.extractEdit.setToolTip(wraptip(
+            "If your data contains a list of objects, set the key of the list. Every list element will be adeded as a single node. Remaining data will be added as offcut node."))
+        layout.addWidget(self.extractEdit)
+
+        layout.addWidget(QLabel("Key for Object ID"))
+        self.objectidEdit = QLineEdit(self)
+        self.objectidEdit.setToolTip(
+            wraptip("If your data contains unique IDs for every node, define the corresponding key."))
+        layout.addWidget(self.objectidEdit)
+
+        # Add layout
+        self.extraLayout.addRow(rowLabel, layout)
 
     @Slot()
-    def onChangedBasepath(self, index = None):
+    def onChangedBasepath(self, index=None):
         '''
         Handles the automated resource suggestion for the
         selected API based on the OpenAPI specification 3.0.0
@@ -1113,7 +1176,7 @@ class ApiTab(QScrollArea):
         self.updateOptions(defaults)
 
     @Slot()
-    def onChangedResource(self, index = None):
+    def onChangedResource(self, index=None):
         '''
         Handles the automated parameter suggestion for the
         selected API endpoint based on the OpenAPI specification 3.0.0
@@ -1130,9 +1193,8 @@ class ApiTab(QScrollArea):
         self.updateParams(defaults)
         self.updateOptions(defaults)
 
-
     @Slot()
-    def onChangedParam(self,index=0):
+    def onChangedParam(self, index=0):
         pass
 
     def getProxies(self, reload=False):
@@ -1151,7 +1213,7 @@ class ApiTab(QScrollArea):
             self.proxies = self.proxies[1:] + self.proxies[:1]
 
         if proxy.startswith('http'):
-            proxy_http = "http://"+re.sub('^https?://', '', proxy)
+            proxy_http = "http://" + re.sub('^https?://', '', proxy)
             proxy_https = "https://" + re.sub('^https?://', '', proxy)
             return {'http': proxy_http, 'https': proxy_https}
         elif proxy != "":
@@ -1187,27 +1249,28 @@ class ApiTab(QScrollArea):
             options['params'][options.get('param_paging', '')] = offset
 
         # paging by key (continue previous fetching process based on last fetched child offcut node)
-        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (options.get('param_paging') is not None):
+        elif (options.get('paging_type') == "key") and (options.get('key_paging') is not None) and (
+                options.get('param_paging') is not None):
             # Get cursor of last offcut node
             offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
-            cursor = getDictValueOrNone(offcut,options.get('key_paging'))
-            stopvalue = not extractValue(offcut,options.get('paging_stop'), dump = False, default = True)[1]
+            cursor = getDictValueOrNone(offcut, options.get('key_paging'))
+            stopvalue = not extractValue(offcut, options.get('paging_stop'), dump=False, default=True)[1]
 
             # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('resume',False) and (offcut is not None) and ((cursor is None) or stopvalue):
+            if options.get('resume', False) and (offcut is not None) and ((cursor is None) or stopvalue):
                 return None
 
             # Continue / start fetching
-            elif (cursor is not None) :
+            elif (cursor is not None):
                 options['params'][options['param_paging']] = cursor
 
         # url based paging
         elif (options.get('paging_type') == "url") and (options.get('key_paging') is not None):
             offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
-            url = getDictValueOrNone(offcut,options.get('key_paging'))
+            url = getDictValueOrNone(offcut, options.get('key_paging'))
 
             # Dont't fetch if already finished (=offcut without next cursor)
-            if options.get('resume',False) and (offcut is not None) and (url is None):
+            if options.get('resume', False) and (offcut is not None) and (url is None):
                 return None
 
             if url is not None:
@@ -1216,7 +1279,7 @@ class ApiTab(QScrollArea):
                 options['url'] = url
 
         elif (options.get('paging_type') == "decrease"):
-            node= getDictValueOrNone(options, 'lastdata.response', dump=False)
+            node = getDictValueOrNone(options, 'lastdata.response', dump=False)
             cursor = getDictValueOrNone(node, options.get('key_paging'))
 
             if (node is not None):
@@ -1230,7 +1293,7 @@ class ApiTab(QScrollArea):
                     return None
 
         # break if "continue pagination" is checked and data already present
-        elif options.get('resume',False):
+        elif options.get('resume', False):
             offcut = getDictValueOrNone(options, 'lastdata.response', dump=False)
 
             # Dont't fetch if already finished (=offcut)
@@ -1312,8 +1375,8 @@ class ApiTab(QScrollArea):
             requestheaders = options.get('headers', {})
 
             # Authorization
-            if options.get('auth','disable') != 'disable':
-                token = options.get('auth_prefix','') + options.get('access_token','')
+            if options.get('auth', 'disable') != 'disable':
+                token = options.get('auth_prefix', '') + options.get('access_token', '')
                 if options.get('auth') == 'param':
                     urlparams[options.get('auth_tokenname')] = token
                 elif (options.get('auth') == 'header'):
@@ -1373,13 +1436,13 @@ class ApiTab(QScrollArea):
                 self.sessions[no].close()
                 self.sessions[no] = None
 
-    def request(self, session_no=0, path=None, args=None, headers=None, method="GET", payload=None,foldername=None,
-                                                      filename=None, fileext=None, format='json'):
+    def request(self, session_no=0, path=None, args=None, headers=None, method="GET", payload=None, foldername=None,
+                filename=None, fileext=None, format='json'):
         """
         Start a new threadsafe session and request
         """
 
-        def download(response,foldername=None,filename=None,fileext=None):
+        def download(response, foldername=None, filename=None, fileext=None):
             if foldername is not None and filename is not None:
                 if fileext is None:
                     contentype = response.headers.get("content-type")
@@ -1389,8 +1452,7 @@ class ApiTab(QScrollArea):
                     else:
                         fileext = None
 
-
-                fullfilename = makefilename(path,foldername, filename, fileext)
+                fullfilename = makefilename(path, foldername, filename, fileext)
                 file = open(fullfilename, 'wb')
             else:
                 fullfilename = None
@@ -1408,7 +1470,6 @@ class ApiTab(QScrollArea):
                         if file is not None:
                             file.write(chunk)
 
-
                     out = content.getvalue()
                     encoding = response.encoding
                     encoding = cchardet.detect(out)['encoding'] if encoding is None else encoding
@@ -1423,17 +1484,9 @@ class ApiTab(QScrollArea):
                 if file is not None:
                     file.close()
 
-            # if file is not None:
-            #     try:
-            #         for chunk in response.iter_content(1024):
-            #             file.write(chunk)
-            #     finally:
-            #         file.close()
-
-
             return (fullfilename, out)
 
-        #Throttle speed
+        # Throttle speed
         if (self.speed is not None) and (self.lastrequest is not None):
             currentSpeed = 1 if self.appusage > self.appusageLimit else self.speed
             pause = ((60 * 1000) / float(currentSpeed)) - self.lastrequest.msecsTo(QDateTime.currentDateTime())
@@ -1464,8 +1517,9 @@ class ApiTab(QScrollArea):
                             cookies = dict(item.split("=", maxsplit=1) for item in cookies.split(";"))
 
                         # Send request
-                        response = session.request(method,path, params=args, headers=headers, cookies=cookies,
-                                                   data=payload, timeout=self.timeout,stream=True,verify=True) # verify=False
+                        response = session.request(method, path, params=args, headers=headers, cookies=cookies,
+                                                   data=payload, timeout=self.timeout, stream=True,
+                                                   verify=True)  # verify=False
 
                     except (HTTPError, ConnectionError) as e:
                         maxretries -= 1
@@ -1480,7 +1534,7 @@ class ApiTab(QScrollArea):
                     else:
                         break
 
-                if int(response.headers.get('content-length',0)) > (self.maxsize * 1024 * 1024):
+                if int(response.headers.get('content-length', 0)) > (self.maxsize * 1024 * 1024):
                     raise DataTooBigError(f"File is too big, content length is {response.headers['content-length']}.")
 
                 status = 'fetched' if response.ok else 'error'
@@ -1489,8 +1543,8 @@ class ApiTab(QScrollArea):
 
                 # Download data
                 data = {
-                    'content-type': response.headers.get("content-type",""),
-                    'sourcepath': path,'sourcequery': args,'finalurl': response.url
+                    'content-type': response.headers.get("content-type", ""),
+                    'sourcepath': path, 'sourcequery': args, 'finalurl': response.url
                 }
 
                 fullfilename, content = download(response, foldername, filename, fileext)
@@ -1499,61 +1553,17 @@ class ApiTab(QScrollArea):
                     data['filename'] = os.path.basename(fullfilename)
                     data['filepath'] = fullfilename
 
-                # Text
-                if format == 'text':
-                        data['text'] = content  # str(response.text)
-
-                 # Scrape links
-                elif format == 'links':
-                    try:
-                        links, base = extractLinks(content, response.url)
-                        data['links'] = links
-                        data['base'] = base
-                    except Exception as  e:
-                        data['error'] = 'Could not extract Links.'
-                        data['message'] = str(e)
-                        data['response'] = content
-
-                # JSON
-                elif format == 'json':
-                    try:
-                        data = json.loads(content) if content != '' else []
-                    except Exception as e:
-                        # self.logMessage("No valid JSON data, try to convert XML to JSON ("+str(e)+")")
-                        # try:
-                        #     data = xmlToJson(response.text)
-                        # except:
-                        data = {
-                            'error': 'Data could not be converted to JSON',
-                            'response': content,
-                            'exception':str(e)
-                        }
-
-                # JSON
-                elif format == 'xml':
-                    try:
-                        data = xmlToJson(content)
-                    except Exception as e:
-                        data = {
-                            'error': 'Data could not be converted to JSON',
-                            'response': content,
-                            'exception':str(e)
-                        }
-
+                data = self.postProcessData(data, content, response, format)
 
             except Exception as e:
-            #except (DataTooBigError, HTTPError, ReadTimeout, ConnectionError, InvalidURL, MissingSchema) as e:
                 status = 'request error'
-                data = {'error':str(e)}
+                data = {'error': str(e)}
                 headers = {}
-
-                #raise Exception("Request Error: {0}".format(str(e)))
         finally:
             if response is not None:
                 response.close()
 
             return data, headers, status
-
 
     def disconnectSocket(self):
         """Used to hardly disconnect the streaming client"""
@@ -1562,12 +1572,87 @@ class ApiTab(QScrollArea):
             session = self.sessions.pop()
             session.close()
 
-        #self.response.raw._fp.close()
-        #self.response.close()
+        # self.response.raw._fp.close()
+        # self.response.close()
+
+    def postProcessData(self, data, content, response, format):
+        """
+        Post process data, e.g. by extracting links or format conversions
+
+        :param data:
+        :param content:
+        :param response:
+        :return:
+        """
+        # Text
+        if format == 'text':
+            data['text'] = content
+
+        # Scrape links
+        elif format == 'links':
+            try:
+                links, base = extractLinks(content, response.url)
+                data['links'] = links
+                data['base'] = base
+            except Exception as e:
+                data['error'] = 'Could not extract links.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # Get triples
+        elif format == 'ttl':
+            try:
+                data['triples'] = extractTriples(content, 'turtle')
+            except Exception as e:
+                data['error'] = 'Could not extract triples.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # Get triples
+        elif format == 'rdf':
+            try:
+                data['triples'] = extractTriples(content, 'xml')
+            except Exception as e:
+                data['error'] = 'Could not extract triples.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # Get triples
+        elif format == 'json-ld':
+            try:
+                data['triples'] = extractTriples(content, 'json-ld')
+            except Exception as e:
+                data['error'] = 'Could not extract triples.'
+                data['message'] = str(e)
+                data['response'] = content
+
+        # JSON
+        elif format == 'json':
+            try:
+                data = json.loads(content) if content != '' else []
+            except Exception as e:
+                data = {
+                    'error': 'Data could not be converted to JSON',
+                    'response': content,
+                    'exception': str(e)
+                }
+
+        # JSON
+        elif format == 'xml':
+            try:
+                data = xmlToJson(content)
+            except Exception as e:
+                data = {
+                    'error': 'Data could not be converted to JSON',
+                    'response': content,
+                    'exception': str(e)
+                }
+
+        return data
 
     @Slot()
     def captureData(self, nodedata, options=None, logData=None, logMessage=None, logProgress=None):
-        session_no = options.get('threadnumber',0)
+        session_no = options.get('threadnumber', 0)
         self.connected = True
 
         # Init pagination
@@ -1590,12 +1675,12 @@ class ApiTab(QScrollArea):
             logMessage("Empty path, node {0} skipped.".format(nodedata['objectid']))
             return False
 
-        if not urlpath.startswith(('https://','http://','file://')):
+        if not urlpath.startswith(('https://', 'http://', 'file://')):
             logMessage("Http or https missing in path, node {0} skipped.".format(nodedata['objectid']))
             return False
 
         if options['logrequests']:
-            logpath = self.getLogURL(urlpath,urlparams,options)
+            logpath = self.getLogURL(urlpath, urlparams, options)
             logMessage("Capturing data for {0} from {1}".format(nodedata['objectid'], logpath))
 
         # Show browser
@@ -1616,16 +1701,16 @@ class ApiTab(QScrollArea):
 
     def selectFolder(self):
         datadir = self.folderEdit.text()
-        datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', '')) if datadir == '' else datadir 
-        datadir = os.path.expanduser('~') if datadir == '' else datadir        
-        
+        datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', '')) if datadir == '' else datadir
+        datadir = os.path.expanduser('~') if datadir == '' else datadir
+
         dlg = SelectFolderDialog(self, 'Select Upload Folder', datadir)
         if dlg.exec_():
             if dlg.optionNodes.isChecked():
-                newnodes = [os.path.basename(f)  for f in dlg.selectedFiles()]
+                newnodes = [os.path.basename(f) for f in dlg.selectedFiles()]
                 self.mainWindow.tree.treemodel.addSeedNodes(newnodes)
                 folder = os.path.dirname(dlg.selectedFiles()[0])
-                self.folderEdit.setText(folder)            
+                self.folderEdit.setText(folder)
             else:
                 folder = dlg.selectedFiles()[0]
                 self.folderEdit.setText(folder)
@@ -1724,6 +1809,7 @@ class ApiTab(QScrollArea):
         if value is not None:
             self.mainWindow.emptyCheckbox.setChecked(bool(value))
 
+
 class AuthTab(ApiTab):
     """
     Module providing authorization
@@ -1752,7 +1838,7 @@ class AuthTab(ApiTab):
         self.authWidget.setLayout(authlayout)
 
         self.authTypeEdit = QComboBox()
-        self.authTypeEdit.addItems(['Disable','API key','OAuth2', 'Cookie', 'OAuth2 Client Credentials'])
+        self.authTypeEdit.addItems(['Disable', 'API key', 'OAuth2', 'Cookie', 'OAuth2 Client Credentials'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.authURIEdit = QLineEdit()
@@ -1776,13 +1862,13 @@ class AuthTab(ApiTab):
         authlayout.addRow("Scopes", self.scopeEdit)
 
         self.proxyEdit = QLineEdit()
-        self.proxyEdit .setToolTip(wraptip("The proxy will be used for fetching data only, not for the login procedure."))
+        self.proxyEdit.setToolTip(
+            wraptip("The proxy will be used for fetching data only, not for the login procedure."))
         authlayout.addRow("Proxy", self.proxyEdit)
-
 
     @Slot()
     def editAuthSettings(self):
-        dialog = QDialog(self,Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
+        dialog = QDialog(self, Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         dialog.setWindowTitle("Authentication settings")
         dialog.setMinimumWidth(400)
 
@@ -1819,7 +1905,7 @@ class AuthTab(ApiTab):
 
             dialog.close()
 
-        #connect the nested functions above to the dialog-buttons
+        # connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(apply)
         buttons.rejected.connect(close)
         dialog.exec_()
@@ -1837,9 +1923,10 @@ class AuthTab(ApiTab):
 
             loginlayout.addWidget(QLabel("Name"))
             self.tokenNameEdit = QLineEdit()
-            self.tokenNameEdit.setToolTip(wraptip("The name of the access token parameter or the authorization header. If you select an authentication method different from API key (e.g. OAuth2 or Cookie), name the is overriden by the selected method."))
+            self.tokenNameEdit.setToolTip(wraptip(
+                "The name of the access token parameter or the authorization header. If you select an authentication method different from API key (e.g. OAuth2 or Cookie), name the is overriden by the selected method."))
             # If you leave this empty, the default value is 'access_token' for param-method and 'Authorization' for header-method.
-            loginlayout.addWidget(self.tokenNameEdit,1)
+            loginlayout.addWidget(self.tokenNameEdit, 1)
 
             rowcaption = "Authorization"
             loginlayout.addWidget(QLabel("Access token"))
@@ -1848,7 +1935,7 @@ class AuthTab(ApiTab):
 
         self.tokenEdit = QLineEdit()
         self.tokenEdit.setEchoMode(QLineEdit.Password)
-        loginlayout.addWidget(self.tokenEdit,2)
+        loginlayout.addWidget(self.tokenEdit, 2)
 
         self.authButton = QPushButton('Settings', self)
         self.authButton.clicked.connect(self.editAuthSettings)
@@ -1860,7 +1947,7 @@ class AuthTab(ApiTab):
         self.loginButton.clicked.connect(self.doLogin)
         loginlayout.addWidget(self.loginButton)
 
-        #self.mainLayout.addRow(rowcaption, loginwidget)
+        # self.mainLayout.addRow(rowcaption, loginwidget)
         self.extraLayout.addRow(rowcaption, loginlayout)
 
     def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
@@ -1869,7 +1956,9 @@ class AuthTab(ApiTab):
 
         # Auth type
         try:
-            options['auth_type'] = self.authTypeEdit.currentText().strip() if self.authTypeEdit.currentText() != "" else defaults.get('auth_type', '')
+            options[
+                'auth_type'] = self.authTypeEdit.currentText().strip() if self.authTypeEdit.currentText() != "" else defaults.get(
+                'auth_type', '')
         except AttributeError:
             options['auth_type'] = defaults.get('auth_type', '')
 
@@ -1897,28 +1986,28 @@ class AuthTab(ApiTab):
             options['auth_tokenname'] = self.tokenNameEdit.text()
 
         except AttributeError:
-            options.pop('auth_tokenname',None)
+            options.pop('auth_tokenname', None)
             options['auth'] = defaults.get('auth', 'disable')
 
         # Override authorization settings (token handling)
         # based on authentication settings
 
         if options.get('auth_type') == 'OAuth2':
-            #options['auth'] = 'header'
+            # options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
-            #options['auth_tokenname'] = "Authorization"
+            # options['auth_tokenname'] = "Authorization"
         elif options.get('auth_type') == 'OAuth2 Client Credentials':
-            #options['auth'] = 'header'
+            # options['auth'] = 'header'
             options['auth_prefix'] = "Bearer "
-            #options['auth_tokenname'] = "Authorization"
+            # options['auth_tokenname'] = "Authorization"
         elif options.get('auth_type') == 'OAuth1':
-            #options['auth'] = 'disable' # managed by Twitter module
+            # options['auth'] = 'disable' # managed by Twitter module
             options['auth_prefix'] = ''
-            #options['auth_tokenname'] = ''
+            # options['auth_tokenname'] = ''
         elif options.get('auth_type') == 'Cookie':
-            #options['auth'] = 'header'
+            # options['auth'] = 'header'
             options['auth_prefix'] = ''
-            #options['auth_tokenname'] = 'Cookie'
+            # options['auth_tokenname'] = 'Cookie'
 
         if options['auth'] == 'disable':
             options['auth_prefix'] = ''
@@ -1926,9 +2015,8 @@ class AuthTab(ApiTab):
 
         return options
 
-
     # Transfer options to GUI
-    def setSettings(self, settings = {}):
+    def setSettings(self, settings={}):
         settings = super(AuthTab, self).setSettings(settings)
 
         # Merge options
@@ -1980,7 +2068,7 @@ class AuthTab(ApiTab):
         if not self.auth_userauthorized and self.auth_preregistered:
             raise Exception('You are not authorized, login please!')
 
-        session_no = options.get('threadnumber',0)
+        session_no = options.get('threadnumber', 0)
         self.closeSession(session_no)
         self.connected = True
         self.speed = options.get('speed', None)
@@ -2005,7 +2093,6 @@ class AuthTab(ApiTab):
             # Save page
             options['currentpage'] = page
 
-
             # build url
             method, urlpath, urlparams, payload, requestheaders = self.buildUrl(nodedata, options, logProgress)
 
@@ -2013,17 +2100,17 @@ class AuthTab(ApiTab):
                 logMessage("Empty path, node {0} skipped.".format(nodedata['objectid']))
                 return False
 
-            if not urlpath.startswith(('https://','http://','file://')):
+            if not urlpath.startswith(('https://', 'http://', 'file://')):
                 logMessage("Http or https missing in path, node {0} skipped.".format(nodedata['objectid']))
                 return False
 
             if options['logrequests']:
-                logpath = self.getLogURL(urlpath,urlparams,options)
+                logpath = self.getLogURL(urlpath, urlparams, options)
                 logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(session_no,urlpath, urlparams, requestheaders, method, payload,
+            data, headers, status = self.request(session_no, urlpath, urlparams, requestheaders, method, payload,
                                                  foldername, filename, fileext, format=format)
 
             # status handling
@@ -2051,10 +2138,8 @@ class AuthTab(ApiTab):
 
         return True
 
-
-
     @Slot()
-    def doLogin(self, session_no = 0):
+    def doLogin(self, session_no=0):
         """
         Show login window
         :param session_no: the number of the session used for login
@@ -2070,16 +2155,19 @@ class AuthTab(ApiTab):
         elif options['auth_type'] == 'Cookie':
             self.doCookieLogin(session_no)
         elif options['auth_type'] == 'API key':
-            QMessageBox.information(self, "Facepager", "Manually enter your API key into the access token field or change the authentication method in the settings.")
+            QMessageBox.information(self, "Facepager",
+                                    "Manually enter your API key into the access token field or change the authentication method in the settings.")
         elif options['auth_type'] == 'Disable':
-            QMessageBox.information(self, "Login disabled","No authentication method selected. Please choose a method in the settings.", QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "Login disabled",
+                                    "No authentication method selected. Please choose a method in the settings.",
+                                    QMessageBox.StandardButton.Ok)
         elif options['auth_type'] == 'OAuth2 External':
             self.doOAuth2ExternalLogin(session_no)
         else:
             self.doOAuth2Login(session_no)
 
     @Slot()
-    def doOAuth1Login(self, session_no = 0):
+    def doOAuth1Login(self, session_no=0):
         try:
             # use credentials from input if provided
             clientid = self.getClientId()
@@ -2130,7 +2218,7 @@ class AuthTab(ApiTab):
             loginurl, loginparams = self.parseURL(loginurl)
             params.update(loginparams)
 
-            urlpath, urlparams, templateparams = self.getURL(loginurl,params,{},{})
+            urlpath, urlparams, templateparams = self.getURL(loginurl, params, {}, {})
             url = urlpath + '?' + urllib.parse.urlencode(urlparams)
 
             self.showLoginWindow(url)
@@ -2159,7 +2247,7 @@ class AuthTab(ApiTab):
                 raise Exception('Client Id is missing, please adjust settings!')
 
             self.startLoginServer(0)
-            redirect_uri = "http://localhost:"+str(self.loginServerInstance.server_port)
+            redirect_uri = "http://localhost:" + str(self.loginServerInstance.server_port)
 
             params = {'client_id': clientid,
                       'redirect_uri': redirect_uri,
@@ -2178,7 +2266,6 @@ class AuthTab(ApiTab):
                                  str(e),
                                  QMessageBox.StandardButton.Ok)
 
-
     @Slot()
     def doCookieLogin(self, session_no=0):
         def newCookie(domain, cookie):
@@ -2187,7 +2274,7 @@ class AuthTab(ApiTab):
 
         try:
             options = self.getSettings()
-            url= options.get('auth_uri', '')
+            url = options.get('auth_uri', '')
 
             if url == '':
                 raise Exception('Login URL is missing, please adjust settings!')
@@ -2213,19 +2300,18 @@ class AuthTab(ApiTab):
         try:
             # See https://developer.twitter.com/en/docs/basics/authentication/overview/application-only
             self.auth_preregistered = False
-            clientid = self.clientIdEdit.text() # no defaults
+            clientid = self.clientIdEdit.text()  # no defaults
             if clientid == '':
                 raise Exception('Client Id is missing, please adjust settings!')
 
-            clientsecret = self.clientSecretEdit.text() # no defaults
+            clientsecret = self.clientSecretEdit.text()  # no defaults
             if clientsecret == '':
                 raise Exception('Client Secret is missing, please adjust settings!')
 
             options = self.getSettings()
-            path= options.get('auth_uri', '')
+            path = options.get('auth_uri', '')
             if path == '':
                 raise Exception('Login URL is missing, please adjust settings!')
-
 
             basicauth = urllib.parse.quote_plus(clientid) + ':' + urllib.parse.quote_plus(clientsecret)
             basicauth = base64.b64encode(basicauth.encode('utf-8')).decode('utf-8')
@@ -2253,7 +2339,6 @@ class AuthTab(ApiTab):
             QMessageBox.critical(self, "Login failed",
                                  str(e),
                                  QMessageBox.StandardButton.Ok)
-
 
     @Slot()
     def showLoginWindow(self, url=''):
@@ -2337,7 +2422,7 @@ class AuthTab(ApiTab):
         else:
             return self.initOAuth2Session(no, renew)
 
-    def initOAuth1Session(self,no=0, renew=False):
+    def initOAuth1Session(self, no=0, renew=False):
         """
         Return session or create if necessary
         :param no: session number
@@ -2362,7 +2447,7 @@ class AuthTab(ApiTab):
         return super(AuthTab, self).initSession(no, renew)
 
     def getOAuth1Service(self):
-        if not hasattr(self,'oauthdata'):
+        if not hasattr(self, 'oauthdata'):
             self.oauthdata = {}
 
         service = OAuth1Service(
@@ -2392,7 +2477,6 @@ class AuthTab(ApiTab):
 
         return service
 
-
     def getOAuth1Token(self, url):
         success = False
         url = urllib.parse.parse_qs(url)
@@ -2414,7 +2498,6 @@ class AuthTab(ApiTab):
                 success = True
         return success
 
-
     def getOAuth2Token(self, url):
         success = False
         try:
@@ -2422,7 +2505,7 @@ class AuthTab(ApiTab):
 
             # Parse URL
             urlparsed = urlparse(url)
-            query = dict(parse_qsl(urlparsed.query))        # dict & parse_qsl to get single values instead of lists
+            query = dict(parse_qsl(urlparsed.query))  # dict & parse_qsl to get single values instead of lists
             fragment = dict(parse_qsl(urlparsed.fragment))  # dict & parse_qsl to get single values instead of lists
 
             # Get code or token
@@ -2441,7 +2524,6 @@ class AuthTab(ApiTab):
                     pass
                 success = True
 
-
             # Flow: response_type=code
             if url.startswith(options['redirect_uri']) and code is not None:
                 try:
@@ -2452,7 +2534,7 @@ class AuthTab(ApiTab):
                     scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else \
                         self.defaults.get('scope', None)
 
-                    headers = options.get("headers",{})
+                    headers = options.get("headers", {})
                     headers = {key.lower(): value for (key, value) in headers.items()}
 
                     session = OAuth2Session(clientid, redirect_uri=options['redirect_uri'], scope=scope)
@@ -2466,7 +2548,7 @@ class AuthTab(ApiTab):
 
                     # Check access and set token
                     self.checkPreregisteredAccess(token)
-                    self.tokenEdit.setText(token.get('access_token',''))
+                    self.tokenEdit.setText(token.get('access_token', ''))
                     try:
                         self.authEdit.setCurrentIndex(self.authEdit.findText('header'))
                     except AttributeError:
@@ -2519,7 +2601,7 @@ class AuthTab(ApiTab):
             return False
 
         # App salt
-        salt = getDictValueOrNone(credentials,'facepager.salt')
+        salt = getDictValueOrNone(credentials, 'facepager.salt')
         if salt is None:
             self.auth_userauthorized = False
             return False
@@ -2538,7 +2620,7 @@ class AuthTab(ApiTab):
             self.auth_userauthorized = False
             return False
 
-        authurl += '?module='+self.name.lower()+'&usertoken='+usertoken.hex()
+        authurl += '?module=' + self.name.lower() + '&usertoken=' + usertoken.hex()
         session = self.initOAuth2Session(0, True)
         data, headers, status = self.request(0, authurl)
         self.closeSession(0)
@@ -2566,12 +2648,12 @@ class GenericTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(GenericTab, self).__init__(mainWindow, "Generic")
 
-        #Defaults
+        # Defaults
         self.timeout = 60
         self.defaults['basepath'] = '<Object ID>'
 
         # Standard inputs
-        self.initInputs()
+        self.initBasicInputs()
 
         # Header, Verbs
         self.initHeaderInputs()
@@ -2580,7 +2662,7 @@ class GenericTab(AuthTab):
 
         # Extract input
         self.initPagingInputs(True)
-        self.initResponseInputs(True)
+        self.initResponseInputs()
 
         self.initFileInputs()
 
@@ -2591,12 +2673,11 @@ class GenericTab(AuthTab):
         self.loadDoc()
         self.loadSettings()
 
-
     def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(GenericTab, self).getSettings(purpose)
 
         if purpose != 'preset':
-            options['querytype'] = self.name + ':'+options['basepath']+options['resource']
+            options['querytype'] = self.name + ':' + options['basepath'] + options['resource']
 
         return options
 
@@ -2606,6 +2687,103 @@ class GenericTab(AuthTab):
     #     self.logmessage.emit("SSL certificate error ignored: %s (Warning: Your connection might be insecure!)" % url)
 
 
+class SparqlTab(AuthTab):
+    def __init__(self, mainWindow=None):
+        super(SparqlTab, self).__init__(mainWindow, "SPARQL")
+
+        # Defaults
+        self.timeout = 60
+        self.defaults['basepath'] = 'https://query.wikidata.org/sparql'
+        self.defaults['params'] = {'query': 'SELECT * WHERE {?s ?p ?o} LIMIT 100'}
+
+        # Inputs
+        self.initBasepathInput("Endpoint")
+        self.initQueryInput("Query")
+        self.initPagingInputs(True)
+        self.initResponseInputs(True)
+
+        # Load options and settings
+        self.loadDoc()
+        self.loadSettings()
+
+    def initQueryInput(self, rowLabel="Query"):
+        # Payload
+        self.queryWidget = QWidget()
+        self.queryLayout = QHBoxLayout()
+        self.queryLayout.setContentsMargins(0, 0, 0, 0)
+        self.queryWidget.setLayout(self.queryLayout)
+
+        self.queryEdit = QPlainTextEdit()
+        self.queryEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.queryLayout.addWidget(self.queryEdit)
+        self.queryLayout.setStretch(0, 1);
+
+        self.queryEditButton = QToolButton(self)
+        self.queryEditButton.setText("..")
+        self.queryEditButton.clicked.connect(self.openQueryEditDialog)
+        self.queryLayout.addWidget(self.queryEditButton)
+        self.queryLayout.setStretch(2, 1);
+
+        self.mainLayout.addRow(rowLabel, self.queryWidget)
+
+        queryValue = getDictValue(self.defaults, 'params.query')
+        self.queryEdit.setPlainText(queryValue)
+
+    def openQueryEditDialog(self):
+        dialog = EditValueDialog(self)
+        dialog.show(self.queryEdit)
+
+    def getSettings(self, purpose='fetch'):
+        """
+        Get the settings
+
+        :param purpose: 'fetch' for fetching data,
+                        'settings' for saving settings when closing the app,
+                        'preset' for saving settings to a preset
+        :return:
+        """
+        options = super(SparqlTab, self).getSettings(purpose)
+
+        # We don't have a resource input in the SPARQL tab.
+        # Thus, provide hardwired values. And set the user-agent
+        options['resource'] = ''
+        options['headers'] = {'User-Agent': settings.get('userAgent')}
+
+        # Get the query value
+        queryValue = self.queryEdit.toPlainText()
+
+        if purpose != 'preset':
+            # Save the endpoint so we see it later in the exports
+            options['querytype'] = self.name + ':' + options['basepath']
+
+            # Add a LIMIT if not set
+            if not re.search(r'\bLIMIT\b\s+\d+\s*$', queryValue, re.IGNORECASE):
+                queryValue += " LIMIT 100"
+
+        # Set query parameters
+        options['params'] = {
+            'query': queryValue,
+            'format': self.formatEdit.currentText().strip()
+        }
+
+        return options
+
+    def setSettings(self, settings={}):
+        """
+        Populates input fields from loaded options and presets
+        :param settings: Dict with options
+        :return:
+        """
+
+        settings = super(SparqlTab, self).setSettings(settings)
+
+        # Insert the query parameter value into the query box
+        queryValue = getDictValue(settings, 'params.query')
+        self.queryEdit.setPlainText(queryValue)
+
+        return settings
+
+
 class FacebookTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(FacebookTab, self).__init__(mainWindow, "Facebook")
@@ -2613,9 +2791,9 @@ class FacebookTab(AuthTab):
         # Authorization
         self.auth_userauthorized = False
 
-        #Defaults
+        # Defaults
         self.defaults['auth_type'] = "OAuth2"
-        self.defaults['scope'] = '' #user_groups
+        self.defaults['scope'] = ''  # user_groups
         self.defaults['basepath'] = 'https://graph.facebook.com/v3.4'
         self.defaults['resource'] = '/<Object ID>'
         self.defaults['auth_uri'] = 'https://www.facebook.com/dialog/oauth'
@@ -2624,7 +2802,7 @@ class FacebookTab(AuthTab):
         self.defaults['login_buttoncaption'] = " Login to Facebook "
 
         # Query Box
-        self.initInputs()
+        self.initBasicInputs()
 
         # Pages Box
         self.initPagingInputs()
@@ -2637,7 +2815,7 @@ class FacebookTab(AuthTab):
 
     def initAuthSettingsInputs(self):
         authlayout = QFormLayout()
-        authlayout.setContentsMargins(0,0,0,0)
+        authlayout.setContentsMargins(0, 0, 0, 0)
         self.authWidget.setLayout(authlayout)
 
         self.pageIdEdit = QLineEdit()
@@ -2648,7 +2826,7 @@ class FacebookTab(AuthTab):
         authlayout.addRow("Client Id", self.clientIdEdit)
 
         self.scopeEdit = QLineEdit()
-        authlayout.addRow("Scopes",self.scopeEdit)
+        authlayout.addRow("Scopes", self.scopeEdit)
 
     def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(FacebookTab, self).getSettings(purpose)
@@ -2662,7 +2840,7 @@ class FacebookTab(AuthTab):
 
         return options
 
-    def setSettings(self, settings ={}):
+    def setSettings(self, settings={}):
         settings = super(FacebookTab, self).setSettings(settings)
 
         if 'pageid' in settings:
@@ -2675,7 +2853,7 @@ class FacebookTab(AuthTab):
         if not self.auth_userauthorized and self.auth_preregistered:
             raise Exception('You are not authorized, login please!')
 
-        if options.get('access_token','') == '':
+        if options.get('access_token', '') == '':
             raise Exception('Access token is missing, login please!')
 
         self.connected = True
@@ -2708,7 +2886,7 @@ class FacebookTab(AuthTab):
 
             # data
             options['querytime'] = str(datetime.now())
-            data, headers, status = self.request(session_no,urlpath, urlparams)
+            data, headers, status = self.request(session_no, urlpath, urlparams)
 
             options['ratelimit'] = False
             options['querystatus'] = status
@@ -2730,20 +2908,20 @@ class FacebookTab(AuthTab):
                     options['info'] = {'x-app-usage': msg.format(self.appusage)}
 
             if (status != "fetched (200)"):
-                msg = getDictValue(data,"error.message")
-                code = getDictValue(data,"error.code")
+                msg = getDictValue(data, "error.message")
+                code = getDictValue(data, "error.code")
                 logMessage("Error '{0}' for {1} with message {2}.".format(status, nodedata['objectid'], msg))
 
                 # see https://developers.facebook.com/docs/graph-api/using-graph-api
                 # see https://developers.facebook.com/docs/graph-api/advanced/rate-limiting/
-                if (code in ['4','17','32','613']) and (status in ['error (400)', 'error (403)']):
+                if (code in ['4', '17', '32', '613']) and (status in ['error (400)', 'error (403)']):
                     options['ratelimit'] = True
                 else:
                     options['ratelimit'] = False
 
             logData(data, options, headers)
             if logProgress is not None:
-                logProgress({'page':page+1})
+                logProgress({'page': page + 1})
 
             # paging
             options = self.updatePagingOptions(data, options)
@@ -2759,19 +2937,19 @@ class FacebookTab(AuthTab):
                 break
 
     @Slot()
-    def doLogin(self, session_no = 0):
+    def doLogin(self, session_no=0):
         try:
-            #use credentials from input if provided
+            # use credentials from input if provided
             clientid = self.getClientId()
             if clientid is None:
                 return False
-            scope= self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope','')
-            
+            scope = self.scopeEdit.text() if self.scopeEdit.text() != "" else self.defaults.get('scope', '')
 
-            url = self.defaults['auth_uri'] +"?client_id=" + clientid + "&redirect_uri="+self.defaults['redirect_uri']+"&response_type=token&scope="+scope+"&display=popup"
+            url = self.defaults['auth_uri'] + "?client_id=" + clientid + "&redirect_uri=" + self.defaults[
+                'redirect_uri'] + "&response_type=token&scope=" + scope + "&display=popup"
             self.showLoginWindow(url)
         except Exception as e:
-            QMessageBox.critical(self, "Login canceled",str(e),QMessageBox.StandardButton.Ok)
+            QMessageBox.critical(self, "Login canceled", str(e), QMessageBox.StandardButton.Ok)
 
     def getUserId(self, token):
         data, headers, status = self.request(
@@ -2786,7 +2964,7 @@ class FacebookTab(AuthTab):
     def onLoginWindowChanged(self, url):
         if "#access_token" in url.toString():
             try:
-                url = urllib.parse.urlparse(url.toString(),allow_fragments=True)
+                url = urllib.parse.urlparse(url.toString(), allow_fragments=True)
                 fragment = urllib.parse.parse_qs(url.fragment)
                 token = fragment.get('access_token').pop()
 
@@ -2803,17 +2981,18 @@ class FacebookTab(AuthTab):
                 # Get page access token
                 pageid = self.pageIdEdit.text().strip()
                 if pageid != '':
-                    data, headers, status = self.request(None, self.basepathEdit.currentText().strip()+'/'+pageid+'?fields=access_token&scope=pages_show_list&access_token='+token)
+                    data, headers, status = self.request(None,
+                                                         self.basepathEdit.currentText().strip() + '/' + pageid + '?fields=access_token&scope=pages_show_list&access_token=' + token)
                     if status != 'fetched (200)':
                         raise Exception("Could not authorize for page. Check page ID in the settings.")
 
-                    token = data.get('access_token','')
+                    token = data.get('access_token', '')
 
                 # Set token
                 self.tokenEdit.setText(token)
             except Exception as e:
-                QMessageBox.critical(self,"Login error",
-                                     str(e),QMessageBox.StandardButton.Ok)
+                QMessageBox.critical(self, "Login error",
+                                     str(e), QMessageBox.StandardButton.Ok)
             self.closeLoginWindow()
 
 
@@ -2828,7 +3007,7 @@ class AmazonTab(AuthTab):
         self.defaults['format'] = 'xml'
 
         # Standard inputs
-        self.initInputs()
+        self.initBasicInputs()
 
         # Header, Verbs
         self.initHeaderInputs()
@@ -2836,7 +3015,7 @@ class AmazonTab(AuthTab):
         self.initUploadFolderInput()
 
         # Extract input
-        self.initResponseInputs(True)
+        self.initResponseInputs()
 
         # Pages Box
         self.initPagingInputs(True)
@@ -2846,7 +3025,6 @@ class AmazonTab(AuthTab):
 
         self.loadDoc()
         self.loadSettings()
-
 
     def initLoginInputs(self):
         # token and login button
@@ -2878,18 +3056,21 @@ class AmazonTab(AuthTab):
         options = super(AmazonTab, self).getSettings(purpose)
 
         options['auth'] = 'disable'
-        #options['format'] = self.defaults.get('format', '')
-        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get('service', '')
+        # options['format'] = self.defaults.get('format', '')
+        options['service'] = self.serviceEdit.text().strip() if self.serviceEdit.text() != "" else self.defaults.get(
+            'service', '')
         options['region'] = self.regionEdit.text().strip() if self.regionEdit.text() != "" else self.defaults.get(
             'region', '')
 
         if purpose != 'preset':
-            options['secretkey'] = self.secretkeyEdit.text().strip() #if self.secretkeyEdit.text() != "" else self.defaults.get('auth_uri', '')
-            options['accesskey'] = self.accesskeyEdit.text().strip() #if self.accesskeyEdit.text() != "" else self.defaults.get('redirect_uri', '')
+            options[
+                'secretkey'] = self.secretkeyEdit.text().strip()  # if self.secretkeyEdit.text() != "" else self.defaults.get('auth_uri', '')
+            options[
+                'accesskey'] = self.accesskeyEdit.text().strip()  # if self.accesskeyEdit.text() != "" else self.defaults.get('redirect_uri', '')
 
         return options
 
-    def setSettings(self, settings = {}):
+    def setSettings(self, settings={}):
         settings = super(AmazonTab, self).setSettings(settings)
 
         if 'secretkey' in settings:
@@ -2902,7 +3083,6 @@ class AmazonTab(AuthTab):
         self.regionEdit.setText(settings.get('region'))
 
         return settings
-
 
     # Get authorization header
     # See https://docs.aws.amazon.com/de_de/general/latest/gr/sigv4-signed-request-examples.html
@@ -2917,7 +3097,6 @@ class AmazonTab(AuthTab):
 
         if access_key == '' or secret_key == '':
             raise Exception('Access key or secret key is missing, please fill the input fields!')
-
 
         # Key derivation functions. See:
         # http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
@@ -2983,7 +3162,7 @@ class AmazonTab(AuthTab):
             payload_buffer = payload
             payload = payload_buffer.read()
             payload_buffer.rewind()
-            #payload = payload.decode('utf-8')
+            # payload = payload.decode('utf-8')
 
         payload_hash = hashlib.sha256(payload).hexdigest()
 
@@ -3022,6 +3201,7 @@ class AmazonTab(AuthTab):
 
         return (headers)
 
+
 class TwitterTab(AuthTab):
     def __init__(self, mainWindow=None):
         super(TwitterTab, self).__init__(mainWindow, "Twitter")
@@ -3033,7 +3213,7 @@ class TwitterTab(AuthTab):
         self.defaults['basepath'] = 'https://api.twitter.com/1.1'
         self.defaults['resource'] = '/search/tweets'
         self.defaults['params'] = {'q': '<Object ID>'}
-        #self.defaults['extension'] = ".json"
+        # self.defaults['extension'] = ".json"
 
         self.defaults['auth_type'] = 'OAuth1'
         self.defaults['access_token_url'] = 'https://api.twitter.com/oauth/access_token'
@@ -3042,7 +3222,7 @@ class TwitterTab(AuthTab):
         self.defaults['login_window_caption'] = 'Twitter Login Page'
 
         # Query and Parameter Box
-        self.initInputs()
+        self.initBasicInputs()
         self.initPagingInputs()
 
         self.initAuthSetupInputs()
@@ -3072,7 +3252,6 @@ class TwitterTab(AuthTab):
         self.loginButton.clicked.connect(self.doLogin)
         loginlayout.addWidget(self.loginButton)
 
-
         # Add to main-Layout
         self.extraLayout.addRow("Access Token", loginlayout)
 
@@ -3081,7 +3260,7 @@ class TwitterTab(AuthTab):
         authlayout.setContentsMargins(0, 0, 0, 0)
         self.authWidget.setLayout(authlayout)
 
-        self.authTypeEdit= QComboBox()
+        self.authTypeEdit = QComboBox()
         self.authTypeEdit.addItems(['OAuth1', 'OAuth2 Client Credentials'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
@@ -3107,8 +3286,8 @@ class TwitterTab(AuthTab):
     def getUserId(self, session):
         # Send request
         response = session.request('GET', 'https://api.twitter.com/1.1/account/settings.json', timeout=self.timeout)
-        if not response.ok :
-             return None
+        if not response.ok:
+            return None
 
         data = response.json() if response.text != '' else []
         return getDictValueOrNone(data, 'screen_name')
@@ -3122,7 +3301,7 @@ class TwitterTab(AuthTab):
         self.speed = options.get('speed', None)
         self.timeout = options.get('timeout', 15)
         self.maxsize = options.get('maxsize', 5)
-        session_no = options.get('threadnumber',0)
+        session_no = options.get('threadnumber', 0)
 
         # Init pagination
         options = self.initPagingOptions(nodedata, options)
@@ -3180,7 +3359,6 @@ class TwitterTab(AuthTab):
                 break
 
 
-
 class TwitterStreamingTab(TwitterTab):
     def __init__(self, mainWindow=None):
         super(TwitterTab, self).__init__(mainWindow, "Twitter Streaming")
@@ -3197,13 +3375,13 @@ class TwitterStreamingTab(TwitterTab):
         self.defaults['basepath'] = 'https://stream.twitter.com/1.1'
         self.defaults['resource'] = '/statuses/filter'
         self.defaults['params'] = {'track': '<Object ID>'}
-        #self.defaults['extension'] = ".json"
+        # self.defaults['extension'] = ".json"
 
         self.defaults['key_objectid'] = 'id'
         self.defaults['key_nodedata'] = None
 
         # Query Box
-        self.initInputs()
+        self.initBasicInputs()
         self.initAuthSetupInputs()
         self.initLoginInputs()
 
@@ -3215,8 +3393,8 @@ class TwitterStreamingTab(TwitterTab):
 
     def stream(self, session_no=0, path='', args=None, headers=None):
         self.connected = True
-        self.retry_counter=0
-        self.last_reconnect=QDateTime.currentDateTime()
+        self.retry_counter = 0
+        self.last_reconnect = QDateTime.currentDateTime()
         try:
             session = self.initSession(session_no)
 
@@ -3226,33 +3404,35 @@ class TwitterStreamingTab(TwitterTab):
                     try:
                         if headers is not None:
                             response = session.post(path, params=args,
-                                                         headers=headers,
-                                                         timeout=self.timeout,
-                                                         stream=True)
+                                                    headers=headers,
+                                                    timeout=self.timeout,
+                                                    stream=True)
                         else:
                             response = session.get(path, params=args, timeout=self.timeout,
-                                                        stream=True)
+                                                   stream=True)
 
                     except requests.exceptions.Timeout:
                         raise Exception('Request timed out.')
                     else:
                         if response.status_code != 200:
-                            if self.retry_counter<=5:
-                                self.logMessage("Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: "+ str(response.content))
+                            if self.retry_counter <= 5:
+                                self.logMessage(
+                                    "Reconnecting in 3 Seconds: " + str(response.status_code) + ". Message: " + str(
+                                        response.content))
                                 time.sleep(3)
-                                if self.last_reconnect.secsTo(QDateTime.currentDateTime())>120:
+                                if self.last_reconnect.secsTo(QDateTime.currentDateTime()) > 120:
                                     self.retry_counter = 0
                                     _send()
                                 else:
-                                    self.retry_counter+=1
+                                    self.retry_counter += 1
                                     _send()
                             else:
-                                #self.connected = False
+                                # self.connected = False
                                 self.disconnectSocket()
-                                raise Exception("Request Error: " + str(response.status_code) + ". Message: "+str(response.content))
+                                raise Exception("Request Error: " + str(response.status_code) + ". Message: " + str(
+                                    response.content))
 
                         return response
-
 
             while self.connected:
                 response = _send()
@@ -3276,8 +3456,8 @@ class TwitterStreamingTab(TwitterTab):
             response.close()
 
         except AttributeError:
-            #This exception is thrown when canceling the connection
-            #Only re-raise if not manually canceled
+            # This exception is thrown when canceling the connection
+            # Only re-raise if not manually canceled
             if self.connected:
                 raise
         finally:
@@ -3299,17 +3479,18 @@ class TwitterStreamingTab(TwitterTab):
             logpath = self.getLogURL(urlpath, urlparams, options)
             logMessage("Fetching data for {0} from {1}".format(nodedata['objectid'], logpath))
 
-        self.timeout = options.get('timeout',30)
+        self.timeout = options.get('timeout', 30)
         self.maxsize = options.get('maxsize', 5)
 
         # data
-        session_no = options.get('threadnumber',0)
+        session_no = options.get('threadnumber', 0)
         for data, headers, status in self.stream(session_no, path=urlpath, args=urlparams):
             # data
             options['querytime'] = str(datetime.now())
             options['querystatus'] = status
 
             logData(data, options, headers)
+
 
 class YoutubeTab(AuthTab):
     def __init__(self, mainWindow=None):
@@ -3324,7 +3505,8 @@ class YoutubeTab(AuthTab):
         self.defaults['auth_uri'] = 'https://accounts.google.com/o/oauth2/auth'
         self.defaults['token_uri'] = "https://accounts.google.com/o/oauth2/token"
         self.defaults['redirect_uri'] = 'https://localhost'
-        self.defaults['scope'] = "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl"
+        self.defaults[
+            'scope'] = "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl"
         self.defaults['response_type'] = "code"
 
         self.defaults['login_buttoncaption'] = " Login to Google "
@@ -3333,10 +3515,10 @@ class YoutubeTab(AuthTab):
         self.defaults['auth'] = 'param'
         self.defaults['basepath'] = "https://www.googleapis.com/youtube/v3"
         self.defaults['resource'] = '/search'
-        self.defaults['params'] = {'q':'<Object ID>','part':'snippet','maxResults':'50'}
+        self.defaults['params'] = {'q': '<Object ID>', 'part': 'snippet', 'maxResults': '50'}
 
         # Standard inputs
-        self.initInputs()
+        self.initBasicInputs()
 
         # Pages Box
         self.initPagingInputs()
@@ -3350,11 +3532,11 @@ class YoutubeTab(AuthTab):
 
     def initAuthSetupInputs(self):
         authlayout = QFormLayout()
-        authlayout.setContentsMargins(0,0,0,0)
+        authlayout.setContentsMargins(0, 0, 0, 0)
         self.authWidget.setLayout(authlayout)
 
-        self.authTypeEdit= QComboBox()
-        self.authTypeEdit.addItems(['OAuth2', 'OAuth2 External','API key'])
+        self.authTypeEdit = QComboBox()
+        self.authTypeEdit.addItems(['OAuth2', 'OAuth2 External', 'API key'])
         authlayout.addRow("Authentication type", self.authTypeEdit)
 
         self.clientIdEdit = QLineEdit()
@@ -3366,16 +3548,16 @@ class YoutubeTab(AuthTab):
         authlayout.addRow("Client Secret", self.clientSecretEdit)
 
         self.scopeEdit = QLineEdit()
-        authlayout.addRow("Scopes",self.scopeEdit)
+        authlayout.addRow("Scopes", self.scopeEdit)
 
     def getUserId(self, token):
         data, headers, status = self.request(
-            None, 'https://www.googleapis.com/youtube/v3/channels?mine=true&access_token='+token)
+            None, 'https://www.googleapis.com/youtube/v3/channels?mine=true&access_token=' + token)
 
         if status != 'fetched (200)':
             return None
 
-        return getDictValueOrNone(data,'items.0.id')
+        return getDictValueOrNone(data, 'items.0.id')
 
     def getSettings(self, purpose='fetch'):  # purpose = 'fetch'|'settings'|'preset'
         options = super(YoutubeTab, self).getSettings(purpose)
@@ -3384,7 +3566,7 @@ class YoutubeTab(AuthTab):
             options['auth'] = 'param'
             options['auth_prefix'] = ''
             options['auth_tokenname'] = 'key'
-        else: # OAuth2
+        else:  # OAuth2
             options['auth'] = 'header'
             options['auth_prefix'] = 'Bearer '
             options['auth_tokenname'] = 'Authorization'
@@ -3446,6 +3628,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
 
     def close(self):
         pass
+
 
 class DataTooBigError(Exception):
     pass

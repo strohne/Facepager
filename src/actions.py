@@ -356,12 +356,19 @@ class ApiActions(object):
         return (self.mainWindow.database.filename)
 
     def queryPipeline(self, pipeline, indexes=None):
+        """
+        Query presets step by step
+
+        :param pipeline: An object with the pipeline item in the 'item' key and the presets in the 'presets' key
+        :param indexes:
+        :return:
+        """
         columns = []
-        for preset in pipeline:
+        pipelineItem = pipeline['item']
+        for preset in pipeline['presets']:
             # Select item in preset window
-            item = preset.get('item')
-            if item is not None:
-                self.mainWindow.presetWindow.presetList.setCurrentItem(item)
+            if pipelineItem is not None:
+                self.mainWindow.presetWindow.selectItem(pipelineItem, preset.get('step', 0))
 
             columns.extend(preset.get('columns', []))
             module = preset.get('module')
@@ -377,8 +384,10 @@ class ApiActions(object):
 
         # Set columns
         columns = list(dict.fromkeys(columns))
-        self.mainWindow.fieldList.setPlainText("\n".join(columns))
-        self.showColumns()
+        if columns is not None:
+            self.mainWindow.fieldList.setPlainText("\n".join(columns))
+            self.mainWindow.guiActions.showColumns()
+
 
 
 
@@ -1082,7 +1091,6 @@ class GuiActions(object):
         # update node level in duplicate nodes window
         if self.mainWindow.transferWindow.isVisible():
             self.mainWindow.transferWindow.updateNode(current)
-
 
         #select level
         level = 0
