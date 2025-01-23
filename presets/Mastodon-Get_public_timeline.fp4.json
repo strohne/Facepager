@@ -25,9 +25,9 @@
     "scope": "identity read mysubreddits",
     "proxy": "",
     "auth_type": "Disable",
-    "auth_uri": "https://www.reddit.com/api/v1/authorize?state=mystate&duration=temporary",
-    "redirect_uri": "https://localhost",
-    "token_uri": "https://www.reddit.com/api/v1/access_token",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
     "auth": "disable",
     "auth_tokenname": "",
     "auth_prefix": ""
