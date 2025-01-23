@@ -1,4 +1,6 @@
 {
+  "name": "Search YouTube videos",
+  "category": "YouTube",
   "description": "Add search terms as nodes. Just write the search terms like you would type them on the YouTube website.\n\nThis preset gives you back 50 search results. If you want more change the number in the maxResults-parameter.\n\nSee https://developers.google.com/youtube/v3/docs/search/list for information about parameters.\n\nOverview about YouTube Data API reference: https://developers.google.com/youtube/v3/docs/",
   "module": "YouTube",
   "speed": 200,
@@ -17,6 +19,5 @@
     "id.videoId",
     "snippet.title",
     "snippet.description"
-  ],
-  "name": "Search YouTube videos"
+  ]
 }
