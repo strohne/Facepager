@@ -18,7 +18,8 @@
     },
     "key_paging": null,
     "nodedata": "results.bindings",
-    "objectid": null,
+        "objectid": "gnd_id.value",
+
     "offset_start": 1,
     "offset_step": 1,
     "paging_stop": null,
