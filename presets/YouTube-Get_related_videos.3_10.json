@@ -1,4 +1,5 @@
 {
+  "name": "Get related videos",
   "category": "YouTube",
   "columns": [
     "id.videoId",
@@ -7,10 +8,9 @@
     "snippet.channelId",
     "snippet.channelTitle"
   ],
-  "description": "Add a video IDs as a node. You can use the search preset to get video IDs or get one from the last part of a video URL. For example add O2t8EDyBPPs to get comments to the video https://www.youtube.com/watch?v=O2t8EDyBPPs. By the way: the video is very much related to this preset, you should definitely watch it. \n\nThis preset returns 50 videos, related to the video you entered as a node.\n\nSee https://developers.google.com/youtube/v3/docs/search/list for information about parameters.\n\nOverview about YouTube Data API reference: https://developers.google.com/youtube/v3/docs/",
+  "description": "*Note: Due to changes in the API, this preset does no longer work. The relatedToVideoId parameter ceased to exist*\n\nAdd a video IDs as a node. You can use the search preset to get video IDs or get one from the last part of a video URL. For example add O2t8EDyBPPs to get comments to the video https://www.youtube.com/watch?v=O2t8EDyBPPs. By the way: the video is very much related to this preset, you should definitely watch it. \n\nThis preset returns 50 videos, related to the video you entered as a node.\n\nSee https://developers.google.com/youtube/v3/docs/search/list for information about parameters.\n\nOverview about YouTube Data API reference: https://developers.google.com/youtube/v3/docs/",
   "headers": false,
   "module": "YouTube",
-  "name": "Get related videos",
   "options": {
     "basepath": "https://www.googleapis.com/youtube/v3",
     "resource": "/search",
