@@ -125,7 +125,7 @@ See https://developer.apple.com/documentation/security/notarizing-macos-software
 	$ xcrun notarytool submit Facepager_Setup_4_6_0.mac.pkg --keychain-profile "notarytool-password" --wait
 	
 - If notarisation fails (Status: invalid), fetch the notary log, see https://forums.developer.apple.com/forums/thread/705839:
-	$ xcrun notarytool log CREDENTIALS REQUEST_UUID
+	$ xcrun notarytool log --keychain-profile "notarytool-password" REQUEST_UUID notarytool_log.txt
 
 
 __Hints for solving errors:__
