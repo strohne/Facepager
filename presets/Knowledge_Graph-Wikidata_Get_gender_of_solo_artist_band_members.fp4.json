@@ -36,6 +36,7 @@
   "timeout": 15,
   "maxsize": 5,
   "columns": [
+    "entityLabel.value",
     "genderLabel.value"
   ]
 }

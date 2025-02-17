@@ -33,80 +33,99 @@ __Hints for solving errors:__
 - See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/ for PySide2 issues
 
     
-## macOS High Sierra
+## macOS Sequoia
 
-Setup Facepager to run with venv, see src/readme.md. 
+Setup Facepager to run with venv, see src/readme.md.
 
 Install software:
-- Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version.  
-  $ source ../pyenv/bin/activate  
-  $ pip -V
-  
-- Install pyinstaller  and upx (optional)
-  $ pip install pyinstaller  
-  $ brew install upx  
 
-The following steps can alternatively be executed with build/osx/build.pyinstaller.command. 
-Double click build.pyinstaller.command in Finder or execute in terminal.
+- Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version: 
+    $ source ../pyenv/bin/activate  
+    $ pip -V
+    
+- Install pyinstaller and upx (optional):
+	$ pip install pyinstaller  
+    $ brew install upx
+    
 
-- Copy Facepager.spec to src folder:  
-  $ cp ../build/osx/Facepager.spec Facepager.spec
+The following steps can alternatively be executed with build/osx/build.pyinstaller.command. Double click build.pyinstaller.command in Finder or execute in terminal.
 
-- Fix pyinstaller problem with PySide2 (copy hooks folder to src folder):  
-  $ cp -r ../build/osx/hooks hooks
-
+- Copy Facepager.spec to src folder:
+    $ cd src
+    $ cp ../build/osx/Facepager.spec Facepager.spec
+    
+- Fix pyinstaller problem with PySide2 (copy *updated* hooks folder to src folder):  
+    $ cp -r ../build/osx/hooks hooks
+    
 - Remove old build files:  
-  $ rm -rf build  
-  $ rm -rf dist  
-
-- Run pyinstaller:  
-  $ pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec  
-
+    $ rm -rf build  
+    $ rm -rf dist
+    
+- Run pyinstaller from src directory:
+    $ pyinstaller --upx-dir=/opt/homebrew/Cellar/upx/4.2.4 Facepager.spec
+    
 - Check if Facepager starts and fix errors:  
-  $ ./dist/Facepager/Facepager
+    $ open ./dist/Facepager.app
+    
 
-- Create package  
-  $ cd dist  
-  $ zip -r Facepager.app.zip Facepager.app  
-  $ cp Facepager.app.zip ../../build/osx/Facepager_4.app.zip  
+### Code signing and packaging  
 
+See https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43  
 
-## Code signing and packaging
+#### Get certificates  
 
-See https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
+ - Create an Apple Developer Account  
+ - Login to your account and create two certificates (Account -> Identifiers & Profiles): 
+	 1. Installer outside AppStore 
+	 2. Application outside AppStore. 
+- Download the certificates and install them in the "login" KeyChain.
 
-### Get certificates
-- Create an Apple Developer Account
-- Login to your account and create two certificates (Account -> Identifiers & Profiles): 1. Installer outside AppStore, 2. Application outside AppStore. Download the certificates and install them in the login KeyChain
+#### Sign the app 
 
-### Sign the app
-- Unpack the Facepager.zip or directly use the dist folder 
-- Fix PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt. 
-  sudo pip3 install macholib  
-  python3 fix_app_qt_folder_names_for_codesign.py Facepager.app
+- Fix PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt:
+	$ sudo pip3 install macholib
+	$ cd dist
+	$ python3 ../../build/osx/fix_app_qt_folder_names_for_codesign.py Facepager.app  
+	
+- Add entitlements.plist to directory:
+- List the available keys and locate a Developer ID Application certificate
+	$ security find-identity -p basic -v
+	
+- Codesign with the application hash:
+	$ codesign --deep --force --options=runtime --entitlements ../../build/osx/entitlements.plist --sign "C5675C9047BC5F500D88849509790AEEBCB99534 (HASH_OF_DEVELOPER_ID APPLICATION)" --timestamp Facepager.app
+	
+- *Alternatively* copy entitlements.plist from build directory:
+	$ cp -r ../../build/osx/entitlements.plist entitlements.plist
+	
+#### Create package
 
-- Create the entitlements.plist anlegen, see https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
-- Find the developer hashes:  
-  security find-identity -p basic -v
-- Codesign with the application hash:  
-  codesign --deep --force --options=runtime --entitlements ./entitlements.plist --sign "C5675C9047BC5F500D88849509790AEEBCB99534" --timestamp ./Facepager.app
+- Create a temp directory to build the package:
+    $ mkdir /tmp/Facepager
+    
+- Use ditto to build the pkg installer structure
+    $ ditto ./ /tmp/Facepager
+    
+- build the package
+	$ productbuild --identifier "com.strohne.facepager.pkg" --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" --timestamp --root /tmp/Facepager /Applications/Facepager.app Facepager_Setup_4_6_0.mac.pkg
 
-### Create package
+### Notarize  
 
+See https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution#Notarize-your-preexisting-software and https://developer.apple.com/documentation/security/customizing-the-notarization-workflow#Upload-your-app-to-the-notarization-service. In short, you need to authenticate in order to upload the app to Apple's notarisation service.
 
-productbuild --identifier "com.strohne.facepager.pkg" --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" --timestamp --root ./Facepager.app /Applications/Facepager.app Facepager.pkg
+- Provide a reference to a keychain item named `notarytool-password` (altool has been deprecated from November 1, 2023). Best, add it using the command line:
+	$ xcrun notarytool store-credentials
+	
+- When prompted, enter profile name:
+	$ "notarytool-password"
+	
+- Leave App Store Connect API keys unspecified.
+- When prompted, enter Developer Apple ID, App-specific password for the Developer Apple ID, and the Developer Team ID.
 
-
-## Notarize
-**Not working yet.**
-You need altoll which comes with Xcode. Alternatively, download "Transporter.app" from the app store. You will find altos in /Applications/Transporter.app/Contents/Frameworks/ContentDeliveryServices.framework/Versions/A/Frameworks/AppStoreService.framework/Versions/A/Support/altool
-
-(To find a file: sudo find /Applications -name altool -print)
-
-Create a password item in KeyChain, name it Developer-altool and set the app specific password
-
-xcrun /Applications/Transporter.app/Contents/Frameworks/ContentDeliveryServices.framework/Versions/A/Frameworks/AppStoreService.framework/Versions/A/Support/altool --notarize-app --primary-bundle-id "com.strohne.facepager" --username="jakob.juenger@uni-muenster.de" --password "@keychain:Developer-altool" --file ./Facepager.pkg --verbose
-
+- Start notarisation after successful authentication:
+	$ xcrun notarytool submit Facepager_Setup_4_6_0.mac.pkg --keychain-profile "notarytool-password" --wait
+	
+- If notarisation fails (Status: invalid), fetch the notary log, see https://forums.developer.apple.com/forums/thread/705839:
+	$ xcrun notarytool log --keychain-profile "notarytool-password" REQUEST_UUID notarytool_log.txt
 
 
 __Hints for solving errors:__
