@@ -231,7 +231,7 @@ SSL certificates come from the certifi package included in the requests library.
 
 _Don't forget to adjust the tag name and message below_
 
-- Create a git tag on the command line with `git tag -a v3.9.2 -m "Version 3.9.2"`
-- Upload the tag to GitHib with `git push origin v3.9.2`
+- Create a git tag on the command line with `git tag -a v4.6.1 -m "Version 4.6.1"`
+- Upload the tag to GitHib with `git push origin v4.6.1`
 - For major releases draft a new release on GitHub, for minor releases edit the last release.
 - Enter the tag into the corresponding field, edit release notes, upload binary files.
