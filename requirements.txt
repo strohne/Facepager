@@ -11,3 +11,4 @@ tldextract
 cssselect 
 markdown
 PySide2==5.15.*
+rdflib

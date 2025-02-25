@@ -3,8 +3,8 @@
 cd "`dirname "$0"`"
 cd ../..
 
-cp ../build/osx/Facepager.spec Facepager.spec
-cp -r ../build/osx/hooks hooks
+cp build/osx/Facepager.spec src/Facepager.spec
+cp -r build/osx/hooks src/hooks
 
 cd src
 rm -rf build

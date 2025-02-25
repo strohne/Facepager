@@ -802,13 +802,13 @@ class BufferReader():
     """StringIO with a callback.
     """
     def __init__(self, data='',callback=None):
-        self._callback = callback
-        self._progress = 0
-        self._len = int(len(data))
 
         if type(data) == str:
             data = data.encode()
 
+        self._callback = callback
+        self._progress = 0
+        self._len = int(len(data))
         self._io = io.BytesIO(data)
 
     def __len__(self):
