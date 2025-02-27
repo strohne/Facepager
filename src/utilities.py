@@ -218,6 +218,42 @@ def sliceData(data, headers=None, options={}):
 
 def extractValue(data, key, dump=True, folder="", default=''):
     """Extract value from dict and pipe through modifiers
+
+    An extraction key follows the pattern `name=key|modifiers`:
+
+    - name: The column name in the column setup
+    - key: Either a dot separated path into the data or a literal value in double quotes.
+           This allows you to extract values from the data or to directly provide a specific value.
+   - modifiers: A pipe separated list of modifiers.
+                The extracted value is feed into the modifiers step by step.
+                Each modifier may have options. The options follow after a colon.
+
+    The following modifiers (in the pipe part) are supported:
+    - js
+    - json Parse the value as json and use the key in the option
+           to extract a value. The key can be a dot separated extraction path.
+           Without an option, the value is converted to a json string.
+           This is useful for reading text files and escaping the content
+           so that it can be used in the payload.
+    - not
+    - is
+    - re
+    - encode
+    - css
+    - xpath
+    - file The value is interpreted as a file name.
+           The file is loaded from the upload folder.
+           Set the option to `txt` to read the file as text file
+           (e.g. in the payload pattern).
+           By default, it is loaded in bytes mode, suitable for file uploads.
+    - base64
+    - last
+    - first
+    - max
+    - min
+    - timestamp
+    - shortdate
+
     :param data:
     :param multikey:
     :param dump:
@@ -228,8 +264,11 @@ def extractValue(data, key, dump=True, folder="", default=''):
         # Parse key
         name, key, pipeline = parseKey(key)
 
-        # Input: dict. Output: string, number, list or dict
-        value = getDictValue(data, key, dump, default)
+        if key.startswith('"') and key.endswith('"'):
+            value = key.strip('"')
+        else:
+            # Input: dict. Output: string, number, list or dict
+            value = getDictValue(data, key, dump, default)
 
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
@@ -263,8 +302,11 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 # Input: list of strings.
                 # Output if dump==True: list of strings
                 # Output if dump==False: list of dict, list, string or number
-                selector = modifier[1]
-                items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+                if (len(modifier) > 1):
+                    selector = modifier[1]
+                    items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+                else:
+                    items = [json.dumps(x)[1:-1]  for x in value]
 
                 # Flatten list if not dumped
                 if not dump:
@@ -322,8 +364,14 @@ def extractValue(data, key, dump=True, folder="", default=''):
             # Load file contents (using modifiers after a pipe symbol)
             elif modifier[0] == 'file':
                 value = value[0]
-                with open(os.path.join(folder, value), 'rb') as file:
-                    value = file.read()
+                filetype = modifier[1] if len(modifier) > 1 else bytes
+
+                if filetype == 'txt':
+                    with open(os.path.join(folder, value), 'r', encoding='utf-8') as file:
+                        value = file.read()
+                else:
+                    with open(os.path.join(folder, value), 'rb') as file:
+                        value = file.read()
 
             elif modifier[0] == 'base64':
                 value = value[0]
