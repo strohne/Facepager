@@ -1,0 +1,47 @@
+{
+  "name": "Epigraf API Playground",
+  "category": "Epigraf",
+  "type": "preset",
+  "pipeline": null,
+  "description": "To use this preset, start by adding a seed node (e.g., materials). Additionally, make sure to paste your Epigraf API access token into the \"Access Token\" field at the buttom of the Generic module. Once you are ready \"Fetch Data\".\n\nYou can find your access token in your user record within Epigraf. ",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://epigraf.inschriften.net/",
+    "resource": "epi/playground/properties/index/<Object ID>.json",
+    "params": {
+      "columns": "id, parent_id, lemma, sortkey, iri"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "GET",
+    "format": "json",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 10,
+    "paging_type": "count",
+    "param_paging": "page",
+    "offset_start": 1,
+    "offset_step": 1,
+    "nodedata": "properties",
+    "objectid": null,
+    "scope": "",
+    "proxy": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "param",
+    "auth_tokenname": "token"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "id",
+    "parent_id",
+    "lemma",
+    "sortkey",
+    "iri"
+  ]
+}
