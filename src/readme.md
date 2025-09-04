@@ -23,6 +23,7 @@ Facepager depends on the following packages:
 - pyjsparser: pip install pyjsparser (MIT)
 - tldextract
 - markdown: pip install markdown
+- rdflib: pip install rdflib
 
 Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
 
