@@ -319,6 +319,7 @@ class TreeModel(QAbstractItemModel):
         self.customcolumns = []
         self.newnodes = 0
         self.nodecounter = 0
+        self.downloadFolder = ""
 
         # Cache for prefetching data
         self.prefetching = False
@@ -337,6 +338,10 @@ class TreeModel(QAbstractItemModel):
 
     def setCustomColumns(self,cols):
         self.customcolumns = cols
+        self.layoutChanged.emit()
+
+    def setDownloadFolder(self, folder):
+        self.downloadFolder = folder
         self.layoutChanged.emit()
 
     def deleteNode(self, index, delaycommit=False):
@@ -444,7 +449,7 @@ class TreeModel(QAbstractItemModel):
             # Custom columns
             else:
                 key = self.customcolumns[index.column() - default_len]
-                value = extractValue(item.data.get('response',''), key)[1]
+                value = extractValue(item.data.get('response',''), key, True, self.downloadFolder)[1]
 
             if role == Qt.ToolTipRole:
                 return wraptip(value)
@@ -512,7 +517,7 @@ class TreeModel(QAbstractItemModel):
                node.data['querytype']
               ]
         for key in self.customcolumns:
-            row.append(extractValue(node.data['response'],key)[1])
+            row.append(extractValue(node.data['response'], key, True, self.downloadFolder)[1])
         return row
 
     def hasChildren(self, index):

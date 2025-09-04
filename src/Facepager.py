@@ -513,6 +513,10 @@ class MainWindow(QMainWindow):
                 return self.RequestTabs.widget(i)
         return None
 
+    def getDownloadFolder(self):
+        module = self.getModule('Generic')
+        return module.downloadfolderEdit.text() if module else ""
+
     def updateUI(self):
         #disable buttons that do not work without an opened database
         self.guiActions.databaseActions.setEnabled(self.database.connected)

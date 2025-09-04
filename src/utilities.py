@@ -15,6 +15,8 @@ from xmljson import BadgerFish
 import io
 import pyjsparser
 import rdflib
+from io import BytesIO
+from PIL import Image
 
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
@@ -246,6 +248,9 @@ def extractValue(data, key, dump=True, folder="", default=''):
            Set the option to `txt` to read the file as text file
            (e.g. in the payload pattern).
            By default, it is loaded in bytes mode, suitable for file uploads.
+    - thumb The value is a file name. The file is loaded from the upload folder.
+          Set the target size in the option (e.g. 60). Target size defaults to 100.
+          Will return a data URL containing the base64 encoded image
     - base64
     - last
     - first
@@ -372,6 +377,13 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 else:
                     with open(os.path.join(folder, value), 'rb') as file:
                         value = file.read()
+
+            elif modifier[0] == 'thumb':
+                value = value[0]
+                size = int(modifier[1] if len(modifier) > 1 else 100)
+                if not value.startswith('file:///'):
+                    value = os.path.join(folder, value)
+                value = imgToDataUrl(value, size)
 
             elif modifier[0] == 'base64':
                 value = value[0]
@@ -792,6 +804,20 @@ def extractHtml(html, selector, type='css', dump=False):
             items.append('ERROR: '+str(e))
 
     return items
+
+
+def imgToDataUrl(filepath, size = 100):
+    with open(filepath, 'rb') as file:
+        img = Image.open(file)
+        img.thumbnail((size,size), Image.Resampling.LANCZOS)
+        buffer = BytesIO()
+        format = img.format if img.format else 'PNG'
+        img.save(buffer, format=format)
+        img_bytes = buffer.getvalue()
+        base64_str = b64encode(img_bytes).decode('utf-8')
+        mime = Image.MIME.get(format, 'image/png')
+        data_url = f'data:{mime};base64,{base64_str}'
+        return data_url
 
 def xmlToJson(data):
     bf = BadgerFish(dict_type=OrderedDict)

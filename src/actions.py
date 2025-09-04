@@ -824,6 +824,9 @@ class GuiActions(object):
         cols = [x.strip() for x in cols]
         self.mainWindow.tree.treemodel.setCustomColumns(cols)
 
+        folder = self.mainWindow.getDownloadFolder()
+        self.mainWindow.tree.treemodel.setDownloadFolder(folder)
+
     @Slot()
     def clearColumns(self):
         self.mainWindow.fieldList.clear()
