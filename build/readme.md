@@ -6,8 +6,10 @@ Setup Facepager to run in your environment using venv, see src/readme.md
 Install software
 - Install NSIS (https://sourceforge.net/projects/nsis/)
 - Install pyinstaller and pywin32:  
-  `$ pip install pyinstaller`  
-  `$ pip install pywin32`  
+  ```
+  pip install pyinstaller
+  pip install pywin32
+  ```  
 
 - Run build/windows/build.bat
 
@@ -33,80 +35,130 @@ __Hints for solving errors:__
 - See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/ for PySide2 issues
 
     
-## macOS High Sierra
+## macOS Sequoia
 
-Setup Facepager to run with venv, see src/readme.md. 
+Setup Facepager to run with venv, see src/readme.md.
 
 Install software:
-- Go to the src folder of Facepager and activate venv. Make sure to use the right version of pip (`pyenv/bin/pip`) by checking the version.  
-  $ source ../pyenv/bin/activate  
-  $ pip -V
-  
-- Install pyinstaller  and upx (optional)
-  $ pip install pyinstaller  
-  $ brew install upx  
 
-The following steps can alternatively be executed with build/osx/build.pyinstaller.command. 
+- Activate venv. Make sure to use the right version of pip (`venv/bin/pip`) by checking the version:
+  ```
+  source venv/bin/activate  
+  pip -V
+  ```    
+- Install pyinstaller and upx (optional):
+  ```
+  pip install pyinstaller  
+  brew install upx
+  ```    
+- Install Xcode
+
+The following steps can alternatively be executed with build/osx/build.pyinstaller.command.
 Double click build.pyinstaller.command in Finder or execute in terminal.
 
-- Copy Facepager.spec to src folder:  
-  $ cp ../build/osx/Facepager.spec Facepager.spec
+- Copy Facepager.spec to src folder:
+  ```
+  cd src
+  cp ../build/osx/Facepager.spec Facepager.spec
+  ```    
+- Fix pyinstaller problem with PySide2 
+  (copy the hooks to the src folder):  
+  ```
+  cp -r ../build/osx/hooks hooks
+  ```
+    
+- Remove old build files:
+  ``` 
+  rm -rf build  
+  rm -rf dist
+  ```
 
-- Fix pyinstaller problem with PySide2 (copy hooks folder to src folder):  
-  $ cp -r ../build/osx/hooks hooks
+- Run pyinstaller from src directory:
+  ```
+  pyinstaller --upx-dir=/opt/homebrew/Cellar/upx/4.2.4 Facepager.spec
+  ```  
+    
+- Check if Facepager starts and fix errors:
+  ``` 
+  open ./dist/Facepager.app
+  ```    
 
-- Remove old build files:  
-  $ rm -rf build  
-  $ rm -rf dist  
+### Code signing and packaging  
 
-- Run pyinstaller:  
-  $ pyinstaller --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec  
+See https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43  
 
-- Check if Facepager starts and fix errors:  
-  $ ./dist/Facepager/Facepager
+#### Get certificates  
 
-- Create package  
-  $ cd dist  
-  $ zip -r Facepager.app.zip Facepager.app  
-  $ cp Facepager.app.zip ../../build/osx/Facepager_4.app.zip  
+ - Create an Apple Developer Account  
+ - Login to your account and create two certificates (Account -> Identifiers & Profiles): 
+	 1. Installer outside AppStore 
+	 2. Application outside AppStore. 
+- Download the certificates and install them in the "login" KeyChain.
 
+#### Sign the app 
 
-## Code signing and packaging
-
-See https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
-
-### Get certificates
-- Create an Apple Developer Account
-- Login to your account and create two certificates (Account -> Identifiers & Profiles): 1. Installer outside AppStore, 2. Application outside AppStore. Download the certificates and install them in the login KeyChain
-
-### Sign the app
-- Unpack the Facepager.zip or directly use the dist folder 
-- Fix PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt. 
+- Fix the PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt:
+  ```  
   sudo pip3 install macholib  
-  python3 fix_app_qt_folder_names_for_codesign.py Facepager.app
-
-- Create the entitlements.plist anlegen, see https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
-- Find the developer hashes:  
+  cd dist  
+  python3 ../../build/osx/fix_app_qt_folder_names_for_codesign.py Facepager.app    
+  ```
+  
+- List the available keys and locate a Developer ID Application certificate.
+  You will need the application hash and the installer hash.
+  ```
   security find-identity -p basic -v
-- Codesign with the application hash:  
-  codesign --deep --force --options=runtime --entitlements ./entitlements.plist --sign "C5675C9047BC5F500D88849509790AEEBCB99534" --timestamp ./Facepager.app
+  ```
+  	
+- Codesign with the application hash:
+  ``` 
+  codedesign --deep --force --options=runtime --entitlements ../../build/osx/entitlements.plist --sign "PUT_HASH_OF_DEVELOPER_ID_APPLICATION_HERE" --timestamp Facepager.app
+  ```
 
-### Create package
+See the following workflow, although it may be outdated: https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
 
+#### Create package
 
-productbuild --identifier "com.strohne.facepager.pkg" --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" --timestamp --root ./Facepager.app /Applications/Facepager.app Facepager.pkg
+- Create a temp directory to build the package:
+  ``` 
+  mkdir /tmp/Facepager
+  ```    
+- Use ditto to build the pkg installer structure
+  ``` 
+  ditto ./ /tmp/Facepager
+  ```    
+- build the package
+  ``` 
+  productbuild --identifier "com.strohne.facepager.pkg" --sign "PUT_HASH_OF_HASH_OF_INSTALLER_ID_HERE" --timestamp --root /tmp/Facepager /Applications/Facepager.app Facepager_Setup_4_6_0.mac.pkg
+  ```
+  
+### Notarize  
 
+In short, you need to authenticate in order to upload the app to Apple's notarisation service.
 
-## Notarize
-**Not working yet.**
-You need altoll which comes with Xcode. Alternatively, download "Transporter.app" from the app store. You will find altos in /Applications/Transporter.app/Contents/Frameworks/ContentDeliveryServices.framework/Versions/A/Frameworks/AppStoreService.framework/Versions/A/Support/altool
+- A a keychain item named `notarytool-password`   
+  ``` 
+  xcrun notarytool store-credentials
+  ``` 
+- When prompted, enter `notarytool-password` as profile name.	
+- Leave App Store Connect API keys unspecified.
+- When prompted, enter the Developer Apple ID, 
+  the App-specific password for the Developer Apple ID, 
+  and the Developer Team ID.
 
-(To find a file: sudo find /Applications -name altool -print)
+- Start notarisation after successful authentication:
+  ``` 
+  run notarytool submit Facepager_Setup_4_6_0.mac.pkg --keychain-profile "notarytool-password" --wait
+	
+- If notarisation fails (Status: invalid), fetch the notary log,
+  see https://forums.developer.apple.com/forums/thread/705839:
+  ``` 
+  xcrun notarytool log --keychain-profile "notarytool-password" REQUEST_UUID notarytool_log.txt
+  ```
 
-Create a password item in KeyChain, name it Developer-altool and set the app specific password
-
-xcrun /Applications/Transporter.app/Contents/Frameworks/ContentDeliveryServices.framework/Versions/A/Frameworks/AppStoreService.framework/Versions/A/Support/altool --notarize-app --primary-bundle-id "com.strohne.facepager" --username="jakob.juenger@uni-muenster.de" --password "@keychain:Developer-altool" --file ./Facepager.pkg --verbose
-
+See for further information:
+- https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution#Notarize-your-preexisting-software 
+- https://developer.apple.com/documentation/security/customizing-the-notarization-workflow#Upload-your-app-to-the-notarization-service. 
 
 
 __Hints for solving errors:__
@@ -179,7 +231,7 @@ SSL certificates come from the certifi package included in the requests library.
 
 _Don't forget to adjust the tag name and message below_
 
-- Create a git tag on the command line with `git tag -a v3.9.2 -m "Version 3.9.2"`
-- Upload the tag to GitHib with `git push origin v3.9.2`
+- Create a git tag on the command line with `git tag -a v4.6.1 -m "Version 4.6.1"`
+- Upload the tag to GitHib with `git push origin v4.6.1`
 - For major releases draft a new release on GitHub, for minor releases edit the last release.
 - Enter the tag into the corresponding field, edit release notes, upload binary files.

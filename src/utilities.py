@@ -15,6 +15,8 @@ from xmljson import BadgerFish
 import io
 import pyjsparser
 import rdflib
+from io import BytesIO
+from PIL import Image
 
 def getResourceFolder():
     if getattr(sys, 'frozen', False) and (platform.system() != 'Darwin'):
@@ -218,6 +220,45 @@ def sliceData(data, headers=None, options={}):
 
 def extractValue(data, key, dump=True, folder="", default=''):
     """Extract value from dict and pipe through modifiers
+
+    An extraction key follows the pattern `name=key|modifiers`:
+
+    - name: The column name in the column setup
+    - key: Either a dot separated path into the data or a literal value in double quotes.
+           This allows you to extract values from the data or to directly provide a specific value.
+   - modifiers: A pipe separated list of modifiers.
+                The extracted value is feed into the modifiers step by step.
+                Each modifier may have options. The options follow after a colon.
+
+    The following modifiers (in the pipe part) are supported:
+    - js
+    - json Parse the value as json and use the key in the option
+           to extract a value. The key can be a dot separated extraction path.
+           Without an option, the value is converted to a json string.
+           This is useful for reading text files and escaping the content
+           so that it can be used in the payload.
+    - not
+    - is
+    - re
+    - encode
+    - css
+    - xpath
+    - file The value is interpreted as a file name.
+           The file is loaded from the upload folder.
+           Set the option to `txt` to read the file as text file
+           (e.g. in the payload pattern).
+           By default, it is loaded in bytes mode, suitable for file uploads.
+    - thumb The value is a file name. The file is loaded from the upload folder.
+          Set the target size in the option (e.g. 60). Target size defaults to 100.
+          Will return a data URL containing the base64 encoded image
+    - base64
+    - last
+    - first
+    - max
+    - min
+    - timestamp
+    - shortdate
+
     :param data:
     :param multikey:
     :param dump:
@@ -228,8 +269,11 @@ def extractValue(data, key, dump=True, folder="", default=''):
         # Parse key
         name, key, pipeline = parseKey(key)
 
-        # Input: dict. Output: string, number, list or dict
-        value = getDictValue(data, key, dump, default)
+        if key.startswith('"') and key.endswith('"'):
+            value = key.strip('"')
+        else:
+            # Input: dict. Output: string, number, list or dict
+            value = getDictValue(data, key, dump, default)
 
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
@@ -263,8 +307,11 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 # Input: list of strings.
                 # Output if dump==True: list of strings
                 # Output if dump==False: list of dict, list, string or number
-                selector = modifier[1]
-                items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+                if (len(modifier) > 1):
+                    selector = modifier[1]
+                    items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+                else:
+                    items = [json.dumps(x)[1:-1]  for x in value]
 
                 # Flatten list if not dumped
                 if not dump:
@@ -322,8 +369,21 @@ def extractValue(data, key, dump=True, folder="", default=''):
             # Load file contents (using modifiers after a pipe symbol)
             elif modifier[0] == 'file':
                 value = value[0]
-                with open(os.path.join(folder, value), 'rb') as file:
-                    value = file.read()
+                filetype = modifier[1] if len(modifier) > 1 else bytes
+
+                if filetype == 'txt':
+                    with open(os.path.join(folder, value), 'r', encoding='utf-8') as file:
+                        value = file.read()
+                else:
+                    with open(os.path.join(folder, value), 'rb') as file:
+                        value = file.read()
+
+            elif modifier[0] == 'thumb':
+                value = value[0]
+                size = int(modifier[1] if len(modifier) > 1 else 100)
+                if not value.startswith('file:///'):
+                    value = os.path.join(folder, value)
+                value = imgToDataUrl(value, size)
 
             elif modifier[0] == 'base64':
                 value = value[0]
@@ -745,6 +805,20 @@ def extractHtml(html, selector, type='css', dump=False):
 
     return items
 
+
+def imgToDataUrl(filepath, size = 100):
+    with open(filepath, 'rb') as file:
+        img = Image.open(file)
+        img.thumbnail((size,size), Image.Resampling.LANCZOS)
+        buffer = BytesIO()
+        format = img.format if img.format else 'PNG'
+        img.save(buffer, format=format)
+        img_bytes = buffer.getvalue()
+        base64_str = b64encode(img_bytes).decode('utf-8')
+        mime = Image.MIME.get(format, 'image/png')
+        data_url = f'data:{mime};base64,{base64_str}'
+        return data_url
+
 def xmlToJson(data):
     bf = BadgerFish(dict_type=OrderedDict)
     xml = lxml.html.fromstring(data.encode('utf-8'))
@@ -802,13 +876,13 @@ class BufferReader():
     """StringIO with a callback.
     """
     def __init__(self, data='',callback=None):
-        self._callback = callback
-        self._progress = 0
-        self._len = int(len(data))
 
         if type(data) == str:
             data = data.encode()
 
+        self._callback = callback
+        self._progress = 0
+        self._len = int(len(data))
         self._io = io.BytesIO(data)
 
     def __len__(self):

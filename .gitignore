@@ -13,6 +13,9 @@ build/windows/PySide2
 build/osx/copyfromvm.bat
 build/osx/*.app
 build/osx/*.pkg
+build/osx/Certificates
+build/osx/Codesign
+build/osx/notarytool_log.txt
 pyenv
 venv
 .project

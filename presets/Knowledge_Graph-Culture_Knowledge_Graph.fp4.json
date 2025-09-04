@@ -1,0 +1,14 @@
+{
+  "name": "Culture Knowledge Graph",
+  "category": "Knowledge Graph",
+  "type": "pipeline",
+  "pipeline": null,
+  "description": "This pipeline demonstrates how to run presets one after another. Add a year (e.g. 1851) as a seed node, then click \"Run Pipeline\". \n\n1. In the first step, GND IDs are retrieved from the Culture Knowledge Graph using the first preset in this pipeline. \n\n2. After GND IDs were retrieved, a second preset is used to query names from the Culture Knowledge graph. \n\nSee the presets for further information. In the Getting Started with Culture Knowledge Graph you fin a walk through the presets. \n",
+  "module": null,
+  "options": null,
+  "speed": null,
+  "saveheaders": null,
+  "timeout": null,
+  "maxsize": null,
+  "columns": null
+}

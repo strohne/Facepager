@@ -137,8 +137,8 @@ class Node(Base):
         def queryparams(self, queryparams_raw):
             self.queryparams_raw = json.dumps(queryparams_raw)
 
-        def getResponseValue(self,key,encoding=None):
-            name, value=extractValue(self.response,key)
+        def getResponseValue(self,key, encoding=None, downloadFolder= ""):
+            name, value=extractValue(self.response, key, True, downloadFolder)
             if encoding and isinstance(value, str):
                 return (name, value.encode(encoding))
             else:

@@ -55,12 +55,12 @@ from server import Server, RequestHandler
 
 # Some hackery required for pyInstaller
 # See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/#could-not-find-qtwebengineprocessexe-on-windows
-# if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
-#     os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.normpath(os.path.join(
-#         sys._MEIPASS, 'PySide2', 'Qt', 'lib',
-#         'QtWebEngineCore.framework', 'Helpers', 'QtWebEngineProcess.app',
-#         'Contents', 'MacOS', 'QtWebEngineProcess'
-#     ))
+if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
+    os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.normpath(os.path.join(
+        sys._MEIPASS, 'PySide2', 'Qt', 'lib',
+        'QtWebEngineCore.framework', 'Helpers', 'QtWebEngineProcess.app',
+        'Contents', 'MacOS', 'QtWebEngineProcess'
+    ))
 
 # Fix Mac not showing windows
 if sys.platform == 'darwin':
@@ -512,6 +512,10 @@ class MainWindow(QMainWindow):
             if self.RequestTabs.widget(i).name == module:
                 return self.RequestTabs.widget(i)
         return None
+
+    def getDownloadFolder(self):
+        module = self.getModule('Generic')
+        return module.downloadfolderEdit.text() if module else ""
 
     def updateUI(self):
         #disable buttons that do not work without an opened database

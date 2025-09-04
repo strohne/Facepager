@@ -148,6 +148,8 @@ class ExportFileDialog(QFileDialog):
         progress.setMaximum(Node.query.count())
 
         try:
+            downloadFolder = self.mainWindow.getDownloadFolder()
+
             delimiter = self.optionSeparator.currentText()
             delimiter = delimiter.encode('utf-8').decode('unicode_escape')
             writer = csv.writer(output, delimiter=delimiter, quotechar='"',
@@ -178,7 +180,7 @@ class ExportFileDialog(QFileDialog):
                            node.objecttype,getDictValue(node.queryparams,'nodedata'),
                            node.querystatus, node.querytime, node.querytype]
                     for key in self.mainWindow.tree.treemodel.customcolumns:
-                        row.append(node.getResponseValue(key)[1])
+                        row.append(node.getResponseValue(key, None, downloadFolder)[1])
 
                     if self.optionLinebreaks.isChecked():
                         row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]
