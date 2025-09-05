@@ -497,16 +497,24 @@ class TreeModel(QAbstractItemModel):
 
         return None
 
-    def getRowHeader(self):
-        row = ["id", "parent_id", "level", "object_id", "object_type", "object_key", "query_status", "query_time", "query_type"]
+    def getFixedRowHeader(self):
+        return ["id", "parent_id", "level", "object_id", "object_type", "object_key", "query_status", "query_time", "query_type"]
+
+    def getCustomRowHeader(self):
+        row = []
         columns = extractNames(self.customcolumns)
         for key in columns:
             row.append(key)
         return row
 
-    def getRowData(self, index):
+    def getRowHeader(self):
+        row = self.getFixedRowHeader()
+        row = row + self.getCustomRowHeader()
+        return row
+
+    def getFixedRowData(self, index):
         node = index.internalPointer()
-        row = [node.id,
+        return [node.id,
                node.parentItem.id,
                node.data['level'],
                node.data['objectid'],
@@ -516,8 +524,17 @@ class TreeModel(QAbstractItemModel):
                node.data['querytime'],
                node.data['querytype']
               ]
+
+    def getCustomRowData(self, index):
+        node = index.internalPointer()
+        row = []
         for key in self.customcolumns:
             row.append(extractValue(node.data['response'], key, True, self.downloadFolder)[1])
+        return row
+
+    def getRowData(self, index):
+        row = self.getFixedRowData(index)
+        row = row + self.getCustomRowData(index)
         return row
 
     def hasChildren(self, index):

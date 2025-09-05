@@ -1,7 +1,8 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QFileDialog, QCheckBox, QComboBox, QLabel, QHBoxLayout
+from PySide2.QtWidgets import QFileDialog, QCheckBox, QComboBox, QLabel, QHBoxLayout, QLineEdit
 import csv
+import tempfile
 from widgets.progressbar import ProgressBar
 from database import *
 
@@ -30,10 +31,20 @@ class ExportFileDialog(QFileDialog):
         self.optionSeparator.insertItems(0, [";","\\t",","])
         self.optionSeparator.setEditable(True)
 
+        self.optionLevel = QLineEdit(self)
+        self.optionLevel.setToolTip(wraptip("Leave empty to export all levels or enter a single level, starting from 0."))
+
+        self.optionObjectTypes = QLineEdit(self)
+        self.optionObjectTypes.setToolTip(wraptip("Leave empty to export all types or enter a comma separated list."))
+
         # if none or all are selected, export all
         # if one or more are selected, export selective
         self.optionAll = QComboBox(self)
-        self.optionAll.insertItems(0, ['All nodes (faster for large datasets, ordered by internal ID)','Selected nodes (ordered like shown in nodes view)'])
+        self.optionAll.insertItems(0, [
+            'All nodes (faster for large datasets, ordered by internal ID)',
+            'Selected nodes (ordered like shown in nodes view)',
+            'Selected nodes in wide format (each row includes all ancestor colums)'
+        ])
         if self.mainWindow.tree.noneOrAllSelected():
             self.optionAll.setCurrentIndex(0)
         else:
@@ -48,6 +59,10 @@ class ExportFileDialog(QFileDialog):
         options.addWidget(self.optionLinebreaks)
         options.addWidget(QLabel('Separator'))
         options.addWidget(self.optionSeparator)
+        options.addWidget(QLabel('Level'))
+        options.addWidget(self.optionLevel)
+        options.addWidget(QLabel('Object types'))
+        options.addWidget(self.optionObjectTypes)
         options.addStretch(1)
 
         layout.addLayout(options,row,1,1,2)
@@ -66,8 +81,6 @@ class ExportFileDialog(QFileDialog):
         # if not os.path.exists(dbfilename):
         #     dbfilename = os.path.expanduser("~")
 
-
-
         if self.exec_():
             try:
                 if os.path.isfile(self.selectedFiles()[0]):
@@ -79,68 +92,135 @@ class ExportFileDialog(QFileDialog):
             try:
                 output = open(self.selectedFiles()[0], 'w', newline='', encoding='utf8')
                 try:
-                    if self.optionBOM.isChecked():
-                        output.write('\ufeff')
-
                     if self.optionAll.currentIndex() == 0:
                         self.exportAllNodes(output)
                     else:
-                        self.exportSelectedNodes(output)
+                        joinLevels = self.optionAll.currentIndex() == 2
+                        self.exportSelectedNodes(output, joinLevels)
                 finally:
                     output.close()
             except Exception as e:
                 QMessageBox.information(self,"Facepager","Could not export file:"+str(e))
                 return False
 
-    def exportSelectedNodes(self,output):
+    def exportSelectedNodes(self,output, joinLevels):
+        """
+        Export the selected nodes and their children
+
+        :param output: A file handle
+        :return:
+        """
         progress = ProgressBar("Exporting data...", self.mainWindow)
 
-        #indexes = self.mainWindow.tree.selectionModel().selectedRows()
-        #if child nodes should be exported as well, uncomment this line an comment the previous one
         indexes = self.mainWindow.tree.selectedIndexesAndChildren()
         indexes = list(indexes)
         progress.setMaximum(len(indexes))
 
+        rowfile = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', newline='', delete=False)
+        tmpfilename = rowfile.name
+
         try:
+            addpath = True
+
+            try:
+                targetLevel = int(self.optionLevel.text())
+            except (ValueError, TypeError):
+                targetLevel = None
+
+            targetTypes = self.optionObjectTypes.text()
+            targetTypes = targetTypes.split(',') if targetTypes != "" else None
+
             delimiter = self.optionSeparator.currentText()
             delimiter = delimiter.encode('utf-8').decode('unicode_escape')
-            writer = csv.writer(output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
-                                lineterminator='\r\n')
-
-
-            #headers
-            row = [str(val) for val in self.mainWindow.tree.treemodel.getRowHeader()]
-            if self.optionLinebreaks.isChecked():
-                row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
-            row = ['path'] + row
-            writer.writerow(row)
+            writer = csv.writer(
+                rowfile, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+                lineterminator='\r\n'
+            )
 
             #rows
+            maxLevel = 0
             path = []
+            parentRows = []
             for index in indexes:
                 if progress.wasCanceled:
                     break
 
                 # data
-                rowdata = self.mainWindow.tree.treemodel.getRowData(index)
+                fixedRowData = self.mainWindow.tree.treemodel.getFixedRowData(index)
+                customRowData = self.mainWindow.tree.treemodel.getCustomRowData(index)
+                currentLevel = int(fixedRowData[2])
+                currentType = fixedRowData[4]
+                maxLevel = max(maxLevel, currentLevel)
 
                 # path of parents (#2=level;#3=object ID)
-                while rowdata[2] < len(path):
-                    path.pop()
-                path.append(rowdata[3])
+                if addpath:
+                    while currentLevel < len(path):
+                        path.pop()
+                    path.append(fixedRowData[3])
+                    fixedRowData = ["/".join(path)] + fixedRowData
 
-                # values
-                row = [str(val) for val in rowdata]
-                row = ["/".join(path)] + row
-                if self.optionLinebreaks.isChecked():
-                    row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
+                row = fixedRowData
 
-                writer.writerow(row)
+                if joinLevels:
+                    while currentLevel < len(parentRows):
+                        parentRows.pop()
+                    parentRows.append(customRowData)
+                    for parentRow in parentRows:
+                        row = row + parentRow
+                else:
+                    row = row + customRowData
+
+                targetRow = (targetLevel is None) or (currentLevel == targetLevel)
+                targetRow = targetRow and (targetTypes is None) or (currentType in targetTypes)
+
+                if targetRow:
+                    row = prepareList(
+                        [str(val) for val in row],
+                        self.optionLinebreaks.isChecked()
+                    )
+                    writer.writerow(row)
 
                 progress.step()
 
+            rowfile.flush()
+            rowfile.seek(0)
+
+            #bom
+            if self.optionBOM.isChecked():
+                output.write('\ufeff')
+
+            #headers
+            outputWriter = csv.writer(
+                output, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_ALL, doublequote=True,
+                lineterminator='\r\n'
+            )
+
+            fixedColumns = self.mainWindow.tree.treemodel.getFixedRowHeader()
+            if addpath:
+                fixedColumns = ['path'] + fixedColumns
+            row = fixedColumns
+
+            customColumns = self.mainWindow.tree.treemodel.getCustomRowHeader()
+            if joinLevels:
+                for i in range(maxLevel+1):
+                    row = row + ['lvl_' + str(i) + '_' + x for x in customColumns]
+            else:
+                row = row + customColumns
+
+            row = prepareList(
+                [str(val) for val in row],
+                self.optionLinebreaks.isChecked()
+            )
+            outputWriter.writerow(row)
+
+            # Copy rows from tmp file to output
+            for line in rowfile:
+                output.write(line)
+
         finally:
             progress.close()
+            rowfile.close()
+            os.unlink(tmpfilename)
 
 
     def exportAllNodes(self,output):
@@ -148,7 +228,18 @@ class ExportFileDialog(QFileDialog):
         progress.setMaximum(Node.query.count())
 
         try:
+            if self.optionBOM.isChecked():
+                output.write('\ufeff')
+
             downloadFolder = self.mainWindow.getDownloadFolder()
+
+            try:
+                targetLevel = int(self.optionLevel.text())
+            except (ValueError, TypeError):
+                targetLevel = None
+
+            targetTypes = self.optionObjectTypes.text()
+            targetTypes = targetTypes.split(',') if targetTypes != "" else None
 
             delimiter = self.optionSeparator.currentText()
             delimiter = delimiter.encode('utf-8').decode('unicode_escape')
@@ -176,16 +267,22 @@ class ExportFileDialog(QFileDialog):
                     if progress.wasCanceled:
                         break
 
-                    row = [node.level, node.id, node.parent_id, node.objectid,
-                           node.objecttype,getDictValue(node.queryparams,'nodedata'),
-                           node.querystatus, node.querytime, node.querytype]
-                    for key in self.mainWindow.tree.treemodel.customcolumns:
-                        row.append(node.getResponseValue(key, None, downloadFolder)[1])
+                    currentLevel = node.level
+                    currentType = node.objecttype
+                    targetRow = (targetLevel is None) or (currentLevel == targetLevel)
+                    targetRow = targetRow and (targetTypes is None) or (currentType in targetTypes)
 
-                    if self.optionLinebreaks.isChecked():
-                        row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]
+                    if targetRow:
+                        row = [currentLevel, node.id, node.parent_id, node.objectid,
+                               currentType,getDictValue(node.queryparams,'nodedata'),
+                               node.querystatus, node.querytime, node.querytype]
+                        for key in self.mainWindow.tree.treemodel.customcolumns:
+                            row.append(node.getResponseValue(key, None, downloadFolder)[1])
 
-                    writer.writerow(row)
+                        if self.optionLinebreaks.isChecked():
+                            row = [str(val).replace('\n', ' ').replace('\r',' ') for val in row]
+
+                        writer.writerow(row)
 
                     # Step the bar
                     progress.step()
