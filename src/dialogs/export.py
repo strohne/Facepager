@@ -171,7 +171,7 @@ class ExportFileDialog(QFileDialog):
                     row = row + customRowData
 
                 targetRow = (targetLevel is None) or (currentLevel == targetLevel)
-                targetRow = targetRow and (targetTypes is None) or (currentType in targetTypes)
+                targetRow = targetRow and ((targetTypes is None) or (currentType in targetTypes))
 
                 if targetRow:
                     row = prepareList(
@@ -270,7 +270,7 @@ class ExportFileDialog(QFileDialog):
                     currentLevel = node.level
                     currentType = node.objecttype
                     targetRow = (targetLevel is None) or (currentLevel == targetLevel)
-                    targetRow = targetRow and (targetTypes is None) or (currentType in targetTypes)
+                    targetRow = targetRow and ((targetTypes is None) or (currentType in targetTypes))
 
                     if targetRow:
                         row = [currentLevel, node.id, node.parent_id, node.objectid,
