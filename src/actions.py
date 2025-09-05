@@ -791,6 +791,7 @@ class GuiActions(object):
             datadir = os.path.expanduser('~') if datadir == '' else datadir
 
             filenames, filter = QFileDialog.getOpenFileNames(dialog, "Add filenames", datadir)
+            newNodes = []
             for filename in filenames:
                 #with open(filename, encoding="UTF-8-sig") as file:
 
@@ -798,14 +799,15 @@ class GuiActions(object):
                 data['fileurl'] = 'file:' + pathname2url(filename)
                 data['filename'] = os.path.basename(filename)
                 data['filepath'] = filename
+                newNodes.append(data)
 
 
-                self.mainWindow.tree.treemodel.addSeedNodes([data])
-                self.mainWindow.tree.selectLastRow()
-                dialog.close()
+            self.mainWindow.tree.treemodel.addSeedNodes(newNodes)
+            self.mainWindow.tree.selectLastRow()
+            dialog.close()
 
-                self.mainWindow.tree.selectLastRow()
-                dialog.close()
+            #self.mainWindow.tree.selectLastRow()
+            #dialog.close()
 
         def close():
             dialog.close()
