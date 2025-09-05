@@ -2,10 +2,10 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QActionGroup
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import csv
-from copy import deepcopy
 from widgets.progressbar import ProgressBar
+from widgets.filedialog import CsvOpenDialog
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
@@ -130,12 +130,11 @@ class ApiActions(object):
         return True
 
     @blockState
-    def addCsv(self, filename, updateProgress=None):
+    def addCsv(self, filename, delimiter, updateProgress=None):
         progress = ProgressBar("Adding nodes...", self.mainWindow)
         try:
-
             with open(filename, encoding="UTF-8-sig") as csvfile:
-                rows = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
+                rows = csv.DictReader(csvfile, delimiter=delimiter, quotechar='"', doublequote=True)
                 self.mainWindow.tree.treemodel.addSeedNodes(rows, progress=updateProgress)
                 self.mainWindow.tree.selectLastRow()
 
@@ -738,8 +737,8 @@ class GuiActions(object):
             return False
 
         # makes the user add a new facebook object into the db
-        dialog = QDialog(self.mainWindow)
-        dialog.setWindowTitle("Add Nodes")
+        addNodesDialog = QDialog(self.mainWindow)
+        addNodesDialog.setWindowTitle("Add Nodes")
         layout = QVBoxLayout()
 
         label = QLabel("One <b>Object ID</b> per line")
@@ -761,7 +760,7 @@ class GuiActions(object):
         loadbutton.setToolTip(wraptip("Import nodes from a csv file. Use semicolon as seperator. The first column becomes the Object ID, all columns are added to the data view as key value pairs."))
         layout.addWidget(buttons)
 
-        dialog.setLayout(layout)
+        addNodesDialog.setLayout(layout)
 
         self.progressUpdate = datetime.now()
 
@@ -769,7 +768,7 @@ class GuiActions(object):
             newnodes = [node.strip() for node in input.toPlainText().splitlines()]
 
             self.apiActions.addNodes(newnodes)
-            dialog.close()
+            addNodesDialog.close()
 
         def updateProgress():
             if datetime.now() >= self.progressUpdate:
@@ -781,36 +780,42 @@ class GuiActions(object):
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
             datadir = os.path.expanduser('~') if datadir == '' else datadir
 
-            filename, filetype = QFileDialog.getOpenFileName(dialog, "Load CSV", datadir, "CSV files (*.csv)")
-            if filename != "":
-                self.apiActions.addCsv(filename,updateProgress)
-            dialog.close()
+            csvDialog = CsvOpenDialog(addNodesDialog)
+            if csvDialog.exec_() == QDialog.Accepted:
+                filename = csvDialog.selectedFiles()[0]
+                delimiter = csvDialog.selectedDelimiter()
+                self.apiActions.addCsv(filename, delimiter, updateProgress)
+
+            addNodesDialog.close()
 
         def loadFilenames():
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
             datadir = os.path.expanduser('~') if datadir == '' else datadir
 
-            filenames, filter = QFileDialog.getOpenFileNames(dialog, "Add filenames", datadir)
-            newNodes = []
-            for filename in filenames:
-                #with open(filename, encoding="UTF-8-sig") as file:
+            filenames, filter = QFileDialog.getOpenFileNames(addNodesDialog, "Add filenames", datadir)
 
-                data = {}
-                data['fileurl'] = 'file:' + pathname2url(filename)
-                data['filename'] = os.path.basename(filename)
-                data['filepath'] = filename
-                newNodes.append(data)
+            # Construct generator
+            def newNodes(filenames):
+                for filename in filenames:
+                    data = {}
+                    data['fileurl'] = 'file:' + pathname2url(filename)
+                    data['filename'] = os.path.basename(filename)
+                    data['filepath'] = filename
+                    yield data
 
+            #progress = ProgressBar("Adding nodes...", self.mainWindow)
+            try:
+                self.mainWindow.tree.treemodel.addSeedNodes(newNodes(filenames), updateProgress)
+                #self.mainWindow.tree.selectLastRow()
+            finally:
+                pass
+                #progress.close()
 
-            self.mainWindow.tree.treemodel.addSeedNodes(newNodes)
             self.mainWindow.tree.selectLastRow()
-            dialog.close()
-
-            #self.mainWindow.tree.selectLastRow()
-            #dialog.close()
+            addNodesDialog.close()
 
         def close():
-            dialog.close()
+            addNodesDialog.close()
 
         #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(createNodes)
@@ -818,7 +823,7 @@ class GuiActions(object):
         loadbutton.clicked.connect(loadCSV)
         filesbutton.clicked.connect(loadFilenames)
 
-        dialog.exec_()
+        addNodesDialog.exec_()
 
     @Slot()
     def showColumns(self):

@@ -362,6 +362,12 @@ class TreeModel(QAbstractItemModel):
     def addSeedNodes(self, nodesdata, extended=False, progress=None, delaycommit=False):
         """
         Add seed nodes
+
+        :param nodesdata: A list or a generator for nodes. Each node is a dict with keys, the first key is used as Object ID.
+        :param extended:
+        :param progress:
+        :param delaycommit:
+        :return:
         """
 
         try:
