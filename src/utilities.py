@@ -258,6 +258,8 @@ def extractValue(data, key, dump=True, folder="", default=''):
     - min
     - timestamp
     - shortdate
+    - join Concatenate a list of values with a semicolon.
+           Options: Provide a different separator for joining, e.g. a comma as in `tags|join:,`.
 
     :param data:
     :param multikey:
@@ -273,8 +275,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
             value = key.strip('"')
         else:
             # Input: dict. Output: string, number, list or dict
-            # TODO: if dump is true, length, first, last etc. can't work
-            value = getDictValue(data, key, dump, default)
+            value = getDictValue(data, key, False, default)
 
         for idx, modifier in enumerate(pipeline):
             value = value if type(value) is list else [value]
@@ -407,6 +408,10 @@ def extractValue(data, key, dump=True, folder="", default=''):
             elif modifier[0] == 'length':
                 value = len(value)
 
+            elif modifier[0] == 'join':
+                separator = modifier[1] if len(modifier) > 1 else ';'
+                value = dumpValue(value, separator)
+
             elif modifier[0] == 'utc':
                 value = [datetime.utcfromtimestamp(float(x)).isoformat() for x in value]
 
@@ -488,7 +493,7 @@ def getDictValue(data, multikey, dump=True, default=''):
             try:
                 value=data[keys[0]]
                 if len(keys) > 1:
-                    value = getDictValue(value,keys[1],dump, default)
+                    value = getDictValue(value,keys[1],False, default)
             except:
                 if keys[0] == '*':
                     listkey = keys[1] if len(keys) > 1 else ''
@@ -544,11 +549,18 @@ def getDictValue(data, multikey, dump=True, default=''):
     except Exception as e:
         return default
 
-def dumpValue(value):
+def dumpValue(value, separator = ';'):
+    """
+    Convert simple and nested values to string
+
+    :param value:
+    :param separator:
+    :return:
+    """
     if (type(value) is dict):
       value = json.dumps(value)
     elif (type(value) is list):
-        value = ";".join([dumpValue(x) for x in value])
+        value = separator.join([dumpValue(x) for x in value])
     elif (isinstance(value, int)):
         value = str(value)
     elif (isinstance(value, float)):
@@ -942,7 +954,10 @@ def formatdict(data):
     else:
         return "\n".join(getdictvalues(data))
 
-
+def prepareList(value, removeLineBreaks = True):
+    if removeLineBreaks:
+        value = [val.replace('\n', ' ').replace('\r', ' ') for val in value]
+    return value
 
 def tokenize_with_escape(a, escape='\\', separator='|', n = None):
     '''
