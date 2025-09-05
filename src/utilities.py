@@ -273,6 +273,7 @@ def extractValue(data, key, dump=True, folder="", default=''):
             value = key.strip('"')
         else:
             # Input: dict. Output: string, number, list or dict
+            # TODO: if dump is true, length, first, last etc. can't work
             value = getDictValue(data, key, dump, default)
 
         for idx, modifier in enumerate(pipeline):
@@ -387,7 +388,9 @@ def extractValue(data, key, dump=True, folder="", default=''):
 
             elif modifier[0] == 'base64':
                 value = value[0]
-                value = b64encode(value.encode('utf-8')).decode('utf-8')
+                if isinstance(value, str):
+                    value = value.encode('utf-8')
+                value = b64encode(value).decode('utf-8')
 
             elif modifier[0] == 'last':
                 value = value[-1]
@@ -422,12 +425,8 @@ def extractValue(data, key, dump=True, folder="", default=''):
                 value = [str(datetime.strptime(x, '%a %b %d %H:%M:%S %z %Y')) for x in value]
 
         # If modified in pipeline (otherwise already handled by getDictValue)...
-        if dump and (type(value) is dict):
-            value = json.dumps(value)
-        if dump and (type(value) is list):
-            value = ";".join(value)
-        elif dump and (isinstance(value, int)):
-            value = str(value)
+        if dump:
+            value = dumpValue(value)
 
         return (name, value)
 
@@ -537,19 +536,26 @@ def getDictValue(data, multikey, dump=True, default=''):
         else:
             value = default
 
-        if dump and (type(value) is dict):
-            value = json.dumps(value)
-        elif dump and (type(value) is list):
-            value = ";".join(value)
-        elif dump and (isinstance(value, int)):
-            value = str(value)
-        elif dump and (isinstance(value, float)):
-            value = str(value)
+        if dump:
+            value = dumpValue(value)
 
         return value
 
     except Exception as e:
         return default
+
+def dumpValue(value):
+    if (type(value) is dict):
+      value = json.dumps(value)
+    elif (type(value) is list):
+        value = ";".join([dumpValue(x) for x in value])
+    elif (isinstance(value, int)):
+        value = str(value)
+    elif (isinstance(value, float)):
+        value = str(value)
+
+    return value
+
 
 def getDictValueOrNone(data, key, dump = True):
     if (key is None) or (key == ''):
