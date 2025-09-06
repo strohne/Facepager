@@ -160,7 +160,7 @@ class ApiTab(QScrollArea):
                 value = {'Object ID': str(nodedata['objectid'])}
                 name, value = extractValue(value, match, folder=options.get('folder', ''))
             else:
-                name, value = extractValue(nodedata['response'], match, folder=options.get('folder', ''))
+                name, value = extractValue(nodedata['response'], match, folder=options.get('folder', ''), metaData = nodedata)
 
             if (pattern == '<' + match + '>'):
                 pattern = value
@@ -485,7 +485,7 @@ class ApiTab(QScrollArea):
 
                     self.resourceEdit.addItem(path)
                     idx = self.resourceEdit.count() - 1
-                    self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations, "get.summary", "")),
+                    self.resourceEdit.setItemData(idx, wraptip(getDictValue(operations, "get.summary", default ="")),
                                                   Qt.ToolTipRole)
 
                     # store params for later use in onChangedResource
@@ -511,7 +511,7 @@ class ApiTab(QScrollArea):
                 self.resourceEdit.setCurrentIndex(index)
 
             operations = self.resourceEdit.itemData(index, Qt.UserRole)
-            params = getDictValue(operations, "get.parameters", False) if operations else []
+            params = getDictValue(operations, "get.parameters", dump = False) if operations else []
 
             # Set param names
             self.paramEdit.setNameOptionsAll(params)
@@ -719,11 +719,11 @@ class ApiTab(QScrollArea):
         except AttributeError:
             operations = {}
 
-        schema = getDictValue(operations, "get.responses.200.content.application/json.schema", []) if operations else []
+        schema = getDictValue(operations, "get.responses.200.content.application/json.schema", dump = False, default = {}) if operations else []
         options = {}
 
         # Params
-        params = getDictValue(operations, "get.parameters", False) if operations else []
+        params = getDictValue(operations, "get.parameters", dump = False) if operations else []
         defaultparams = {}
         for param in params:
             # Default values for required params
@@ -3342,7 +3342,7 @@ class TwitterTab(AuthTab):
             # applies to /search/tweets
             if (paging is None) and isinstance(data, dict) and hasDictValue(data, "search_metadata.next_results"):
                 paging = options
-                url, params = self.parseURL(getDictValue(data, "search_metadata.next_results", False))
+                url, params = self.parseURL(getDictValue(data, "search_metadata.next_results", dump = False))
                 options['url'] = urlpath
                 options['params'] = params
 

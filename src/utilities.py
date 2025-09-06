@@ -11,6 +11,7 @@ import urllib.parse
 import tldextract
 from collections import OrderedDict
 from collections.abc import Mapping
+from sqlalchemy.orm import DeclarativeMeta
 from xmljson import BadgerFish
 import io
 import pyjsparser
@@ -37,13 +38,21 @@ def flattenList(items):
             value.append(item)
     return value
 
-def hasDictValue(data,multikey, piped=False):
+def hasDictValue(data, key, piped=False):
+    """
+
+    :param data:
+    :param key:
+    :param piped:
+    :return:
+    """
+
     try:
-        #multikey = multikey.split('|').pop(0) if piped else multikey
-        name, multikey, pipeline = parseKey(multikey) if piped else (None,multikey,None)
+        #multikey = key.split('|').pop(0) if piped else multikey
+        name, key, pipeline = parseKey(key) if piped else (None, key, None)
 
         #keys=multikey.split('.',1)
-        keys = tokenize_with_escape(multikey, escape='\\', separator='.')
+        keys = tokenize_with_escape(key, escape='\\', separator='.')
 
         if isinstance(data, Mapping) and keys[0] != '':
 
@@ -86,23 +95,123 @@ def hasDictValue(data,multikey, piped=False):
     except Exception as e:
         return False
 
-def extractNames(customcolumns = []):
-    """Extract name contained in keys
+def extractNames(keys = [], merged = False):
     """
+    Extract names from an extraction key
+    By default, a column name is the extraction key.
+    In the extraction key, the name can be changed by prefixing the path with a name,
+    separated by an equal sign (e.g. `likes=comments.*.likes`).
+    Further, extraction keys can be defined for different levels by a filter condition in square brackets
+    after the column name (e.g. `likes[$level=2]=posts.*.likes` and likes[$level=3]=comments.*.likes`).
+
+    :param keys:
+    :param merged: Whether to merge names that only differ in their conditions.
+    :return:
+    """
+
     names = []
-    for column in customcolumns:
-        name = tokenize_with_escape(str(column)).pop(0).split('=', 1)
-        name = column if len(name) < 2 else name[0]
+    for column in keys:
+        tokens = tokenize_with_escape(str(column))
+        first = tokens.pop(0)
+        parts = split_outside_brackets(first, "=", 1)
+        if len(parts) > 1:
+            name = parts[0]
+            if merged:
+                name = re.sub(r'\[.*', '', name)
+                if name in names:
+                    continue
+        else:
+            name = column
+
         names.append(name)
+
     return names
 
-def parseKey(key):
-    pipeline = tokenize_with_escape(key)
-    key = pipeline.pop(0).split('=', 1)
-    name = key.pop(0) if len(key) > 1 else None
-    key = key[0]
 
-    return (name, key, pipeline)
+def evaluateCondition(condition_str, node):
+    """
+    Evaluate a simple condition string of the form `$level=1` against the node.
+    Conditions can be combined with commas, e.g. `$level=1,$query_status=200 (fetched)`.
+
+    For each condition:
+    - Split at first '=' into cond1 and cond2
+    - Extract value from node using extractValue(None, cond1, True, "", node, "")
+    - Compare extracted value to cond2 (string comparison)
+
+    Returns True if all conditions match, False otherwise.
+    """
+
+    if not node:
+        return False
+
+    # Split multiple conditions by comma
+    conditions = [c.strip() for c in tokenize_with_escape(condition_str,separator=",")]
+
+    for cond in conditions:
+        # Reject invalid condition
+        if '=' not in cond:
+            return False
+
+        # Test other conditions
+        cond1, cond2 = cond.split('=', 1)
+        name, value = extractValue(None, cond1, True, "", node, "")
+        if (value is None) or (str(value) != cond2):
+            return False
+
+    return True
+
+def extractKeys(keys=[], merged=False, node = None):
+    """
+    Extract keys from an extraction key, removing the name if present.
+
+    Extraction keys follow the pattern [name][condition]=path|modifier:options|...
+
+    If the extraction key is named and merged is True,
+    filter condition in square brackets are evaluated against the node.
+
+    :param keys:
+    :param merged: Whether to merge names that only differ in their conditions.
+    :param node: The node to check conditions
+    :return:
+    """
+
+    mergedKeys = {}
+    for column in keys:
+        name, path, modifiers = parseKey(column)
+        if merged and name:
+
+            # Use regex to separate name and condition in []
+            m = re.match(r'^([^\[]+)(\[(.+)\])?$', name)
+            matches = True
+            if m:
+                name = m.group(1)
+                condition = m.group(3)  # None if no condition
+
+                # Evaluate condition if present
+                if condition and (node is not None):
+                    matches = evaluateCondition(condition, node)
+
+            if matches:
+                mergedKeys[name] = column
+            elif not name in mergedKeys:
+                mergedKeys[name] = '""'
+        else:
+            mergedKeys[column] = column
+
+    return list(mergedKeys.values())
+
+def parseKey(key):
+    # Separate name+path and modifiers
+    tokens = tokenize_with_escape(key)
+    first = tokens.pop(0)
+    parts = split_outside_brackets(first, "=", 1)
+
+    if len(parts) > 1:
+        name, path = parts[0], parts[1]
+    else:
+        name, path = None, parts[0]
+
+    return (name, path, tokens)
 
 def dict_generator(indict, pre=None):
     pre = pre[:] if pre else []
@@ -165,7 +274,7 @@ def hasValue(data, key):
     keys = tokenize_with_escape(key,separator=',')
 
     for key in keys:
-        name, value = extractValue(data, key, False)
+        name, value = extractValue(data, key, dump=False)
         if (((value is not None) and (value != False)  and (value != '') and (type(value) is not list)) or \
              ((type(value) is list) and (len(value) > 0))):
             return True
@@ -185,7 +294,7 @@ def sliceData(data, headers=None, options={}):
 
         for key in keys:
             if hasDictValue(data, key, piped=True):
-                name, newnodes = extractValue(data, key, False)
+                name, newnodes = extractValue(data, key, dump = False)
                 newnodes = toDictListTuple(newnodes,key)
 
                 nodes.extend(newnodes)
@@ -218,14 +327,171 @@ def sliceData(data, headers=None, options={}):
 
     return data
 
-def extractValue(data, key, dump=True, folder="", default=''):
+def postProcess(value, pipeline, dump, folder):
+    for idx, modifier in enumerate(pipeline):
+        value = value if type(value) is list else [value]
+
+        modifier = modifier.split(":", 1)
+        if modifier[0] == 'js':
+            # Input: list of strings.
+            # Output if dump==True: list of strings
+            # Output if dump==False: list of dict, list, string or number
+            selector = modifier[1]
+
+            items = []
+            for x in value:
+                try:
+                    # x = x.replace('\\\\"', '\\"')
+
+                    tree = pyjsparser.parse(x)
+                    items += jsWalkValues(tree)
+                except Exception as e:
+                    items.append({'error': str(e)})
+
+            items = [getDictValue(x, selector, dump=dump, default=[]) for x in items]
+
+            # Flatten list if not dumped
+            if not dump:
+                value = flattenList(items)
+            else:
+                value = items
+
+        elif modifier[0] == 'json':
+            # Input: list of strings.
+            # Output if dump==True: list of strings
+            # Output if dump==False: list of dict, list, string or number
+            if (len(modifier) > 1):
+                selector = modifier[1]
+                items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
+            else:
+                items = [json.dumps(x)[1:-1] for x in value]
+
+            # Flatten list if not dumped
+            if not dump:
+                value = flattenList(items)
+            else:
+                value = items
+
+        elif modifier[0] == 'not':
+            selector = modifier[1]
+            check = [x == selector for x in value]
+            value = not any(check)
+
+        elif modifier[0] == 'is':
+            selector = modifier[1]
+            check = [x == selector for x in value]
+            value = any(check)
+
+        elif modifier[0] == 're':
+            # Input: list of strings.
+            # Output: list of strings
+            selector = modifier[1]
+            items = [re.findall(selector, x) for x in value]
+
+            # Flatten (first group in match if re.findall returns multiple groups)
+            value = []
+            for matches in items:
+                for match in matches:
+                    if (type(match) is tuple):
+                        value.append(match[0])
+                    else:
+                        value.append(match)
+
+        # Example: encode:utf-8
+        elif modifier[0] == 'encode':
+            # Input: list of strings.
+            # Output: list of strings
+            encoding = modifier[1]
+            value = [x.encode(encoding) for x in value]
+
+
+        elif modifier[0] == 'css':
+            # Input: list of strings.
+            # Output: list of strings
+            selector = modifier[1]
+            value = [extractHtml(x, selector, type='css') for x in value]
+            value = [y for x in value for y in x]
+
+        elif modifier[0] == 'xpath':
+            # Input: list of strings.
+            # Output: list of strings
+            selector = modifier[1]
+            value = [extractHtml(x, selector, type='xpath') for x in value]
+            value = [y for x in value for y in x]
+
+        # Load file contents (using modifiers after a pipe symbol)
+        elif modifier[0] == 'file':
+            value = value[0]
+            filetype = modifier[1] if len(modifier) > 1 else bytes
+
+            if filetype == 'txt':
+                with open(os.path.join(folder, value), 'r', encoding='utf-8') as file:
+                    value = file.read()
+            else:
+                with open(os.path.join(folder, value), 'rb') as file:
+                    value = file.read()
+
+        elif modifier[0] == 'thumb':
+            value = value[0]
+            size = int(modifier[1] if len(modifier) > 1 else 100)
+            if not value.startswith('file:///'):
+                value = os.path.join(folder, value)
+            value = imgToDataUrl(value, size)
+
+        elif modifier[0] == 'base64':
+            value = value[0]
+            if isinstance(value, str):
+                value = value.encode('utf-8')
+            value = b64encode(value).decode('utf-8')
+
+        elif modifier[0] == 'last':
+            value = value[-1]
+
+        elif modifier[0] == 'first':
+            value = value[0]
+
+        elif modifier[0] == 'max':
+            value = max(value)
+
+        elif modifier[0] == 'min':
+            value = min(value)
+
+        elif modifier[0] == 'length':
+            value = len(value)
+
+        elif modifier[0] == 'join':
+            separator = modifier[1] if len(modifier) > 1 else ';'
+            value = dumpValue(value, separator)
+
+        elif modifier[0] == 'utc':
+            value = [datetime.utcfromtimestamp(float(x)).isoformat() for x in value]
+
+        elif modifier[0] == 'timestamp':
+
+            # Example mydate|timestamp:%Y-%m-%d %H:%M:%S
+            if len(modifier) > 1:
+                format = modifier[1]
+                value = [str(int(datetime.strptime(x, format).timestamp())) for x in value]
+
+            # Example mydate|timestamp
+            else:
+                value = [str(int(datetime.fromisoformat(x).timestamp())) for x in value]
+
+        elif modifier[0] == 'shortdate':
+            value = [str(datetime.strptime(x, '%a %b %d %H:%M:%S %z %Y')) for x in value]
+
+    return value
+
+def extractValue(data, key, dump=True, folder="", metaData=None, default=""):
     """Extract value from dict and pipe through modifiers
 
     An extraction key follows the pattern `name=key|modifiers`:
 
-    - name: The column name in the column setup
+    - name: The column name in the column setup. Supports filtering in square brackets, e.g. name[$level=1]
     - key: Either a dot separated path into the data or a literal value in double quotes.
            This allows you to extract values from the data or to directly provide a specific value.
+           Supports * as wildcard for one level and ** to skip multiple levels.
+           Keys starting with `$` are supposed to address values in the metaData object.
    - modifiers: A pipe separated list of modifiers.
                 The extracted value is feed into the modifiers step by step.
                 Each modifier may have options. The options follow after a colon.
@@ -262,8 +528,10 @@ def extractValue(data, key, dump=True, folder="", default=''):
            Options: Provide a different separator for joining, e.g. a comma as in `tags|join:,`.
 
     :param data:
-    :param multikey:
+    :param key:
     :param dump:
+    :param folder:
+    :param metaData:
     :return:
     """
     #global jsparser
@@ -271,165 +539,17 @@ def extractValue(data, key, dump=True, folder="", default=''):
         # Parse key
         name, key, pipeline = parseKey(key)
 
+        # Input: dict. Output: string, number, list or dict
         if key.startswith('"') and key.endswith('"'):
             value = key.strip('"')
+        elif (metaData is not None) and (key in ["$level","$object_id", "$object_type", "$object_key", "$query_status", "$query_time", "$query_type"]):
+            key = key[1:].replace('_', '')
+            value = getDictValue(metaData, key, dump = False, default = default)
         else:
-            # Input: dict. Output: string, number, list or dict
-            value = getDictValue(data, key, False, default)
+            value = getDictValue(data, key, dump = False, default = default)
 
-        for idx, modifier in enumerate(pipeline):
-            value = value if type(value) is list else [value]
+        value = postProcess(value, pipeline, dump, folder)
 
-            modifier = modifier.split(":", 1)
-            if modifier[0] == 'js':
-                # Input: list of strings.
-                # Output if dump==True: list of strings
-                # Output if dump==False: list of dict, list, string or number
-                selector = modifier[1]
-
-                items = []
-                for x in value:
-                    try:
-                        #x = x.replace('\\\\"', '\\"')
-
-                        tree = pyjsparser.parse(x)
-                        items += jsWalkValues(tree)
-                    except Exception as e:
-                        items.append({'error':str(e)})
-
-                items = [getDictValue(x, selector, dump=dump, default=[]) for x in items]
-
-                # Flatten list if not dumped
-                if not dump:
-                    value = flattenList(items)
-                else:
-                    value = items
-
-            elif modifier[0] == 'json':
-                # Input: list of strings.
-                # Output if dump==True: list of strings
-                # Output if dump==False: list of dict, list, string or number
-                if (len(modifier) > 1):
-                    selector = modifier[1]
-                    items = [getDictValue(json.loads(x), selector, dump=dump) for x in value]
-                else:
-                    items = [json.dumps(x)[1:-1]  for x in value]
-
-                # Flatten list if not dumped
-                if not dump:
-                    value = flattenList(items)
-                else:
-                    value = items
-
-            elif modifier[0] == 'not':
-                selector = modifier[1]
-                check = [x == selector for x in value]
-                value = not any(check)
-
-            elif modifier[0] == 'is':
-                selector =modifier[1]
-                check = [x == selector for x in value]
-                value = any(check)
-
-            elif modifier[0] == 're':
-                # Input: list of strings.
-                # Output: list of strings
-                selector = modifier[1]
-                items = [re.findall(selector, x) for x in value]
-
-                # Flatten (first group in match if re.findall returns multiple groups)
-                value = []
-                for matches in items:
-                    for match in matches:
-                        if (type(match) is tuple):
-                            value.append(match[0])
-                        else:
-                            value.append(match)
-
-            # Example: encode:utf-8
-            elif modifier[0] == 'encode':
-                # Input: list of strings.
-                # Output: list of strings
-                encoding = modifier[1]
-                value = [x.encode(encoding) for x in value]
-
-
-            elif modifier[0] == 'css':
-                # Input: list of strings.
-                # Output: list of strings
-                selector = modifier[1]
-                value = [extractHtml(x, selector, type='css') for x in value]
-                value = [y for x in value for y in x]
-
-            elif modifier[0] == 'xpath':
-                # Input: list of strings.
-                # Output: list of strings
-                selector = modifier[1]
-                value = [extractHtml(x, selector, type='xpath') for x in value]
-                value = [y for x in value for y in x]
-
-            # Load file contents (using modifiers after a pipe symbol)
-            elif modifier[0] == 'file':
-                value = value[0]
-                filetype = modifier[1] if len(modifier) > 1 else bytes
-
-                if filetype == 'txt':
-                    with open(os.path.join(folder, value), 'r', encoding='utf-8') as file:
-                        value = file.read()
-                else:
-                    with open(os.path.join(folder, value), 'rb') as file:
-                        value = file.read()
-
-            elif modifier[0] == 'thumb':
-                value = value[0]
-                size = int(modifier[1] if len(modifier) > 1 else 100)
-                if not value.startswith('file:///'):
-                    value = os.path.join(folder, value)
-                value = imgToDataUrl(value, size)
-
-            elif modifier[0] == 'base64':
-                value = value[0]
-                if isinstance(value, str):
-                    value = value.encode('utf-8')
-                value = b64encode(value).decode('utf-8')
-
-            elif modifier[0] == 'last':
-                value = value[-1]
-
-            elif modifier[0] == 'first':
-                value = value[0]
-
-            elif modifier[0] == 'max':
-                value = max(value)
-
-            elif modifier[0] == 'min':
-                value = min(value)
-
-            elif modifier[0] == 'length':
-                value = len(value)
-
-            elif modifier[0] == 'join':
-                separator = modifier[1] if len(modifier) > 1 else ';'
-                value = dumpValue(value, separator)
-
-            elif modifier[0] == 'utc':
-                value = [datetime.utcfromtimestamp(float(x)).isoformat() for x in value]
-
-            elif modifier[0] == 'timestamp':
-
-                # Example mydate|timestamp:%Y-%m-%d %H:%M:%S
-                if len(modifier) > 1:
-                    format = modifier[1]
-                    value = [str(int(datetime.strptime(x, format).timestamp())) for x in value]
-
-                # Example mydate|timestamp
-                else:
-                    value = [str(int(datetime.fromisoformat(x).timestamp())) for x in value]
-
-            elif modifier[0] == 'shortdate':
-                value = [str(datetime.strptime(x, '%a %b %d %H:%M:%S %z %Y')) for x in value]
-
-        # If modified in pipeline (otherwise already handled by getDictValue)...
         if dump:
             value = dumpValue(value)
 
@@ -448,7 +568,7 @@ def findDictValues(data, multikey, dump=True, default=''):
     :return:
     """
     if hasDictValue(data, multikey):
-        return [getDictValue(data, multikey, dump, default)]
+        return [getDictValue(data, multikey, dump = dump, default = default)]
     elif isinstance(data, Mapping) and multikey != '':
         values = []
         for key, value in data,items():
@@ -489,17 +609,17 @@ def getDictValue(data, multikey, dump=True, default=''):
         #keys=multikey.split('.',1)
         keys = tokenize_with_escape(multikey,escape ='\\',separator='.',n=1)
 
-        if isinstance(data, Mapping) and keys[0] != '':
+        if isinstance(data, Mapping) and (keys[0] != ''):
             try:
                 value=data[keys[0]]
                 if len(keys) > 1:
-                    value = getDictValue(value,keys[1],False, default)
+                    value = getDictValue(value,keys[1],dump = False, default = default)
             except:
                 if keys[0] == '*':
                     listkey = keys[1] if len(keys) > 1 else ''
                     value=[]
                     for elem in data:
-                        item = getDictValue(data[elem],listkey,dump, default)
+                        item = getDictValue(data[elem],listkey,dump = dump, default = default)
                         if isinstance(item,list):
                             value.extend(item)
                         else:
@@ -511,11 +631,20 @@ def getDictValue(data, multikey, dump=True, default=''):
                 else:
                     value = default
 
+        elif (isinstance(type(data), DeclarativeMeta)) and (keys[0] != ''):
+            try:
+                value=getattr(data, keys[0], None)
+                if len(keys) > 1:
+                    value = getDictValue(value,keys[1],dump = False, default = default)
+            except:
+                value = default
+
+
         elif type(data) is list and keys[0] != '':
             try:
                 value=data[int(keys[0])]
                 if len(keys) > 1:
-                    value = getDictValue(value,keys[1],dump, default)
+                    value = getDictValue(value,keys[1],dump = dump, default=default)
             except:
                 if keys[0] == '**':
                     listkey = keys[1] if len(keys) > 1 else ''
@@ -529,7 +658,7 @@ def getDictValue(data, multikey, dump=True, default=''):
 
                     value=[]
                     for elem in data:
-                        item = getDictValue(elem, listkey, dump, default)
+                        item = getDictValue(elem, listkey, dump=dump, default=default)
                         if isinstance(item, list):
                             value.extend(item)
                         else:
@@ -597,7 +726,7 @@ def filterDictValue(data, multikey, dump=True, piped=False):
             try:
                 value=data
                 if len(keys) > 1:
-                    value[int(keys[0])] = getDictValue(value[int(keys[0])],keys[1],False)
+                    value[int(keys[0])] = getDictValue(value[int(keys[0])],keys[1], dump = False)
                 else:
                     value[int(keys[0])] = ''
             except:
@@ -959,15 +1088,20 @@ def prepareList(value, removeLineBreaks = True):
         value = [val.replace('\n', ' ').replace('\r', ' ') for val in value]
     return value
 
-def tokenize_with_escape(a, escape='\\', separator='|', n = None):
-    '''
-        Tokenize a string with escape characters
-        @n number of token to consume or None for all tokens
-    '''
+def tokenize_with_escape(value, escape='\\', separator='|', n = None):
+    """
+    Tokenize a string with escape characters
+
+    :param value:
+    :param escape:
+    :param separator:
+    :param n: number of token to consume or None for all tokens
+    :return:
+    """
     result = []
     token = ''
     state = 0
-    for i, c in enumerate(a):
+    for i, c in enumerate(value):
         # Rest of string
         if state == 2:
             token += c
@@ -975,7 +1109,7 @@ def tokenize_with_escape(a, escape='\\', separator='|', n = None):
         # Next character (state 0: not in escape sequence)
         elif state == 0:
             # Swith to escape sequence state
-            if (c == escape) and (i < len(a)-1) and (a[i+1] == separator):
+            if (c == escape) and (i < len(value) - 1) and (value[i + 1] == separator):
                 state = 1
 
             # Or tokenize
@@ -997,4 +1131,31 @@ def tokenize_with_escape(a, escape='\\', separator='|', n = None):
 
 
     result.append(token)
+    return result
+
+def split_outside_brackets(s: str, sep: str = "=", maxsplit: int = 1):
+    """
+    Split string by separator, ignoring separators inside square brackets [].
+    Returns a list with up to maxsplit+1 parts.
+    """
+    result = []
+    buf = []
+    depth = 0
+    splits = 0
+
+    for c in s:
+        if c == "[":
+            depth += 1
+            buf.append(c)
+        elif c == "]":
+            depth = max(0, depth - 1)
+            buf.append(c)
+        elif c == sep and depth == 0 and (maxsplit is None or splits < maxsplit):
+            result.append("".join(buf))
+            buf = []
+            splits += 1
+        else:
+            buf.append(c)
+
+    result.append("".join(buf))
     return result

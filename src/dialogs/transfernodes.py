@@ -132,7 +132,7 @@ class TransferNodes(QDialog):
                 if key == 'Object ID' or key == '':
                     objectids = treenode.data.get("objectid")
                 else:
-                    objectids = extractValue(treenode.data.get('response',''),key, dump=False)[1]
+                    objectids = extractValue(treenode.data.get('response',''),key, dump=False, metaData = treenode.data)[1]
                 objectids = objectids if type(objectids) is list else [objectids]
 
                 for objectid in objectids:

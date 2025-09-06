@@ -263,7 +263,7 @@ class ApiViewer(QDialog):
                 title = getDictValue(data, 'info.title') + " " + data['path']
                 self.detailName.setText(title)
 
-                operation = getDictValue(data, 'operations.get', False)
+                operation = getDictValue(data, 'operations.get', dump = False)
                 if operation:
                     # Description
                     self.detailDescription.setText(getDictValue(operation, 'summary'))
@@ -330,7 +330,7 @@ class ApiViewer(QDialog):
                             addDetailProperties(items, key+'*.')
 
 
-                    schema = getDictValue(operation, 'responses.200.content.application/json.schema', None)
+                    schema = getDictValue(operation, 'responses.200.content.application/json.schema', default = None)
                     addDetailProperties(schema)
 
 
@@ -537,9 +537,9 @@ class ApiViewer(QDialog):
 
             # Extract urls
             for k,v in self.apis.items():
-                api_module = getDictValue(v,'x-facepager-module','Generic')
+                api_module = getDictValue(v,'x-facepager-module', default = 'Generic')
                 if (api_module == module):
-                    api_urls = getDictValue(v, 'servers.*.url', [])
+                    api_urls = getDictValue(v, 'servers.*.url', default = [])
                     urls.extend(api_urls)
                     urls= list(set(urls))
 
@@ -557,9 +557,9 @@ class ApiViewer(QDialog):
             # Get best match based on module and basepath
             api = None
             for k,v in self.apis.items():
-                api_module = getDictValue(v,'x-facepager-module','Generic')
-                api_urls = getDictValue(v,'servers.*.url',[])
-                api_default = getDictValue(v,'x-facepager-default',False)
+                api_module = getDictValue(v,'x-facepager-module', default = 'Generic')
+                api_urls = getDictValue(v,'servers.*.url',default = [])
+                api_default = getDictValue(v,'x-facepager-default', default = False)
 
                 # Prio 1: user defined docs matching module and basepath
                 if (api_module == module) and (basepath in api_urls) and (not api_default):
@@ -588,7 +588,7 @@ class ApiViewer(QDialog):
             # TODO: prioritize non default apis
             # TODO: fuzzy match (module matches, basepath is similar)
             api_module = topData.get('module', 'Generic')
-            api_urls = getDictValue(topData, 'info.servers.*.url', [])
+            api_urls = getDictValue(topData, 'info.servers.*.url', default = [])
             api_default = topData['default']
 
             if (api_module == module) and (basepath in api_urls):
@@ -619,7 +619,7 @@ class ApiViewer(QDialog):
                     operation = paths.get(path.replace(basepath,""))
                 else:
                     operation = None
-                operation = getDictValue(operation,"get.responses.200",False) if operation is not None else {}
+                operation = getDictValue(operation,"get.responses.200", dump = False) if operation is not None else {}
 
                 # Field
                 if field is None and operation is not None and isinstance(operation, dict):
@@ -660,15 +660,15 @@ class ApiViewer(QDialog):
 
                     return schema
 
-                schema = getDictValue(operation, 'content.application/json.schema', None)
+                schema = getDictValue(operation, 'content.application/json.schema', default = None)
                 fieldprops = findFieldProperties(field, schema)
                 if fieldprops is not None:
                     return fieldprops.get('description','')
 
 
-                # response = getDictValue(operation, 'content.application/json.schema.properties', False)
+                # response = getDictValue(operation, 'content.application/json.schema.properties', default = False)
                 # if not response:
-                #     response = getDictValue(operation, 'content.application/json.schema.items.properties', False)
+                #     response = getDictValue(operation, 'content.application/json.schema.items.properties', default = False)
                 #
                 # if response and isinstance(response, dict):
                 #     if not field in response:
@@ -686,7 +686,7 @@ class ApiViewer(QDialog):
     def getSchemaComponent(self, data, key):
         # eg "#components/schema/user/properties
         key = key.replace("#", "").replace("/", ".")
-        return getDictValue(data, key, False)
+        return getDictValue(data, key, dump = False)
 
 
     def applyItem(self):
@@ -703,7 +703,7 @@ class ApiViewer(QDialog):
         if tab is not None:
             path = data.get('path', '')
             options = {
-                'basepath' : getDictValue(data, 'info.servers.0.url',''),
+                'basepath' : getDictValue(data, 'info.servers.0.url',default = ''),
                 'resource' : path
             }
 

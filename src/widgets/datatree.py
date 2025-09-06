@@ -316,7 +316,8 @@ class TreeModel(QAbstractItemModel):
         super(TreeModel, self).__init__(parent)
 
         self.database = database
-        self.customcolumns = []
+        self.customColumnKeys = []
+        self.customColumnLabels = []
         self.newnodes = 0
         self.nodecounter = 0
         self.downloadFolder = ""
@@ -337,7 +338,8 @@ class TreeModel(QAbstractItemModel):
             self.endResetModel()
 
     def setCustomColumns(self,cols):
-        self.customcolumns = cols
+        self.customColumnKeys = cols
+        self.customColumnLabels = extractNames(cols, True)
         self.layoutChanged.emit()
 
     def setDownloadFolder(self, folder):
@@ -426,7 +428,7 @@ class TreeModel(QAbstractItemModel):
         return parentNode.childCount()
 
     def columnCount(self, parent):
-        return 6 + len(self.customcolumns)
+        return 6 + len(self.customColumnLabels)
 
     def data(self, index, role):
         if not index.isValid():
@@ -435,7 +437,6 @@ class TreeModel(QAbstractItemModel):
         item = index.internalPointer()
 
         if (role == Qt.DisplayRole) or (role == Qt.ToolTipRole):
-            custom_len = len(self.customcolumns)
             default_len = 6
 
             # Default columns
@@ -454,8 +455,8 @@ class TreeModel(QAbstractItemModel):
 
             # Custom columns
             else:
-                key = self.customcolumns[index.column() - default_len]
-                value = extractValue(item.data.get('response',''), key, True, self.downloadFolder)[1]
+                key = self.getCustomColumnKey(index.column() - default_len, item.data)
+                value = extractValue(item.data.get('response',''), key, dump = True, folder = self.downloadFolder, metaData = item.data)[1]
 
             if role == Qt.ToolTipRole:
                 return wraptip(value)
@@ -498,7 +499,7 @@ class TreeModel(QAbstractItemModel):
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
             captions = ['Object ID','Object Type', 'Object Key', 'Query Status', 'Query Time', 'Query Type']
-            captions += extractNames(self.customcolumns)
+            captions += self.customColumnLabels
             return captions[section] if section < len(captions) else ""
 
         return None
@@ -507,11 +508,38 @@ class TreeModel(QAbstractItemModel):
         return ["id", "parent_id", "level", "object_id", "object_type", "object_key", "query_status", "query_time", "query_type"]
 
     def getCustomRowHeader(self):
-        row = []
-        columns = extractNames(self.customcolumns)
-        for key in columns:
-            row.append(key)
-        return row
+        """
+        Get custom column names
+
+        :param merged: Whether to merge names that only differ in their conditions, see extractNames().
+        :return:
+        """
+
+        return self.customColumnLabels
+
+    def getCustomColumnKeys(self, merged = False, node = None):
+        """
+        Get custom column keys
+
+        :param merged: Whether to evaluate column name conditions and only return matching keys.
+        :param node: The node used to evaluate the conditions
+        :return:
+        """
+
+        return extractKeys(self.customColumnKeys, merged, node)
+
+    def getCustomColumnKey(self, idx, data = None):
+        """
+        Get custom column key
+
+        :param idx: The column index
+        :param node: The node used to evaluate the conditions
+        :return:
+        """
+
+        # TODO: cache in node
+        keys = self.getCustomColumnKeys(True, data)
+        return keys[idx]
 
     def getRowHeader(self):
         row = self.getFixedRowHeader()
@@ -531,16 +559,23 @@ class TreeModel(QAbstractItemModel):
                node.data['querytype']
               ]
 
-    def getCustomRowData(self, index):
+    def getCustomRowData(self, index, merged = False):
+        """
+        Get data as defined in the custom columns
+
+        :param index:
+        :param merged: Whether to evaluation column conditions and only return matching data.
+        :return:
+        """
         node = index.internalPointer()
         row = []
-        for key in self.customcolumns:
-            row.append(extractValue(node.data['response'], key, True, self.downloadFolder)[1])
+        for key in self.getCustomColumnKeys(merged, node.data):
+            row.append(extractValue(node.data['response'], key, dump = True, folder = self.downloadFolder, metaData = node.data)[1])
         return row
 
     def getRowData(self, index):
         row = self.getFixedRowData(index)
-        row = row + self.getCustomRowData(index)
+        row = row + self.getCustomRowData(index, True)
         return row
 
     def hasChildren(self, index):

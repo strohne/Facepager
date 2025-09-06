@@ -387,9 +387,6 @@ class ApiActions(object):
             self.mainWindow.fieldList.setPlainText("\n".join(columns))
             self.mainWindow.guiActions.showColumns()
 
-
-
-
     def getPresetOptions(self):
         apimodule = self.mainWindow.RequestTabs.currentWidget()
 
@@ -839,7 +836,6 @@ class GuiActions(object):
         self.mainWindow.fieldList.clear()
         self.mainWindow.tree.treemodel.setCustomColumns([])
 
-
     @Slot()
     def addColumn(self):
         key = self.mainWindow.detailTree.selectedKey()
@@ -899,7 +895,6 @@ class GuiActions(object):
 
         if tree.treemodel.itemtype is not None:
             self.mainWindow.apiWindow.showDoc(tree.treemodel.module, tree.treemodel.basepath, tree.treemodel.path, key)
-
 
     @Slot()
     def expandAll(self):

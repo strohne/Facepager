@@ -147,7 +147,7 @@ class ExportFileDialog(QFileDialog):
 
                 # data
                 fixedRowData = self.mainWindow.tree.treemodel.getFixedRowData(index)
-                customRowData = self.mainWindow.tree.treemodel.getCustomRowData(index)
+                customRowData = self.mainWindow.tree.treemodel.getCustomRowData(index, True)
                 currentLevel = int(fixedRowData[2])
                 currentType = fixedRowData[4]
                 maxLevel = max(maxLevel, currentLevel)
@@ -248,9 +248,10 @@ class ExportFileDialog(QFileDialog):
                                 lineterminator='\r\n')
 
             # Headers
-            row = ["level", "id", "parent_id", "object_id", "object_type","object_key",
+            row = ["level", "id", "parent_id",
+                   "object_id", "object_type","object_key",
                    "query_status", "query_time", "query_type"]
-            for key in extractNames(self.mainWindow.tree.treemodel.customcolumns):
+            for key in self.mainWindow.tree.treemodel.customColumnLabels:
                 row.append(key)
             if self.optionLinebreaks.isChecked():
                 row = [val.replace('\n', ' ').replace('\r',' ') for val in row]
@@ -276,7 +277,7 @@ class ExportFileDialog(QFileDialog):
                         row = [currentLevel, node.id, node.parent_id, node.objectid,
                                currentType,getDictValue(node.queryparams,'nodedata'),
                                node.querystatus, node.querytime, node.querytype]
-                        for key in self.mainWindow.tree.treemodel.customcolumns:
+                        for key in self.mainWindow.tree.treemodel.getCustomColumnKeys(True, node):
                             row.append(node.getResponseValue(key, None, downloadFolder)[1])
 
                         if self.optionLinebreaks.isChecked():
