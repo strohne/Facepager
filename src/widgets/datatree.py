@@ -318,6 +318,7 @@ class TreeModel(QAbstractItemModel):
         self.database = database
         self.customColumnKeys = []
         self.customColumnLabels = []
+        self.hasColumnConditions = False
         self.newnodes = 0
         self.nodecounter = 0
         self.downloadFolder = ""
@@ -339,7 +340,7 @@ class TreeModel(QAbstractItemModel):
 
     def setCustomColumns(self,cols):
         self.customColumnKeys = cols
-        self.customColumnLabels = extractNames(cols, True)
+        self.customColumnLabels, self.hasColumnConditions = extractNames(cols)
         self.layoutChanged.emit()
 
     def setDownloadFolder(self, folder):
@@ -455,7 +456,7 @@ class TreeModel(QAbstractItemModel):
 
             # Custom columns
             else:
-                key = self.getCustomColumnKey(index.column() - default_len, item.data)
+                key = self.getCustomColumnKeys(item.data)[index.column() - default_len]
                 value = extractValue(item.data.get('response',''), key, dump = True, folder = self.downloadFolder, metaData = item.data)[1]
 
             if role == Qt.ToolTipRole:
@@ -511,35 +512,21 @@ class TreeModel(QAbstractItemModel):
         """
         Get custom column names
 
-        :param merged: Whether to merge names that only differ in their conditions, see extractNames().
         :return:
         """
 
         return self.customColumnLabels
 
-    def getCustomColumnKeys(self, merged = False, node = None):
+    def getCustomColumnKeys(self, node = None):
         """
         Get custom column keys
 
-        :param merged: Whether to evaluate column name conditions and only return matching keys.
-        :param node: The node used to evaluate the conditions
-        :return:
-        """
-
-        return extractKeys(self.customColumnKeys, merged, node)
-
-    def getCustomColumnKey(self, idx, data = None):
-        """
-        Get custom column key
-
-        :param idx: The column index
         :param node: The node used to evaluate the conditions
         :return:
         """
 
         # TODO: cache in node
-        keys = self.getCustomColumnKeys(True, data)
-        return keys[idx]
+        return extractKeys(self.customColumnKeys, node) if self.hasColumnConditions else self.customColumnKeys
 
     def getRowHeader(self):
         row = self.getFixedRowHeader()
@@ -559,23 +546,24 @@ class TreeModel(QAbstractItemModel):
                node.data['querytype']
               ]
 
-    def getCustomRowData(self, index, merged = False):
+    def getCustomRowData(self, index):
         """
         Get data as defined in the custom columns
 
+        Column conditions are evaluated and only data for matching conditions is returned.
+
         :param index:
-        :param merged: Whether to evaluation column conditions and only return matching data.
         :return:
         """
         node = index.internalPointer()
         row = []
-        for key in self.getCustomColumnKeys(merged, node.data):
+        for key in self.getCustomColumnKeys(node.data):
             row.append(extractValue(node.data['response'], key, dump = True, folder = self.downloadFolder, metaData = node.data)[1])
         return row
 
     def getRowData(self, index):
         row = self.getFixedRowData(index)
-        row = row + self.getCustomRowData(index, True)
+        row = row + self.getCustomRowData(index)
         return row
 
     def hasChildren(self, index):

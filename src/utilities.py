@@ -95,7 +95,7 @@ def hasDictValue(data, key, piped=False):
     except Exception as e:
         return False
 
-def extractNames(keys = [], merged = False):
+def extractNames(keys = []):
     """
     Extract names from an extraction key
     By default, a column name is the extraction key.
@@ -105,27 +105,28 @@ def extractNames(keys = [], merged = False):
     after the column name (e.g. `likes[$level=2]=posts.*.likes` and likes[$level=3]=comments.*.likes`).
 
     :param keys:
-    :param merged: Whether to merge names that only differ in their conditions.
-    :return:
+    :return: A tuple with names as first element and a boolean indicating whether column conditions exist in the second.
     """
 
     names = []
+    hasConditions = False
     for column in keys:
         tokens = tokenize_with_escape(str(column))
         first = tokens.pop(0)
         parts = split_outside_brackets(first, "=", 1)
         if len(parts) > 1:
             name = parts[0]
-            if merged:
+            if '[' in name:
+                hasConditions = True
                 name = re.sub(r'\[.*', '', name)
-                if name in names:
-                    continue
+            if name in names:
+                continue
         else:
             name = column
 
         names.append(name)
 
-    return names
+    return (names, hasConditions)
 
 
 def evaluateCondition(condition_str, node):
@@ -160,25 +161,25 @@ def evaluateCondition(condition_str, node):
 
     return True
 
-def extractKeys(keys=[], merged=False, node = None):
+def extractKeys(keys=[], node = None):
     """
-    Extract keys from an extraction key, removing the name if present.
+    Extract keys matching their column conditions
 
     Extraction keys follow the pattern [name][condition]=path|modifier:options|...
 
-    If the extraction key is named and merged is True,
-    filter condition in square brackets are evaluated against the node.
+    If the extraction key is named,
+    filter condition in square brackets
+    are evaluated against the node.
 
     :param keys:
-    :param merged: Whether to merge names that only differ in their conditions.
-    :param node: The node to check conditions
+    :param node: The node used to evaluate column conditions
     :return:
     """
 
     mergedKeys = {}
     for column in keys:
         name, path, modifiers = parseKey(column)
-        if merged and name:
+        if name:
 
             # Use regex to separate name and condition in []
             m = re.match(r'^([^\[]+)(\[(.+)\])?$', name)

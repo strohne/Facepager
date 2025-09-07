@@ -147,7 +147,7 @@ class ExportFileDialog(QFileDialog):
 
                 # data
                 fixedRowData = self.mainWindow.tree.treemodel.getFixedRowData(index)
-                customRowData = self.mainWindow.tree.treemodel.getCustomRowData(index, True)
+                customRowData = self.mainWindow.tree.treemodel.getCustomRowData(index)
                 currentLevel = int(fixedRowData[2])
                 currentType = fixedRowData[4]
                 maxLevel = max(maxLevel, currentLevel)
@@ -277,7 +277,7 @@ class ExportFileDialog(QFileDialog):
                         row = [currentLevel, node.id, node.parent_id, node.objectid,
                                currentType,getDictValue(node.queryparams,'nodedata'),
                                node.querystatus, node.querytime, node.querytype]
-                        for key in self.mainWindow.tree.treemodel.getCustomColumnKeys(True, node):
+                        for key in self.mainWindow.tree.treemodel.getCustomColumnKeys(node):
                             row.append(node.getResponseValue(key, None, downloadFolder)[1])
 
                         if self.optionLinebreaks.isChecked():
