@@ -1,0 +1,46 @@
+{
+  "name": "OpenAI Image Prompts",
+  "category": "OpenAI",
+  "type": "preset",
+  "pipeline": null,
+  "description": "Send an image along with a prompt to OpenAIs API. The default prompt asks for describing the image. You can change it in the payload. This is a very generic preset that can be used to send text only prompts as well.\n\n1. Add image files as seed nodes\n2. Enter your OpenAI access token to the Access Token field\n3. Fetch data\n\nYou get an API Key by registering at the OpenAI developer platform: https://platform.openai.com/\n\nYou can change the prompt and other settings in the payload field. For further options, see the the OpenAI Responses API reference: https://platform.openai.com/docs/api-reference/introduction\n",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://api.openai.com/v1",
+    "resource": "/responses",
+    "params": {},
+    "extension": "",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "verb": "POST",
+    "format": "json",
+    "encoding": "<None>",
+    "payload": "{\n    \"model\": \"gpt-4.1-mini\",\n    \"input\": [\n      {\n        \"role\": \"user\",\n        \"content\": [\n          {\"type\": \"input_text\", \"text\": \"Describe this image in detail.\"},\n          {\"type\": \"input_image\",\"image_url\": \"<filepath|thumb:200>'\"}\n        ]\n      }\n    ]\n  }",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 1,
+    "paging_type": "key",
+    "key_paging": null,
+    "paging_stop": null,
+    "param_paging": null,
+    "nodedata": null,
+    "objectid": null,
+    "scope": "",
+    "proxy": "",
+    "auth_type": "OAuth2",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "header",
+    "auth_tokenname": "Authorization",
+    "auth_prefix": "Bearer "
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "output.*.content.*.text"
+  ]
+}
