@@ -1,0 +1,52 @@
+{
+  "name": "Geocode with Nominatim / OpenStreetmap",
+  "category": "Geocoding",
+  "type": "preset",
+  "pipeline": null,
+  "description": "With this preset you can get latitude, longitude and further details for addresses using the Nominatim service.\n\n1. Add addresses as seed nodes.  \n2. Set the email address in the user agent header field.  \n3. Set the request speed to 60 requests per minute at maximum.  \n4. Fetch data.  \n\nAlternatively, load a CSV file via the Add Nodes button and change the placeholder in the q-Parameter to match your address column.\n\nPlease respect the The Nominatim Usage Policy.\nIt requires you to set a valid User Agent with your email address. \nDo not go faster than 1 request per second.\nFurther, credit them in publications.\n\nSee https://operations.osmfoundation.org/policies/nominatim/",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://nominatim.openstreetmap.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {
+      "User-Agent": "Facepager (ADD YOUR MAILADRESS HERE)"
+    },
+    "key_paging": null,
+    "nodedata": null,
+    "objectid": null,
+    "pages": 1,
+    "paging_stop": null,
+    "paging_type": "key",
+    "param_paging": null,
+    "params": {
+      "addressdetails": "1",
+      "format": "json",
+      "limit": "1",
+      "q": "<Object ID>"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/search",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 60,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "input[$level=0]=address",
+    "display_name",
+    "lat",
+    "lon"
+  ]
+}
