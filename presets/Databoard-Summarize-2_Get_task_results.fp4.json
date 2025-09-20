@@ -1,0 +1,45 @@
+{
+  "name": "2 Get task results",
+  "category": "Databoard",
+  "type": "preset",
+  "pipeline": "Summarize",
+  "description": "Create task first, then fetch results",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://databoard.uni-muenster.de/tasks/run",
+    "resource": "<task_id>",
+    "params": {
+      "wait": "10"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "GET",
+    "format": "json",
+    "filename": "<Object ID>",
+    "fileext": ".xml",
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "offset_start": 0,
+    "offset_step": 10,
+    "nodedata": null,
+    "objectid": "task_id",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://databoard.uni-muenster.de/login",
+    "redirect_uri": "https://databoard.uni-muenster.de/login?success=1",
+    "token_uri": "",
+    "auth": "header",
+    "auth_tokenname": "Authorization",
+    "auth_prefix": "Bearer "
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "result.answers.0.llm_result",
+    "state"
+  ]
+}

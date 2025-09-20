@@ -1,0 +1,45 @@
+{
+  "name": "2 Get task results",
+  "category": "Databoard",
+  "type": "preset",
+  "pipeline": "Coding",
+  "description": "Create task first, then fetch results by the task id.",
+  "module": "Generic",
+  "options": {
+    "auth": "header",
+    "auth_prefix": "Bearer ",
+    "auth_tokenname": "Authorization",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://databoard.uni-muenster.de/login",
+    "basepath": "https://databoard.uni-muenster.de/tasks/run/",
+    "extension": "",
+    "fileext": "",
+    "filename": "",
+    "format": "json",
+    "headers": {},
+    "nodedata": null,
+    "objectid": "task_id",
+    "offset_start": 0,
+    "offset_step": 10,
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "params": {
+      "wait": "10"
+    },
+    "proxy": "",
+    "redirect_uri": "https://databoard.uni-muenster.de/login?success=1",
+    "resource": "<task_id>",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "result.answers.0",
+    "state"
+  ]
+}

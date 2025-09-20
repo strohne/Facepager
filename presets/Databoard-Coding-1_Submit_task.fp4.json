@@ -1,0 +1,47 @@
+{
+  "name": "1 Submit task",
+  "category": "Databoard",
+  "type": "preset",
+  "pipeline": "Coding",
+  "description": "Add seed nodes that contain the text in the \"text\" key. To add such nodes, you can prepare a CSV file (semicolon as separator) and load it from the Add Nodes menu option.\n\nRevise the rules in the payload. Make sure it is valid JSON. Be aware that JSON does not support line breaks in literal values (between quotes). Instead of providing the rules directly in the payload, you can prepare a rules.json file (array of rules as in the payload), put it into the upload folder (see the setting below the payload) and then use the placeholder  \"rules\": <\"rules.json\"|file:txt>\n\nThen login to the Databoard Service with your credentials and fetch data.\n\nIf the result is ready within 10 seconds (see the wait parameter), it will be returned directly. If it takes longer, use the preset to get task results with the task ID. For larger samples we recommend to set the wait parameter to 0, submit all tasks, then fetch them in a different step.\n\nYou can repeat the identical request later, the result will be returned from the Databoard cache once it has been successfully retrieved.\n\nSee https://databoard.uni-muenster.de for the documentation.",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://databoard.uni-muenster.de/tasks/run",
+    "resource": "",
+    "params": {
+      "wait": "10"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "POST",
+    "format": "json",
+    "encoding": "<None>",
+    "payload": "{\n  \"task\": \"coding\",\n  \"input\": \"<text>\",\n  \"options\": {\n   \"mode\": \"multi\",\n    \"rules\": [\n       {\"category\":\"A1 Aktivieren\",\"description\":\"Es wird aktiv zu einer Handlung aufgerufen. Das ist dann der Fall, wenn f\u00fcr etwas mobilisiert wird, ein blo\u00dfer Hinweis auf ein Ereignis reicht nicht. Das kann typischerweise mit einer Bitte einhergehen. Ein einfacher Link wird nicht als Aufforderung oder Werbung verstanden.\", \"example\":\"Dann redet nicht nur, dann macht doch mal was\"},\n       {\"category\":\"A4 Solidarisieren\",\"description\":\"Es wird eine Positionierung zu einer Gruppe, Bewegung oder gesellschaftspolitischen Str\u00f6mung vorgenommen und damit eine \u00fcberindividuelle Haltung ausgedr\u00fcckt. Der Sprechakt dr\u00fcckt Zugeh\u00f6rigkeit zu einer Bewegung, einem kollektiven Akteur oder einer Str\u00f6mung aus, wobei die Bezeichnung nicht nur als Beschreibung, sondern als Identifizierungsmerkmal der Akteure oder Ideologie dient. \", \"example\":\"#ichbinhier\"}\n    ]\n  }\n}",
+    "filename": "",
+    "fileext": "",
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "offset_start": 0,
+    "offset_step": 10,
+    "nodedata": null,
+    "objectid": "task_id",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://databoard.uni-muenster.de/login",
+    "redirect_uri": "https://databoard.uni-muenster.de/login?success=1",
+    "token_uri": "",
+    "auth": "header",
+    "auth_tokenname": "Authorization",
+    "auth_prefix": "Bearer "
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "result.answers.0",
+    "state"
+  ]
+}
