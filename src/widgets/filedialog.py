@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QFileDialog, QComboBox, QLabel, QHBoxLayout
+from PySide6.QtWidgets import QFileDialog, QComboBox, QLabel, QHBoxLayout
 
 
 class CsvOpenDialog(QFileDialog):

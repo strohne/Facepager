@@ -49,22 +49,23 @@ from dialogs.dataviewer import *
 from dialogs.selectnodes import *
 from dialogs.transfernodes import *
 
+
 import logging
 import threading
 from server import Server, RequestHandler
 
 # Some hackery required for pyInstaller
 # See https://justcode.nimbco.com/PyInstaller-with-Qt5-WebEngineView-using-PySide2/#could-not-find-qtwebengineprocessexe-on-windows
-if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
-    os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.normpath(os.path.join(
-        sys._MEIPASS, 'PySide6', 'Qt', 'lib',
-        'QtWebEngineCore.framework', 'Helpers', 'QtWebEngineProcess.app',
-        'Contents', 'MacOS', 'QtWebEngineProcess'
-    ))
-
-# Fix Mac not showing windows
-if getattr(sys,'frozen', False) and sys.platform == 'darwin':
-    os.environ['QT_MAC_WANTS_LAYER'] = '1'
+# if getattr(sys, 'frozen', False) and sys.platform == 'darwin':
+#     os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.normpath(os.path.join(
+#         sys._MEIPASS, 'PySide6', 'Qt', 'lib',
+#         'QtWebEngineCore.framework', 'Helpers', 'QtWebEngineProcess.app',
+#         'Contents', 'MacOS', 'QtWebEngineProcess'
+#     ))
+#
+# # Fix Mac not showing windows
+# if getattr(sys,'frozen', False) and sys.platform == 'darwin':
+#     os.environ['QT_MAC_WANTS_LAYER'] = '1'
 
 class MainWindow(QMainWindow):
 
@@ -73,7 +74,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Facepager " + settings['version'])
         self.setWindowIcon(QIcon(":/icons/icon_facepager.png"))
-        QApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton)
+#        QApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton)
 
 
         # This is needed to display the app icon on the taskbar on Windows 7
@@ -306,17 +307,17 @@ class MainWindow(QMainWindow):
         self.settingsLayout.addRow(self.clearCheckbox)
 
         # Style
-        self.styleEdit = QComboBox(self)
-        self.styleEdit.setToolTip(wraptip("Choose the styling of Facepager."))
-
-        styles = [x for x in QStyleFactory.keys() if x != "Windows"]
-        styles = ['<default>'] + styles
-
-        self.styleEdit.insertItems(0, styles)
-        self.styleEdit.setCurrentText(self.settings.value('style', '<default>'))
-
-        self.styleEdit.currentIndexChanged.connect(self.setStyle)
-        self.settingsLayout.addRow('Style', self.styleEdit)
+        # self.styleEdit = QComboBox(self)
+        # self.styleEdit.setToolTip(wraptip("Choose the styling of Facepager."))
+        #
+        # styles = [x for x in QStyleFactory.keys() if x != "Windows"]
+        # styles = ['<default>'] + styles
+        #
+        # self.styleEdit.insertItems(0, styles)
+        # self.styleEdit.setCurrentText(self.settings.value('style', '<default>'))
+        #
+        # self.styleEdit.currentIndexChanged.connect(self.setStyle)
+        # self.settingsLayout.addRow('Style', self.styleEdit)
 
         #
         #  Components
@@ -489,14 +490,14 @@ class MainWindow(QMainWindow):
         self.loglist.clear()
         groupLayout.addWidget(self.loglist)
 
-    def setStyle(self):
-        style = self.styleEdit.currentText()
-        try:
-            if style == '<default>':
-                style = self.styleEdit.itemText(1)
-            QApplication.setStyle(style)
-        except Exception as e:
-            self.logmessage(e)
+    # def setStyle(self):
+    #     style = self.styleEdit.currentText()
+    #     try:
+    #         if style == '<default>':
+    #             style = self.styleEdit.itemText(1)
+    #         QApplication.setStyle(style)
+    #     except Exception as e:
+    #         self.logmessage(e)
 
     def databaseLabelClicked(self):
         if self.database.connected:
@@ -582,7 +583,7 @@ class MainWindow(QMainWindow):
         self.settings.setValue('saveheaders', self.headersCheckbox.isChecked())
         self.settings.setValue('expand', self.autoexpandCheckbox.isChecked())
         self.settings.setValue('logrequests', self.logCheckbox.isChecked())
-        self.settings.setValue('style', self.styleEdit.currentText())
+        #self.settings.setValue('style', self.styleEdit.currentText())
 
         self.settings.beginGroup("GlobalSettings")
         self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
@@ -772,15 +773,13 @@ def startMain():
     main=MainWindow()
 
     # Change styling
-    if cmd_args.style is not None:
-        QApplication.setStyle(cmd_args.style)
-    #elif sys.platform == 'darwin':
-    #    QApplication.setStyle('Fusion')
-    elif main.settings.value('style', '<default>') != '<default>':
-        QApplication.setStyle(main.settings.value('style'))
+    # if cmd_args.style is not None:
+    #     QApplication.setStyle(cmd_args.style)
+    # elif main.settings.value('style', '<default>') != '<default>':
+    #     QApplication.setStyle(main.settings.value('style'))
 
     main.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

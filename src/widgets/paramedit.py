@@ -181,7 +181,7 @@ class QParamEdit(QTableWidget):
             combo=QComboBox(self)
             combo.setEditable(True)
             combo.setMinimumContentsLength(25)
-            combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLength)
+            combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
             combo.row = row
             combo.col = 0
             combo.editTextChanged.connect(self.calcRows)
@@ -197,7 +197,7 @@ class QParamEdit(QTableWidget):
             value = ValueEdit(self)
             combo = value.comboBox
             combo.setMinimumContentsLength(20)
-            combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLength)
+            combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
 
             combo.row = row
             combo.col = 1

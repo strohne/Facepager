@@ -67,11 +67,10 @@ class PreLoginWebDialog(QDialog):
         #browser.setBackgroundRole(QPalette.Window)
 
     def loadPage(self):
-        #self.browser.load(QUrl(self.url))
-        self.browser.load(self.url)
+        QTimer.singleShot(0, lambda: self.browser.load(QUrl(self.url)))
 
     def show(self):
-        #super(WebDialog, self).show()
+        super(PreLoginWebDialog, self).show()
         self.loadPage()
         return self.exec_()
 
@@ -153,14 +152,12 @@ class LoginWebDialog(QDialog):
         super().close()
 
     def loadPage(self):
-        #self.browser.load(QUrl(self.url))
-        self.browser.load(self.url)
+        QTimer.singleShot(0, lambda: self.browser.load(QUrl(self.url)))
 
     def showPage(self, url):
-        #super(WebDialog, self).show()
         self.url = url
-        self.loadPage()
         self.show()
+        self.loadPage()
 
     @Slot(str)
     def onLogMessage(self,message):

@@ -1,5 +1,4 @@
 from PySide6.QtCore import *
-from PySide6.QtGui import *
 from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QMainWindow
 
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -34,12 +33,10 @@ class HelpWindow(QMainWindow):
         dismiss.setText("Close")
         dismiss.clicked.connect(self.hide)
         hLayout.addWidget(dismiss)
-        #browser.setBackgroundRole(QPalette.Window)
 
     def show(self):
         super(HelpWindow,self).show()
         self.loadPage()
-
 
     def loadPage(self):
         self.browser.load(QUrl("http://strohne.github.io/Facepager/"))
