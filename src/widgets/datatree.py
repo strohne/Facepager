@@ -316,9 +316,12 @@ class TreeModel(QAbstractItemModel):
         super(TreeModel, self).__init__(parent)
 
         self.database = database
-        self.customcolumns = []
+        self.customColumnKeys = []
+        self.customColumnLabels = []
+        self.hasColumnConditions = False
         self.newnodes = 0
         self.nodecounter = 0
+        self.downloadFolder = ""
 
         # Cache for prefetching data
         self.prefetching = False
@@ -336,7 +339,12 @@ class TreeModel(QAbstractItemModel):
             self.endResetModel()
 
     def setCustomColumns(self,cols):
-        self.customcolumns = cols
+        self.customColumnKeys = cols
+        self.customColumnLabels, self.hasColumnConditions = extractNames(cols)
+        self.layoutChanged.emit()
+
+    def setDownloadFolder(self, folder):
+        self.downloadFolder = folder
         self.layoutChanged.emit()
 
     def deleteNode(self, index, delaycommit=False):
@@ -357,6 +365,12 @@ class TreeModel(QAbstractItemModel):
     def addSeedNodes(self, nodesdata, extended=False, progress=None, delaycommit=False):
         """
         Add seed nodes
+
+        :param nodesdata: A list or a generator for nodes. Each node is a dict with keys, the first key is used as Object ID.
+        :param extended:
+        :param progress:
+        :param delaycommit:
+        :return:
         """
 
         try:
@@ -415,7 +429,7 @@ class TreeModel(QAbstractItemModel):
         return parentNode.childCount()
 
     def columnCount(self, parent):
-        return 6 + len(self.customcolumns)
+        return 6 + len(self.customColumnLabels)
 
     def data(self, index, role):
         if not index.isValid():
@@ -424,7 +438,6 @@ class TreeModel(QAbstractItemModel):
         item = index.internalPointer()
 
         if (role == Qt.DisplayRole) or (role == Qt.ToolTipRole):
-            custom_len = len(self.customcolumns)
             default_len = 6
 
             # Default columns
@@ -443,8 +456,8 @@ class TreeModel(QAbstractItemModel):
 
             # Custom columns
             else:
-                key = self.customcolumns[index.column() - default_len]
-                value = extractValue(item.data.get('response',''), key)[1]
+                key = self.getCustomColumnKeys(item.data)[index.column() - default_len]
+                value = extractValue(item.data.get('response',''), key, dump = True, folder = self.downloadFolder, metaData = item.data)[1]
 
             if role == Qt.ToolTipRole:
                 return wraptip(value)
@@ -487,21 +500,42 @@ class TreeModel(QAbstractItemModel):
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
             captions = ['Object ID','Object Type', 'Object Key', 'Query Status', 'Query Time', 'Query Type']
-            captions += extractNames(self.customcolumns)
+            captions += self.customColumnLabels
             return captions[section] if section < len(captions) else ""
 
         return None
 
+    def getFixedRowHeader(self):
+        return ["id", "parent_id", "level", "object_id", "object_type", "object_key", "query_status", "query_time", "query_type"]
+
+    def getCustomRowHeader(self):
+        """
+        Get custom column names
+
+        :return:
+        """
+
+        return self.customColumnLabels
+
+    def getCustomColumnKeys(self, node = None):
+        """
+        Get custom column keys
+
+        :param node: The node used to evaluate the conditions
+        :return:
+        """
+
+        # TODO: cache in node
+        return extractKeys(self.customColumnKeys, node) if self.hasColumnConditions else self.customColumnKeys
+
     def getRowHeader(self):
-        row = ["id", "parent_id", "level", "object_id", "object_type", "object_key", "query_status", "query_time", "query_type"]
-        columns = extractNames(self.customcolumns)
-        for key in columns:
-            row.append(key)
+        row = self.getFixedRowHeader()
+        row = row + self.getCustomRowHeader()
         return row
 
-    def getRowData(self, index):
+    def getFixedRowData(self, index):
         node = index.internalPointer()
-        row = [node.id,
+        return [node.id,
                node.parentItem.id,
                node.data['level'],
                node.data['objectid'],
@@ -511,8 +545,25 @@ class TreeModel(QAbstractItemModel):
                node.data['querytime'],
                node.data['querytype']
               ]
-        for key in self.customcolumns:
-            row.append(extractValue(node.data['response'],key)[1])
+
+    def getCustomRowData(self, index):
+        """
+        Get data as defined in the custom columns
+
+        Column conditions are evaluated and only data for matching conditions is returned.
+
+        :param index:
+        :return:
+        """
+        node = index.internalPointer()
+        row = []
+        for key in self.getCustomColumnKeys(node.data):
+            row.append(extractValue(node.data['response'], key, dump = True, folder = self.downloadFolder, metaData = node.data)[1])
+        return row
+
+    def getRowData(self, index):
+        row = self.getFixedRowData(index)
+        row = row + self.getCustomRowData(index)
         return row
 
     def hasChildren(self, index):

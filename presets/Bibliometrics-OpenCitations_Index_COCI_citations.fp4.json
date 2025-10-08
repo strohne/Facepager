@@ -1,0 +1,50 @@
+{
+  "name": "OpenCitations Index (COCI): citations",
+  "category": "Bibliometrics",
+  "description": "[The OpenCitations Index](https://opencitations.net/index) – formerly known as the OpenCitations Index of Crossref open DOI-to-DOI citations (COCI) – is a bibliographic index recording and storing citations between publications. It pulls its data from various open scholarly sources as described on their website (see link above), thereby providing comprehensive and openly accessible bibliographic and citation data. \n\nEach citation is identified by an unique [Open Citation Identifier (OCI)](https://identifiers.org/oci). However, data can be fetched via various identifiers including DOIs.  Further, each item is a citation record. To get its bibliographic metadata use the \"OpenCitations Index (COCI): Metadata from doi\" preset.\n\nApply this preset to fetch the titles of all works that cite the seed work.  Add as many DOIs as seed nodes as you wish (e.g. , \"10.1111/j.1460-2466.2008.01401.x\").\n\nHere we are calling version 2.0.x of [the REST API for the OpenCitations Index](https://opencitations.net/index/api/v2#/citations/%7Bid%7D).",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://opencitations.net/index/api/v2",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {},
+    "nodedata": null,
+    "objectid": "citing",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "params": {
+      "<doi>": "<Object ID>"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/citations/doi:<doi>",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "oci",
+    "citing",
+    "cited",
+    "creation",
+    "timespan",
+    "journal_sc",
+    "author_sc",
+    "",
+    ""
+  ]
+}

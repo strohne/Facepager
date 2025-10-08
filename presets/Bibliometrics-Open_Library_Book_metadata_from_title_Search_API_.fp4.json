@@ -1,0 +1,55 @@
+{
+  "name": "Open Library: Book metadata from title (Search API)",
+  "category": "Bibliometrics",
+  "description": "[Open Library](https://openlibrary.org/) is an open project launched by the Internet Archive in 2006 that aims to provide \"one web page for every book ever published\". Each page contains detailed bibliographic information about the entry, including metadata such as publisher, publication date, and ISBN. The result is an exhaustive catalog of books searchable by title, author, or subject and, whenever possible, Open Library offers digital versions of its books for borrowing and reading. Due to its collaborative, wiki-style nature all users are welcome to contribute information to the catalog by editing book information or even adding new entries.\n\nApply this preset to fetch all available metadata about a book or a book series using the [Open Library Search API](https://openlibrary.org/dev/docs/api/search). Start by adding a book title as seed note (e.g., \"A Song of Ice and Fire\").  This will return all works that contain the seed need in their title. Edit the fields parameter to specifiy the metadata returned by your query. \n\nPlease, see this [overview of Open Library's range of APIs](https://openlibrary.org/developers/api) to find the API that best suits your needs and adjust the preset accordingly. Generally, OpenLibrary recommends their powerful [Search API](https://openlibrary.org/dev/docs/api/search) and they have published some [tips for working with it](https://openlibrary.org/search/howto).\n\n**Note:** Please mind Open Library's bulk download policy. Open Library kindly asks to not use their APIs for bulk downloads.  If you need a dump of complete data, please read about their [bulk download](https://openlibrary.org/data#downloads) options, or email them at openlibrary@archive.org. If you plan to make regular, frequent use of Open Library's APIs (e.g. multiple calls per minute), please edit the existing **header** to specify the **User-Agent string** with (a) the name of your application and (b) your contact email or phone number, so Open Library may contact you when we notice high request volume. Failing to include these headers may result in the application (Facepager) being blocked.",
+  "module": "Generic",
+  "options": {
+    "auth": "disable",
+    "auth_prefix": "",
+    "auth_tokenname": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "basepath": "https://openlibrary.org",
+    "extension": "",
+    "fileext": "<None>",
+    "filename": "<None>",
+    "format": "json",
+    "headers": {
+      "User-Agent": "Facepager/4.5.3 (youremail@example.com)"
+    },
+    "nodedata": "docs",
+    "objectid": "author_name.0",
+    "offset_start": 1,
+    "offset_step": 1,
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "params": {
+      "fields": "*",
+      "limit": "10",
+      "q": "title:<Object ID>",
+      "sort": "old"
+    },
+    "proxy": "",
+    "redirect_uri": "",
+    "resource": "/search.json?",
+    "scope": "",
+    "token_uri": "",
+    "verb": "GET"
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "title",
+    "key",
+    "first_publish_year",
+    "author_name.0",
+    "author_key.0",
+    "edition_count",
+    "ebook_access",
+    "isbn.0",
+    "ratings_average"
+  ]
+}

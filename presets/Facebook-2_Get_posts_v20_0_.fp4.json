@@ -1,0 +1,39 @@
+{
+  "name": "2 Get posts (v20.0)",
+  "category": "Facebook",
+  "description": "Fetch the last 20 posts of a Facebook page.\n\n\n**Get started with the preset**\n\n1. After creating or opening a database, add the handle of a Facebook page (e.g. \"Uni.Greifswald.de\") as a seed node using the \"Add Nodes\" button.\n\n2. Load the preset by clicking \"Apply\" in the preset window.\n\n3. Login to Facebook in the Facebook module.\n\n4. Select the seed node and then click the \"Fetch Data\" button.\n\nLearn how to use presets in the wiki: https://github.com/strohne/Facepager/wiki/Presets\n\n\n**Some further options**\n\n1. Change the limit-parameter: You can increase the limit-parameter or increade the maximum pages to get more posts. \n\n2. Filtering by date: To filter by date use the parameters \"since\" and \"until\". The until-parameter always has to be one day later, the day starts at 0:00am GMT. For example, set since to \"2019-03-21\" and until to \"2019-03-22\" to limit the result to 21st of March 2019. See https://developers.facebook.com/docs/graph-api/results for further information.\n\n3. Get other fields: If you want more data than message, created_time and updated_time adjust the fields-parameter. Try things such as: attachments, message_tags, story, permalink_url, shares. You will find more fiields in the API reference (see below).\n\n4. Get reactions: If you want data about reactions try adding fields from the reactions preset: comments.limit(0).summary(1), reactions.limit(0).summary(1), reactions.type(LIKE).limit(0).summary(1).as(like), reactions.type(LOVE).limit(0).summary(1).as(love), reactions.type(HAHA).limit(0).summary(1).as(haha), reactions.type(WOW).limit(0).summary(1).as(wow), reactions.type(SAD).limit(0).summary(1).as(sad), reactions.type(ANGRY).limit(0).summary(1).as(angry), likes.limit(0).summary(true) \n\n\n**Facebook API documentation**\n\nBe aware of the API limitations, Facebook provides only up to 600 posts per year for each page. For more information and query options see the API reference: https://developers.facebook.com/docs/graph-api/reference/v20.0/page/feed\n\nTo understand the data contained in a post see https://developers.facebook.com/docs/graph-api/reference/v20.0/post \n\nThe technique to query reactions along with the posts is called field expansion, see https://developers.facebook.com/docs/graph-api/guides/field-expansion",
+  "module": "Facebook",
+  "options": {
+    "auth": "param",
+    "auth_prefix": "",
+    "auth_tokenname": "access_token",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://www.facebook.com/dialog/oauth",
+    "basepath": "https://graph.facebook.com/v20.0",
+    "extension": "",
+    "key_paging": "paging.next",
+    "nodedata": "data",
+    "objectid": "id",
+    "pages": 1,
+    "paging_type": "url",
+    "params": {
+      "<page-id>": "<Object ID>",
+      "fields": "message, from, created_time, updated_time",
+      "limit": "20"
+    },
+    "redirect_uri": "https://www.facebook.com/connect/login_success.html",
+    "resource": "/<page-id>/posts",
+    "scope": "",
+    "token_uri": ""
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "message",
+    "created_time",
+    "updated_time",
+    "error.message"
+  ]
+}

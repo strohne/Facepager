@@ -2,10 +2,10 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtGui import QActionGroup
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import csv
-from copy import deepcopy
 from widgets.progressbar import ProgressBar
+from widgets.filedialog import CsvOpenDialog
 from database import *
 from apimodules import *
 from apithread import ApiThreadPool
@@ -130,12 +130,11 @@ class ApiActions(object):
         return True
 
     @blockState
-    def addCsv(self, filename, updateProgress=None):
+    def addCsv(self, filename, delimiter, updateProgress=None):
         progress = ProgressBar("Adding nodes...", self.mainWindow)
         try:
-
             with open(filename, encoding="UTF-8-sig") as csvfile:
-                rows = csv.DictReader(csvfile, delimiter=';', quotechar='"', doublequote=True)
+                rows = csv.DictReader(csvfile, delimiter=delimiter, quotechar='"', doublequote=True)
                 self.mainWindow.tree.treemodel.addSeedNodes(rows, progress=updateProgress)
                 self.mainWindow.tree.selectLastRow()
 
@@ -356,12 +355,19 @@ class ApiActions(object):
         return (self.mainWindow.database.filename)
 
     def queryPipeline(self, pipeline, indexes=None):
+        """
+        Query presets step by step
+
+        :param pipeline: An object with the pipeline item in the 'item' key and the presets in the 'presets' key
+        :param indexes:
+        :return:
+        """
         columns = []
-        for preset in pipeline:
+        pipelineItem = pipeline['item']
+        for preset in pipeline['presets']:
             # Select item in preset window
-            item = preset.get('item')
-            if item is not None:
-                self.mainWindow.presetWindow.presetList.setCurrentItem(item)
+            if pipelineItem is not None:
+                self.mainWindow.presetWindow.selectItem(pipelineItem, preset.get('step', 0))
 
             columns.extend(preset.get('columns', []))
             module = preset.get('module')
@@ -377,10 +383,9 @@ class ApiActions(object):
 
         # Set columns
         columns = list(dict.fromkeys(columns))
-        self.mainWindow.fieldList.setPlainText("\n".join(columns))
-        self.showColumns()
-
-
+        if columns is not None:
+            self.mainWindow.fieldList.setPlainText("\n".join(columns))
+            self.mainWindow.guiActions.showColumns()
 
     def getPresetOptions(self):
         apimodule = self.mainWindow.RequestTabs.currentWidget()
@@ -729,8 +734,8 @@ class GuiActions(object):
             return False
 
         # makes the user add a new facebook object into the db
-        dialog = QDialog(self.mainWindow)
-        dialog.setWindowTitle("Add Nodes")
+        addNodesDialog = QDialog(self.mainWindow)
+        addNodesDialog.setWindowTitle("Add Nodes")
         layout = QVBoxLayout()
 
         label = QLabel("One <b>Object ID</b> per line")
@@ -752,7 +757,7 @@ class GuiActions(object):
         loadbutton.setToolTip(wraptip("Import nodes from a csv file. Use semicolon as seperator. The first column becomes the Object ID, all columns are added to the data view as key value pairs."))
         layout.addWidget(buttons)
 
-        dialog.setLayout(layout)
+        addNodesDialog.setLayout(layout)
 
         self.progressUpdate = datetime.now()
 
@@ -760,7 +765,7 @@ class GuiActions(object):
             newnodes = [node.strip() for node in input.toPlainText().splitlines()]
 
             self.apiActions.addNodes(newnodes)
-            dialog.close()
+            addNodesDialog.close()
 
         def updateProgress():
             if datetime.now() >= self.progressUpdate:
@@ -772,34 +777,42 @@ class GuiActions(object):
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
             datadir = os.path.expanduser('~') if datadir == '' else datadir
 
-            filename, filetype = QFileDialog.getOpenFileName(dialog, "Load CSV", datadir, "CSV files (*.csv)")
-            if filename != "":
-                self.apiActions.addCsv(filename,updateProgress)
-            dialog.close()
+            csvDialog = CsvOpenDialog(addNodesDialog)
+            if csvDialog.exec_() == QDialog.Accepted:
+                filename = csvDialog.selectedFiles()[0]
+                delimiter = csvDialog.selectedDelimiter()
+                self.apiActions.addCsv(filename, delimiter, updateProgress)
+
+            addNodesDialog.close()
 
         def loadFilenames():
             datadir = os.path.dirname(self.mainWindow.settings.value('lastpath', ''))
             datadir = os.path.expanduser('~') if datadir == '' else datadir
 
-            filenames, filter = QFileDialog.getOpenFileNames(dialog, "Add filenames", datadir)
-            for filename in filenames:
-                #with open(filename, encoding="UTF-8-sig") as file:
+            filenames, filter = QFileDialog.getOpenFileNames(addNodesDialog, "Add filenames", datadir)
 
-                data = {}
-                data['fileurl'] = 'file:' + pathname2url(filename)
-                data['filename'] = os.path.basename(filename)
-                data['filepath'] = filename
+            # Construct generator
+            def newNodes(filenames):
+                for filename in filenames:
+                    data = {}
+                    data['fileurl'] = 'file:' + pathname2url(filename)
+                    data['filename'] = os.path.basename(filename)
+                    data['filepath'] = filename
+                    yield data
 
+            #progress = ProgressBar("Adding nodes...", self.mainWindow)
+            try:
+                self.mainWindow.tree.treemodel.addSeedNodes(newNodes(filenames), updateProgress)
+                #self.mainWindow.tree.selectLastRow()
+            finally:
+                pass
+                #progress.close()
 
-                self.mainWindow.tree.treemodel.addSeedNodes([data])
-                self.mainWindow.tree.selectLastRow()
-                dialog.close()
-
-                self.mainWindow.tree.selectLastRow()
-                dialog.close()
+            self.mainWindow.tree.selectLastRow()
+            addNodesDialog.close()
 
         def close():
-            dialog.close()
+            addNodesDialog.close()
 
         #connect the nested functions above to the dialog-buttons
         buttons.accepted.connect(createNodes)
@@ -807,7 +820,7 @@ class GuiActions(object):
         loadbutton.clicked.connect(loadCSV)
         filesbutton.clicked.connect(loadFilenames)
 
-        dialog.exec_()
+        addNodesDialog.exec_()
 
     @Slot()
     def showColumns(self):
@@ -815,11 +828,13 @@ class GuiActions(object):
         cols = [x.strip() for x in cols]
         self.mainWindow.tree.treemodel.setCustomColumns(cols)
 
+        folder = self.mainWindow.getDownloadFolder()
+        self.mainWindow.tree.treemodel.setDownloadFolder(folder)
+
     @Slot()
     def clearColumns(self):
         self.mainWindow.fieldList.clear()
         self.mainWindow.tree.treemodel.setCustomColumns([])
-
 
     @Slot()
     def addColumn(self):
@@ -880,7 +895,6 @@ class GuiActions(object):
 
         if tree.treemodel.itemtype is not None:
             self.mainWindow.apiWindow.showDoc(tree.treemodel.module, tree.treemodel.basepath, tree.treemodel.path, key)
-
 
     @Slot()
     def expandAll(self):
@@ -1082,7 +1096,6 @@ class GuiActions(object):
         # update node level in duplicate nodes window
         if self.mainWindow.transferWindow.isVisible():
             self.mainWindow.transferWindow.updateNode(current)
-
 
         #select level
         level = 0

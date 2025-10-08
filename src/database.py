@@ -28,7 +28,7 @@ class Database(object):
             if self.connected:
                 self.disconnect()
 
-            self.engine = create_engine('sqlite:///%s'%filename, convert_unicode=True)
+            self.engine = create_engine('sqlite:///%s'%filename)
             self.session = scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=self.engine))
             Base.query = self.session.query_property()
             #Create a query attribute by inheritance from the declarative base
@@ -137,8 +137,8 @@ class Node(Base):
         def queryparams(self, queryparams_raw):
             self.queryparams_raw = json.dumps(queryparams_raw)
 
-        def getResponseValue(self,key,encoding=None):
-            name, value=extractValue(self.response,key)
+        def getResponseValue(self, key, encoding=None, downloadFolder= ""):
+            name, value=extractValue(self.response, key, dump=True, folder=downloadFolder, metaData = self)
             if encoding and isinstance(value, str):
                 return (name, value.encode(encoding))
             else:

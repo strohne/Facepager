@@ -22,7 +22,7 @@ class TextViewer(QTextBrowser):
         
     def setText(self,text):
         text = '' if text is None else text
-        text = self.autoLinkText(text)
+        #text = self.autoLinkText(text)
 
         # auto br prevents markdown parsing
         # todo: make presets markdown compatible
@@ -34,14 +34,18 @@ class TextViewer(QTextBrowser):
         self.setHtml(text)
 
     def autoBrText(self,html):
-        return html.replace('\n', '<br />')
+        return html.replace('\n', '<br>')
         
     def autoLinkText(self,html):
-        # match all the urls
-        # this returns a tuple with two groups
-        # if the url is part of an existing link, the second element
-        # in the tuple will be "> or </a>
-        # if not, the second element will be an empty string
+        """
+        @deprecated
+
+        match all the urls
+        this returns a tuple with two groups
+        if the url is part of an existing link, the second element
+        in the tuple will be "> or </a>
+        if not, the second element will be an empty string
+        """
         urlre = re.compile("(\(?https?://[-A-Za-z0-9+&@#/%?=~_()|!:,.;]*[-A-Za-z0-9+&@#/%=~_()|])(\">|</a>)?")
         urls = urlre.findall(html)
         clean_urls = []

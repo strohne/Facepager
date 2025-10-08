@@ -1,0 +1,50 @@
+{
+  "name": "Web Detection",
+  "category": "Google Cloud Platform",
+  "type": "preset",
+  "pipeline": null,
+  "description": "Add file names as seed nodes and fetch data.\n\n**Authorization**\n\nYou need to login to the Google Cloud Platform:  \n\n- Create a project on the Google Cloud Platform and enable billing.  \n- For the project, activate the Google Vision API.  \n- Create OAuth2 credentials and add client key and client ID (=secret key) into the Facepager login settings (next to the login button)  \n- Change the x-goog-user-project header to match your project ID  \n\n- Click Login to get an access token. Now you can fetch data.",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://vision.googleapis.com/v1/images:annotate",
+    "resource": "",
+    "params": {},
+    "extension": "",
+    "headers": {
+      "x-goog-user-project": "vision-12345"
+    },
+    "verb": "POST",
+    "format": "json",
+    "encoding": "<None>",
+    "payload": "{  \"requests\": [\n    {\n      \"image\": {\n        \"content\": \"<filename|file|base64>\"\n      },\n      \"features\": [\n        {\n         \"maxResults\": 10,\n          \"type\": \"WEB_DETECTION\"\n        }\n      ]\n    }\n  ]\n}",
+    "filename": "",
+    "fileext": "",
+    "pages": 1,
+    "paging_type": "key",
+    "key_paging": null,
+    "paging_stop": null,
+    "param_paging": null,
+    "nodedata": "responses.0.webDetection",
+    "objectid": null,
+    "scope": "https://www.googleapis.com/auth/cloud-vision",
+    "proxy": "",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "redirect_uri": "https://localhost",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth": "header",
+    "auth_tokenname": "Authorization",
+    "auth_prefix": "Bearer "
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "filename",
+    "imagedata=filepath|thumb:100",
+    "entityId=webEntities.*.entityId",
+    "entityScore=webEntities.*.score",
+    "entityDescription=webEntities.*.description"
+  ]
+}

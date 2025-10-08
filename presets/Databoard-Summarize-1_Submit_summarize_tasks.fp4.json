@@ -1,0 +1,47 @@
+{
+  "name": "1 Submit summarize tasks",
+  "category": "Databoard",
+  "type": "preset",
+  "pipeline": "Summarize",
+  "description": "Set the upload folder and add file names as seed nodes.\n\nRevise the payload if necessary. Make sure it is valid JSON. Be aware that JSON does not support line breaks in literal values (between quotes).\n\nThen login to the Databoard Service with your credentials and fetch data.\n\nIf the result is ready within 10 seconds (see the wait parameter), it will be returned directly. If it takes longer, use the preset to get task results with the task ID. For larger samples we recommend to set the wait parameter to 0, submit all tasks, then fetch them in a different step.\n\nYou can repeat the identical request later, the result will be returned from the Databoard cache once it has been successfully retrieved.\n\nSee https://databoard.uni-muenster.de for the documentation.",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://databoard.uni-muenster.de/tasks/run",
+    "resource": "",
+    "params": {
+      "wait": "10"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "POST",
+    "format": "json",
+    "encoding": "<None>",
+    "payload": "{\n  \"task\": \"summarize\",\n  \"input\": \"<Object ID|file:txt|json>\"\n}",
+    "filename": "<Object ID>",
+    "fileext": ".xml",
+    "pages": 1,
+    "paging_type": "count",
+    "param_paging": null,
+    "offset_start": 0,
+    "offset_step": 10,
+    "nodedata": null,
+    "objectid": "task_id",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "OAuth2",
+    "auth_uri": "https://databoard.uni-muenster.de/login",
+    "redirect_uri": "https://databoard.uni-muenster.de/login?success=1",
+    "token_uri": "",
+    "auth": "header",
+    "auth_tokenname": "Authorization",
+    "auth_prefix": "Bearer "
+  },
+  "speed": 200,
+  "saveheaders": false,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "result.answers.0.llm_result",
+    "state"
+  ]
+}

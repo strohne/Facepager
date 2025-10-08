@@ -4,7 +4,7 @@ cd "`dirname "$0"`"
 cd ../..
 
 cp build/osx/Facepager.spec src/Facepager.spec
-#cp -r build/osx/hooks src/hooks
+cp -r build/osx/hooks src/hooks
 
 cd src
 rm -rf build
