@@ -18,6 +18,7 @@ build/osx/Codesign
 build/osx/notarytool_log.txt
 pyenv
 venv
+.venv
 .project
 .pydevproject
 .settings/
