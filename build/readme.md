@@ -97,7 +97,7 @@ See https://gist.github.com/bpteague/750906b9a02094e7389427d308ba1002
 
 #### Sign the app
 
-- Fix the PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt:
+- Not neccessary anymore: Fix the PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt:
   ```
   sudo pip3 install macholib
   cd dist
