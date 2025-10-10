@@ -83,9 +83,15 @@ Double click build.pyinstaller.command in Finder or execute in terminal.
   open ./dist/Facepager.app
   ```
 
-### Code signing and packaging
+### Code signing, packaging, and notarization
 
-See https://gist.github.com/bpteague/750906b9a02094e7389427d308ba1002
+See [bpteague's PyInstaller recipe for codesigning an OSX .app bundle](https://gist.github.com/bpteague/750906b9a02094e7389427d308ba1002) for reference.
+
+Requirements:
+- Apple Developer Account
+- Xcode command-line tools installed
+
+### [DEPRECATED] Code signing and packaging
 
 #### Get certificates
 
