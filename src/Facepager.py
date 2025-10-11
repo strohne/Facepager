@@ -31,6 +31,7 @@ from datetime import datetime
 
 import html
 
+from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import QWidget, QStyleFactory, QMainWindow
@@ -308,17 +309,17 @@ class MainWindow(QMainWindow):
         self.settingsLayout.addRow(self.clearCheckbox)
 
         # Style
-        # self.styleEdit = QComboBox(self)
-        # self.styleEdit.setToolTip(wraptip("Choose the styling of Facepager."))
-        #
-        # styles = [x for x in QStyleFactory.keys() if x != "Windows"]
-        # styles = ['<default>'] + styles
-        #
-        # self.styleEdit.insertItems(0, styles)
-        # self.styleEdit.setCurrentText(self.settings.value('style', '<default>'))
-        #
-        # self.styleEdit.currentIndexChanged.connect(self.setStyle)
-        # self.settingsLayout.addRow('Style', self.styleEdit)
+        self.styleEdit = QComboBox(self)
+        self.styleEdit.setToolTip(wraptip("Choose the styling of Facepager."))
+
+        styles = [x for x in QStyleFactory.keys() if x != "Windows"]
+        styles = ['<default>'] + styles
+
+        self.styleEdit.insertItems(0, styles)
+        self.styleEdit.setCurrentText(self.settings.value('style', '<default>'))
+
+        self.styleEdit.currentIndexChanged.connect(self.setStyle)
+        self.settingsLayout.addRow('Style', self.styleEdit)
 
         #
         #  Components
@@ -491,14 +492,14 @@ class MainWindow(QMainWindow):
         self.loglist.clear()
         groupLayout.addWidget(self.loglist)
 
-    # def setStyle(self):
-    #     style = self.styleEdit.currentText()
-    #     try:
-    #         if style == '<default>':
-    #             style = self.styleEdit.itemText(1)
-    #         QApplication.setStyle(style)
-    #     except Exception as e:
-    #         self.logmessage(e)
+    def setStyle(self):
+        style = self.styleEdit.currentText()
+        try:
+            if style == '<default>':
+                style = self.styleEdit.itemText(1)
+            QApplication.setStyle(style)
+        except Exception as e:
+            self.logmessage(e)
 
     def databaseLabelClicked(self):
         if self.database.connected:
@@ -584,7 +585,7 @@ class MainWindow(QMainWindow):
         self.settings.setValue('saveheaders', self.headersCheckbox.isChecked())
         self.settings.setValue('expand', self.autoexpandCheckbox.isChecked())
         self.settings.setValue('logrequests', self.logCheckbox.isChecked())
-        #self.settings.setValue('style', self.styleEdit.currentText())
+        self.settings.setValue('style', self.styleEdit.currentText())
 
         self.settings.beginGroup("GlobalSettings")
         self.settings.setValue("clearsettings", self.clearCheckbox.isChecked())
@@ -762,26 +763,18 @@ class QAwesomeTooltipEventFilter(QObject):
         # Else, defer to the default superclass handling of this event.
         return super().eventFilter(widget, event)
 
-
-
 def startMain():
     app = QApplication(sys.argv)
-
-    # Word wrap tooltips (does not work yet, chrashes app)
-    #tooltipfilter = QAwesomeTooltipEventFilter(app)
-    #app.installEventFilter(tooltipfilter)
-
     main=MainWindow()
 
     # Change styling
-    # if cmd_args.style is not None:
-    #     QApplication.setStyle(cmd_args.style)
-    # elif main.settings.value('style', '<default>') != '<default>':
-    #     QApplication.setStyle(main.settings.value('style'))
+    if cmd_args.style is not None:
+        QApplication.setStyle(cmd_args.style)
+    elif main.settings.value('style', '<default>') != '<default>':
+        QApplication.setStyle(main.settings.value('style'))
 
-    main.show()
+    main.showMaximized()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     # Logging
@@ -803,8 +796,5 @@ if __name__ == "__main__":
 
     cmd_args = cmd_args.parse_args()
 
-    # Locate the SSL certificate for requests
-    # todo: no longer necessary because requests uses certifi? https://requests.readthedocs.io/en/master/user/advanced/#ca-certificates
-    # os.environ['REQUESTS_CA_BUNDLE'] = os.path.join(getResourceFolder() , 'ssl', 'cacert.pem')
-
+    # Main window
     startMain()
