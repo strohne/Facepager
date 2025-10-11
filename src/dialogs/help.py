@@ -9,20 +9,22 @@ from PySide6.QtWebEngineCore import QWebEnginePage
 import os
 import sys
 import webbrowser
+from settings import *
 
 class HelpWindow(QMainWindow):
     def __init__(self, parent=None):
         super(HelpWindow,self).__init__(parent)
 
-        self.setWindowTitle("Facepager 4 - Help")
+        self.setWindowTitle(settings['applabel'] + " - Help")
         self.setMinimumWidth(600);
         self.setMinimumHeight(600);
         central = QWidget()
         self.setCentralWidget(central)
         vLayout = QVBoxLayout(central)
 
-        self.page = MyQWebEnginePage()
+        self.page = MyHelpWebEnginePage()
         self.browser = QWebEngineView(central)
+        self.browser.setAttribute(Qt.WidgetAttribute.WA_NativeWindow, True)
         self.browser.setPage(self.page)
 
         vLayout.addWidget(self.browser)
@@ -35,21 +37,20 @@ class HelpWindow(QMainWindow):
         hLayout.addWidget(dismiss)
 
     def show(self):
-        super(HelpWindow,self).show()
+        super(HelpWindow, self).show()
         self.loadPage()
 
     def loadPage(self):
-        self.browser.load(QUrl("http://strohne.github.io/Facepager/"))
+        self.browser.load(QUrl(settings['help']))
 
-class MyQWebEnginePage(QWebEnginePage):
+class MyHelpWebEnginePage(QWebEnginePage):
     def __init__(self, parent=None):
-        super(MyQWebEnginePage,self).__init__(parent)
-
+        super(MyHelpWebEnginePage, self).__init__(parent)
 
     def acceptNavigationRequest(self, url, type, isMainFrame):
         if (type == QWebEnginePage.NavigationTypeLinkClicked):
             url = url.toString()
-            if not url.startswith("http://strohne.github.io/Facepager/"):
+            if not url.startswith(settings['help']):
                 webbrowser.open(url)
                 return False
 

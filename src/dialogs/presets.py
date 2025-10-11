@@ -101,7 +101,6 @@ class PresetWindow(QDialog):
         self.presetWidget.setPalette(p)
         self.presetWidget.setAutoFillBackground(True)
 
-        # self.presetWidget.setStyleSheet("background-color: rgb(255,255,255);")
         self.presetView = QScrollArea()
         self.presetView.setWidgetResizable(True)
         self.presetView.setWidget(self.presetWidget)
