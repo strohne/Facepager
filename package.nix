@@ -1,36 +1,33 @@
 # This file defines the Facepager package
-# It's called by flake.nix to build the package for different systems
+# Building PySide6 from PyPI instead of using nixpkgs version
 
-{lib, python310Packages, python310, qt6, bash, ...}:
+{ lib
+, python311
+, python311Packages
+, qt6
+, bash
+, fetchPypi
+, makeWrapper
+, cmake
+, ninja
+}:
 
-python310Packages.buildPythonApplication {
+python311Packages.buildPythonApplication {
   pname = "facepager";
-  version = "4.6.0-flake_test";
+  version = "4.6.0";
 
   src = ./.;
 
-  # Python dependencies from requirements.txt
-  propagatedBuildInputs = with python310Packages; [
-    sqlalchemy
-    python-dateutil
-    requests
-    requests-oauthlib
-    requests-toolbelt
-    rauth
-    lxml
-    cchardet
-    pyjsparser
-    tldextract
-    cssselect
-    markdown
-    pyside6
-    rdflib
-    pillow
-  ];
+  # Use pyproject format to handle requirements.txt
+  format = "other";
 
-  # Ensures Qt applications are properly wrapped
+  # Build-time dependencies
   nativeBuildInputs = [
     qt6.wrapQtAppsHook
+    makeWrapper
+    python311Packages.pip
+    cmake
+    ninja
   ];
 
   # Qt runtime libraries
@@ -40,29 +37,49 @@ python310Packages.buildPythonApplication {
     qt6.qtwebengine
   ];
 
-  # Custom installation since there's no setup.py
-  format = "other";
+  # Python dependencies - we'll install via pip during build
+  propagatedBuildInputs = with python311Packages; [
+    pip
+    setuptools
+    wheel
+  ];
+
+  buildPhase = ''
+    runHook preBuild
+
+    # Create a temporary venv to install dependencies
+    ${python311}/bin/python -m venv venv
+    source venv/bin/activate
+
+    # Install dependencies from requirements.txt via pip
+    # This will build PySide6 with WebEngine support
+    pip install --no-cache-dir -r requirements.txt
+
+    runHook postBuild
+  '';
 
   installPhase = ''
     runHook preInstall
 
     mkdir -p $out/bin
     mkdir -p $out/share/facepager
+    mkdir -p $out/lib/python${python311.pythonVersion}/site-packages
 
-    # Copy all necessary files
+    # Copy application files
     cp -r src/* $out/share/facepager/
     cp -r icons $out/share/facepager/
     cp -r presets $out/share/facepager/
     cp -r docs $out/share/facepager/
 
-    # Create executable wrapper
-    cat > $out/bin/facepager << EOF
-    #!${bash}/bin/bash
-    cd $out/share/facepager
-    exec ${python310}/bin/python Facepager.py "\$@"
-    EOF
+    # Copy the installed Python packages from venv
+    cp -r venv/lib/python${python311.pythonVersion}/site-packages/* \
+      $out/lib/python${python311.pythonVersion}/site-packages/
 
-    chmod +x $out/bin/facepager
+    # Create wrapper with proper PYTHONPATH
+    makeWrapper ${python311}/bin/python $out/bin/facepager \
+      --prefix PYTHONPATH : "$out/lib/python${python311.pythonVersion}/site-packages" \
+      --add-flags "$out/share/facepager/Facepager.py" \
+      --chdir "$out/share/facepager"
 
     runHook postInstall
   '';
@@ -73,6 +90,8 @@ python310Packages.buildPythonApplication {
       Facepager was made for fetching public available data from YouTube,
       Twitter and other websites on the basis of APIs and webscraping.
       All data is stored in a SQLite database and may be exported to csv.
+
+      This package builds PySide6 with WebEngine support from PyPI.
     '';
     homepage = "https://github.com/strohne/Facepager";
     license = licenses.mit;
