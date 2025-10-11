@@ -222,7 +222,7 @@ class MainWindow(QMainWindow):
         fetchWidget.setLayout(fetchLayout)
         bottomSplitter.addWidget(fetchWidget)
 
-        settingsGroup=QGroupBox("Settings")
+        settingsGroup=QGroupBox("Fetch Settings")
         fetchLayout.addWidget(settingsGroup)
 
         fetchsettings = QFormLayout()
@@ -383,13 +383,15 @@ class MainWindow(QMainWindow):
         #Requests/Apimodules
         self.RequestTabs=QTabWidget()
         moduleslayout.addWidget(self.RequestTabs)
+
+        self.RequestTabs.addTab(GenericTab(self), "Generic")
+        self.RequestTabs.addTab(SparqlTab(self),"SPARQL")
+
         self.RequestTabs.addTab(YoutubeTab(self),"YouTube")
         self.RequestTabs.addTab(TwitterTab(self),"Twitter")
         self.RequestTabs.addTab(TwitterStreamingTab(self),"Twitter Streaming")
         self.RequestTabs.addTab(FacebookTab(self), "Facebook")
         self.RequestTabs.addTab(AmazonTab(self),"Amazon")
-        self.RequestTabs.addTab(SparqlTab(self),"SPARQL")
-        self.RequestTabs.addTab(GenericTab(self),"Generic")
 
         module = self.settings.value('module',False)
         tab = self.getModule(module)
