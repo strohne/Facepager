@@ -18,6 +18,23 @@ Installation packages for each version are available on the [releases page](http
 
 If you want to run from source, see [src/readme.md](https://github.com/strohne/Facepager/blob/master/src/readme.md).
 
+### Development with Nix/devenv
+
+For developers using Nix, this repository includes a `devenv.nix` configuration for a reproducible development environment:
+
+```bash
+# Enter the development shell
+devenv shell
+
+# Or use direnv for automatic activation (recommended)
+direnv allow
+cd /path/to/Facepager  # devenv activates automatically
+```
+
+The development environment includes Python 3.10 with all dependencies from `requirements.txt` automatically installed.
+
+**Note on Nix packaging**: Due to limitations with QtWebEngine on macOS in the Nix ecosystem, a fully packaged Nix flake for end-user installation is not currently available. The traditional installers above remain the recommended installation method for end users.
+
 ### Getting help
 
 Try the help button built into Facepager or directly go to the [Wiki](https://github.com/strohne/Facepager/wiki). There you find everything to [get you started](https://github.com/strohne/Facepager/wiki/Getting-Started). Further, you will find some [Tutorials on YouTube](https://www.youtube.com/channel/UCiIbKv5b5rz-6LPTLQgVGug).
