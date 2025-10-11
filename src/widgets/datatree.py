@@ -20,6 +20,13 @@ class DataTree(QTreeView):
         self.setSelectionBehavior(QTreeView.SelectRows)
         self.setUniformRowHeights(True)
 
+        self.setStyleSheet("""
+            QTreeView::item:selected {
+                background-color: #3874f2;
+                color: white;
+            }
+        """)
+
 
     def loadData(self, database):
         self.treemodel = TreeModel(database)
