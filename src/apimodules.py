@@ -1064,9 +1064,8 @@ class ApiTab(QScrollArea):
         self.payloadLayout.setContentsMargins(0, 0, 0, 0)
         self.payloadWidget.setLayout(self.payloadLayout)
 
-        self.payloadEdit = QPlainTextEdit()
-        self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.payloadLayout.addWidget(self.payloadEdit)
+        self.initPayloadInput()
+        self.payloadLayout.addWidget(self.payloadContainerWidget)
         self.payloadLayout.setStretch(0, 1);
 
         self.multipartEdit = QParamEdit()
@@ -1074,6 +1073,28 @@ class ApiTab(QScrollArea):
         self.payloadLayout.setStretch(2, 1);
 
         self.mainLayout.addRow("Payload", self.payloadWidget)
+
+    def openPayloadEditDialog(self):
+        dialog = EditValueDialog(self)
+        dialog.show(self.payloadEdit)
+
+    def initPayloadInput(self):
+        # Payload
+        self.payloadContainerWidget = QWidget()
+        self.payloadContainerLayout = QHBoxLayout()
+        self.payloadContainerLayout.setContentsMargins(0, 0, 0, 0)
+        self.payloadContainerWidget.setLayout(self.payloadContainerLayout)
+
+        self.payloadEdit = QPlainTextEdit()
+        self.payloadEdit.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.payloadContainerLayout.addWidget(self.payloadEdit)
+        self.payloadContainerLayout.setStretch(0, 1);
+
+        self.payloadEditButton = QToolButton(self)
+        self.payloadEditButton.setText("..")
+        self.payloadEditButton.clicked.connect(self.openPayloadEditDialog)
+        self.payloadContainerLayout.addWidget(self.payloadEditButton)
+        self.payloadContainerLayout.setStretch(2, 1)
 
     def verbChanged(self):
         if self.verbEdit.currentText() in ['GET', 'DELETE', 'HEAD']:
@@ -1097,11 +1118,11 @@ class ApiTab(QScrollArea):
             # Multipart
             if self.encodingEdit.currentText().strip() == 'multipart/form-data':
                 self.multipartEdit.show()
-                self.payloadEdit.hide()
+                self.payloadContainerWidget.hide()
 
                 # self.payloadEdit.setPlainText(json.dumps(self.multipartEdit.getParams(),indent=4,))
             else:
-                self.payloadEdit.show()
+                self.payloadContainerWidget.show()
                 self.multipartEdit.hide()
 
             # Folder
