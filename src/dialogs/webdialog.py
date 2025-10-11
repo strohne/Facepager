@@ -13,118 +13,46 @@ import urllib.parse
 from datetime import datetime
 from utilities import makefilename
 
-class PreLoginWebDialog(QDialog):
-    def __init__(self, parent=None, caption = "", url=""):
-        super(PreLoginWebDialog, self).__init__(parent)
-
-        self.url = url
-
-        self.setWindowTitle(caption)
-        self.setMinimumWidth(600);
-        self.setMinimumHeight(500);
-
-        vLayout = QVBoxLayout()
-        self.setLayout(vLayout)
-
-        self.browser = QWebEngineView(self)
-        self.page = WebPageCustom(self.browser)
-        self.page.allowLinks = False
-        self.page.loadFinished.connect(self.loadFinished)
-        self.page.loadStarted.connect(self.loadStarted)
-
-        self.browser.setPage(self.page)
-        vLayout.addWidget(self.browser)
-
-
-        # Buttons
-        hLayout = QHBoxLayout()
-        vLayout.addLayout(hLayout)
-
-        # Status bar
-        self.reloadButton = QPushButton(self)
-        self.reloadButton.setText("Retry")
-        self.reloadButton.clicked.connect(self.loadPage)
-        self.reloadButton.setVisible(False)
-        hLayout.addWidget(self.reloadButton)
-
-        self.loadingLabel = QLabel()
-        hLayout.addWidget(self.loadingLabel)
-
-        hLayout.addStretch(5)
-
-        buttonDismiss = QPushButton(self)
-        buttonDismiss.setText("Cancel")
-        buttonDismiss.clicked.connect(self.reject)
-        hLayout.addWidget(buttonDismiss)
-
-        self.buttonProceed = QPushButton(self)
-        self.buttonProceed.setText("Proceed")
-        self.buttonProceed.setDefault(True)
-        self.buttonProceed.clicked.connect(self.accept)
-        self.buttonProceed.setDisabled(True)
-        hLayout.addWidget(self.buttonProceed)
-
-        #browser.setBackgroundRole(QPalette.Window)
-
-    def loadPage(self):
-        QTimer.singleShot(0, lambda: self.browser.load(QUrl(self.url)))
-
-    def show(self):
-        super(PreLoginWebDialog, self).show()
-        self.loadPage()
-        return self.exec_()
-
-
-    @Slot()
-    def loadStarted(self):
-        self.ready = False
-        self.buttonProceed.setDisabled(True)
-        self.loadingLabel.setText('Loading...')
-
-
-    @Slot()
-    def loadFinished(self, ok):
-        if ok:
-            self.ready = True
-            self.reloadButton.setVisible(False)
-            self.buttonProceed.setDisabled(False)
-            self.loadingLabel.setText('Loading finished.')
-        else:
-            self.ready = False
-            self.reloadButton.setVisible(True)
-            self.buttonProceed.setDisabled(True)
-            self.loadingLabel.setText('Loading failed.')
-
 class LoginWebDialog(QDialog):
+    """
+    Used for API login
+    """
 
     logMessage = Signal(str)
     urlChanged = Signal(QUrl)
+    onProceed = Signal()
 
-    def __init__(self, parent=None, caption = "", width=600, height=600):
+    def __init__(self, parent=None, proceed = False, caption = "", width = 600, height = 600):
         super().__init__(parent)
 
         self.url = None
-        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        # Window settings
+        self.setAttribute(Qt.WidgetAttribute.WA_NativeWindow, True)
+        #self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(width, height)
         self.setWindowTitle(caption)
 
+        # Window layout
         vLayout = QVBoxLayout()
         self.setLayout(vLayout)
 
-        self.browser = QWebEngineView(self)
-        self.page = WebPageCustom(self.browser)
+        self.page = MyCustomWebEnginePage()
         self.page.allowLinks = False
 
         self.page.loadFinished.connect(self.loadFinished)
         self.page.loadStarted.connect(self.loadStarted)
         self.page.logMessage.connect(self.onLogMessage)
+        # catch redirects to localhost or nonexistent uris
+        self.page.urlNotFound.connect(self.onUrlChanged)
 
+        self.browser = QWebEngineView(self)
+        self.browser.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.browser.setAttribute(Qt.WidgetAttribute.WA_NativeWindow, True)
         self.browser.urlChanged.connect(self.onUrlChanged)
-        self.page.urlNotFound.connect(self.onUrlChanged) #catch redirects to localhost or nonexistent uris
-
         self.browser.setPage(self.page)
-        vLayout.addWidget(self.browser)
 
+        vLayout.addWidget(self.browser)
 
         # Buttons
         hLayout = QHBoxLayout()
@@ -134,13 +62,22 @@ class LoginWebDialog(QDialog):
         self.reloadButton = QPushButton(self)
         self.reloadButton.setText("Retry")
         self.reloadButton.clicked.connect(self.loadPage)
-        self.reloadButton.setVisible(False)
+        self.reloadButton.setVisible(True)
         hLayout.addWidget(self.reloadButton)
 
         self.loadingLabel = QLabel()
         hLayout.addWidget(self.loadingLabel)
 
         hLayout.addStretch(5)
+
+        self.buttonProceed = QPushButton(self)
+        self.buttonProceed.setText("Proceed")
+        self.buttonProceed.setDefault(True)
+        self.buttonProceed.clicked.connect(self.onProceedClicked)
+        self.buttonProceed.setDisabled(True)
+        self.buttonProceed.setVisible(proceed)
+
+        hLayout.addWidget(self.buttonProceed)
 
         buttonDismiss = QPushButton(self)
         buttonDismiss.setText("Cancel")
@@ -151,12 +88,20 @@ class LoginWebDialog(QDialog):
         self.browser.stop()
         super().close()
 
-    def loadPage(self):
-        QTimer.singleShot(0, lambda: self.browser.load(QUrl(self.url)))
+    def onProceedClicked(self):
+        self.close()
+        self.onProceed.emit()
 
-    def showPage(self, url):
+    def loadPage(self):
+        #self.browser.load(QUrl(self.url))
+        QTimer.singleShot(100, lambda: self.browser.load(QUrl(self.url)))
+
+    def show(self, url):
         self.url = url
-        self.show()
+        super().show()
+
+    def showEvent(self, event):
+        super().showEvent(event)
         self.loadPage()
 
     @Slot(str)
@@ -171,7 +116,7 @@ class LoginWebDialog(QDialog):
     def loadStarted(self):
         self.ready = False
         self.loadingLabel.setText('Loading...')
-
+        self.buttonProceed.setDisabled(True)
 
     @Slot()
     def loadFinished(self, ok):
@@ -179,19 +124,25 @@ class LoginWebDialog(QDialog):
             self.ready = True
             self.reloadButton.setVisible(False)
             self.loadingLabel.setText('Loading finished.')
+            self.buttonProceed.setDisabled(False)
+
         else:
             self.ready = False
             self.reloadButton.setVisible(True)
             self.loadingLabel.setText('Loading failed.')
+            self.buttonProceed.setDisabled(True)
 
 class BrowserDialog(QMainWindow):
+    """
+    Used for cookie login and web scraping
+    """
+
     logMessage = Signal(str)
     captureData = Signal(dict, dict, dict)
     newCookie = Signal(str, str)
     #loadFinished = Signal(bool)
     #urlChanged = Signal(str)
     #urlNotFound = Signal(QUrl)
-
 
     def __init__(self, parent=None, caption = "",  width=600, height=600):
         super(BrowserDialog,self).__init__(parent)
@@ -231,12 +182,16 @@ class BrowserDialog(QMainWindow):
         self.topLayout.addWidget(self.addressBar)
         self.addressBar.setVisible(False)
 
+        # Create WebPage
+        self.webpage = MyCustomWebEnginePage()
+
         # Create WebView
         self.webview = QWebEngineView(self)
-        QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-        QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.ScreenCaptureEnabled, True)
-        self.webpage = WebPageCustom(self.webview)
         self.webview.setPage(self.webpage)
+        settings = self.webview.settings()
+        settings.setAttribute(QWebEngineSettings.WebAttribute.PluginsEnabled, True)
+        settings.setAttribute(QWebEngineSettings.WebAttribute.ScreenCaptureEnabled, True)
+
         self.mainLayout.addWidget(self.webview)
         self.webview.show()
 
@@ -486,14 +441,14 @@ class BrowserDialog(QMainWindow):
             self.cookieLabel.setText("Cookie for domain: " + domain + ": " + cookie)
 
 
-class WebPageCustom(QWebEnginePage):
+class MyCustomWebEnginePage(QWebEnginePage):
     logMessage = Signal(str)
     urlNotFound = Signal(QUrl)
     cookieChanged = Signal(str, str)
 
-    def __init__(self, parent):
-        #super(QWebPageCustom, self).__init__(*args, **kwargs)
-        super(WebPageCustom, self).__init__(parent)
+    def __init__(self, parent=None):
+        #super(QMyCustomWebEnginePage, self).__init__(*args, **kwargs)
+        super(MyCustomWebEnginePage, self).__init__(parent)
 
         self.allowLinks = True
         self.cookiecache = {}
@@ -501,13 +456,11 @@ class WebPageCustom(QWebEnginePage):
         profile = self.profile()
         profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
         profile.clearHttpCache()
-        #print(profile.httpUserAgent())
 
         cookies = profile.cookieStore()
         profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
         cookies.deleteAllCookies()
         cookies.cookieAdded.connect(self.cookieAdded)
-
 
     @Slot()
     def cookieAdded(self, cookie):
@@ -542,8 +495,6 @@ class WebPageCustom(QWebEnginePage):
             return False
 
         if option.domain == QWebEnginePage.QtNetwork:
-            #msg = "Network error (" + str(option.error) + "): " + option.errorString
-            #self.logMessage.emit(msg)
             self.urlNotFound.emit(option.url)
 
         elif option.domain == QWebEnginePage.Http:

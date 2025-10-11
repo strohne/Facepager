@@ -34,7 +34,7 @@ else:
 import dateutil.parser
 
 from dialogs.folder import SelectFolderDialog
-from dialogs.webdialog import PreLoginWebDialog, LoginWebDialog, BrowserDialog, WebPageCustom
+from dialogs.webdialog import LoginWebDialog, BrowserDialog
 from server import LoginServer
 from widgets.paramedit import *
 from utilities import *
@@ -1823,6 +1823,7 @@ class AuthTab(ApiTab):
         super(AuthTab, self).__init__(mainWindow, name)
 
         self.loginServerInstance = None
+        self.hasConfirmedTerms = False
 
         self.defaults['login_buttoncaption'] = " Login "
         self.defaults['login_window_caption'] = "Login Page"
@@ -2139,6 +2140,35 @@ class AuthTab(ApiTab):
         return True
 
     @Slot()
+    def onConfirmTerms(self):
+        """
+        When terms are confirmed, got to next step, i.e. call the login method.
+        :return:
+        """
+        self.hasConfirmedTerms = True
+        self.doLogin()
+
+    def confirmTerms(self):
+        """
+        If no custom client IDs are provided and the module has terms,
+        show the terms page and return False. Otherwise, return True.
+
+        :return:
+        """
+
+        if self.clientIdEdit.text() != "":
+            return True
+
+        termsurl = self.defaults.get('termsurl', '')
+        if (not self.hasConfirmedTerms) and (termsurl != ''):
+            proceedDlg = LoginWebDialog(self.mainWindow, True, "Confirm terms")
+            proceedDlg.onProceed.connect(self.onConfirmTerms)
+            proceedDlg.show(termsurl)
+            return False
+
+        return True
+
+    @Slot()
     def doLogin(self, session_no=0):
         """
         Show login window
@@ -2147,6 +2177,10 @@ class AuthTab(ApiTab):
         """
         self.closeSession(session_no)
         options = self.getSettings()
+
+        # Confirm terms
+        if not self.confirmTerms():
+            return
 
         if options['auth_type'] == 'OAuth2 Client Credentials':
             self.doTwitterAppLogin(session_no)
@@ -2344,6 +2378,7 @@ class AuthTab(ApiTab):
     def showLoginWindow(self, url=''):
         self.loginWindow = LoginWebDialog(
             self.mainWindow,
+            False,
             self.defaults.get('login_window_caption', 'Login'),
             self.defaults.get('login_window_width', 600),
             self.defaults.get('login_window_height', 600)
@@ -2352,7 +2387,7 @@ class AuthTab(ApiTab):
         self.loginWindow.logMessage.connect(self.logMessage)
         self.loginWindow.urlChanged.connect(self.onLoginWindowChanged)
 
-        self.loginWindow.showPage(url)
+        self.loginWindow.show(url)
 
     @Slot()
     def closeLoginWindow(self):
@@ -2458,10 +2493,6 @@ class AuthTab(ApiTab):
             authorize_url=self.defaults.get('authorize_url'),
             request_token_url=self.defaults.get('request_token_url'),
             base_url=self.defaults.get('basepath'))
-
-        # clientid = self.getClientId()
-        # if clientid is None:
-        #     return None
 
         service.consumer_key = self.clientIdEdit.text() if self.clientIdEdit.text() != "" else \
             self.defaults['client_id']
@@ -2576,15 +2607,8 @@ class AuthTab(ApiTab):
         else:
             self.auth_preregistered = True
             clientid = self.defaults.get('client_id', '')
-
             if clientid == '':
                 raise Exception('Client ID missing, please adjust settings!')
-
-            termsurl = self.defaults.get('termsurl', '')
-            if termsurl != '':
-                proceedDlg = PreLoginWebDialog(self.mainWindow, "Login to Facepager", termsurl)
-                if proceedDlg.show() != QDialog.Accepted:
-                    return None
 
         return clientid
 
@@ -2939,6 +2963,10 @@ class FacebookTab(AuthTab):
     @Slot()
     def doLogin(self, session_no=0):
         try:
+            # Confirm terms
+            if not self.confirmTerms():
+                return
+
             # use credentials from input if provided
             clientid = self.getClientId()
             if clientid is None:
