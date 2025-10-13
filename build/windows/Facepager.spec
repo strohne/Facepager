@@ -4,10 +4,10 @@ block_cipher = None
 
 
 a = Analysis(['Facepager.py'],
-             pathex=['.'],
+             pathex=['../src'],
              binaries=[('../build/windows/cchardet', 'cchardet')],
              datas=[],
-             hiddenimports=['PySide2.QtPrintSupport'],
+             hiddenimports=['PySide6.QtPrintSupport'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
