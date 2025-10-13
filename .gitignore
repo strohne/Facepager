@@ -33,3 +33,12 @@ Facepager*.exe
 *.app.macosx.zip
 *.bat
 .Rproj.user
+
+# devenv
+.devenv*
+devenv.local.nix
+devenv.*
+.envrc
+
+# direnv
+.direnv
