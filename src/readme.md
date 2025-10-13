@@ -4,7 +4,7 @@ Facepager 4 is developed for Python 3.10 (64 bit) and PySide2 (Qt5)
 
 Facepager depends on the following packages:
 
-- PySide2: pip install PySide2==5.15.2 (Licence LGPLv3/GPLv2)
+- PySide6: pip install PySide6 (Licence LGPLv3/GPLv2)
 - SQLAlchemy: pip install SQLAlchemy (Licence: MIT)
 - dateutil: pip install python-dateutil (PSF License)
 - requests: pip install requests (Apache2 License)
@@ -29,7 +29,7 @@ Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. Yo
 
 The right version of PySide2 matters. Not every version includes the WebEngineWidgets module. For example, there is no version working out of the box for Windows 32bit.
 
-# Steps to runder under Windows 10
+# Steps to run under Windows 11
 
 Install Python3 64bit: https://www.python.org/downloads/windows/
 Make sure python.exe is in the path. See https://docs.python.org/3/using/windows.html#using-on-windows for further details.  
