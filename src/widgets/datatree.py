@@ -500,9 +500,9 @@ class TreeModel(QAbstractItemModel):
     #     # Original, inherited flags:
     #     original_flags = super(TreeModel, self).flags(index)
     #
-    #     return (original_flags | Qt.ItemIsEnabled
-    #             | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled
-    #             | Qt.ItemIsDropEnabled)
+    #     return (original_flags | Qt.ItemFlag.ItemIsEnabled
+    #             | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsDragEnabled
+    #             | Qt.ItemFlag.ItemIsDropEnabled)
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
@@ -664,7 +664,7 @@ class TreeModel(QAbstractItemModel):
 
         # Iterate all nodes backwards
         while row >= 0:
-            child = index.child(row, 0)
+            child = self.index(row, 0, index)
             if self.checkFilter(child, filter):
                 item = self.getItemFromIndex(child)
                 return item.data
@@ -831,10 +831,7 @@ class TreeModel(QAbstractItemModel):
 
         # Iterate all nodes on the same level or deeper
         while True:
-            if not parent.isValid():
-                child = self.index(row, 0, parent)
-            else:
-                child = parent.child(row, 0)
+            child = self.index(row, 0, parent)
 
             if progress is not None:
                 if not progress(row - row_start,row_end - row_start + 1, level):
@@ -898,10 +895,7 @@ class TreeModel(QAbstractItemModel):
                     if not progress(row, row_end+1, level+1):
                         break
 
-                if not index.isValid():
-                    child = self.index(row, 0, index)
-                else:
-                    child = index.child(row, 0)
+                child = self.index(row, 0, index)
 
                 if child.isValid():
                     conditions['includeself'] = True
