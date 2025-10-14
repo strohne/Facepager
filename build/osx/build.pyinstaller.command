@@ -12,7 +12,6 @@ rm -rf dist
 
 source ../venv/bin/activate
 ../venv/bin/pyinstaller Facepager.spec
-# cd ..
 cd /dist
 
 codesign -vv --strict Facepager.app
