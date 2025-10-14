@@ -29,13 +29,13 @@ exe = EXE(pyz,
           console=False,
           icon='../icons/icon_facepager.icns',
           codesign_identity='PUT_HASH_OF_HASH_OF_INSTALLER_ID_HERE',
-          entitlements_file='entitlements.plist')
+          entitlements_file='../build/osx/entitlements.plist')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
                a.datas,
                strip=False,
-               upx=False,
+               upx=True,
                name='Facepager')
 app = BUNDLE(coll,
              name='Facepager.app',
