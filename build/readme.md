@@ -53,10 +53,11 @@ Install software:
   ```
 - Install Xcode
 
-The following steps can alternatively be executed with build/osx/build.pyinstaller.command. #TODO: update command
+The following steps can alternatively be executed with build/osx/build.pyinstaller.command.
 Double click build.pyinstaller.command in Finder or execute in terminal.
 
-- Copy Facepager.spec to src folder:
+- Copy Facepager.spec to src folder. Before you proceed, please, duplicate Facepager.default.spec and rename it to Facepager.spec. Note that it contains the argument `codesign_identity = 'PUT_HASH_OF_HASH_OF_INSTALLER_ID_HERE'` and has `upx = True` in both Analysis and EXE sections. If you do not have upx installed, set `upx = False` in both sections.
+If you do not plan to codesign your build, simply remove the argument. See [bpteague's PyInstaller recipe for codesigning an OSX .app bundle](https://gist.github.com/bpteague/750906b9a02094e7389427d308ba1002) for reference on how to obtain the hash key as well as how to store an Apple Developer certificate in `notarytool`.
   ```
   cd src
   cp ../build/osx/Facepager.spec .
@@ -68,14 +69,14 @@ Double click build.pyinstaller.command in Finder or execute in terminal.
   rm -rf dist
   ```
 
-- Run pyinstaller from src directory:
+- Run pyinstaller from src directory. Note that Facepager.spec contains settings to
   ```
   pyinstaller Facepager.spec
   ```
-  or with upx compression:
+
+- [Only if you are codesigning the app] Codesign app and make sure signature is valid:
   ```
-  which upx
-  pyinstaller --upx-dir=INSERTUPXPATH Facepager.spec
+  codesign -vv --strict Facepager.app
   ```
 
 - Check if Facepager starts and fix errors:
@@ -83,97 +84,42 @@ Double click build.pyinstaller.command in Finder or execute in terminal.
   open ./dist/Facepager.app
   ```
 
-### Code signing, packaging, and notarization
+### Packaging and notarization
 
-See [bpteague's PyInstaller recipe for codesigning an OSX .app bundle](https://gist.github.com/bpteague/750906b9a02094e7389427d308ba1002) for reference.
-
-Requirements:
-- Apple Developer Account
-- Xcode command-line tools installed
-
-Note:
-- Do not submit .pkg for notarization but use .zip, otherwise staple won't work.
-- After having run `xcrun stapler staple Facepager.app`, package app by running `ditto -c -k --sequesterRsrc --keepParent Facepager.app Facepager_Setup_4_7_0.mac.pkg`
-- Notarize again:
-  `xcrun notarytool submit Facepager_Setup_4_7_0.mac.pkg --keychain-profile profile --wait`
-  `xcrun stapler staple Facepager_Setup_4_7_0.mac.pkg`
-- Verify notarization: `spctl -a -vv -t install Facepager_Setup_4_7_0.mac.pkg` (instead of `spctl -a -v Facepager.app`).
-
-### [DEPRECATED] Code signing and packaging
-
-#### Get certificates
-
- - Create an Apple Developer Account
- - Login to your account and create two certificates (Account -> Identifiers & Profiles):
-	 1. Installer outside AppStore
-	 2. Application outside AppStore.
-- Download the certificates and install them in the "login" KeyChain.
-
-#### Sign the app
-
-- Not neccessary anymore: Fix the PySide folder structure, see https://github.com/pyinstaller/pyinstaller/wiki/Recipe-OSX-Code-Signing-Qt:
+- Apple only notarizes `.pkg`, `.dmg`, and `.zip` files. Hence we must compress our build before submitting. To do so, run:
   ```
-  sudo pip3 install macholib
-  cd dist
-  python3 ../../build/osx/fix_app_qt_folder_names_for_codesign.py Facepager.app
+  ditto -c -k --sequesterRsrc --keepParent Facepager.app Facepager.zip
+  ```
+- Notarize the zip file:
+  ```
+  xcrun notarytool submit Facepager.app --keychain-profile fpcodesign22 --wait
+  ```
+- Staple the notarization ticket to the app and verify that the notarization was successful:
+  ```
+  xcrun stapler staple Facepager.app
+  spctl -a -v Facepager.app
   ```
 
-- List the available keys and locate a Developer ID Application certificate.
-  You will need the application hash and the installer hash.
+- Now we can create the final installer package. Run the following command from the project's root directory:
   ```
-  security find-identity -p basic -v
-  ```
-
-- Codesign with the application hash:
-  ```
-  codedesign --deep --force --options=runtime --entitlements ../../build/osx/entitlements.plist --sign "PUT_HASH_OF_DEVELOPER_ID_APPLICATION_HERE" --timestamp Facepager.app
+  productbuild --identifier "com.strohne.facepager.pkg" \
+    --sign "PUT_HASH_OF_HASH_OF_INSTALLER_ID_HERE" \
+    --timestamp \
+    --root src/dist/Facepager.app /Applications/Facepager.app \
+    Facepager_Setup_4_7_0.mac.pkg
   ```
 
-See the following workflow, although it may be outdated: https://gist.github.com/txoof/0636835d3cc65245c6288b2374799c43
-
-#### Create package
-
-- Create a temp directory to build the package:
+- Notarize the installer package and, again, staple the notarization ticket to the package and verify that the notarization was successful:
   ```
-  mkdir /tmp/Facepager
-  ```
-- Use ditto to build the pkg installer structure
-  ```
-  ditto ./ /tmp/Facepager
-  ```
-- build the package
-  ```
-  productbuild --identifier "com.strohne.facepager.pkg" --sign "PUT_HASH_OF_HASH_OF_INSTALLER_ID_HERE" --timestamp --root /tmp/Facepager /Applications/Facepager.app Facepager_Setup_4_6_0.mac.pkg
-  ```
-
-### Notarize
-
-In short, you need to authenticate in order to upload the app to Apple's notarisation service.
-
-- A a keychain item named `notarytool-password`
-  ```
-  xcrun notarytool store-credentials
-  ```
-- When prompted, enter `notarytool-password` as profile name.
-- Leave App Store Connect API keys unspecified.
-- When prompted, enter the Developer Apple ID,
-  the App-specific password for the Developer Apple ID,
-  and the Developer Team ID.
-
-- Start notarisation after successful authentication:
-  ```
-  run notarytool submit Facepager_Setup_4_6_0.mac.pkg --keychain-profile "notarytool-password" --wait
-
-- If notarisation fails (Status: invalid), fetch the notary log,
-  see https://forums.developer.apple.com/forums/thread/705839:
-  ```
-  xcrun notarytool log --keychain-profile "notarytool-password" REQUEST_UUID notarytool_log.txt
+  xcrun notarytool submit Facepager_Setup_4_7_0.mac.pkg --keychain-profile fpcodesign22 --wait
+  xcrun stapler staple Facepager_Setup_4_7_0.mac.pkg
+  spctl -a -vv -t install Facepager_Setup_4_7_0.mac.pkg
+  pkgutil --check-signature Facepager_Setup_4_7_0.mac.pkg
   ```
 
 See for further information:
 - https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution#Notarize-your-preexisting-software
 - https://developer.apple.com/documentation/security/customizing-the-notarization-workflow#Upload-your-app-to-the-notarization-service.
-
 
 __Hints for solving errors:__
 
