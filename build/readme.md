@@ -91,6 +91,14 @@ Requirements:
 - Apple Developer Account
 - Xcode command-line tools installed
 
+Note:
+- Do not submit .pkg for notarization but use .zip, otherwise staple won't work.
+- After having run `xcrun stapler staple Facepager.app`, package app by running `ditto -c -k --sequesterRsrc --keepParent Facepager.app Facepager_Setup_4_7_0.mac.pkg`
+- Notarize again:
+  `xcrun notarytool submit Facepager_Setup_4_7_0.mac.pkg --keychain-profile profile --wait`
+  `xcrun stapler staple Facepager_Setup_4_7_0.mac.pkg`
+- Verify notarization: `spctl -a -vv -t install Facepager_Setup_4_7_0.mac.pkg` (instead of `spctl -a -v Facepager.app`).
+
 ### [DEPRECATED] Code signing and packaging
 
 #### Get certificates
