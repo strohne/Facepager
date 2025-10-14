@@ -3,8 +3,8 @@
 cd "`dirname "$0"`"
 cd ../..
 
+cp build/osx/entitlements.plist src/entitlements.plist
 cp build/osx/Facepager.spec src/Facepager.spec
-cp -r build/osx/hooks src/hooks
 
 cd src
 rm -rf build
@@ -12,15 +12,30 @@ rm -rf dist
 
 source ../venv/bin/activate
 ../venv/bin/pyinstaller Facepager.spec
-#../venv/bin/pyinstaller --onefile --windowed --noconfirm --upx-dir=/usr/local/bin/ Facepager.spec
-cd ..
+# cd ..
+cd /dist
 
-python3 build/osx/fix_app_qt_folder_names_for_codesign.py src/dist/Facepager.app
+codesign -vv --strict Facepager.app
 
-codesign --deep --force --options=runtime --entitlements build/osx/entitlements.plist --sign "C5675C9047BC5F500D88849509790AEEBCB99534" --timestamp src/dist/Facepager.app
+ditto -c -k --sequesterRsrc --keepParent Facepager.app Facepager.zip
 
-rm -rf build/osx/Facepager.pkg
+xcrun notarytool submit Facepager.app --keychain-profile fpcodesign22 --wait
+xcrun stapler staple Facepager.app
+spctl -a -v Facepager.app
 
-productbuild --identifier "com.strohne.facepager.pkg" --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" --timestamp --root src/dist/Facepager.app /Applications/Facepager.app build/osx/Facepager.pkg
+cd ../..
+
+rm -rf Facepager_Setup_4_7_0.mac.pkg
+
+productbuild --identifier "com.strohne.facepager.pkg" \
+  --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" \
+  --timestamp \
+  --root src/dist/Facepager.app /Applications/Facepager.app \
+  Facepager_Setup_4_7_0.mac.pkg
+
+xcrun notarytool submit Facepager_Setup_4_7_0.mac.pkg --keychain-profile fpcodesign22 --wait
+xcrun stapler staple Facepager_Setup_4_7_0.mac.pkg
+spctl -a -vv -t install Facepager_Setup_4_7_0.mac.pkg
+pkgutil --check-signature Facepager_Setup_4_7_0.mac.pkg
 
 read -p "Press any key to continue..." -n1 -s
