@@ -5,6 +5,7 @@ misc/
 src/build
 src/dist
 src/hooks
+src/entitlements.plist
 src/*.pyc
 src/*.pyo
 __pycache__
