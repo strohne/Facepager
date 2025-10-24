@@ -27,7 +27,7 @@ cd ../..
 rm -rf Facepager_Setup_4_7_0.mac.pkg
 
 productbuild --identifier "com.strohne.facepager.pkg" \
-  --sign "AC630C1E0415944E2C2DCDE3210ADC5C8F20A02E" \
+  --sign "PUT_HASH_OF_APPLICATION_ID_HERE" \
   --timestamp \
   --root src/dist/Facepager.app /Applications/Facepager.app \
   Facepager_Setup_4_7_0.mac.pkg
