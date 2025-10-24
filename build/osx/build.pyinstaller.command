@@ -12,13 +12,13 @@ rm -rf dist
 
 source ../venv/bin/activate
 ../venv/bin/pyinstaller Facepager.spec
-cd /dist
+cd dist
 
 codesign -vv --strict Facepager.app
 
 ditto -c -k --sequesterRsrc --keepParent Facepager.app Facepager.zip
 
-xcrun notarytool submit Facepager.app --keychain-profile fpcodesign22 --wait
+xcrun notarytool submit Facepager.zip --keychain-profile fpcodesign22 --wait
 xcrun stapler staple Facepager.app
 spctl -a -v Facepager.app
 
