@@ -28,7 +28,7 @@ exe = EXE(pyz,
           upx=True,
           console=False,
           icon='../icons/icon_facepager.icns',
-          codesign_identity='PUT_HASH_OF_HASH_OF_INSTALLER_ID_HERE',
+          codesign_identity='PUT_HASH_OF_INSTALLER_ID_HERE',
           entitlements_file='../build/osx/entitlements.plist')
 coll = COLLECT(exe,
                a.binaries,
