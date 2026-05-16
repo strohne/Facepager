@@ -4,8 +4,8 @@ block_cipher = None
 
 
 a = Analysis(['Facepager.py'],
-             pathex=['../src'],
-             binaries=[('../build/windows/cchardet', 'cchardet')],
+             pathex=['.'],
+             #binaries=[('../build/windows/cchardet', 'cchardet')],
              datas=[],
              hiddenimports=['PySide6.QtPrintSupport'],
              hookspath=[],
@@ -26,7 +26,8 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False , icon='..\\icons\\icon_facepager.ico')
+          console=False,
+          icon='..\\icons\\icon_facepager.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

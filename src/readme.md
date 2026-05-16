@@ -1,6 +1,6 @@
 # General notes
 
-Facepager 4 is developed for Python 3.10 (64 bit) and PySide2 (Qt5)
+Facepager 4 is developed for Python 3.10 (64 bit) and PySide6
 
 Facepager depends on the following packages:
 
@@ -16,7 +16,7 @@ Facepager depends on the following packages:
 - numpy and pandas: pip install numpy pandas (licensed under BSD and 3-clause BSD license) 
 - lxml: pip install lxml (BSD licence)
 - xmljson pip install xmljson (MIT licence)
-- cchardet: pip install cchardet (GPL, LGPL, MPL 1.1)
+- charset_normalizer: pip install charset-normalizer (MIT)
 - json
 - cssselect
 - datetime
@@ -25,9 +25,13 @@ Facepager depends on the following packages:
 - markdown: pip install markdown
 - rdflib: pip install rdflib
 
-Facepager needs some secret keys to connect to Facebook, Twitter and YouTube. You can provide the credentials in the user interface or in an credential file. See credentials.py.readme for further details. 
+Facepager needs some secret keys to connect to Facebook, Twitter and YouTube.
+You can provide the credentials in the user interface or in an credential file. 
+See credentials.py.readme for further details. 
 
-The right version of PySide2 matters. Not every version includes the WebEngineWidgets module. For example, there is no version working out of the box for Windows 32bit.
+The right version of PySide matters. 
+Not every version includes the WebEngineWidgets module. 
+For example, there is no version working out of the box for Windows 32bit.
 
 # Steps to run under Windows 11
 
@@ -53,7 +57,8 @@ Open the command line in a directory of your choice and execute the comments ind
   $ python Facepager.py  
 
 Note: After the first time installation, you only need to activate venv and run Facepager.py.
-Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. See credentials.py.readme for further details.
+Remember: you can provide default credentials for Facebook, Twitter and YouTube in the credentials.py. 
+See credentials.py.readme for further details.
 
 # Steps to runder under macOS BigSur
 

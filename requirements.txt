@@ -9,7 +9,7 @@ requests-toolbelt
 rauth
 lxml
 xmljson
-cchardet
+charset-normalizer
 pyjsparser
 tldextract
 cssselect

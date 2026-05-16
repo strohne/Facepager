@@ -23,7 +23,7 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from urllib.parse import urlparse, parse_qs, parse_qsl
 
 import webbrowser
-import cchardet
+import charset_normalizer
 import json
 
 if sys.version_info.major < 3:
@@ -1493,7 +1493,7 @@ class ApiTab(QScrollArea):
 
                     out = content.getvalue()
                     encoding = response.encoding
-                    encoding = cchardet.detect(out)['encoding'] if encoding is None else encoding
+                    encoding = charset_normalizer.detect(out)['encoding'] if encoding is None else encoding
                     encoding = 'utf-8' if encoding is None else encoding
                     out = out.decode(encoding)
 
@@ -3660,7 +3660,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
         if response.status_code == 200 and req.method.lower() != 'head':
             try:
                 response.raw = open(path, 'rb')
-                response.encoding = cchardet.detect(response.content)['encoding']
+                response.encoding = charset_normalizer.detect(response.content)['encoding']
             except (OSError, IOError) as err:
                 response.status_code = 500
                 response.reason = str(err)
