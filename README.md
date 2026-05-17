@@ -1,6 +1,39 @@
 ﻿![Logo](https://raw.github.com/strohne/Facepager/master/icons/icon_facepager.png)
 
-Facepager was made for fetching public available data from YouTube, Twitter and other websites on the basis of APIs and webscraping. All data is stored in a SQLite database and may be exported to csv. 
+Facepager was made for fetching public available data from YouTube, 
+Twitter and other websites on the basis of APIs and webscraping. 
+All data is stored in a SQLite database and may be exported to csv. 
+
+### Presets
+
+You can use Facepager with any API or Website. 
+Once you are familiar with the basic concepts, 
+Facepager handles the tasks typically involved in online data collection.
+Facepager  handles multi-threaded data collection, rate limits, pagination, data extraction and many other aspects
+which otherwise require extensive development work to achieve a robust solution.
+
+For getting started, Facepager provides presets for fetching data from various APIs and websites.
+
+**Please note**: Support for the official Facebook, Twitter and YouTube APIs is limited.
+In the last years, we provided presets with pre-registered access to support the community.
+However, due to changes in the APIs and the increasing complexity of the review processes,
+we are not able to maintain this service anymore. 
+In case you want to use Facebook, Twitter or YouTube with Facepager, 
+you need to register for your own API access and provide the cliend ID and client secret
+in the respective settings.
+
+By now, the promoted use cases focus on APIs in the domain of knowledge infrastructures.
+Examples include 
+Open Library, OpenAlex, Crossref, arxiv.org,
+Nominatim geo coding, Google Maps API, Geonames,
+Wikidata, Wikipedia, DBPedia, SemOpenAlex, Culture Knowledge Graph, Getty Thesaurus,
+Mastodon, Reddit 
+and Webscraping e.g. from news sites.
+
+Further, you can use Facepager to interact with cloud services such as
+OpenAI APIs or Amazon Web Services. Although this involves a decent understanding 
+of the respective APIs, you can use Facepager to set up pipelines with your 
+specifically targeted pipelines.
 
 ### Installer
 

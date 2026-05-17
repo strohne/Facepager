@@ -405,6 +405,13 @@ def postProcess(value, pipeline, dump, folder):
             encoding = modifier[1]
             value = [x.encode(encoding) for x in value]
 
+        # Example: escape:json
+        elif modifier[0] == 'escape':
+            # Input: list of strings.
+            # Output: list of strings
+            format = modifier[1]
+            if format == 'json':
+                value = [json.dumps(x) for x in value]
 
         elif modifier[0] == 'css':
             # Input: list of strings.
@@ -507,7 +514,10 @@ def extractValue(data, key, dump=True, folder="", metaData=None, default=""):
     - not
     - is
     - re
-    - encode
+    - encode Encode characters, provide the target encoding as parameter,
+             e.g. 'encode:utf-8'.
+    - escape Escape characters to make them compatible with a target format.
+             Currently, only JSON is supported. Usage: 'escape:json'.
     - css
     - xpath
     - file The value is interpreted as a file name.
